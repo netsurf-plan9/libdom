@@ -13,7 +13,6 @@
 
 #include <dom/core/exceptions.h>
 
-struct dom_ctx;
 struct dom_document;
 struct dom_node;
 struct dom_node_list;
@@ -69,102 +68,86 @@ typedef enum {
 } dom_node_type;
 
 
-void dom_node_ref(struct dom_ctx *ctx, struct dom_node *node);
-void dom_node_unref(struct dom_ctx *ctx, struct dom_node *node);
+void dom_node_ref(struct dom_node *node);
+void dom_node_unref(struct dom_node *node);
 
-dom_exception dom_node_get_name(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string **result);
-dom_exception dom_node_get_value(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string **result);
-dom_exception dom_node_set_value(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *value);
-dom_exception dom_node_get_type(struct dom_ctx *ctx,
-		struct dom_node *node, dom_node_type *result);
-dom_exception dom_node_get_parent(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_node **result);
-dom_exception dom_node_get_children(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_node_list **result);
-dom_exception dom_node_get_first_child(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_node **result);
-dom_exception dom_node_get_last_child(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_node **result);
-dom_exception dom_node_get_previous(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_node **result);
-dom_exception dom_node_get_next(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_node **result);
-dom_exception dom_node_get_attributes(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_named_node_map **result);
-dom_exception dom_node_get_owner(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_document **result);
-dom_exception dom_node_insert_before(struct dom_ctx *ctx,
-		struct dom_node *node,
+dom_exception dom_node_get_name(struct dom_node *node,
+		struct dom_string **result);
+dom_exception dom_node_get_value(struct dom_node *node,
+		struct dom_string **result);
+dom_exception dom_node_set_value(struct dom_node *node,
+		struct dom_string *value);
+dom_exception dom_node_get_type(struct dom_node *node,
+		dom_node_type *result);
+dom_exception dom_node_get_parent(struct dom_node *node,
+		struct dom_node **result);
+dom_exception dom_node_get_children(struct dom_node *node,
+		struct dom_node_list **result);
+dom_exception dom_node_get_first_child(struct dom_node *node,
+		struct dom_node **result);
+dom_exception dom_node_get_last_child(struct dom_node *node,
+		struct dom_node **result);
+dom_exception dom_node_get_previous(struct dom_node *node,
+		struct dom_node **result);
+dom_exception dom_node_get_next(struct dom_node *node,
+		struct dom_node **result);
+dom_exception dom_node_get_attributes(struct dom_node *node,
+		struct dom_named_node_map **result);
+dom_exception dom_node_get_owner(struct dom_node *node,
+		struct dom_document **result);
+dom_exception dom_node_insert_before(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *ref_child,
 		struct dom_node **result);
-dom_exception dom_node_replace_child(struct dom_ctx *ctx,
-		struct dom_node *node,
+dom_exception dom_node_replace_child(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *old_child,
 		struct dom_node **result);
-dom_exception dom_node_remove_child(struct dom_ctx *ctx,
-		struct dom_node *node,
+dom_exception dom_node_remove_child(struct dom_node *node,
 		struct dom_node *old_child,
 		struct dom_node **result);
-dom_exception dom_node_append_child(struct dom_ctx *ctx,
-		struct dom_node *node,
+dom_exception dom_node_append_child(struct dom_node *node,
 		struct dom_node *new_child,
 		struct dom_node **result);
-dom_exception dom_node_has_children(struct dom_ctx *ctx,
-		struct dom_node *node, bool *result);
-dom_exception dom_node_clone(struct dom_ctx *ctx,
-		struct dom_node *node, bool deep,
+dom_exception dom_node_has_children(struct dom_node *node, bool *result);
+dom_exception dom_node_clone(struct dom_node *node, bool deep,
 		struct dom_node **result);
-dom_exception dom_node_normalize(struct dom_ctx *ctx,
-		struct dom_node *node);
-dom_exception dom_node_is_supported(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *feature,
-		struct dom_node *version, bool *result);
-dom_exception dom_node_get_namespace(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string **result);
-dom_exception dom_node_get_prefix(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string **result);
-dom_exception dom_node_set_prefix(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *prefix);
-dom_exception dom_node_get_local_name(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string **result);
-dom_exception dom_node_has_attributes(struct dom_ctx *ctx,
-		struct dom_node *node, bool *result);
-dom_exception dom_node_get_base(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string **result);
-dom_exception dom_node_compare_document_position(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_node *other,
-		uint16_t *result);
-dom_exception dom_node_get_text_content(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string **result);
-dom_exception dom_node_set_text_content(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *content);
-dom_exception dom_node_is_same(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_node *other,
+dom_exception dom_node_normalize(struct dom_node *node);
+dom_exception dom_node_is_supported(struct dom_node *node,
+		struct dom_string *feature, struct dom_node *version,
 		bool *result);
-dom_exception dom_node_lookup_prefix(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *namespace,
+dom_exception dom_node_get_namespace(struct dom_node *node,
 		struct dom_string **result);
-dom_exception dom_node_is_default_namespace(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *namespace,
-		bool *result);
-dom_exception dom_node_lookup_namespace(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *prefix,
+dom_exception dom_node_get_prefix(struct dom_node *node,
 		struct dom_string **result);
-dom_exception dom_node_is_equal(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_node *other,
+dom_exception dom_node_set_prefix(struct dom_node *node,
+		struct dom_string *prefix);
+dom_exception dom_node_get_local_name(struct dom_node *node,
+		struct dom_string **result);
+dom_exception dom_node_has_attributes(struct dom_node *node, bool *result);
+dom_exception dom_node_get_base(struct dom_node *node,
+		struct dom_string **result);
+dom_exception dom_node_compare_document_position(struct dom_node *node,
+		struct dom_node *other, uint16_t *result);
+dom_exception dom_node_get_text_content(struct dom_node *node,
+		struct dom_string **result);
+dom_exception dom_node_set_text_content(struct dom_node *node,
+		struct dom_string *content);
+dom_exception dom_node_is_same(struct dom_node *node, struct dom_node *other,
 		bool *result);
-dom_exception dom_node_get_feature(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *feature,
-		struct dom_string *version, void **result);
-dom_exception dom_node_set_user_data(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *key,
-		void *data, dom_user_data_handler handler,
+dom_exception dom_node_lookup_prefix(struct dom_node *node,
+		struct dom_string *namespace, struct dom_string **result);
+dom_exception dom_node_is_default_namespace(struct dom_node *node,
+		struct dom_string *namespace, bool *result);
+dom_exception dom_node_lookup_namespace(struct dom_node *node,
+		struct dom_string *prefix, struct dom_string **result);
+dom_exception dom_node_is_equal(struct dom_node *node,
+		struct dom_node *other, bool *result);
+dom_exception dom_node_get_feature(struct dom_node *node,
+		struct dom_string *feature, struct dom_string *version,
 		void **result);
-dom_exception dom_node_get_user_data(struct dom_ctx *ctx,
-		struct dom_node *node, struct dom_string *key,
-		void **result);
+dom_exception dom_node_set_user_data(struct dom_node *node,
+		struct dom_string *key, void *data,
+		dom_user_data_handler handler, void **result);
+dom_exception dom_node_get_user_data(struct dom_node *node,
+		struct dom_string *key, void **result);
 
 #endif

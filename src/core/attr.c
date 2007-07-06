@@ -32,7 +32,6 @@ struct dom_attr {
 /**
  * Retrieve an attribute's name
  *
- * \param ctx     The context in which the attribute resides
  * \param attr    Attribute to retrieve name from
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
@@ -41,10 +40,9 @@ struct dom_attr {
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_attr_get_name(struct dom_ctx *ctx,
-		struct dom_attr *attr, struct dom_string **result)
+dom_exception dom_attr_get_name(struct dom_attr *attr,
+		struct dom_string **result)
 {
-	UNUSED(ctx);
 	UNUSED(attr);
 	UNUSED(result);
 
@@ -54,15 +52,12 @@ dom_exception dom_attr_get_name(struct dom_ctx *ctx,
 /**
  * Determine if attribute was specified or defaulted
  *
- * \param ctx     The context in which the attribute resides
  * \param attr    Attribute to inspect
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_attr_get_specified(struct dom_ctx *ctx,
-		struct dom_attr *attr, bool *result)
+dom_exception dom_attr_get_specified(struct dom_attr *attr, bool *result)
 {
-	UNUSED(ctx);
 
 	*result = attr->specified;
 
@@ -72,7 +67,6 @@ dom_exception dom_attr_get_specified(struct dom_ctx *ctx,
 /**
  * Retrieve an attribute's value
  *
- * \param ctx     The context in which the attribute resides
  * \param attr    Attribute to retrieve value from
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
@@ -81,10 +75,9 @@ dom_exception dom_attr_get_specified(struct dom_ctx *ctx,
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_attr_get_value(struct dom_ctx *ctx,
-		struct dom_attr *attr, struct dom_string **result)
+dom_exception dom_attr_get_value(struct dom_attr *attr,
+		struct dom_string **result)
 {
-	UNUSED(ctx);
 	UNUSED(attr);
 	UNUSED(result);
 
@@ -94,16 +87,14 @@ dom_exception dom_attr_get_value(struct dom_ctx *ctx,
 /**
  * Set an attribute's value
  *
- * \param ctx    The context in which the attribute resides
  * \param attr   Attribute to retrieve value from
  * \param value  New value for attribute
  * \return DOM_NO_ERR                      on success,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if attribute is readonly.
  */
-dom_exception dom_attr_set_value(struct dom_ctx *ctx,
-		struct dom_attr *attr, struct dom_string *value)
+dom_exception dom_attr_set_value(struct dom_attr *attr,
+		struct dom_string *value)
 {
-	UNUSED(ctx);
 	UNUSED(attr);
 	UNUSED(value);
 
@@ -113,7 +104,6 @@ dom_exception dom_attr_set_value(struct dom_ctx *ctx,
 /**
  * Retrieve the owning element of an attribute
  *
- * \param ctx     The context in which the attribute resides
  * \param attr    The attribute to extract owning element from
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
@@ -121,12 +111,12 @@ dom_exception dom_attr_set_value(struct dom_ctx *ctx,
  * The returned node will have its reference count increased. The caller
  * should unref it once it has finished with it.
  */
-dom_exception dom_attr_get_owner(struct dom_ctx *ctx,
-		struct dom_attr *attr, struct dom_element **result)
+dom_exception dom_attr_get_owner(struct dom_attr *attr,
+		struct dom_element **result)
 {
 	/* If there is an owning element, increase its reference count */
 	if (attr->owner != NULL)
-		dom_node_ref(ctx, (struct dom_node *) attr->owner);
+		dom_node_ref((struct dom_node *) attr->owner);
 
 	*result = attr->owner;
 
@@ -136,18 +126,16 @@ dom_exception dom_attr_get_owner(struct dom_ctx *ctx,
 /**
  * Retrieve an attribute's type information
  *
- * \param ctx  The context in which the attribute resides
- * \param attr  The attribute to extract type information from
+ * \param attr    The attribute to extract type information from
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  *
  * The returned typeinfo will have its reference count increased. The caller
  * should unref it once it has finished with it.
  */
-dom_exception dom_attr_get_typeinfo(struct dom_ctx *ctx,
-		struct dom_attr *attr, struct dom_typeinfo **result)
+dom_exception dom_attr_get_typeinfo(struct dom_attr *attr,
+		struct dom_typeinfo **result)
 {
-	UNUSED(ctx);
 	UNUSED(attr);
 	UNUSED(result);
 
@@ -157,16 +145,12 @@ dom_exception dom_attr_get_typeinfo(struct dom_ctx *ctx,
 /**
  * Determine if an attribute if of type ID
  *
- * \param ctx     The context in which the attribute resides
  * \param attr    The attribute to inspect
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_attr_is_id(struct dom_ctx *ctx,
-		struct dom_attr *attr, bool *result)
+dom_exception dom_attr_is_id(struct dom_attr *attr, bool *result)
 {
-	UNUSED(ctx);
-
 	*result = attr->is_id;
 
 	return DOM_NO_ERR;

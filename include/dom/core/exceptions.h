@@ -5,8 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
-#ifndef dom_errors_h_
-#define dom_errors_h_
+#ifndef dom_core_exceptions_h_
+#define dom_core_exceptions_h_
 
 /* The DOM spec says that this is actually an unsigned short */
 typedef enum {

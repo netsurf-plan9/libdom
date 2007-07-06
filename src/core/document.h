@@ -9,11 +9,11 @@
 #define dom_internal_document_h_
 
 #include <inttypes.h>
+#include <stddef.h>
 
-struct dom_ctx;
 struct dom_document;
 
-const uint8_t *dom_document_get_base(struct dom_ctx *ctx,
-		struct dom_document *doc);
+const uint8_t *dom_document_get_base(struct dom_document *doc);
+void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size);
 
 #endif

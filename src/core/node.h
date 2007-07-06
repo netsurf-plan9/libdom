@@ -52,8 +52,7 @@ struct dom_node {
 	uint32_t refcnt;		/**< Reference count */
 };
 
-dom_exception dom_node_create(struct dom_ctx *ctx,
-		struct dom_document *doc, dom_node_type type,
+dom_exception dom_node_create(struct dom_document *doc, dom_node_type type,
 		struct dom_string *name, struct dom_string *value,
 		struct dom_node **node);
 

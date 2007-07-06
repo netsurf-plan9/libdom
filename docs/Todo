@@ -1,13 +1,6 @@
 TODO list
 =========
 
-  + Sort out the mess that is dom_ctx - I really don't like it; everything (except dom_strings)
-    should be allocated in the context of a document and, thus, the context is easily found 
-    through foo->owner->blah. dom_strings are somewhat awkward here, as they aren't necessarily
-    allocated in the context of a document, but they still need access to an allocator. Perhaps
-    the simplest solution is for the string constructors to take an allocator and private word
-    as parameters, then store them within the string. This does, however, add an overhead of 
-    8 (or 16 on 64bit platforms) bytes per dom_string, which isn't exactly great.
   + Fill out stub functions for DOM3 core
   + Rest of DOM level 3
   + DOM level 2

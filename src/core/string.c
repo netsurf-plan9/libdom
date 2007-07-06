@@ -8,7 +8,6 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include <dom/ctx.h>
 #include <dom/core/string.h>
 
 #include "core/document.h"
@@ -26,57 +25,51 @@ struct dom_string {
 	enum { DOM_STRING_PTR,
 	       DOM_STRING_CONST_PTR,
 	       DOM_STRING_OFFSET
-	} type;
+	} type;				/**< String type */
 	union {
 		uint8_t *ptr;
 		const uint8_t *cptr;
-		struct {
-			struct dom_document *doc;
-			uint32_t off;
-		} offset;
-	} data;
+		uint32_t offset;
+	} data;				/**< Type-specific data */
 
-	size_t len;
+	size_t len;			/**< Byte length of string */
 
-	uint32_t refcnt;
+	struct dom_document *doc;	/**< Owning document */
+
+	uint32_t refcnt;		/**< Reference count */
 };
 
 /**
  * Claim a reference on a DOM string
  *
- * \param ctx  The context in which the string resides
  * \param str  The string to claim a reference on
  */
-void dom_string_ref(struct dom_ctx *ctx, struct dom_string *str)
+void dom_string_ref(struct dom_string *str)
 {
-	UNUSED(ctx);
-
 	str->refcnt++;
 }
 
 /**
  * Release a reference on a DOM string
  *
- * \param ctx  The context in which the string resides
  * \param str  The string to release the reference from
  *
  * If the reference count reaches zero, any memory claimed by the
  * string will be released
  */
-void dom_string_unref(struct dom_ctx *ctx, struct dom_string *str)
+void dom_string_unref(struct dom_string *str)
 {
 	if (--str->refcnt == 0) {
 		if (str->type == DOM_STRING_PTR)
-			ctx->alloc(str->data.ptr, 0, ctx->pw);
+			dom_document_alloc(str->doc, str->data.ptr, 0);
 
-		ctx->alloc(str, 0, ctx->pw);
+		dom_document_alloc(str->doc, str, 0);
 	}
 }
 
 /**
  * Create a DOM string from an offset into the document buffer
  *
- * \param ctx  The context in which the string resides
  * \param doc  The document in which the string resides
  * \param off  Offset from start of document buffer
  * \param len  Length, in bytes, of string
@@ -86,20 +79,22 @@ void dom_string_unref(struct dom_ctx *ctx, struct dom_string *str)
  * The returned string will already be referenced, so there is no need
  * to explicitly reference it.
  */
-dom_exception dom_string_create_from_off(struct dom_ctx *ctx,
-		struct dom_document *doc, uint32_t off, size_t len,
-		struct dom_string **str)
+dom_exception dom_string_create_from_off(struct dom_document *doc,
+		uint32_t off, size_t len, struct dom_string **str)
 {
 	struct dom_string *ret;
 
-	ret = ctx->alloc(NULL, sizeof(struct dom_string), ctx->pw);
+	ret = dom_document_alloc(doc, NULL, sizeof(struct dom_string));
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
 	ret->type = DOM_STRING_OFFSET;
-	ret->data.offset.doc = doc;
-	ret->data.offset.off = off;
+
+	ret->data.offset = off;
+
 	ret->len = len;
+
+	ret->doc = doc;
 
 	ret->refcnt = 1;
 
@@ -111,7 +106,7 @@ dom_exception dom_string_create_from_off(struct dom_ctx *ctx,
 /**
  * Create a DOM string from a string of characters
  *
- * \param ctx  The context in which the string resides
+ * \param doc  The document in which the string resides
  * \param ptr  Pointer to string of characters
  * \param len  Length, in bytes, of string of characters
  * \param str  Pointer to location to receive pointer to new string
@@ -123,18 +118,18 @@ dom_exception dom_string_create_from_off(struct dom_ctx *ctx,
  * The string of characters passed in will be copied for use by the
  * returned DOM string.
  */
-dom_exception dom_string_create_from_ptr(struct dom_ctx *ctx,
+dom_exception dom_string_create_from_ptr(struct dom_document *doc,
 		const uint8_t *ptr, size_t len, struct dom_string **str)
 {
 	struct dom_string *ret;
 
-	ret = ctx->alloc(NULL, sizeof(struct dom_string), ctx->pw);
+	ret = dom_document_alloc(doc, NULL, sizeof(struct dom_string));
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
-	ret->data.ptr = ctx->alloc(NULL, len, ctx->pw);
+	ret->data.ptr = dom_document_alloc(doc, NULL, len);
 	if (ret->data.ptr == NULL) {
-		ctx->alloc(ret, 0, ctx->pw);
+		dom_document_alloc(doc, ret, 0);
 		return DOM_NO_MEM_ERR;
 	}
 
@@ -143,6 +138,8 @@ dom_exception dom_string_create_from_ptr(struct dom_ctx *ctx,
 	memcpy(ret->data.ptr, ptr, len);
 
 	ret->len = len;
+
+	ret->doc = doc;
 
 	ret->refcnt = 1;
 
@@ -154,7 +151,7 @@ dom_exception dom_string_create_from_ptr(struct dom_ctx *ctx,
 /**
  * Create a DOM string from a constant string of characters
  *
- * \param ctx  The context in which the string resides
+ * \param doc  The document in which the string resides
  * \param ptr  Pointer to string of characters
  * \param len  Length, in bytes, of string of characters
  * \param str  Pointer to location to receive pointer to new string
@@ -166,20 +163,22 @@ dom_exception dom_string_create_from_ptr(struct dom_ctx *ctx,
  * The string of characters passed in will _not_ be copied for use by the
  * returned DOM string.
  */
-dom_exception dom_string_create_from_const_ptr(struct dom_ctx *ctx,
+dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
 		const uint8_t *ptr, size_t len, struct dom_string **str)
 {
 	struct dom_string *ret;
 
-	ret = ctx->alloc(NULL, sizeof(struct dom_string), ctx->pw);
+	ret = dom_document_alloc(doc, NULL, sizeof(struct dom_string));
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
-	ret->data.cptr = ptr;
-
 	ret->type = DOM_STRING_CONST_PTR;
 
+	ret->data.cptr = ptr;
+
 	ret->len = len;
+
+	ret->doc = doc;
 
 	ret->refcnt = 1;
 
@@ -191,7 +190,6 @@ dom_exception dom_string_create_from_const_ptr(struct dom_ctx *ctx,
 /**
  * Get a pointer to the string of characters within a DOM string
  *
- * \param ctx   The context in which the string resides
  * \param str   Pointer to DOM string to retrieve pointer from
  * \param data  Pointer to location to receive data
  * \param len   Pointer to location to receive byte length of data
@@ -200,8 +198,8 @@ dom_exception dom_string_create_from_const_ptr(struct dom_ctx *ctx,
  * The caller must have previously claimed a reference on the DOM string.
  * The returned pointer must not be freed.
  */
-dom_exception dom_string_get_data(struct dom_ctx *ctx,
-		struct dom_string *str, const uint8_t **data, size_t *len)
+dom_exception dom_string_get_data(struct dom_string *str,
+		const uint8_t **data, size_t *len)
 {
 	switch (str->type) {
 	case DOM_STRING_PTR:
@@ -211,8 +209,7 @@ dom_exception dom_string_get_data(struct dom_ctx *ctx,
 		*data = str->data.cptr;
 		break;
 	case DOM_STRING_OFFSET:
-		*data = dom_document_get_base(ctx, str->data.offset.doc) +
-				str->data.offset.off;
+		*data = dom_document_get_base(str->doc) + str->data.offset;
 		break;
 	}
 

@@ -13,28 +13,26 @@
 
 #include <dom/core/exceptions.h>
 
-struct dom_ctx;
 struct dom_document;
 struct dom_string;
 
 /* Claim a reference on a DOM string */
-void dom_string_ref(struct dom_ctx *ctx, struct dom_string *str);
+void dom_string_ref(struct dom_string *str);
 /* Release a reference on a DOM string */
-void dom_string_unref(struct dom_ctx *ctx, struct dom_string *str);
+void dom_string_unref(struct dom_string *str);
 
 /* Create a DOM string from an offset into the document buffer */
-dom_exception dom_string_create_from_off(struct dom_ctx *ctx,
-		struct dom_document *doc, uint32_t off, size_t len,
-		struct dom_string **str);
+dom_exception dom_string_create_from_off(struct dom_document *doc,
+		uint32_t off, size_t len, struct dom_string **str);
 /* Create a DOM string from a string of characters */
-dom_exception dom_string_create_from_ptr(struct dom_ctx *ctx,
+dom_exception dom_string_create_from_ptr(struct dom_document *doc,
 		const uint8_t *ptr, size_t len, struct dom_string **str);
 /* Create a DOM string from a constant string of characters */
-dom_exception dom_string_create_from_const_ptr(struct dom_ctx *ctx,
+dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
 		const uint8_t *ptr, size_t len, struct dom_string **str);
 
 /* Get a pointer to the string of characters within a DOM string */
-dom_exception dom_string_get_data(struct dom_ctx *ctx,
-		struct dom_string *str, const uint8_t **data, size_t *len);
+dom_exception dom_string_get_data(struct dom_string *str,
+		const uint8_t **data, size_t *len);
 
 #endif
