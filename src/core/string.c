@@ -227,7 +227,8 @@ dom_exception dom_string_get_data(struct dom_string *str,
  */
 int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
 {
-	const uint8_t *d1, *d2;
+	const uint8_t *d1 = NULL;
+	const uint8_t *d2 = NULL;
 	size_t l1, l2;
 	dom_exception err;
 
@@ -254,7 +255,8 @@ int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
  */
 int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
 {
-	const uint8_t *d1, *d2;
+	const uint8_t *d1 = NULL;
+	const uint8_t *d2 = NULL;
 	size_t l1, l2;
 	dom_exception err;
 
