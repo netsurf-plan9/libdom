@@ -62,7 +62,7 @@ struct dom_nodelist {
  * will match the children of ::root.
  *
  * The returned list will already be referenced, so the client need not
- * do so explicitly. The client should unref the list once finished with it.
+ * do so explicitly. The client must unref the list once finished with it.
  */
 dom_exception dom_nodelist_create(struct dom_document *doc,
 		struct dom_node *root, struct dom_string *tagname,
@@ -124,6 +124,8 @@ void dom_nodelist_ref(struct dom_nodelist *list)
 void dom_nodelist_unref(struct dom_nodelist *list)
 {
 	if (--list->refcnt == 0) {
+		struct dom_node *owner = (struct dom_node *) list->owner;
+
 		switch (list->type) {
 		case DOM_NODELIST_CHILDREN:
 			/* Nothing to do */
@@ -139,13 +141,16 @@ void dom_nodelist_unref(struct dom_nodelist *list)
 
 		dom_node_unref(list->root);
 
-		dom_node_unref((struct dom_node *) list->owner);
-
 		/* Remove list from document */
 		dom_document_remove_nodelist(list->owner, list);
 
-		/* And destroy the list object */
+		/* Destroy the list object */
 		dom_document_alloc(list->owner, list, 0);
+
+		/* And release our reference on the owning document
+		 * This must be last as, otherwise, it's possible that
+		 * the document is destroyed before we are */
+		dom_node_unref(owner);
 	}
 }
 

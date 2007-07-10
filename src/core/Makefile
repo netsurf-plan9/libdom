@@ -22,7 +22,7 @@
 CFLAGS += -I$(CURDIR)
 
 # Objects
-OBJS = attr document node nodelist string
+OBJS = attr document namednodemap node nodelist string
 
 .PHONY: clean debug distclean export release setup test
 

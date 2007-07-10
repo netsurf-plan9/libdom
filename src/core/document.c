@@ -24,12 +24,24 @@ struct dom_doc_nl {
 };
 
 /**
+ * Iten in list of active namednodemaps
+ */
+struct dom_doc_nnm {
+	struct dom_namednodemap *map;	/**< Named node map */
+
+	struct dom_doc_nnm *next;	/**< Next map */
+	struct dom_doc_nnm *prev;	/**< Previous map */
+};
+
+/**
  * DOM document
  */
 struct dom_document {
 	struct dom_node base;		/**< Base node */
 
 	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
+
+	struct dom_doc_nnm *maps;	/**< List of active namednodemaps */
 
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
@@ -809,7 +821,7 @@ dom_exception dom_document_get_nodelist(struct dom_document *doc,
 	 * If it did, the nodelist's reference count would never reach zero,
 	 * and the list would remain indefinitely. This is not a problem as
 	 * the list notifies the document of its destruction via
-	 * dom_document_remove_nodelist.*/
+	 * dom_document_remove_nodelist. */
 
 	*list = l->list;
 
@@ -848,4 +860,100 @@ void dom_document_remove_nodelist(struct dom_document *doc,
 
 	/* And free item */
 	doc->alloc(l, 0, doc->pw);
+}
+
+/**
+ * Get a namednodemap, creating one if necessary
+ *
+ * \param doc   The document to get a namednodemap for
+ * \param root  Node containing items in map
+ * \param type  The type of map
+ * \param map   Pointer to location to receive map
+ * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
+ *
+ * The returned map will have its reference count increased. It is
+ * the responsibility of the caller to unref the map once it has
+ * finished with it.
+ */
+dom_exception dom_document_get_namednodemap(struct dom_document *doc,
+		struct dom_node *root, dom_namednodemap_type type,
+		struct dom_namednodemap **map)
+{
+	struct dom_doc_nnm *m;
+	dom_exception err;
+
+	for (m = doc->maps; m; m = m->next) {
+		if (dom_namednodemap_match(m->map, root, type))
+			break;
+	}
+
+	if (m != NULL) {
+		/* Found an existing map, so use it */
+		dom_namednodemap_ref(m->map);
+	} else {
+		/* No existing map */
+
+		/* Create active map entry */
+		m = doc->alloc(NULL, sizeof(struct dom_doc_nnm), doc->pw);
+		if (m == NULL)
+			return DOM_NO_MEM_ERR;
+
+		/* Create namednodemap */
+		err = dom_namednodemap_create(doc, root, type, &m->map);
+		if (err != DOM_NO_ERR) {
+			doc->alloc(m, 0, doc->pw);
+			return err;
+		}
+
+		/* Add to document's list of active namednodemaps */
+		m->prev = NULL;
+		m->next = doc->maps;
+		if (doc->maps)
+			doc->maps->prev = m;
+		doc->maps = m;
+	}
+
+	/* Note: the document does not claim a reference on the namednodemap
+	 * If it did, the map's reference count would never reach zero,
+	 * and the list would remain indefinitely. This is not a problem as
+	 * the map notifies the document of its destruction via
+	 * dom_document_remove_namednodempa. */
+
+	*map = m->map;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Remove a namednodemap
+ *
+ * \param doc  The document to remove the map from
+ * \param map  The map to remove
+ */
+void dom_document_remove_namednodemap(struct dom_document *doc,
+		struct dom_namednodemap *map)
+{
+	struct dom_doc_nnm *m;
+
+	for (m = doc->maps; m; m = m->next) {
+		if (m->map == map)
+			break;
+	}
+
+	if (m == NULL) {
+		/* This should never happen; we should probably abort here */
+		return;
+	}
+
+	/* Remove from list */
+	if (m->prev != NULL)
+		m->prev->next = m->next;
+	else
+		doc->maps = m->next;
+
+	if (m->next != NULL)
+		m->next->prev = m->prev;
+
+	/* And free item */
+	doc->alloc(m, 0, doc->pw);
 }
