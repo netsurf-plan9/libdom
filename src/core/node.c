@@ -5,6 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
+#include <dom/core/string.h>
+
 #include "core/document.h"
 #include "core/node.h"
 #include "utils/utils.h"

@@ -10,13 +10,26 @@
 
 #include "core/document.h"
 #include "core/node.h"
+#include "core/nodelist.h"
 #include "utils/utils.h"
+
+/**
+ * Item in list of active nodelists
+ */
+struct dom_doc_nl {
+	struct dom_nodelist *list;	/**< Nodelist */
+
+	struct dom_doc_nl *next;	/**< Next item */
+	struct dom_doc_nl *prev;	/**< Previous item */
+};
 
 /**
  * DOM document
  */
 struct dom_document {
 	struct dom_node base;		/**< Base node */
+
+	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
 
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
@@ -734,4 +747,105 @@ const uint8_t *dom_document_get_base(struct dom_document *doc)
 void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size)
 {
 	return doc->alloc(ptr, size, doc->pw);
+}
+
+/**
+ * Get a nodelist, creating one if necessary
+ *
+ * \param doc        The document to get a nodelist for
+ * \param root       Root node of subtree that list applies to
+ * \param tagname    Name of nodes in list (or NULL)
+ * \param namespace  Namespace part of nodes in list (or NULL)
+ * \param localname  Local part of nodes in list (or NULL)
+ * \param list       Pointer to location to receive list
+ * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
+ *
+ * The returned list will have its reference count increased. It is
+ * the responsibility of the caller to unref the list once it has
+ * finished with it.
+ */
+dom_exception dom_document_get_nodelist(struct dom_document *doc,
+		struct dom_node *root, struct dom_string *tagname,
+		struct dom_string *namespace, struct dom_string *localname,
+		struct dom_nodelist **list)
+{
+	struct dom_doc_nl *l;
+	dom_exception err;
+
+	for (l = doc->nodelists; l; l = l->next) {
+		if (dom_nodelist_match(l->list, root, tagname,
+				namespace, localname))
+			break;
+	}
+
+	if (l != NULL) {
+		/* Found an existing list, so use it */
+		dom_nodelist_ref(l->list);
+	} else {
+		/* No existing list */
+
+		/* Create active list entry */
+		l = doc->alloc(NULL, sizeof(struct dom_doc_nl), doc->pw);
+		if (l == NULL)
+			return DOM_NO_MEM_ERR;
+
+		/* Create nodelist */
+		err = dom_nodelist_create(doc, root, tagname, namespace,
+				localname, &l->list);
+		if (err != DOM_NO_ERR) {
+			doc->alloc(l, 0, doc->pw);
+			return err;
+		}
+
+		/* Add to document's list of active nodelists */
+		l->prev = NULL;
+		l->next = doc->nodelists;
+		if (doc->nodelists)
+			doc->nodelists->prev = l;
+		doc->nodelists = l;
+	}
+
+	/* Note: the document does not claim a reference on the nodelist
+	 * If it did, the nodelist's reference count would never reach zero,
+	 * and the list would remain indefinitely. This is not a problem as
+	 * the list notifies the document of its destruction via
+	 * dom_document_remove_nodelist.*/
+
+	*list = l->list;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Remove a nodelist from a document
+ *
+ * \param doc   The document to remove the list from
+ * \param list  The list to remove
+ */
+void dom_document_remove_nodelist(struct dom_document *doc,
+		struct dom_nodelist *list)
+{
+	struct dom_doc_nl *l;
+
+	for (l = doc->nodelists; l; l = l->next) {
+		if (l->list == list)
+			break;
+	}
+
+	if (l == NULL) {
+		/* This should never happen; we should probably abort here */
+		return;
+	}
+
+	/* Remove from list */
+	if (l->prev != NULL)
+		l->prev->next = l->next;
+	else
+		doc->nodelists = l->next;
+
+	if (l->next != NULL)
+		l->next->prev = l->prev;
+
+	/* And free item */
+	doc->alloc(l, 0, doc->pw);
 }

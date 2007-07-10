@@ -35,4 +35,10 @@ dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
 dom_exception dom_string_get_data(struct dom_string *str,
 		const uint8_t **data, size_t *len);
 
+/* Case sensitively compare two DOM strings */
+int dom_string_cmp(struct dom_string *s1, struct dom_string *s2);
+/* Case insensitively compare two DOM strings */
+int dom_string_icmp(struct dom_string *s1, struct dom_string *s2);
+
+
 #endif

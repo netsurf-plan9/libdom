@@ -5,6 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
+#include <stddef.h>
+
 #include <dom/core/attr.h>
 
 #include "core/node.h"

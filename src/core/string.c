@@ -217,3 +217,57 @@ dom_exception dom_string_get_data(struct dom_string *str,
 
 	return DOM_NO_ERR;
 }
+
+/**
+ * Case sensitively compare two DOM strings
+ *
+ * \param s1  The first string to compare
+ * \param s2  The second string to compare
+ * \return 0 if strings match, non-0 otherwise
+ */
+int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
+{
+	const uint8_t *d1, *d2;
+	size_t l1, l2;
+	dom_exception err;
+
+	err = dom_string_get_data(s1, &d1, &l1);
+	if (err != DOM_NO_ERR)
+		return 1; /* arbitrary */
+
+	err = dom_string_get_data(s2, &d2, &l2);
+	if (err != DOM_NO_ERR)
+		return 1; /* arbitrary */
+
+	if (l1 != l2)
+		return 1; /* arbitrary */
+
+	return strncmp((const char *) d1, (const char *) d2, l1);
+}
+
+/**
+ * Case insensitively compare two DOM strings
+ *
+ * \param s1  The first string to compare
+ * \param s2  The second string to compare
+ * \return 0 if strings match, non-0 otherwise
+ */
+int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
+{
+	const uint8_t *d1, *d2;
+	size_t l1, l2;
+	dom_exception err;
+
+	err = dom_string_get_data(s1, &d1, &l1);
+	if (err != DOM_NO_ERR)
+		return 1; /* arbitrary */
+
+	err = dom_string_get_data(s2, &d2, &l2);
+	if (err != DOM_NO_ERR)
+		return 1; /* arbitrary */
+
+	if (l1 != l2)
+		return 1; /* arbitrary */
+
+	return strncasecmp((const char *) d1, (const char *) d2, l1);
+}

@@ -9,9 +9,9 @@
 #define dom_internal_core_node_h_
 
 #include <dom/core/node.h>
-#include <dom/core/string.h>
 
 struct dom_attr;
+struct dom_string;
 
 /**
  * User data context attached to a DOM node

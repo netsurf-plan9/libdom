@@ -12,8 +12,24 @@
 #include <stddef.h>
 
 struct dom_document;
+struct dom_node;
+struct dom_nodelist;
+struct dom_string;
 
+/* Get base of document buffer */
 const uint8_t *dom_document_get_base(struct dom_document *doc);
+
+/* (De)allocate memory */
 void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size);
+
+/* Get a nodelist, creating one if necessary */
+dom_exception dom_document_get_nodelist(struct dom_document *doc,
+		struct dom_node *root, struct dom_string *tagname,
+		struct dom_string *namespace, struct dom_string *localname,
+		struct dom_nodelist **list);
+
+/* Remove a nodelist */
+void dom_document_remove_nodelist(struct dom_document *doc,
+		struct dom_nodelist *list);
 
 #endif
