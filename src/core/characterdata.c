@@ -8,15 +8,8 @@
 #include <dom/core/characterdata.h>
 #include <dom/core/string.h>
 
-#include "core/node.h"
+#include "core/characterdata.h"
 #include "utils/utils.h"
-
-/**
- * DOM character data node
- */
-struct dom_characterdata {
-	struct dom_node base;		/**< Base node */
-};
 
 /**
  * Retrieve data from a character data node
