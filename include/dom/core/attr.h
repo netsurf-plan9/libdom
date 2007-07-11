@@ -13,7 +13,7 @@
 #include <dom/core/exceptions.h>
 
 struct dom_element;
-struct dom_typeinfo;
+struct dom_type_info;
 struct dom_node;
 struct dom_attr;
 struct dom_string;
@@ -27,8 +27,8 @@ dom_exception dom_attr_set_value(struct dom_attr *attr,
 		struct dom_string *value);
 dom_exception dom_attr_get_owner(struct dom_attr *attr,
 		struct dom_element **result);
-dom_exception dom_attr_get_typeinfo(struct dom_attr *attr,
-		struct dom_typeinfo **result);
+dom_exception dom_attr_get_type_info(struct dom_attr *attr,
+		struct dom_type_info **result);
 dom_exception dom_attr_is_id(struct dom_attr *attr, bool *result);
 
 #endif

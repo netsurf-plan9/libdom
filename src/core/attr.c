@@ -13,7 +13,7 @@
 #include "utils/utils.h"
 
 struct dom_element;
-struct dom_typeinfo;
+struct dom_type_info;
 
 /**
  * DOM node attribute
@@ -26,7 +26,7 @@ struct dom_attr {
 
 	struct dom_element *owner;	/**< Owning element */
 
-	struct dom_typeinfo *schema_type_info;	/**< Type information */
+	struct dom_type_info *schema_type_info;	/**< Type information */
 
 	bool is_id;			/**< Attribute is of type ID */
 };
@@ -132,11 +132,11 @@ dom_exception dom_attr_get_owner(struct dom_attr *attr,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  *
- * The returned typeinfo will have its reference count increased. The caller
+ * The returned type info will have its reference count increased. The caller
  * should unref it once it has finished with it.
  */
-dom_exception dom_attr_get_typeinfo(struct dom_attr *attr,
-		struct dom_typeinfo **result)
+dom_exception dom_attr_get_type_info(struct dom_attr *attr,
+		struct dom_type_info **result)
 {
 	UNUSED(attr);
 	UNUSED(result);
