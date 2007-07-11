@@ -27,7 +27,7 @@ dom_exception dom_attr_set_value(struct dom_attr *attr,
 		struct dom_string *value);
 dom_exception dom_attr_get_owner(struct dom_attr *attr,
 		struct dom_element **result);
-dom_exception dom_attr_get_type_info(struct dom_attr *attr,
+dom_exception dom_attr_get_schema_type_info(struct dom_attr *attr,
 		struct dom_type_info **result);
 dom_exception dom_attr_is_id(struct dom_attr *attr, bool *result);
 

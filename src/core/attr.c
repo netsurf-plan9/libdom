@@ -135,7 +135,7 @@ dom_exception dom_attr_get_owner(struct dom_attr *attr,
  * The returned type info will have its reference count increased. The caller
  * should unref it once it has finished with it.
  */
-dom_exception dom_attr_get_type_info(struct dom_attr *attr,
+dom_exception dom_attr_get_schema_type_info(struct dom_attr *attr,
 		struct dom_type_info **result)
 {
 	UNUSED(attr);
