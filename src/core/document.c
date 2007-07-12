@@ -9,6 +9,7 @@
 #include <dom/core/document.h>
 
 #include "core/document.h"
+#include "core/namednodemap.h"
 #include "core/node.h"
 #include "core/nodelist.h"
 #include "utils/utils.h"
@@ -866,8 +867,8 @@ void dom_document_remove_nodelist(struct dom_document *doc,
  * Get a namednodemap, creating one if necessary
  *
  * \param doc   The document to get a namednodemap for
- * \param root  Node containing items in map
- * \param type  The type of map
+ * \param head  Start of list containing items in map
+ * \param type  The type of items in map
  * \param map   Pointer to location to receive map
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
  *
@@ -876,14 +877,14 @@ void dom_document_remove_nodelist(struct dom_document *doc,
  * finished with it.
  */
 dom_exception dom_document_get_namednodemap(struct dom_document *doc,
-		struct dom_node *root, dom_namednodemap_type type,
+		struct dom_node *head, dom_node_type type,
 		struct dom_namednodemap **map)
 {
 	struct dom_doc_nnm *m;
 	dom_exception err;
 
 	for (m = doc->maps; m; m = m->next) {
-		if (dom_namednodemap_match(m->map, root, type))
+		if (dom_namednodemap_match(m->map, head, type))
 			break;
 	}
 
@@ -899,7 +900,7 @@ dom_exception dom_document_get_namednodemap(struct dom_document *doc,
 			return DOM_NO_MEM_ERR;
 
 		/* Create namednodemap */
-		err = dom_namednodemap_create(doc, root, type, &m->map);
+		err = dom_namednodemap_create(doc, head, type, &m->map);
 		if (err != DOM_NO_ERR) {
 			doc->alloc(m, 0, doc->pw);
 			return err;

@@ -18,9 +18,9 @@
 struct dom_namednodemap {
 	struct dom_document *owner;	/**< Owning document */
 
-	struct dom_node *root;		/**< Node containing items in map */
+	struct dom_node *head;		/**< Start of item list */
 
-	dom_namednodemap_type type;	/**< Type of map */
+	dom_node_type type;		/**< Type of items in map */
 
 	uint32_t refcnt;		/**< Reference count */
 };
@@ -29,24 +29,24 @@ struct dom_namednodemap {
  * Create a namednodemap
  *
  * \param doc  The owning document
- * \param root  Node containing items in map
- * \param type  The type of map
+ * \param head  Start of list containing items in map
+ * \param type  The type of items in the map
  * \param map   Pointer to location to receive created map
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  *
- * ::root must be a node owned by ::doc and must be either an Element or
+ * ::head must be a node owned by ::doc and must be either an Element or
  * DocumentType node.
  *
- * If ::root is of type Element, ::type must be DOM_NAMEDNODEMAP_ATTRIBUTES
- * If ::root is of type DocumentType, ::type may be either
- * DOM_NAMEDNODEMAP_ENTITIES or DOM_NAMEDNODEMAP_NOTATIONS.
+ * If ::head is of type Element, ::type must be DOM_ATTRIBUTE_NODE
+ * If ::head is of type DocumentType, ::type may be either
+ * DOM_ENTITY_NODE or DOM_NOTATION_NODE.
  *
  * The returned map will already be referenced, so the client need not
  * explicitly reference it. The client must unref the map once it is
  * finished with it.
  */
 dom_exception dom_namednodemap_create(struct dom_document *doc,
-		struct dom_node *root, dom_namednodemap_type type,
+		struct dom_node *head, dom_node_type type,
 		struct dom_namednodemap **map)
 {
 	struct dom_namednodemap *m;
@@ -58,8 +58,8 @@ dom_exception dom_namednodemap_create(struct dom_document *doc,
 	dom_node_ref((struct dom_node *) doc);
 	m->owner = doc;
 
-	dom_node_ref(root);
-	m->root = root;
+	dom_node_ref(head);
+	m->head = head;
 
 	m->type = type;
 
@@ -93,7 +93,7 @@ void dom_namednodemap_unref(struct dom_namednodemap *map)
 	if (--map->refcnt == 0) {
 		struct dom_node *owner = (struct dom_node *) map->owner;
 
-		dom_node_unref(map->root);
+		dom_node_unref(map->head);
 
 		/* Remove map from document */
 		dom_document_remove_namednodemap(map->owner, map);
@@ -330,15 +330,15 @@ dom_exception dom_namednodemap_remove_named_item_ns(
 /**
  * Match a namednodemap instance against a set of creation parameters
  *
- * \param map  The map to match
- * \param root  Node containing items in map
- * \param type  The type of map
+ * \param map   The map to match
+ * \param head  Start of list containing items in map
+ * \param type  The type of items in the map
  * \return true if list matches, false otherwise
  */
 bool dom_namednodemap_match(struct dom_namednodemap *map,
-		struct dom_node *root, dom_namednodemap_type type)
+		struct dom_node *head, dom_node_type type)
 {
-	if (map->root == root && map->type == type)
+	if (map->head == head && map->type == type)
 		return true;
 
 	return false;

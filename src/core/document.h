@@ -11,7 +11,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 
-#include "core/namednodemap.h"
+#include <dom/core/node.h>
 
 struct dom_document;
 struct dom_namednodemap;
@@ -36,7 +36,7 @@ void dom_document_remove_nodelist(struct dom_document *doc,
 
 /* Get a namednodemap, creating one if necessary */
 dom_exception dom_document_get_namednodemap(struct dom_document *doc,
-		struct dom_node *root, dom_namednodemap_type type,
+		struct dom_node *head, dom_node_type type,
 		struct dom_namednodemap **map);
 /* Remove a namednodemap */
 void dom_document_remove_namednodemap(struct dom_document *doc,
