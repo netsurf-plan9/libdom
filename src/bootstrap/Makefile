@@ -21,55 +21,33 @@
 # Manipulate include paths
 CFLAGS += -I$(CURDIR)
 
-# Release output
-RELEASE = ${TOP}/${COMPONENT}.a
-
-# Debug output
-DEBUG = ${TOP}/${COMPONENT}-debug.a
-
 # Objects
-OBJS = 
+OBJS = implregistry
 
 .PHONY: clean debug distclean export release setup test
 
 # Targets
-release: $(addprefix Release/, $(addsuffix .o, $(OBJS)))
-	@${MAKE} -C bootstrap release
-	@${MAKE} -C core release
-	@${AR} ${ARFLAGS} $(RELEASE) Release/*
+release: $(addprefix ../Release/, $(addsuffix .o, $(OBJS)))
 
-debug: $(addprefix Debug/, $(addsuffix .o, $(OBJS)))
-	@${MAKE} -C bootstrap debug
-	@${MAKE} -C core debug
-	@${AR} ${ARFLAGS} $(DEBUG) Debug/*
+debug: $(addprefix ../Debug/, $(addsuffix .o, $(OBJS)))
 
 clean:
-	@${MAKE} -C bootstrap clean
-	@${MAKE} -C core clean
-ifneq (${OBJS}, )
-	-@${RM} ${RMFLAGS} $(addprefix Release/, $(addsuffix .o, ${OBJS}))
-	-@${RM} ${RMFLAGS} $(addprefix Debug/, $(addsuffix .o, ${OBJS}))
-endif
-	-@${RM} ${RMFLAGS} $(RELEASE) $(DEBUG)
+	-@${RM} ${RMFLAGS} $(addprefix ../Release/, $(addsuffix .o, ${OBJS}))
+	-@${RM} ${RMFLAGS} $(addprefix ../Debug/, $(addsuffix .o, ${OBJS}))  
 
 distclean:
-	-@${RM} ${RMFLAGS} -r Release
-	-@${RM} ${RMFLAGS} -r Debug
 
 setup:
-	@${MKDIR} ${MKDIRFLAGS} Release
-	@${MKDIR} ${MKDIRFLAGS} Debug
 
 export:
-	@${CP} ${CPFLAGS} $(RELEASE) ${EXPORT}/lib/
 
 test:
 
 # Pattern rules
-Release/%.o: %.c
+../Release/%.o: %.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
 	@${CC} -c ${CFLAGS} -DNDEBUG -o $@ $<
 
-Debug/%.o: %.c
+../Debug/%.o: %.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
 	@${CC} -c -g ${CFLAGS} -o $@ $<
