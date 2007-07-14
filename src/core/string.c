@@ -24,8 +24,10 @@
 struct dom_string {
 	enum { DOM_STRING_PTR,
 	       DOM_STRING_CONST_PTR,
-	       DOM_STRING_OFFSET
+	       DOM_STRING_OFFSET,
+	       DOM_STRING_PTR_NODOC
 	} type;				/**< String type */
+
 	union {
 		uint8_t *ptr;
 		const uint8_t *cptr;
@@ -34,7 +36,14 @@ struct dom_string {
 
 	size_t len;			/**< Byte length of string */
 
-	struct dom_document *doc;	/**< Owning document */
+	union {
+		struct dom_document *doc;	/**< Owning document */
+		struct {
+			dom_alloc alloc;	/**< Memory (de)allocation
+						 * function */
+			void *pw;	/**< Client-specific data */
+		} nodoc;
+	} ctx;				/**< Allocation context */
 
 	uint32_t refcnt;		/**< Reference count */
 };
@@ -60,10 +69,19 @@ void dom_string_ref(struct dom_string *str)
 void dom_string_unref(struct dom_string *str)
 {
 	if (--str->refcnt == 0) {
-		if (str->type == DOM_STRING_PTR)
-			dom_document_alloc(str->doc, str->data.ptr, 0);
+		if (str->type == DOM_STRING_PTR_NODOC) {
+			str->ctx.nodoc.alloc(str->data.ptr, 0,
+					str->ctx.nodoc.pw);
 
-		dom_document_alloc(str->doc, str, 0);
+			str->ctx.nodoc.alloc(str, 0, str->ctx.nodoc.pw);
+		} else {
+			if (str->type == DOM_STRING_PTR) {
+				dom_document_alloc(str->ctx.doc,
+						str->data.ptr, 0);
+			}
+
+			dom_document_alloc(str->ctx.doc, str, 0);
+		}
 	}
 }
 
@@ -94,7 +112,7 @@ dom_exception dom_string_create_from_off(struct dom_document *doc,
 
 	ret->len = len;
 
-	ret->doc = doc;
+	ret->ctx.doc = doc;
 
 	ret->refcnt = 1;
 
@@ -139,7 +157,7 @@ dom_exception dom_string_create_from_ptr(struct dom_document *doc,
 
 	ret->len = len;
 
-	ret->doc = doc;
+	ret->ctx.doc = doc;
 
 	ret->refcnt = 1;
 
@@ -178,7 +196,55 @@ dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
 
 	ret->len = len;
 
-	ret->doc = doc;
+	ret->ctx.doc = doc;
+
+	ret->refcnt = 1;
+
+	*str = ret;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Create a DOM string from a string of characters that does not belong
+ * to a document
+ *
+ * \param alloc  Memory (de)allocation function
+ * \param pw     Pointer to client-specific private data
+ * \param ptr    Pointer to string of characters
+ * \param len    Length, in bytes, of string of characters
+ * \param str    Pointer to location to receive result
+ * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
+ *
+ * The returned string will already be referenced, so there is no need
+ * to explicitly reference it.
+ *
+ * The string of characters passed in will be copied for use by the
+ * returned DOM string.
+ */
+dom_exception dom_string_create_from_ptr_no_doc(dom_alloc alloc, void *pw,
+		const uint8_t *ptr, size_t len, struct dom_string **str)
+{
+	struct dom_string *ret;
+
+	ret = alloc(NULL, sizeof(struct dom_string), pw);
+	if (ret == NULL)
+		return DOM_NO_MEM_ERR;
+
+	ret->data.ptr = alloc(NULL, len, pw);
+	if (ret->data.ptr == NULL) {
+		alloc(ret, 0, pw);
+		return DOM_NO_MEM_ERR;
+	}
+
+	ret->type = DOM_STRING_PTR_NODOC;
+
+	memcpy(ret->data.ptr, ptr, len);
+
+	ret->len = len;
+
+	ret->ctx.nodoc.alloc = alloc;
+	ret->ctx.nodoc.pw = pw;
 
 	ret->refcnt = 1;
 
@@ -209,7 +275,11 @@ dom_exception dom_string_get_data(struct dom_string *str,
 		*data = str->data.cptr;
 		break;
 	case DOM_STRING_OFFSET:
-		*data = dom_document_get_base(str->doc) + str->data.offset;
+		*data = dom_document_get_base(str->ctx.doc) +
+				str->data.offset;
+		break;
+	case DOM_STRING_PTR_NODOC:
+		*data = str->data.ptr;
 		break;
 	}
 

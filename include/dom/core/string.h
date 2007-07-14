@@ -11,6 +11,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 
+#include <dom/functypes.h>
 #include <dom/core/exceptions.h>
 
 struct dom_document;
@@ -29,6 +30,10 @@ dom_exception dom_string_create_from_ptr(struct dom_document *doc,
 		const uint8_t *ptr, size_t len, struct dom_string **str);
 /* Create a DOM string from a constant string of characters */
 dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
+		const uint8_t *ptr, size_t len, struct dom_string **str);
+/* Create a DOM string from a string of characters that does not belong
+ * to a document */
+dom_exception dom_string_create_from_ptr_no_doc(dom_alloc alloc, void *pw,
 		const uint8_t *ptr, size_t len, struct dom_string **str);
 
 /* Get a pointer to the string of characters within a DOM string */
