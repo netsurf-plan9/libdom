@@ -17,6 +17,13 @@
 #include "xmlparser.h"
 #include "utils.h"
 
+static void xml_parser_start_document(void *ctx);
+static void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
+		const xmlChar *prefix, const xmlChar *URI,
+		int nb_namespaces, const xmlChar **namespaces,
+		int nb_attributes, int nb_defaulted,
+		const xmlChar **attributes);
+
 /**
  * XML parser object
  */
@@ -34,44 +41,40 @@ struct xml_parser {
 /**
  * SAX callback dispatch table
  */
-static xmlSAXHandler sax_handler;
-#if 0
- = {
-    internalSubsetSAXFunc internalSubset;
-    isStandaloneSAXFunc isStandalone;
-    hasInternalSubsetSAXFunc hasInternalSubset;
-    hasExternalSubsetSAXFunc hasExternalSubset;
-    resolveEntitySAXFunc resolveEntity;
-    getEntitySAXFunc getEntity;
-    entityDeclSAXFunc entityDecl;
-    notationDeclSAXFunc notationDecl;
-    attributeDeclSAXFunc attributeDecl;
-    elementDeclSAXFunc elementDecl;
-    unparsedEntityDeclSAXFunc unparsedEntityDecl;
-    setDocumentLocatorSAXFunc setDocumentLocator;
-    startDocumentSAXFunc startDocument;
-    endDocumentSAXFunc endDocument;
-    startElementSAXFunc startElement;
-    endElementSAXFunc endElement;
-    referenceSAXFunc reference;
-    charactersSAXFunc characters;
-    ignorableWhitespaceSAXFunc ignorableWhitespace;
-    processingInstructionSAXFunc processingInstruction;
-    commentSAXFunc comment;
-    warningSAXFunc warning;
-    errorSAXFunc error;
-    fatalErrorSAXFunc fatalError; /* unused error() get all the errors */
-    getParameterEntitySAXFunc getParameterEntity;
-    cdataBlockSAXFunc cdataBlock;
-    externalSubsetSAXFunc externalSubset;
-    unsigned int initialized;
-    /* The following fields are extensions available only on version 2 */
-    void *_private;
-    startElementNsSAX2Func startElementNs;
-    endElementNsSAX2Func endElementNs;
-    xmlStructuredErrorFunc serror;
+static xmlSAXHandler sax_handler = {
+	.internalSubset = xmlSAX2InternalSubset,
+	.isStandalone = xmlSAX2IsStandalone,
+	.hasInternalSubset = xmlSAX2HasInternalSubset,
+	.hasExternalSubset = xmlSAX2HasExternalSubset,
+	.resolveEntity = xmlSAX2ResolveEntity,
+	.getEntity = xmlSAX2GetEntity,
+	.entityDecl = xmlSAX2EntityDecl,
+	.notationDecl = xmlSAX2NotationDecl,
+	.attributeDecl = xmlSAX2AttributeDecl,
+	.elementDecl = xmlSAX2ElementDecl,
+	.unparsedEntityDecl = xmlSAX2UnparsedEntityDecl,
+	.setDocumentLocator = xmlSAX2SetDocumentLocator,
+	.startDocument = xml_parser_start_document,
+	.endDocument = xmlSAX2EndDocument,
+	.startElement = NULL,
+	.endElement = NULL,
+	.reference = xmlSAX2Reference,
+	.characters = xmlSAX2Characters,
+	.ignorableWhitespace = xmlSAX2Characters,
+	.processingInstruction = NULL,
+	.comment = xmlSAX2Comment,
+	.warning = xmlParserWarning,
+	.error = xmlParserError,
+	.fatalError = xmlParserError,
+	.getParameterEntity = xmlSAX2GetParameterEntity,
+	.cdataBlock = xmlSAX2CDataBlock,
+	.externalSubset = xmlSAX2ExternalSubset,
+	.initialized = XML_SAX2_MAGIC,
+	._private = NULL,
+	.startElementNs = xml_parser_start_element_ns,
+	.endElementNs = xmlSAX2EndElementNs,
+	.serror = NULL,
 };
-#endif
 
 /**
  * Create an XML parser instance
@@ -185,3 +188,107 @@ struct dom_document *xml_parser_get_document(xml_parser *parser)
 {
 	return (parser->complete ? parser->doc : NULL);
 }
+
+/**
+ * Handle a document start SAX event
+ *
+ * \param ctx  The callback context
+ */
+void xml_parser_start_document(void *ctx)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+	struct dom_implementation *impl;
+	struct dom_string *features, *udkey;
+	struct dom_document *doc;
+	void *ignored;
+	dom_exception err;
+
+	/* Invoke libxml2's default behaviour */
+	xmlSAX2StartDocument(parser->xml_ctx);
+
+	/* Create a string representation of the features we want */
+	err = dom_string_create_from_ptr_no_doc((dom_alloc) parser->alloc,
+			parser->pw, (const uint8_t *) "XML", SLEN("XML"),
+			&features);
+	if (err != DOM_NO_ERR)
+		return;
+
+	/* Now, try to get an appropriate implementation from the registry */
+	err = dom_implregistry_get_dom_implementation(features, &impl,
+			(dom_alloc) parser->alloc, parser->pw);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(features);
+		return;
+	}
+
+	/* No longer need the features string */
+	dom_string_unref(features);
+
+	/* Attempt to create a document */
+	err = dom_implementation_create_document(impl, /* namespace */ NULL,
+			/* qname */ NULL, /* doctype */ NULL,
+			&doc, (dom_alloc) parser->alloc, parser->pw);
+	if (err != DOM_NO_ERR) {
+		dom_implementation_unref(impl);
+		return;
+	}
+
+	/* No longer need the implementation */
+	dom_implementation_unref(impl);
+
+	/* Create key for user data registration */
+	err = dom_string_create_from_const_ptr(doc,
+			(const uint8_t *) "__xmlnode", SLEN("__xmlnode"),
+			&udkey);
+	if (err != DOM_NO_ERR)
+		return;
+
+	/* Register xmlNode as userdata for document */
+	err = dom_node_set_user_data((struct dom_node *) doc,
+			udkey, parser->xml_ctx->myDoc, NULL, &ignored);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(udkey);
+		return;
+	}
+
+	/* No longer need the key */
+	dom_string_unref(udkey);
+
+	/* Register the DOM node with the xmlNode */
+	dom_node_ref((struct dom_node *) doc);
+	parser->xml_ctx->myDoc->_private = doc;
+
+	/* And squirrel the document away for later use */
+	parser->doc = doc;
+}
+
+/**
+ * Handle an element open SAX event
+ *
+ * \param ctx            The callback context
+ * \param localname      The local name of the element
+ * \param prefix         The element namespace prefix
+ * \param URI            The element namespace URI
+ * \param nb_namespaces  The number of namespace definitions
+ * \param namespaces     Array of nb_namespaces prefix/URI pairs
+ * \param nb_attributes  The number of attributes
+ * \param nb_defaulted   The number of defaulted attributes
+ * \param attributes     Array of [nb_attributes + nb_defaulted] attribute
+ *                       values
+ */
+void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
+		const xmlChar *prefix, const xmlChar *URI,
+		int nb_namespaces, const xmlChar **namespaces,
+		int nb_attributes, int nb_defaulted,
+		const xmlChar **attributes)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	/* Invoke libxml2's default behaviour */
+	xmlSAX2StartElementNs(parser->xml_ctx, localname, prefix, URI,
+			nb_namespaces, namespaces, nb_attributes,
+			nb_defaulted, attributes);
+
+	/** \todo mirror the xml tree in the DOM */
+}
+
