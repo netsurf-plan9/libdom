@@ -104,7 +104,7 @@ void dom_node_unref(struct dom_node *node)
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_node_get_name(struct dom_node *node,
+dom_exception dom_node_get_node_name(struct dom_node *node,
 		struct dom_string **result)
 {
 	UNUSED(node);
@@ -127,7 +127,7 @@ dom_exception dom_node_get_name(struct dom_node *node,
  * DOM3Core states that this can raise DOMSTRING_SIZE_ERR. It will not in
  * this implementation; dom_strings are unbounded.
  */
-dom_exception dom_node_get_value(struct dom_node *node,
+dom_exception dom_node_get_node_value(struct dom_node *node,
 		struct dom_string **result)
 {
 	UNUSED(node);
@@ -149,7 +149,7 @@ dom_exception dom_node_get_value(struct dom_node *node,
  * should unref it after the call (as the caller should have already claimed
  * a reference on the string). The node's existing value will be unrefed.
  */
-dom_exception dom_node_set_value(struct dom_node *node,
+dom_exception dom_node_set_node_value(struct dom_node *node,
 		struct dom_string *value)
 {
 	UNUSED(node);
@@ -165,7 +165,7 @@ dom_exception dom_node_set_value(struct dom_node *node,
  * \param result  Pointer to location to receive node type
  * \return DOM_NO_ERR.
  */
-dom_exception dom_node_get_type(struct dom_node *node, dom_node_type *result)
+dom_exception dom_node_get_node_type(struct dom_node *node, dom_node_type *result)
 {
 	*result = node->type;
 

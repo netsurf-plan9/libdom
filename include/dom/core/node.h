@@ -71,13 +71,13 @@ typedef enum {
 void dom_node_ref(struct dom_node *node);
 void dom_node_unref(struct dom_node *node);
 
-dom_exception dom_node_get_name(struct dom_node *node,
+dom_exception dom_node_get_node_name(struct dom_node *node,
 		struct dom_string **result);
-dom_exception dom_node_get_value(struct dom_node *node,
+dom_exception dom_node_get_node_value(struct dom_node *node,
 		struct dom_string **result);
-dom_exception dom_node_set_value(struct dom_node *node,
+dom_exception dom_node_set_node_value(struct dom_node *node,
 		struct dom_string *value);
-dom_exception dom_node_get_type(struct dom_node *node,
+dom_exception dom_node_get_node_type(struct dom_node *node,
 		dom_node_type *result);
 dom_exception dom_node_get_parent(struct dom_node *node,
 		struct dom_node **result);
