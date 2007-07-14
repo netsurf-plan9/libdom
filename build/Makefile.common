@@ -11,29 +11,35 @@ export TOP = $(CURDIR)
 
 # Rules
 release: setup
+	@$(MAKE) $(MAKEFLAGS) -C bindings release
 	@$(MAKE) $(MAKEFLAGS) -C src release
 
 debug: setup
+	@$(MAKE) $(MAKEFLAGS) -C bindings debug
 	@$(MAKE) $(MAKEFLAGS) -C src debug
 
 test: debug
 	@$(MAKE) $(MAKEFLAGS) -C test test
 
 clean:
+	@$(MAKE) $(MAKEFLAGS) -C bindings clean
 	@$(MAKE) $(MAKEFLAGS) -C src clean
 	@$(MAKE) $(MAKEFLAGS) -C test clean
 
 setup:
+	@$(MAKE) $(MAKEFLAGS) -C bindings setup
 	@$(MAKE) $(MAKEFLAGS) -C src setup
 	@$(MAKE) $(MAKEFLAGS) -C test setup
 
 export: release
 	@$(MKDIR) $(MKDIRFLAGS) $(TOP)/dist/lib
 	@$(CP) $(CPFLAGS) -r include $(EXPORT)/
+	@$(MAKE) $(MAKEFLAGS) -C bindings export
 	@$(MAKE) $(MAKEFLAGS) -C src export
 	@$(MAKE) $(MAKEFLAGS) -C test export
 
 distclean: clean
 	-@$(RM) $(RMFLAGS) -r $(TOP)/dist
+	@$(MAKE) $(MAKEFLAGS) -C bindings distclean
 	@$(MAKE) $(MAKEFLAGS) -C src distclean
 	@$(MAKE) $(MAKEFLAGS) -C test distclean

@@ -1,0 +1,35 @@
+LibXML binding for libdom
+=========================
+
+Overview
+--------
+
+  This is an example binding of libxml2 to libdom. It consists of two,
+  orthogonal, parts:
+  
+    1) libxml push parser wrapper
+    2) libxml-specific DOMImplementationSource for libdom
+
+Push parser wrapper
+-------------------
+
+  This is a wrapper around libxml's push parser API, to facilitate
+  construction of a libdom DOM tree. The basic premise is that the wrapper
+  intercepts the SAX events emitted by libxml's tokeniser then invokes 
+  libxml's own SAX handlers, wrapping the results up in libdom-specific
+  data structures.
+
+  The tree created is thus a tree of libdom nodes, each of which is linked
+  to the libxml node that backs it. This allows the binding to process the
+  DOM tree using libxml api, should it need to (e.g. for normalization
+  purposes).
+
+DOMImplementationSource
+-----------------------
+
+  The DOMImplementationSource exposes the APIs needed to create a new
+  document based upon the libxml binding. It also provides the utility
+  functions that libdom uses when performing some operations (such as
+  document normalization). This is needed as libdom is document language
+  agnostic; therefore, it requires support from the binding to perform
+  some operations.
