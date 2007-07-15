@@ -6,6 +6,7 @@
  */
 
 #include <stdbool.h>
+#include <stdio.h>
 
 #include <libxml/parser.h>
 #include <libxml/SAX2.h>
@@ -30,6 +31,37 @@ static void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 static void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child);
 
+static void xml_parser_internal_subset(void *ctx, const xmlChar *name,
+		const xmlChar *ExternalID, const xmlChar *SystemID);
+static int xml_parser_is_standalone(void *ctx);
+static int xml_parser_has_internal_subset(void *ctx);
+static int xml_parser_has_external_subset(void *ctx);
+static xmlParserInputPtr xml_parser_resolve_entity(void *ctx,
+		const xmlChar *publicId, const xmlChar *systemId);
+static xmlEntityPtr xml_parser_get_entity(void *ctx, const xmlChar *name);
+static void xml_parser_entity_decl(void *ctx, const xmlChar *name,
+		int type, const xmlChar *publicId, const xmlChar *systemId,
+		xmlChar *content);
+static void xml_parser_notation_decl(void *ctx, const xmlChar *name,
+		const xmlChar *publicId, const xmlChar *systemId);
+static void xml_parser_attribute_decl(void *ctx, const xmlChar *elem,
+		const xmlChar *fullname, int type, int def,
+		const xmlChar *defaultValue, xmlEnumerationPtr tree);
+static void xml_parser_element_decl(void *ctx, const xmlChar *name,
+		int type, xmlElementContentPtr content);
+static void xml_parser_unparsed_entity_decl(void *ctx, const xmlChar *name,
+		const xmlChar *publicId, const xmlChar *systemId,
+		const xmlChar *notationName);
+static void xml_parser_set_document_locator(void *ctx, xmlSAXLocatorPtr loc);
+static void xml_parser_reference(void *ctx, const xmlChar *name);
+static void xml_parser_characters(void *ctx, const xmlChar *ch, int len);
+static void xml_parser_comment(void *ctx, const xmlChar *value);
+static xmlEntityPtr xml_parser_get_parameter_entity(void *ctx,
+		const xmlChar *name);
+static void xml_parser_cdata_block(void *ctx, const xmlChar *value, int len);
+static void xml_parser_external_subset(void *ctx, const xmlChar *name,
+		const xmlChar *ExternalID, const xmlChar *SystemID);
+
 /**
  * XML parser object
  */
@@ -48,38 +80,38 @@ struct xml_parser {
  * SAX callback dispatch table
  */
 static xmlSAXHandler sax_handler = {
-	.internalSubset = xmlSAX2InternalSubset,
-	.isStandalone = xmlSAX2IsStandalone,
-	.hasInternalSubset = xmlSAX2HasInternalSubset,
-	.hasExternalSubset = xmlSAX2HasExternalSubset,
-	.resolveEntity = xmlSAX2ResolveEntity,
-	.getEntity = xmlSAX2GetEntity,
-	.entityDecl = xmlSAX2EntityDecl,
-	.notationDecl = xmlSAX2NotationDecl,
-	.attributeDecl = xmlSAX2AttributeDecl,
-	.elementDecl = xmlSAX2ElementDecl,
-	.unparsedEntityDecl = xmlSAX2UnparsedEntityDecl,
-	.setDocumentLocator = xmlSAX2SetDocumentLocator,
+	.internalSubset = xml_parser_internal_subset,
+	.isStandalone = xml_parser_is_standalone,
+	.hasInternalSubset = xml_parser_has_internal_subset,
+	.hasExternalSubset = xml_parser_has_external_subset,
+	.resolveEntity = xml_parser_resolve_entity,
+	.getEntity = xml_parser_get_entity,
+	.entityDecl = xml_parser_entity_decl,
+	.notationDecl = xml_parser_notation_decl,
+	.attributeDecl = xml_parser_attribute_decl,
+	.elementDecl = xml_parser_element_decl,
+	.unparsedEntityDecl = xml_parser_unparsed_entity_decl,
+	.setDocumentLocator = xml_parser_set_document_locator,
 	.startDocument = xml_parser_start_document,
 	.endDocument = xml_parser_end_document,
 	.startElement = NULL,
 	.endElement = NULL,
-	.reference = xmlSAX2Reference,
-	.characters = xmlSAX2Characters,
-	.ignorableWhitespace = xmlSAX2Characters,
+	.reference = xml_parser_reference,
+	.characters = xml_parser_characters,
+	.ignorableWhitespace = xml_parser_characters,
 	.processingInstruction = NULL,
-	.comment = xmlSAX2Comment,
-	.warning = xmlParserWarning,
-	.error = xmlParserError,
-	.fatalError = xmlParserError,
-	.getParameterEntity = xmlSAX2GetParameterEntity,
-	.cdataBlock = xmlSAX2CDataBlock,
-	.externalSubset = xmlSAX2ExternalSubset,
+	.comment = xml_parser_comment,
+	.warning = NULL,
+	.error = NULL,
+	.fatalError = NULL,
+	.getParameterEntity = xml_parser_get_parameter_entity,
+	.cdataBlock = xml_parser_cdata_block,
+	.externalSubset = xml_parser_external_subset,
 	.initialized = XML_SAX2_MAGIC,
 	._private = NULL,
 	.startElementNs = xml_parser_start_element_ns,
 	.endElementNs = xml_parser_end_element_ns,
-	.serror = NULL,
+	.serror = NULL
 };
 
 /**
@@ -108,8 +140,7 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 		return NULL;
 
 	parser->xml_ctx =
-		xmlCreatePushParserCtxt(&sax_handler, parser, "", 0,
-				NULL);
+		xmlCreatePushParserCtxt(&sax_handler, parser, "", 0, NULL);
 	if (parser->xml_ctx == NULL) {
 		alloc(parser, 0, pw);
 		return NULL;
@@ -284,6 +315,10 @@ void xml_parser_end_document(void *ctx)
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2EndDocument(parser->xml_ctx);
 
+	/* If there is no document, we can't do anything */
+	if (parser->doc == NULL)
+		return;
+
 	/* We need to mirror any child nodes at the end of the list of
 	 * children which occur after the last Element node in the list */
 
@@ -356,6 +391,10 @@ void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
 			nb_namespaces, namespaces, nb_attributes,
 			nb_defaulted, attributes);
 
+	/* If there is no document, we can't do anything */
+	if (parser->doc == NULL)
+		return;
+
 	if (parent == NULL) {
 		/* No parent; use document */
 		parent = (xmlNodePtr) parser->xml_ctx->myDoc;
@@ -416,6 +455,10 @@ void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2EndElementNs(parser->xml_ctx, localname, prefix, URI);
 
+	/* If there is no document, we can't do anything */
+	if (parser->doc == NULL)
+		return;
+
 	/* We need to mirror any child nodes at the end of the list of
 	 * children which occur after the last Element node in the list */
 
@@ -452,7 +495,161 @@ void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 {
 	UNUSED(parser);
 	UNUSED(parent);
-	UNUSED(child);
 
-	/** \todo implement */
+	switch (child->type) {
+	case XML_ELEMENT_NODE:
+	case XML_TEXT_NODE:
+	case XML_CDATA_SECTION_NODE:
+	case XML_PI_NODE:
+	case XML_COMMENT_NODE:
+	case XML_DOCUMENT_NODE:
+	case XML_DOCUMENT_TYPE_NODE:
+	case XML_NOTATION_NODE:
+	case XML_DTD_NODE:
+	default:
+		fprintf(stderr, "Unsupported node type: %d\n", child->type);
+	}
+}
+
+/*                                                                         */
+/* ------------------------------------------------------------------------*/
+/*                                                                         */
+void xml_parser_internal_subset(void *ctx, const xmlChar *name,
+		const xmlChar *ExternalID, const xmlChar *SystemID)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2InternalSubset(parser->xml_ctx, name, ExternalID, SystemID);
+}
+
+int xml_parser_is_standalone(void *ctx)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	return xmlSAX2IsStandalone(parser->xml_ctx);
+}
+
+int xml_parser_has_internal_subset(void *ctx)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	return xmlSAX2HasInternalSubset(parser->xml_ctx);
+}
+
+int xml_parser_has_external_subset(void *ctx)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	return xmlSAX2HasExternalSubset(parser->xml_ctx);
+}
+
+xmlParserInputPtr xml_parser_resolve_entity(void *ctx,
+		const xmlChar *publicId, const xmlChar *systemId)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	return xmlSAX2ResolveEntity(parser->xml_ctx, publicId, systemId);
+}
+
+xmlEntityPtr xml_parser_get_entity(void *ctx, const xmlChar *name)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	return xmlSAX2GetEntity(parser->xml_ctx, name);
+}
+
+void xml_parser_entity_decl(void *ctx, const xmlChar *name,
+		int type, const xmlChar *publicId, const xmlChar *systemId,
+		xmlChar *content)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2EntityDecl(parser->xml_ctx, name, type, publicId, systemId,
+			content);
+}
+
+void xml_parser_notation_decl(void *ctx, const xmlChar *name,
+		const xmlChar *publicId, const xmlChar *systemId)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2NotationDecl(parser->xml_ctx, name, publicId, systemId);
+}
+
+void xml_parser_attribute_decl(void *ctx, const xmlChar *elem,
+		const xmlChar *fullname, int type, int def,
+		const xmlChar *defaultValue, xmlEnumerationPtr tree)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2AttributeDecl(parser->xml_ctx, elem, fullname, type, def,
+			defaultValue, tree);
+}
+
+void xml_parser_element_decl(void *ctx, const xmlChar *name,
+		int type, xmlElementContentPtr content)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2ElementDecl(parser->xml_ctx, name, type, content);
+}
+
+void xml_parser_unparsed_entity_decl(void *ctx, const xmlChar *name,
+		const xmlChar *publicId, const xmlChar *systemId,
+		const xmlChar *notationName)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2UnparsedEntityDecl(parser->xml_ctx, name, publicId,
+			systemId, notationName);
+}
+
+void xml_parser_set_document_locator(void *ctx, xmlSAXLocatorPtr loc)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2SetDocumentLocator(parser->xml_ctx, loc);
+}
+
+void xml_parser_reference(void *ctx, const xmlChar *name)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2Reference(parser->xml_ctx, name);
+}
+
+void xml_parser_characters(void *ctx, const xmlChar *ch, int len)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2Characters(parser->xml_ctx, ch, len);
+}
+
+void xml_parser_comment(void *ctx, const xmlChar *value)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2Comment(parser->xml_ctx, value);
+}
+
+xmlEntityPtr xml_parser_get_parameter_entity(void *ctx, const xmlChar *name)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	return xmlSAX2GetParameterEntity(parser->xml_ctx, name);
+}
+
+void xml_parser_cdata_block(void *ctx, const xmlChar *value, int len)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2CDataBlock(parser->xml_ctx, value, len);
+}
+
+void xml_parser_external_subset(void *ctx, const xmlChar *name,
+		const xmlChar *ExternalID, const xmlChar *SystemID)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+
+	xmlSAX2ExternalSubset(parser->xml_ctx, name, ExternalID, SystemID);
 }

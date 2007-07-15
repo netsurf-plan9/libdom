@@ -22,10 +22,10 @@
 CFLAGS += -I$(CURDIR)
 
 # Release output
-RELEASE = ${TOP}/${COMPONENT}.a
+RELEASE = ${TOP}/${COMPONENT}-libxml.a
 
 # Debug output
-DEBUG = ${TOP}/${COMPONENT}-debug.a
+DEBUG = ${TOP}/${COMPONENT}-libxml-debug.a
 
 # Objects
 OBJS = 
