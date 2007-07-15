@@ -334,7 +334,7 @@ dom_exception dom_node_get_attributes(struct dom_node *node,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_node_get_owner(struct dom_node *node,
+dom_exception dom_node_get_owner_document(struct dom_node *node,
 		struct dom_document **result)
 {
 	/* If there is an owner, increase its reference count */

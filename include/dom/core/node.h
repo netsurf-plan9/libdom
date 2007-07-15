@@ -93,7 +93,7 @@ dom_exception dom_node_get_next(struct dom_node *node,
 		struct dom_node **result);
 dom_exception dom_node_get_attributes(struct dom_node *node,
 		struct dom_named_node_map **result);
-dom_exception dom_node_get_owner(struct dom_node *node,
+dom_exception dom_node_get_owner_document(struct dom_node *node,
 		struct dom_document **result);
 dom_exception dom_node_insert_before(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *ref_child,
