@@ -18,11 +18,17 @@
 #include "utils.h"
 
 static void xml_parser_start_document(void *ctx);
+static void xml_parser_end_document(void *ctx);
 static void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
 		const xmlChar *prefix, const xmlChar *URI,
 		int nb_namespaces, const xmlChar **namespaces,
 		int nb_attributes, int nb_defaulted,
 		const xmlChar **attributes);
+static void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
+		const xmlChar *prefix, const xmlChar *URI);
+
+static void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
+		xmlNodePtr child);
 
 /**
  * XML parser object
@@ -55,7 +61,7 @@ static xmlSAXHandler sax_handler = {
 	.unparsedEntityDecl = xmlSAX2UnparsedEntityDecl,
 	.setDocumentLocator = xmlSAX2SetDocumentLocator,
 	.startDocument = xml_parser_start_document,
-	.endDocument = xmlSAX2EndDocument,
+	.endDocument = xml_parser_end_document,
 	.startElement = NULL,
 	.endElement = NULL,
 	.reference = xmlSAX2Reference,
@@ -72,7 +78,7 @@ static xmlSAXHandler sax_handler = {
 	.initialized = XML_SAX2_MAGIC,
 	._private = NULL,
 	.startElementNs = xml_parser_start_element_ns,
-	.endElementNs = xmlSAX2EndElementNs,
+	.endElementNs = xml_parser_end_element_ns,
 	.serror = NULL,
 };
 
@@ -263,6 +269,64 @@ void xml_parser_start_document(void *ctx)
 }
 
 /**
+ * Handle a document end SAX event
+ *
+ * \param ctx  The callback context
+ */
+void xml_parser_end_document(void *ctx)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+	struct dom_string *key;
+	xmlNodePtr node;
+	xmlNodePtr n;
+	dom_exception err;
+
+	/* Invoke libxml2's default behaviour */
+	xmlSAX2EndDocument(parser->xml_ctx);
+
+	/* We need to mirror any child nodes at the end of the list of
+	 * children which occur after the last Element node in the list */
+
+	/* Create key */
+	err = dom_string_create_from_const_ptr(parser->doc,
+			(const uint8_t *) "__xmlnode", SLEN("__xmlnode"),
+			&key);
+	if (err != DOM_NO_ERR)
+		return;
+
+	/* Get XML node */
+	err = dom_node_get_user_data((struct dom_node *) parser->doc, key,
+			(void **) &node);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(key);
+		return;
+	}
+
+	/* No longer need key */
+	dom_string_unref(key);
+
+	/* Find last Element node, if any */
+	for (n = node->last; n != NULL; n = n->prev) {
+		if (n->type == XML_ELEMENT_NODE)
+			break;
+	}
+
+	if (n == NULL) {
+		/* No Element node found; entire list needs mirroring */
+		n = node->children;
+	} else {
+		/* Found last Element; skip over it */
+		n = n->next;
+	}
+
+	/* Now, mirror nodes in the DOM */
+	for (; n != NULL; n = n->next) {
+		xml_parser_add_node(parser,
+				(struct dom_node *) node->_private, n);
+	}
+}
+
+/**
  * Handle an element open SAX event
  *
  * \param ctx            The callback context
@@ -271,10 +335,12 @@ void xml_parser_start_document(void *ctx)
  * \param URI            The element namespace URI
  * \param nb_namespaces  The number of namespace definitions
  * \param namespaces     Array of nb_namespaces prefix/URI pairs
- * \param nb_attributes  The number of attributes
+ * \param nb_attributes  The total number of attributes
  * \param nb_defaulted   The number of defaulted attributes
- * \param attributes     Array of [nb_attributes + nb_defaulted] attribute
- *                       values
+ * \param attributes     Array of nb_attributes attribute values
+ *
+ * The number of non-defaulted attributes is ::nb_attributes - ::nb_defaulted
+ * The defaulted attributes are at the end of the array ::attributes.
  */
 void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
 		const xmlChar *prefix, const xmlChar *URI,
@@ -283,12 +349,110 @@ void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
 		const xmlChar **attributes)
 {
 	xml_parser *parser = (xml_parser *) ctx;
+	xmlNodePtr parent = parser->xml_ctx->node;
 
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2StartElementNs(parser->xml_ctx, localname, prefix, URI,
 			nb_namespaces, namespaces, nb_attributes,
 			nb_defaulted, attributes);
 
-	/** \todo mirror the xml tree in the DOM */
+	if (parent == NULL) {
+		/* No parent; use document */
+		parent = (xmlNodePtr) parser->xml_ctx->myDoc;
+	}
+
+	if (parent->type == XML_DOCUMENT_NODE ||
+			parent->type == XML_ELEMENT_NODE) {
+		/* Mirror in the DOM all children of the parent node
+		 * between the previous Element child (or the start,
+		 * whichever is encountered first) and the Element
+		 * just created */
+		xmlNodePtr n;
+
+		/* Find previous element node, if any */
+		for (n = parser->xml_ctx->node->prev; n != NULL;
+				n = n->prev) {
+			if (n->type == XML_ELEMENT_NODE)
+				break;
+		}
+
+		if (n == NULL) {
+			/* No previous Element; use parent's children */
+			n = parent->children;
+		} else {
+			/* Previous Element; skip over it */
+			n = n->next;
+		}
+
+		/* Now, mirror nodes in the DOM */
+		for (; n != parser->xml_ctx->node; n = n->next) {
+			xml_parser_add_node(parser,
+					(struct dom_node *) parent->_private,
+					n);
+		}
+	}
+
+	/* Mirror the created node and its attributes in the DOM */
+	xml_parser_add_node(parser, (struct dom_node *) parent->_private,
+			parser->xml_ctx->node);
+
 }
 
+/**
+ * Handle an element close SAX event
+ *
+ * \param ctx        The callback context
+ * \param localname  The local name of the element
+ * \param prefix     The element namespace prefix
+ * \param URI        The element namespace URI
+ */
+void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
+		const xmlChar *prefix, const xmlChar *URI)
+{
+	xml_parser *parser = (xml_parser *) ctx;
+	xmlNodePtr node = parser->xml_ctx->node;
+	xmlNodePtr n;
+
+	/* Invoke libxml2's default behaviour */
+	xmlSAX2EndElementNs(parser->xml_ctx, localname, prefix, URI);
+
+	/* We need to mirror any child nodes at the end of the list of
+	 * children which occur after the last Element node in the list */
+
+	/* Find last Element node, if any */
+	for (n = node->last; n != NULL; n = n->prev) {
+		if (n->type == XML_ELEMENT_NODE)
+			break;
+	}
+
+	if (n == NULL) {
+		/* No Element node found; entire list needs mirroring */
+		n = node->children;
+	} else {
+		/* Found last Element; skip over it */
+		n = n->next;
+	}
+
+	/* Now, mirror nodes in the DOM */
+	for (; n != NULL; n = n->next) {
+		xml_parser_add_node(parser,
+				(struct dom_node *) node->_private, n);
+	}
+}
+
+/**
+ * Add a node to the DOM
+ *
+ * \param parser  The parser context
+ * \param parent  The parent DOM node
+ * \param child   The xmlNode to mirror in the DOM as a child of parent
+ */
+void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
+		xmlNodePtr child)
+{
+	UNUSED(parser);
+	UNUSED(parent);
+	UNUSED(child);
+
+	/** \todo implement */
+}
