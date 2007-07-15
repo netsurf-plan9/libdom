@@ -19,7 +19,8 @@
 # test       Execute any test cases
 
 # Extend toolchain settings
-CFLAGS += -I${TOP}/src/ -I$(CURDIR)
+CFLAGS += -I${TOP}/src/ -I${TOP}/bindings/xml/ -I$(CURDIR)
+LDFLAGS += `pkg-config --libs libxml-2.0`
 
 # Release output
 RELEASE =
@@ -28,7 +29,7 @@ RELEASE =
 DEBUG =
 
 # Objects
-OBJS = 
+OBJS = binding
 
 .PHONY: clean debug export release setup test
 
@@ -56,5 +57,5 @@ test: $(OBJS)
 %: %.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
 	@${CC} -c -g ${CFLAGS} -o $@.o $<
-	@${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-debug
+	@${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-libxml-debug -ldom-debug
 	@${RM} ${RMFLAGS} $@.o
