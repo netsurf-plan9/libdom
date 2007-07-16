@@ -24,6 +24,7 @@
 #include <dom/core/attr.h>
 #include <dom/core/characterdata.h>
 #include <dom/core/document.h>
+#include <dom/core/document_type.h>
 #include <dom/core/element.h>
 #include <dom/core/exceptions.h>
 #include <dom/core/implementation.h>
