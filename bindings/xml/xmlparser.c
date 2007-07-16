@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <libxml/parser.h>
 #include <libxml/SAX2.h>
@@ -30,6 +31,8 @@ static void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 
 static void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child);
+static void xml_parser_add_element_node(xml_parser *parser,
+		struct dom_node *parent, xmlNodePtr child);
 
 static void xml_parser_internal_subset(void *ctx, const xmlChar *name,
 		const xmlChar *ExternalID, const xmlChar *SystemID);
@@ -493,22 +496,134 @@ void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child)
 {
-	UNUSED(parser);
-	UNUSED(parent);
-
 	switch (child->type) {
 	case XML_ELEMENT_NODE:
+		xml_parser_add_element_node(parser, parent, child);
+		break;
 	case XML_TEXT_NODE:
 	case XML_CDATA_SECTION_NODE:
-	case XML_PI_NODE:
+	case XML_ENTITY_REF_NODE:
 	case XML_COMMENT_NODE:
-	case XML_DOCUMENT_NODE:
-	case XML_DOCUMENT_TYPE_NODE:
-	case XML_NOTATION_NODE:
 	case XML_DTD_NODE:
 	default:
 		fprintf(stderr, "Unsupported node type: %d\n", child->type);
 	}
+}
+
+/**
+ * Add an element node to the DOM
+ *
+ * \param parser  The parser context
+ * \param parent  The parent DOM node
+ * \param child   The xmlNode to mirror in the DOM as a child of parent
+ */
+void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
+		xmlNodePtr child)
+{
+	struct dom_element *el;
+	xmlAttrPtr a;
+	dom_exception err;
+
+	/* Create the element node */
+	if (child->ns == NULL) {
+		/* No namespace */
+		struct dom_string *tag_name;
+
+		/* Create tag name DOM string */
+		err = dom_string_create_from_const_ptr(parser->doc,
+				child->name,
+				strlen((const char *) child->name),
+				&tag_name);
+		if (err != DOM_NO_ERR)
+			return;
+
+		/* Create element node */
+		err = dom_document_create_element(parser->doc,
+				tag_name, &el);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(tag_name);
+			return;
+		}
+
+		/* No longer need tag name */
+		dom_string_unref(tag_name);
+	} else {
+		/* Namespace */
+
+		/** \todo implement this */
+	}
+
+	/* Add attributes to created element */
+	for (a = child->properties; a != NULL; a = a->next) {
+		struct dom_attr *attr;
+		xmlNodePtr c;
+
+		/* Create attribute node */
+		if (a->ns == NULL) {
+			/* Attribute has no namespace */
+			struct dom_string *name;
+
+			/* Create attribute name DOM string */
+			err = dom_string_create_from_const_ptr(parser->doc,
+					a->name,
+					strlen((const char *) a->name),
+					&name);
+			if (err != DOM_NO_ERR)
+				goto cleanup;
+
+			/* Create attribute */
+			err = dom_document_create_attribute(parser->doc,
+					name, &attr);
+			if (err != DOM_NO_ERR) {
+				dom_string_unref(name);
+				goto cleanup;
+			}
+
+			/* No longer need attribute name */
+			dom_string_unref(name);
+		} else {
+			/* Attribute has namespace */
+
+			/** \todo implement this */
+		}
+
+		/* Clone subtree (attribute value) */
+		for (c = a->children; c != NULL; c = c->next) {
+			xml_parser_add_node(parser,
+					(struct dom_node *) attr, c);
+		}
+
+		/* And add attribute to the element */
+		err = dom_element_set_attribute_node(el, attr, &attr);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref((struct dom_node *) attr);
+			goto cleanup;
+		}
+
+		/* We're no longer interested in the attribute node */
+		dom_node_unref((struct dom_node *) attr);
+	}
+
+	/* Finally, append element to parent */
+	err = dom_node_append_child(parent, (struct dom_node *) el,
+			(struct dom_node **) &el);
+	if (err != DOM_NO_ERR) {
+		goto cleanup;
+	}
+
+	/* No longer interested in element node */
+	dom_node_unref((struct dom_node *) el);
+
+	return;
+
+cleanup:
+
+	/** \todo clean up attributes */
+
+	/* No longer want node */
+	dom_node_unref((struct dom_node *) el);
+
+	return;
 }
 
 /*                                                                         */
