@@ -125,7 +125,7 @@ dom_exception dom_element_get_attribute_node(struct dom_element *element,
  *
  * \param element  The element to add a node to
  * \param attr     The attribute node to add
- * \param result   Pointer to location to recieve previous node
+ * \param result   Pointer to location to receive previous node
  * \return DOM_NO_ERR                      on success,
  *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not belong to the
  *                                         same document as ::element,
