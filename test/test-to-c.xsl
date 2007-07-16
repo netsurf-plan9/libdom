@@ -165,7 +165,46 @@ DOM templates
 -->
 
 <xsl:template name="produce-method">
-<!-- TODO: implement me -->
+	<xsl:variable name="methodName" select="local-name(.)"/>
+	<!--  if interface is specified -->
+	<xsl:choose>
+		<xsl:when test="@interface">
+			<xsl:variable name="interface" select="@interface"/>
+			<xsl:call-template name="produce-specific-method">
+				<xsl:with-param name="method" select="$domspec/library/interface[@name = $interface]/method[@name = $methodName]"/>
+				<!--<xsl:with-param name="vardefs" select="$vardefs"/>-->
+			</xsl:call-template>
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:variable name="methods" select="$domspec/library/interface/method[@name = $methodName]"/>
+			<xsl:call-template name="produce-specific-method">
+				<xsl:with-param name="method" select="$methods[1]"/>
+				<!--<xsl:with-param name="vardefs" select="$vardefs"/>-->
+			</xsl:call-template>
+		</xsl:otherwise>
+	</xsl:choose>
+</xsl:template>
+
+<xsl:template name="produce-specific-method">
+	<xsl:param name="method"/>
+	<xsl:variable name="current" select="."/>
+	<xsl:variable name="obj" select="@obj"/>
+	<!--<xsl:variable name="var" select="@var"/>-->
+	
+	<xsl:text>	</xsl:text>
+	<xsl:call-template name="convert_method_name">
+		<xsl:with-param name="method_target"><xsl:value-of select="//*[local-name() = 'var' and @name = $obj]/@type"/></xsl:with-param>
+		<xsl:with-param name="method_name"><xsl:value-of select="$method/@name"/></xsl:with-param>
+	</xsl:call-template>
+	<xsl:text>(</xsl:text><xsl:value-of select="@obj"/>
+	<xsl:for-each select="$method/parameters/param">
+		<xsl:variable name="paramDef" select="."/>
+		<xsl:text>, </xsl:text><xsl:value-of select="$current/@*[name() = $paramDef/@name]"/>
+	</xsl:for-each>
+	<xsl:if test="@var">
+		<xsl:text>, &amp;</xsl:text><xsl:value-of select="@var"/>
+	</xsl:if>
+	<xsl:text>);</xsl:text>
 </xsl:template>
 
 <xsl:template name="produce-attribute">
@@ -218,6 +257,7 @@ DOM templates
 
 	</xsl:if>
 </xsl:template>
+
 
 <!--
 ================================
@@ -324,6 +364,29 @@ Assert templates
 		<xsl:otherwise>
 			<!-- assume no conversion is needed -->
 			<xsl:text><xsl:value-of select="$attribute_name"/></xsl:text>
+		</xsl:otherwise>
+	</xsl:choose>
+</xsl:template>
+
+<!--
+Method name is in the form dom_<type>_<methodName>
+For example, dom_document_create_element
+-->
+<xsl:template name="convert_method_name">
+	<xsl:param name="method_target"/>
+	<xsl:param name="method_name"/>
+	<xsl:message><xsl:value-of select="$method_name"/></xsl:message>
+	<xsl:call-template name="convert_var_type">
+		<xsl:with-param name="var_type"><xsl:value-of select="$method_target"/></xsl:with-param>
+	</xsl:call-template>
+	<xsl:text>_</xsl:text>
+	<xsl:choose>
+		<xsl:when test="$method_name = 'createElement'">
+			<xsl:text>create_element</xsl:text>
+		</xsl:when>
+		<xsl:otherwise>
+			<!-- assume no conversion is needed -->
+			<xsl:text><xsl:value-of select="$method_name"/></xsl:text>
 		</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
