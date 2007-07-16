@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+#include "utils.h"
 #include "xmlbinding.h"
 #include "xmlparser.h"
 
