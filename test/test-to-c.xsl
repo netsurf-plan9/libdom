@@ -69,7 +69,10 @@ we generate an <xsl:message> reporting that the element is not known.
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'test']">
-<xsl:text>#include &lt;dom/dom.h&gt;
+<xsl:text>#include &lt;string.h&gt;
+
+#include &lt;dom/dom.h&gt;
+#include &lt;utils.h&gt;
 #include "testutils.h"
 
 </xsl:text>
@@ -115,7 +118,7 @@ The source document contained the following notice:
 	append a counter to the variable name?
 	-->
 	<xsl:text>
-	TestObject testObject = test_object_create(argc, argv, "</xsl:text><xsl:value-of select="@href"/><xsl:text>.xml", false);
+	TestObject *testObject = test_object_create(argc, argv, "</xsl:text><xsl:value-of select="@href"/><xsl:text>.xml", false);
 	assert(testObject != NULL);
 	
 	</xsl:text><xsl:value-of select="@var"/><xsl:text> = test_object_get_doc(testObject);
@@ -245,13 +248,13 @@ DOM templates
 		<xsl:text>
 	err = </xsl:text>
 	<xsl:call-template name="convert_var_type">
-		<xsl:with-param name="var_type"><xsl:value-of select="//*[local-name() = 'var' and @name = $obj]/@type"/></xsl:with-param>
+		<xsl:with-param name="var_type"><xsl:value-of select="$domspec/library/interface[attribute = $attribute]/@name"/></xsl:with-param>
 	</xsl:call-template>
 	<xsl:text>_get_</xsl:text>
 	<xsl:call-template name="convert_attribute_name">
 		<xsl:with-param name="attribute_name"><xsl:value-of select="$attribute/@name"/></xsl:with-param>
 	</xsl:call-template>
-	<xsl:text>(</xsl:text><xsl:value-of select="@obj"/><xsl:text>, &amp;</xsl:text><xsl:value-of select="@var"/><xsl:text>);
+	<xsl:text>(</xsl:text><!-- TODO: cast to the type expected by the interface if necessary --><xsl:value-of select="@obj"/><xsl:text>, &amp;</xsl:text><xsl:value-of select="@var"/><xsl:text>);
 	assert(err == DOM_NO_ERR);
 </xsl:text>
 
@@ -286,13 +289,13 @@ Assert templates
 	<!-- implement equality test depending upon $var_type -->
 	<xsl:choose>
 		<xsl:when test="$var_type = 'DOMString'">
+			<!--
+			FIXME: this is currently broken, because doc is hardwired
+			-->
 			<xsl:text>
 	struct dom_string *match;
-	struct dom_document *actualDoc;
-	err = dom_node_get_owner_document(</xsl:text><xsl:value-of select="@actual"/><xsl:text>, &amp;actualDoc);
-	assert(err == DOM_NO_ERR);
 	
-	err = dom_string_create_from_const_ptr(actualDoc, </xsl:text><xsl:value-of select="@expected"/><xsl:text>,
+	err = dom_string_create_from_const_ptr(doc, </xsl:text><xsl:value-of select="@expected"/><xsl:text>,
 		SLEN(</xsl:text><xsl:value-of select="@expected"/><xsl:text>), &amp;match);
 	assert(err == DOM_NO_ERR); <!-- TODO: pull this line out, since it's reused everywhere -->
 	
@@ -341,6 +344,9 @@ Assert templates
 		</xsl:when>
 		<xsl:when test="$var_type = 'Element'">
 			<xsl:text>dom_element</xsl:text>
+		</xsl:when>
+		<xsl:when test="$var_type = 'Node'">
+			<xsl:text>dom_node</xsl:text>
 		</xsl:when>
 		<xsl:otherwise>
 			<xsl:value-of select="$var_type"/>
