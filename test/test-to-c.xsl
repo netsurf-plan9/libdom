@@ -72,7 +72,6 @@ we generate an <xsl:message> reporting that the element is not known.
 <xsl:text>#include &lt;string.h&gt;
 
 #include &lt;dom/dom.h&gt;
-#include &lt;utils.h&gt;
 #include "testutils.h"
 
 </xsl:text>
@@ -236,6 +235,10 @@ DOM templates
 	<xsl:param name="attribute"/>
 	<xsl:variable name="obj" select="@obj"/>
 	<xsl:variable name="value" select="@value"/>
+	<xsl:variable name="obj_type" select="//*[local-name() = 'var' and @name = $obj]/@type"/>
+	<xsl:variable name="interface_type" select="$domspec/library/interface[attribute = $attribute]/@name"/>
+	<xsl:message>obj_type<xsl:value-of select="$obj_type"/></xsl:message>
+	<xsl:message>iface_type<xsl:value-of select="$interface_type"/></xsl:message>
 	<!--  check if attribute name starts with is  -->
 	<xsl:if test="@value">
 		<!-- TODO: set attribute to a value -->
@@ -247,14 +250,25 @@ DOM templates
 	<xsl:if test="@var">
 		<xsl:text>
 	err = </xsl:text>
-	<xsl:call-template name="convert_var_type">
-		<xsl:with-param name="var_type"><xsl:value-of select="$domspec/library/interface[attribute = $attribute]/@name"/></xsl:with-param>
-	</xsl:call-template>
-	<xsl:text>_get_</xsl:text>
-	<xsl:call-template name="convert_attribute_name">
-		<xsl:with-param name="attribute_name"><xsl:value-of select="$attribute/@name"/></xsl:with-param>
-	</xsl:call-template>
-	<xsl:text>(</xsl:text><!-- TODO: cast to the type expected by the interface if necessary --><xsl:value-of select="@obj"/><xsl:text>, &amp;</xsl:text><xsl:value-of select="@var"/><xsl:text>);
+		<xsl:call-template name="convert_var_type">
+			<xsl:with-param name="var_type"><xsl:value-of select="$interface_type"/></xsl:with-param>
+		</xsl:call-template>
+		<xsl:text>_get_</xsl:text>
+		<xsl:call-template name="convert_attribute_name">
+			<xsl:with-param name="attribute_name"><xsl:value-of select="$attribute/@name"/></xsl:with-param>
+		</xsl:call-template>
+		<xsl:text>(</xsl:text>
+		<!-- cast to target interface if this is different from the type of the variable @obj -->
+		<xsl:if test="$obj_type != $interface_type">
+			<xsl:text>(struct </xsl:text>
+			<xsl:call-template name="convert_var_type">
+				<xsl:with-param name="var_type"><xsl:value-of select="$interface_type"/></xsl:with-param>
+			</xsl:call-template>
+			<xsl:text> *) </xsl:text>
+		</xsl:if>
+	<!-- TODO: cast to the type expected by the interface if necessary -->
+		<xsl:value-of select="@obj"/><xsl:text>, &amp;</xsl:text><xsl:value-of select="@var"/>
+		<xsl:text>);
 	assert(err == DOM_NO_ERR);
 </xsl:text>
 
@@ -295,7 +309,7 @@ Assert templates
 			<xsl:text>
 	struct dom_string *match;
 	
-	err = dom_string_create_from_const_ptr(doc, </xsl:text><xsl:value-of select="@expected"/><xsl:text>,
+	err = dom_string_create_from_const_ptr(doc, (uint8_t *) </xsl:text><xsl:value-of select="@expected"/><xsl:text>,
 		SLEN(</xsl:text><xsl:value-of select="@expected"/><xsl:text>), &amp;match);
 	assert(err == DOM_NO_ERR); <!-- TODO: pull this line out, since it's reused everywhere -->
 	
