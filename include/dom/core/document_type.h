@@ -3,7 +3,7 @@
  * Licensed under the MIT License,
  *                http://www.opensource.org/licenses/mit-license.php
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
- * Copyright 2007 James Shaw <EMAIL_ADDRESS>
+ * Copyright 2007 James Shaw <jshaw@netsurf-browser.org>
  */
 
 #ifndef dom_core_document_type_h_
