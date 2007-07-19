@@ -2,6 +2,7 @@
 export CC = gcc
 export AR = ar
 export LD = gcc
+export XSLT = xsltproc
 
 export CP = cp
 export RM = rm

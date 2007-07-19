@@ -1,4 +1,4 @@
-# Makefile for Hubbub testcases
+# Makefile for DOM testcases
 #
 # Toolchain is exported by top-level makefile
 #
@@ -28,8 +28,14 @@ RELEASE =
 # Debug output
 DEBUG =
 
+# Transformer input
+XMLFILES = $(wildcard xml/*.xml)
+
+# Transformer output
+CFILES = $(XMLFILES:.xml=.c)
+
 # Objects
-OBJS = binding
+OBJS = $(CFILES:.c=)
 
 .PHONY: clean debug export release setup test
 
@@ -52,6 +58,8 @@ export:
 
 test: $(OBJS)
 	@${PERL} testrunner.pl ${EXEEXT}
+	
+transform: $(CFILES)
 
 # Pattern rules
 %: %.c
@@ -59,3 +67,6 @@ test: $(OBJS)
 	@${CC} -c -g ${CFLAGS} -o $@.o $<
 	@${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-libxml-debug -ldom-debug
 	@${RM} ${RMFLAGS} $@.o
+	
+%.c: %.xml
+	${XSLT} -o $@ transform/test-to-c.xsl $<

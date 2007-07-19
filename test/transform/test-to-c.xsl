@@ -237,8 +237,6 @@ DOM templates
 	<xsl:variable name="value" select="@value"/>
 	<xsl:variable name="obj_type" select="//*[local-name() = 'var' and @name = $obj]/@type"/>
 	<xsl:variable name="interface_type" select="$domspec/library/interface[attribute = $attribute]/@name"/>
-	<xsl:message>obj_type<xsl:value-of select="$obj_type"/></xsl:message>
-	<xsl:message>iface_type<xsl:value-of select="$interface_type"/></xsl:message>
 	<!--  check if attribute name starts with is  -->
 	<xsl:if test="@value">
 		<!-- TODO: set attribute to a value -->
@@ -303,13 +301,15 @@ Assert templates
 	<!-- implement equality test depending upon $var_type -->
 	<xsl:choose>
 		<xsl:when test="$var_type = 'DOMString'">
-			<!--
-			FIXME: this is currently broken, because doc is hardwired
-			-->
+
 			<xsl:text>
+	/* begin assertEquals */
 	struct dom_string *match;
 	
-	err = dom_string_create_from_const_ptr(doc, (uint8_t *) </xsl:text><xsl:value-of select="@expected"/><xsl:text>,
+	err = dom_string_create_from_const_ptr(</xsl:text>
+	<!-- use the first variable we find that's of @type 'Document' -->
+	<xsl:value-of select="//*[local-name() = 'var' and @type = 'Document'][1]/@name"/>
+	<xsl:text>, (uint8_t *) </xsl:text><xsl:value-of select="@expected"/><xsl:text>,
 		SLEN(</xsl:text><xsl:value-of select="@expected"/><xsl:text>), &amp;match);
 	assert(err == DOM_NO_ERR); <!-- TODO: pull this line out, since it's reused everywhere -->
 	
@@ -339,6 +339,9 @@ Assert templates
 			<xsl:message terminate="no">Warning in assertEquals template: don't know how to compare variable type '<xsl:value-of select="$var_type"/>'</xsl:message>
 		</xsl:otherwise>
 	</xsl:choose>
+	<xsl:text>
+	/* end assertEquals */
+</xsl:text>
 </xsl:template>
 
 <!-- helper templates -->
@@ -383,7 +386,7 @@ Assert templates
 		</xsl:when>
 		<xsl:otherwise>
 			<!-- assume no conversion is needed -->
-			<xsl:text><xsl:value-of select="$attribute_name"/></xsl:text>
+			<xsl:value-of select="$attribute_name"/>
 		</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
@@ -406,7 +409,7 @@ For example, dom_document_create_element
 		</xsl:when>
 		<xsl:otherwise>
 			<!-- assume no conversion is needed -->
-			<xsl:text><xsl:value-of select="$method_name"/></xsl:text>
+			<xsl:value-of select="$method_name"/>
 		</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
