@@ -46,6 +46,7 @@ debug:
 
 clean:
 ifneq (${OBJS}, )
+	-@${RM} ${RMFLAGS} $(CFILES)
 	-@${RM} ${RMFLAGS} $(addsuffix ${EXEEXT},  $(OBJS))
 endif
 
@@ -69,4 +70,4 @@ transform: $(CFILES)
 	@${RM} ${RMFLAGS} $@.o
 	
 %.c: %.xml
-	${XSLT} -o $@ transform/test-to-c.xsl $<
+	@${XSLT} -o $@ transform/test-to-c.xsl $<
