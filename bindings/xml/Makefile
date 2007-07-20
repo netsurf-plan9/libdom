@@ -19,7 +19,9 @@
 # test       Execute any test cases
 
 # Manipulate include paths
-CFLAGS += -I$(CURDIR) `pkg-config --cflags libxml-2.0` -D_POSIX_C_SOURCE
+CFLAGS += -I$(CURDIR) \
+	`${PKGCONFIG} ${PKGCONFIGFLAGS} --cflags libxml-2.0` \
+	-D_POSIX_C_SOURCE
 
 # Objects
 OBJS = xmlbinding xmlparser

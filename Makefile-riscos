@@ -13,7 +13,8 @@ export MV = mv
 export ECHO = echo
 export MAKE = make
 export PERL = perl
-export PKGCONFIG = pkg-config
+export PKGCONFIG = $(GCCSDK_INSTALL_ENV)/ro-pkg-config
+export XSLT = xsltproc
 
 # Toolchain flags
 WARNFLAGS = -Wall -Wextra -Wundef -Wpointer-arith -Wcast-align \
@@ -31,6 +32,7 @@ export MVFLAGS =
 export ECHOFLAGS = 
 export MAKEFLAGS =
 export PKGCONFIGFLAGS =
+export XSLTFLAGS =
 
 export EXEEXT = ,ff8
 

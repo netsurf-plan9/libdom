@@ -2,7 +2,6 @@
 export CC = gcc
 export AR = ar
 export LD = gcc
-export XSLT = xsltproc
 
 export CP = cp
 export RM = rm
@@ -12,6 +11,7 @@ export ECHO = echo
 export MAKE = make
 export PERL = perl
 export PKGCONFIG = pkg-config
+export XSLT = xsltproc
 
 # Toolchain flags
 WARNFLAGS = -Wall -Wextra -Wundef -Wpointer-arith -Wcast-align \
@@ -28,6 +28,7 @@ export MVFLAGS =
 export ECHOFLAGS = 
 export MAKEFLAGS =
 export PKGCONFIGFLAGS =
+export XSLTFLAGS =
 
 export EXEEXT =
 

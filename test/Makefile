@@ -20,7 +20,7 @@
 
 # Extend toolchain settings
 CFLAGS += -I${TOP}/src/ -I${TOP}/bindings/xml/ -I$(CURDIR)
-LDFLAGS += `pkg-config --libs libxml-2.0`
+LDFLAGS += `${PKGCONFIG} ${PKGCONFIGFLAGS} --libs libxml-2.0`
 
 # Release output
 RELEASE =
@@ -47,6 +47,7 @@ debug:
 clean:
 ifneq (${OBJS}, )
 	-@${RM} ${RMFLAGS} $(CFILES)
+	-@${RM} ${RMFLAGS} $(CFILES:.c=.o)
 	-@${RM} ${RMFLAGS} $(addsuffix ${EXEEXT},  $(OBJS))
 endif
 
@@ -59,15 +60,15 @@ export:
 
 test: $(OBJS)
 	@${PERL} testrunner.pl ${EXEEXT}
-	
+
 transform: $(CFILES)
 
 # Pattern rules
 %: %.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
-	@${CC} -c -g ${CFLAGS} -o $@.o $<
-	@${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-libxml-debug -ldom-debug
+	${CC} -c -g ${CFLAGS} -o $@.o $<
+	${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-libxml-debug -ldom-debug
 	@${RM} ${RMFLAGS} $@.o
-	
+
 %.c: %.xml
-	@${XSLT} -o $@ transform/test-to-c.xsl $<
+	@${XSLT} ${XSLTFLAGS} -o $@ transform/test-to-c.xsl $<
