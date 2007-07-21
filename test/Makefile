@@ -29,13 +29,13 @@ RELEASE =
 DEBUG =
 
 # Transformer input
-XMLFILES = $(wildcard xml/*.xml)
+XMLFILES = $(wildcard xml/tests/*.xml)
 
 # Transformer output
-CFILES = $(XMLFILES:.xml=.c)
+CFILES = $(addprefix xml/c/, $(notdir $(XMLFILES:.xml=.c)))
 
 # Objects
-OBJS = $(CFILES:.c=)
+OBJS = $(addprefix xml/bin/, $(notdir $(XMLFILES:.xml=)))
 
 .PHONY: clean debug export release setup test
 
@@ -46,15 +46,16 @@ debug:
 
 clean:
 ifneq (${OBJS}, )
-	-@${RM} ${RMFLAGS} $(CFILES)
-	-@${RM} ${RMFLAGS} $(CFILES:.c=.o)
-	-@${RM} ${RMFLAGS} $(addsuffix ${EXEEXT},  $(OBJS))
+	-@${RM} ${RMFLAGS} -r xml/c/
+	-@${RM} ${RMFLAGS} -r xml/bin/
 endif
 
 distclean:
 	-@${RM} ${RMFLAGS} log
 
 setup:
+	@${MKDIR} ${MKDIRFLAGS} $(CURDIR)/xml/c
+	@${MKDIR} ${MKDIRFLAGS} $(CURDIR)/xml/bin
 
 export:
 
@@ -64,11 +65,11 @@ test: $(OBJS)
 transform: $(CFILES)
 
 # Pattern rules
-%: %.c
+xml/bin/%: xml/c/%.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
-	${CC} -c -g ${CFLAGS} -o $@.o $<
-	${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-libxml-debug -ldom-debug
+	@${CC} -c -g ${CFLAGS} -o $@.o $<
+	@${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-libxml-debug -ldom-debug
 	@${RM} ${RMFLAGS} $@.o
 
-%.c: %.xml
+xml/c/%.c: xml/tests/%.xml
 	@${XSLT} ${XSLTFLAGS} -o $@ transform/test-to-c.xsl $<
