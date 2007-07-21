@@ -27,7 +27,7 @@ dom_exception dom_document_get_doctype(struct dom_document *doc,
 		struct dom_document_type **result);
 dom_exception dom_document_get_implementation(struct dom_document *doc,
 		struct dom_implementation **result);
-dom_exception dom_document_get_element(struct dom_document *doc,
+dom_exception dom_document_get_document_element(struct dom_document *doc,
 		struct dom_element **result);
 dom_exception dom_document_create_element(struct dom_document *doc,
 		struct dom_string *tag_name, struct dom_element **result);

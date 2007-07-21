@@ -95,7 +95,7 @@ dom_exception dom_document_get_implementation(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_get_element(struct dom_document *doc,
+dom_exception dom_document_get_document_element(struct dom_document *doc,
 		struct dom_element **result)
 {
 	UNUSED(doc);
