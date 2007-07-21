@@ -79,17 +79,17 @@ dom_exception dom_node_set_node_value(struct dom_node *node,
 		struct dom_string *value);
 dom_exception dom_node_get_node_type(struct dom_node *node,
 		dom_node_type *result);
-dom_exception dom_node_get_parent(struct dom_node *node,
+dom_exception dom_node_get_parent_node(struct dom_node *node,
 		struct dom_node **result);
-dom_exception dom_node_get_children(struct dom_node *node,
+dom_exception dom_node_get_child_nodes(struct dom_node *node,
 		struct dom_node_list **result);
 dom_exception dom_node_get_first_child(struct dom_node *node,
 		struct dom_node **result);
 dom_exception dom_node_get_last_child(struct dom_node *node,
 		struct dom_node **result);
-dom_exception dom_node_get_previous(struct dom_node *node,
+dom_exception dom_node_get_previous_sibling(struct dom_node *node,
 		struct dom_node **result);
-dom_exception dom_node_get_next(struct dom_node *node,
+dom_exception dom_node_get_next_sibling(struct dom_node *node,
 		struct dom_node **result);
 dom_exception dom_node_get_attributes(struct dom_node *node,
 		struct dom_named_node_map **result);
@@ -107,8 +107,8 @@ dom_exception dom_node_remove_child(struct dom_node *node,
 dom_exception dom_node_append_child(struct dom_node *node,
 		struct dom_node *new_child,
 		struct dom_node **result);
-dom_exception dom_node_has_children(struct dom_node *node, bool *result);
-dom_exception dom_node_clone(struct dom_node *node, bool deep,
+dom_exception dom_node_has_child_nodes(struct dom_node *node, bool *result);
+dom_exception dom_node_clone_node(struct dom_node *node, bool deep,
 		struct dom_node **result);
 dom_exception dom_node_normalize(struct dom_node *node);
 dom_exception dom_node_is_supported(struct dom_node *node,

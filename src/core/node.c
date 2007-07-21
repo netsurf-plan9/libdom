@@ -183,7 +183,7 @@ dom_exception dom_node_get_node_type(struct dom_node *node, dom_node_type *resul
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_node_get_parent(struct dom_node *node,
+dom_exception dom_node_get_parent_node(struct dom_node *node,
 		struct dom_node **result)
 {
 	/* If there is a parent node, then increase its reference count */
@@ -204,7 +204,7 @@ dom_exception dom_node_get_parent(struct dom_node *node,
  *
  * \todo Work out reference counting semantics of dom_node_list
  */
-dom_exception dom_node_get_children(struct dom_node *node,
+dom_exception dom_node_get_child_nodes(struct dom_node *node,
 		struct dom_node_list **result)
 {
 	UNUSED(node);
@@ -270,7 +270,7 @@ dom_exception dom_node_get_last_child(struct dom_node *node,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_node_get_previous(struct dom_node *node,
+dom_exception dom_node_get_previous_sibling(struct dom_node *node,
 		struct dom_node **result)
 {
 	/* If there is a previous sibling, increase its reference count */
@@ -293,7 +293,7 @@ dom_exception dom_node_get_previous(struct dom_node *node,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_node_get_next(struct dom_node *node,
+dom_exception dom_node_get_next_sibling(struct dom_node *node,
 		struct dom_node **result)
 {
 	/* If there is a subsequent sibling, increase its reference count */
@@ -509,7 +509,7 @@ dom_exception dom_node_append_child(struct dom_node *node,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_node_has_children(struct dom_node *node, bool *result)
+dom_exception dom_node_has_child_nodes(struct dom_node *node, bool *result)
 {
 	*result = node->first_child != NULL;
 
@@ -555,7 +555,7 @@ dom_exception dom_node_has_children(struct dom_node *node, bool *result)
  * \todo work out what happens when cloning Document, DocumentType, Entity
  * and Notation nodes.
  */
-dom_exception dom_node_clone(struct dom_node *node, bool deep,
+dom_exception dom_node_clone_node(struct dom_node *node, bool deep,
 		struct dom_node **result)
 {
 	UNUSED(node);
