@@ -38,6 +38,14 @@ static void xml_parser_add_element_node(xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child);
 static void xml_parser_add_text_node(xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child);
+static void xml_parser_add_cdata_section(xml_parser *parser,
+		struct dom_node *parent, xmlNodePtr child);
+static void xml_parser_add_entity_reference(xml_parser *parser,
+		struct dom_node *parent, xmlNodePtr child);
+static void xml_parser_add_comment(xml_parser *parser,
+		struct dom_node *parent, xmlNodePtr child);
+static void xml_parser_add_document_type(xml_parser *parser,
+		struct dom_node *parent, xmlNodePtr child);
 
 static void xml_parser_internal_subset(void *ctx, const xmlChar *name,
 		const xmlChar *ExternalID, const xmlChar *SystemID);
@@ -81,6 +89,8 @@ struct xml_parser {
 	bool complete;			/**< Indicate stream completion */
 
 	struct dom_string *udkey;	/**< Key for DOM node user data */
+
+	struct dom_implementation *impl;/**< DOM implementation */
 
 	xml_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
@@ -141,6 +151,7 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 		xml_alloc alloc, void *pw)
 {
 	xml_parser *parser;
+	struct dom_string *features;
 	dom_exception err;
 
 	UNUSED(enc);
@@ -162,7 +173,7 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 	parser->complete = false;
 
 	/* Create key for user data registration */
-	err = dom_string_create_from_ptr_no_doc(alloc, pw,
+	err = dom_string_create_from_ptr_no_doc((dom_alloc) alloc, pw,
 			(const uint8_t *) "__xmlnode", SLEN("__xmlnode"),
 			&parser->udkey);
 	if (err != DOM_NO_ERR) {
@@ -170,6 +181,31 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 		alloc(parser, 0, pw);
 		return NULL;
 	}
+
+	/* Get DOM implementation */
+	/* Create a string representation of the features we want */
+	err = dom_string_create_from_ptr_no_doc((dom_alloc) alloc, pw,
+			(const uint8_t *) "XML", SLEN("XML"), &features);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(parser->udkey);
+		xmlFreeParserCtxt(parser->xml_ctx);
+		alloc(parser, 0, pw);
+		return NULL;
+	}
+
+	/* Now, try to get an appropriate implementation from the registry */
+	err = dom_implregistry_get_dom_implementation(features,
+			&parser->impl, (dom_alloc) alloc, pw);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(features);
+		dom_string_unref(parser->udkey);
+		xmlFreeParserCtxt(parser->xml_ctx);
+		alloc(parser, 0, pw);
+		return NULL;
+	}
+
+	/* No longer need the features string */
+	dom_string_unref(features);
 
 	parser->alloc = alloc;
 	parser->pw = pw;
@@ -184,6 +220,8 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
  */
 void xml_parser_destroy(xml_parser *parser)
 {
+	dom_implementation_unref(parser->impl);
+
 	dom_string_unref(parser->udkey);
 
 	xmlFreeParserCtxt(parser->xml_ctx);
@@ -257,48 +295,29 @@ struct dom_document *xml_parser_get_document(xml_parser *parser)
 void xml_parser_start_document(void *ctx)
 {
 	xml_parser *parser = (xml_parser *) ctx;
-	struct dom_implementation *impl;
-	struct dom_string *features;
 	struct dom_document *doc;
 	dom_exception err;
 
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2StartDocument(parser->xml_ctx);
 
-	/* Create a string representation of the features we want */
-	err = dom_string_create_from_ptr_no_doc((dom_alloc) parser->alloc,
-			parser->pw, (const uint8_t *) "XML", SLEN("XML"),
-			&features);
-	if (err != DOM_NO_ERR)
-		return;
-
-	/* Now, try to get an appropriate implementation from the registry */
-	err = dom_implregistry_get_dom_implementation(features, &impl,
-			(dom_alloc) parser->alloc, parser->pw);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(features);
-		return;
-	}
-
-	/* No longer need the features string */
-	dom_string_unref(features);
-
 	/* Attempt to create a document */
-	err = dom_implementation_create_document(impl, /* namespace */ NULL,
-			/* qname */ NULL, /* doctype */ NULL,
-			&doc, (dom_alloc) parser->alloc, parser->pw);
+	err = dom_implementation_create_document(parser->impl,
+			/* namespace */ NULL,
+			/* qname */ NULL,
+			/* doctype */ NULL,
+			&doc,
+			(dom_alloc) parser->alloc,
+			parser->pw);
 	if (err != DOM_NO_ERR) {
-		dom_implementation_unref(impl);
 		return;
 	}
-
-	/* No longer need the implementation */
-	dom_implementation_unref(impl);
 
 	/* Link nodes together */
 	err = xml_parser_link_nodes(parser, (struct dom_node *) doc,
 			(xmlNodePtr) parser->xml_ctx->myDoc);
 	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) doc);
 		return;
 	}
 
@@ -514,6 +533,31 @@ dom_exception xml_parser_link_nodes(xml_parser *parser, struct dom_node *dom,
 void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child)
 {
+	static const char *node_types[] = {
+		"THIS_IS_NOT_A_NODE",
+		"XML_ELEMENT_NODE",
+		"XML_ATTRIBUTE_NODE",
+		"XML_TEXT_NODE",
+		"XML_CDATA_SECTION_NODE",
+		"XML_ENTITY_REF_NODE",
+		"XML_ENTITY_NODE",
+		"XML_PI_NODE",
+		"XML_COMMENT_NODE",
+		"XML_DOCUMENT_NODE",
+		"XML_DOCUMENT_TYPE_NODE",
+		"XML_DOCUMENT_FRAG_NODE",
+		"XML_NOTATION_NODE",
+		"XML_HTML_DOCUMENT_NODE",
+		"XML_DTD_NODE",
+		"XML_ELEMENT_DECL",
+		"XML_ATTRIBUTE_DECL",
+		"XML_ENTITY_DECL",
+		"XML_NAMESPACE_DECL",
+		"XML_XINCLUDE_START",
+		"XML_XINCLUDE_END",
+		"XML_DOCB_DOCUMENT_NODE"
+	};
+
 	switch (child->type) {
 	case XML_ELEMENT_NODE:
 		xml_parser_add_element_node(parser, parent, child);
@@ -522,11 +566,20 @@ void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 		xml_parser_add_text_node(parser, parent, child);
 		break;
 	case XML_CDATA_SECTION_NODE:
+		xml_parser_add_cdata_section(parser, parent, child);
+		break;
 	case XML_ENTITY_REF_NODE:
+		xml_parser_add_entity_reference(parser, parent, child);
+		break;
 	case XML_COMMENT_NODE:
+		xml_parser_add_comment(parser, parent, child);
+		break;
 	case XML_DTD_NODE:
+		xml_parser_add_document_type(parser, parent, child);
+		break;
 	default:
-		fprintf(stderr, "Unsupported node type: %d\n", child->type);
+		fprintf(stderr, "Unsupported node type: %s\n",
+				node_types[child->type]);
 	}
 }
 
@@ -807,6 +860,249 @@ void xml_parser_add_text_node(xml_parser *parser, struct dom_node *parent,
 
 	/* No longer interested in text node */
 	dom_node_unref((struct dom_node *) text);
+}
+
+/**
+ * Add a cdata section to the DOM
+ *
+ * \param parser  The parser context
+ * \param parent  The parent DOM node
+ * \param child   The xmlNode to mirror in the DOM as a child of parent
+ */
+void xml_parser_add_cdata_section(xml_parser *parser,
+		struct dom_node *parent, xmlNodePtr child)
+{
+	struct dom_text *cdata, *ins_cdata;
+	struct dom_string *data;
+	dom_exception err;
+
+	/* Create DOM string data for cdata section */
+	err = dom_string_create_from_const_ptr(parser->doc, child->content,
+			strlen((const char *) child->content), &data);
+	if (err != DOM_NO_ERR)
+		return;
+
+	/* Create text node */
+	err = dom_document_create_cdata_section(parser->doc, data, &cdata);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(data);
+		return;
+	}
+
+	/* No longer need data */
+	dom_string_unref(data);
+
+	/* Append cdata section to parent */
+	err = dom_node_append_child(parent, (struct dom_node *) cdata,
+			(struct dom_node **) &ins_cdata);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) cdata);
+		return;
+	}
+
+	/* We're not interested in the inserted cdata section */
+	if (ins_cdata != NULL)
+		dom_node_unref((struct dom_node *) ins_cdata);
+
+	/* Link nodes together */
+	err = xml_parser_link_nodes(parser, (struct dom_node *) cdata,
+			child);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) cdata);
+		return;
+	}
+
+	/* No longer interested in cdata section */
+	dom_node_unref((struct dom_node *) cdata);
+}
+
+/**
+ * Add an entity reference to the DOM
+ *
+ * \param parser  The parser context
+ * \param parent  The parent DOM node
+ * \param child   The xmlNode to mirror in the DOM as a child of parent
+ */
+void xml_parser_add_entity_reference(xml_parser *parser,
+		struct dom_node *parent, xmlNodePtr child)
+{
+	struct dom_node *entity, *ins_entity;
+	struct dom_string *name;
+	xmlNodePtr c;
+	dom_exception err;
+
+	/* Create name of entity reference */
+	err = dom_string_create_from_const_ptr(parser->doc, child->name,
+			strlen((const char *) child->name), &name);
+	if (err != DOM_NO_ERR)
+		return;
+
+	/* Create text node */
+	err = dom_document_create_entity_reference(parser->doc, name,
+			&entity);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(name);
+		return;
+	}
+
+	/* No longer need name */
+	dom_string_unref(name);
+
+	/* Mirror subtree (reference value) */
+	for (c = child->children; c != NULL; c = c->next) {
+		xml_parser_add_node(parser, (struct dom_node *) entity, c);
+	}
+
+	/* Append entity reference to parent */
+	err = dom_node_append_child(parent, (struct dom_node *) entity,
+			(struct dom_node **) &ins_entity);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) entity);
+		return;
+	}
+
+	/* We're not interested in the inserted entity reference */
+	if (ins_entity != NULL)
+		dom_node_unref((struct dom_node *) ins_entity);
+
+	/* Link nodes together */
+	err = xml_parser_link_nodes(parser, (struct dom_node *) entity,
+			child);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) entity);
+		return;
+	}
+
+	/* No longer interested in entity reference */
+	dom_node_unref((struct dom_node *) entity);
+}
+
+/**
+ * Add a comment to the DOM
+ *
+ * \param parser  The parser context
+ * \param parent  The parent DOM node
+ * \param child   The xmlNode to mirror in the DOM as a child of parent
+ */
+void xml_parser_add_comment(xml_parser *parser, struct dom_node *parent,
+		xmlNodePtr child)
+{
+	struct dom_characterdata *comment, *ins_comment;
+	struct dom_string *data;
+	dom_exception err;
+
+	/* Create DOM string data for comment */
+	err = dom_string_create_from_const_ptr(parser->doc, child->content,
+			strlen((const char *) child->content), &data);
+	if (err != DOM_NO_ERR)
+		return;
+
+	/* Create comment */
+	err = dom_document_create_comment(parser->doc, data, &comment);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(data);
+		return;
+	}
+
+	/* No longer need data */
+	dom_string_unref(data);
+
+	/* Append comment to parent */
+	err = dom_node_append_child(parent, (struct dom_node *) comment,
+			(struct dom_node **) &ins_comment);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) comment);
+		return;
+	}
+
+	/* We're not interested in the inserted comment */
+	if (ins_comment != NULL)
+		dom_node_unref((struct dom_node *) ins_comment);
+
+	/* Link nodes together */
+	err = xml_parser_link_nodes(parser, (struct dom_node *) comment,
+			child);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) comment);
+		return;
+	}
+
+	/* No longer interested in comment */
+	dom_node_unref((struct dom_node *) comment);
+}
+
+/**
+ * Add a document type to the DOM
+ *
+ * \param parser  The parser context
+ * \param parent  The parent DOM node
+ * \param child   The xmlNode to mirror in the DOM as a child of parent
+ */
+void xml_parser_add_document_type(xml_parser *parser,
+		struct dom_node *parent, xmlNodePtr child)
+{
+	xmlDtdPtr dtd = (xmlDtdPtr) child;
+	struct dom_document_type *doctype;
+	struct dom_string *qname, *public_id, *system_id;
+	dom_exception err;
+
+	/* Create qname for doctype */
+	err = dom_string_create_from_const_ptr(parser->doc, dtd->name,
+			strlen((const char *) dtd->name), &qname);
+	if (err != DOM_NO_ERR)
+		return;
+
+	/* Create public ID for doctype */
+	err = dom_string_create_from_const_ptr(parser->doc,
+			dtd->ExternalID,
+			strlen((const char *) dtd->ExternalID),
+			&public_id);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(qname);
+		return;
+	}
+
+	/* Create system ID for doctype */
+	err = dom_string_create_from_const_ptr(parser->doc,
+			dtd->SystemID,
+			strlen((const char *) dtd->SystemID),
+			&system_id);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(public_id);
+		dom_string_unref(qname);
+		return;
+	}
+
+	/* Create doctype */
+	err = dom_implementation_create_document_type(parser->impl,
+			qname, public_id, system_id, &doctype,
+			(dom_alloc) parser->alloc, parser->pw);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(system_id);
+		dom_string_unref(public_id);
+		dom_string_unref(qname);
+		return;
+	}
+
+	/* No longer need qname, public_id, system_id */
+	dom_string_unref(system_id);
+	dom_string_unref(public_id);
+	dom_string_unref(qname);
+
+	/** \todo Add doctype to document (requires some libdom-internal API
+	 * -- doctypes are immutable in the DOM) */
+	UNUSED(parent);
+
+	/* Link nodes together */
+	err = xml_parser_link_nodes(parser, (struct dom_node *) doctype,
+			child);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) doctype);
+		return;
+	}
+
+	/* No longer interested in doctype */
+	dom_node_unref((struct dom_node *) doctype);
 }
 
 /*                                                                         */
