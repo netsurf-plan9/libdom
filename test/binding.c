@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 	doc = test_object_get_doc(staff);
 	assert(doc != NULL);
 
-	err = dom_document_get_element(doc, &element);
+	err = dom_document_get_document_element(doc, &element);
 	assert(err == DOM_NO_ERR);
 	assert(element != NULL);
 

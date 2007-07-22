@@ -35,7 +35,9 @@ XMLFILES = $(wildcard xml/tests/*.xml)
 CFILES = $(addprefix xml/c/, $(notdir $(XMLFILES:.xml=.c)))
 
 # Objects
-OBJS = $(addprefix xml/bin/, $(notdir $(XMLFILES:.xml=)))
+XMLOBJS = $(addprefix xml/bin/, $(notdir $(XMLFILES:.xml=)))
+OTHEROBJS = binding
+OBJS = $(OTHEROBJS) $(XMLOBJS)
 
 .PHONY: clean debug export release setup test
 
@@ -46,6 +48,7 @@ debug:
 
 clean:
 ifneq (${OBJS}, )
+	-@${RM} ${RMFLAGS} $(addsuffix ${EXEEXT}, $(OTHEROBJS))
 	-@${RM} ${RMFLAGS} -r xml/c/
 	-@${RM} ${RMFLAGS} -r xml/bin/
 endif
@@ -73,3 +76,9 @@ xml/bin/%: xml/c/%.c
 
 xml/c/%.c: xml/tests/%.xml
 	@${XSLT} ${XSLTFLAGS} -o $@ transform/test-to-c.xsl $<
+
+%: %.c
+	@${ECHO} ${ECHOFLAGS} "==> $<"
+	@${CC} -c -g ${CFLAGS} -o $@.o $<
+	@${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-libxml-debug -ldom-debug
+	@${RM} ${RMFLAGS} $@.o
