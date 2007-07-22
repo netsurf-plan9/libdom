@@ -8,6 +8,7 @@
 #include <dom/functypes.h>
 #include <dom/core/document.h>
 
+#include "core/characterdata.h"
 #include "core/document.h"
 #include "core/namednodemap.h"
 #include "core/node.h"
@@ -161,6 +162,28 @@ dom_exception dom_document_create_document_fragment(struct dom_document *doc,
  */
 dom_exception dom_document_create_text_node(struct dom_document *doc,
 		struct dom_string *data, struct dom_text **result)
+{
+	UNUSED(doc);
+	UNUSED(data);
+	UNUSED(result);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+/**
+ * Create a comment node
+ *
+ * \param doc     The document owning the node
+ * \param data    The data for the node
+ * \param result  Pointer to location to receive result
+ * \return DOM_NO_ERR.
+ *
+ * The returned node will have its reference count increased. It is
+ * the responsibility of the caller to unref the node once it has
+ * finished with it.
+ */
+dom_exception dom_document_create_comment(struct dom_document *doc,
+		struct dom_string *data, struct dom_characterdata **result)
 {
 	UNUSED(doc);
 	UNUSED(data);

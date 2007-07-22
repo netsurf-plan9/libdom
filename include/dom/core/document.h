@@ -13,6 +13,7 @@
 #include <dom/core/exceptions.h>
 
 struct dom_attr;
+struct dom_characterdata;
 struct dom_configuration;
 struct dom_document;
 struct dom_document_type;
@@ -35,6 +36,8 @@ dom_exception dom_document_create_document_fragment(struct dom_document *doc,
 		struct dom_node **result);
 dom_exception dom_document_create_text_node(struct dom_document *doc,
 		struct dom_string *data, struct dom_text **result);
+dom_exception dom_document_create_comment(struct dom_document *doc,
+		struct dom_string *data, struct dom_characterdata **result);
 dom_exception dom_document_create_cdata_section(struct dom_document *doc,
 		struct dom_string *data, struct dom_text **result);
 dom_exception dom_document_create_processing_instruction(
