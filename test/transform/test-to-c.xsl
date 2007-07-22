@@ -5,13 +5,24 @@ test representation.
 -->
 
 <xsl:stylesheet version="1.0" 
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns:str="http://exslt.org/strings"><!-- TODO: exslt not currently used -->
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    	<!--
+    	The interfaces document is generated from the W3C test suite.
+    	It contains the signatures of DOM interfaces, their methods
+    	and attributes
+    	-->
 	<xsl:param name="interfaces-docname">dom1-interfaces.xml</xsl:param>
+	
+	<!--
+	The ctypes document maps interfaces, methods and attributes in the
+	interfaces document to their C counterparts, proving the ability to
+	override names and types.
+	-->
+	<xsl:param name="ctypes-docname">ctypes.xml</xsl:param>
 	<xsl:param name="target-uri-base">http://www.w3.org/2001/DOM-Test-Suite/tests/Level-1/</xsl:param>
 	<xsl:output method="text" encoding="UTF-8"/>
 	<xsl:variable name="domspec" select="document($interfaces-docname)"/>
-
+	<xsl:variable name="ctypes" select="document($ctypes-docname)"/>
 
 <!-- swallow any text which we don't understand -->
 <xsl:template match="text()" mode="body"/>
@@ -39,7 +50,6 @@ we generate an <xsl:message> reporting that the element is not known.
 		<xsl:when test="$method">
 			<xsl:call-template name="produce-method">
 				<xsl:with-param name="method" select="$method"/>
-				<!-- TODO: vardefs not yet done <xsl:with-param name="vardefs" select="$vardefs"/>-->
             		</xsl:call-template>
 		</xsl:when>
 		<xsl:otherwise>
@@ -51,9 +61,7 @@ we generate an <xsl:message> reporting that the element is not known.
 			<xsl:variable name="attribute" select="$domspec/library/interface[not($interface) or @name = $interface]/attribute[@name = $feature]"/>
 			<xsl:choose>
 				<xsl:when test="$attribute">
-					<xsl:call-template name="produce-attribute">
-						<!-- TODO: vardefs not yet done <xsl:with-param name="vardefs" select="$vardefs"/> -->
-					</xsl:call-template>
+					<xsl:call-template name="produce-attribute"/>
 				</xsl:when>
 				
 				<xsl:otherwise>
@@ -141,25 +149,25 @@ Language construct templates
 
 <xsl:template match="*[local-name() = 'var']" mode="body">
 	<xsl:text>	</xsl:text>
-	<xsl:call-template name="convert_var_declaration">
-		<xsl:with-param name="var_type" select="@type"/>
+	<xsl:call-template name="produce-var-type-declaration">
+		<xsl:with-param name="var-type" select="./@type"/>
 	</xsl:call-template>
 	<xsl:value-of select="@name"/>;
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'if']" mode="body">
-<xsl:text>
+	<xsl:text>
 	if (</xsl:text><xsl:apply-templates select="*[1]" mode="body"/><xsl:text>) {
-</xsl:text>
-<xsl:apply-templates select="*[position() &gt; 1 and local-name() != 'else']" mode="body"/>
-<xsl:text>	}</xsl:text>
-<xsl:for-each select="*[local-name() = 'else']">
-	<xsl:text> else {
-</xsl:text>
-	<xsl:apply-templates mode="body"/>
+	</xsl:text>
+	<xsl:apply-templates select="*[position() &gt; 1 and local-name() != 'else']" mode="body"/>
 	<xsl:text>	}</xsl:text>
-</xsl:for-each>
-<xsl:text>
+	<xsl:for-each select="*[local-name() = 'else']">
+		<xsl:text> else {
+</xsl:text>
+		<xsl:apply-templates mode="body"/>
+		<xsl:text>	}</xsl:text>
+	</xsl:for-each>
+	<xsl:text>
 </xsl:text>
 </xsl:template>
 
@@ -177,44 +185,18 @@ DOM templates
 			<xsl:variable name="interface" select="@interface"/>
 			<xsl:call-template name="produce-specific-method">
 				<xsl:with-param name="method" select="$domspec/library/interface[@name = $interface]/method[@name = $methodName]"/>
-				<!--<xsl:with-param name="vardefs" select="$vardefs"/>-->
 			</xsl:call-template>
 		</xsl:when>
 		<xsl:otherwise>
 			<xsl:variable name="methods" select="$domspec/library/interface/method[@name = $methodName]"/>
 			<xsl:call-template name="produce-specific-method">
 				<xsl:with-param name="method" select="$methods[1]"/>
-				<!--<xsl:with-param name="vardefs" select="$vardefs"/>-->
 			</xsl:call-template>
 		</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
 
-<xsl:template name="produce-specific-method">
-	<xsl:param name="method"/>
-	<xsl:variable name="current" select="."/>
-	<xsl:variable name="obj" select="@obj"/>
-	<xsl:variable name="var" select="//*[local-name() = 'var' and @name = $obj]"/>
-	
-	<xsl:text>	</xsl:text>
-	<xsl:call-template name="convert_method_name">
-		<xsl:with-param name="method_target"><xsl:value-of select="$var/@type"/></xsl:with-param>
-		<xsl:with-param name="method_name"><xsl:value-of select="$method/@name"/></xsl:with-param>
-	</xsl:call-template>
-	<xsl:text>(</xsl:text><xsl:value-of select="@obj"/>
-	<xsl:for-each select="$method/parameters/param">
-		<xsl:variable name="paramDef" select="."/>
-		<xsl:text>, </xsl:text>
-		<xsl:value-of select="$current/@*[name() = $paramDef/@name]"/>
-	</xsl:for-each>
-	<xsl:if test="@var">
-		<xsl:text>, &amp;</xsl:text><xsl:value-of select="@var"/>
-	</xsl:if>
-	<xsl:text>);</xsl:text>
-</xsl:template>
-
 <xsl:template name="produce-attribute">
-	<!-- <xsl:param name="vardefs"/> -->
 	<xsl:variable name="attribName" select="local-name(.)"/>
 	<xsl:choose>
 		<!--  if interface is specified -->
@@ -222,97 +204,159 @@ DOM templates
 			<xsl:variable name="interface" select="@interface"/>
 			<xsl:call-template name="produce-specific-attribute">
 				<xsl:with-param name="attribute" select="$domspec/library/interface[@name = $interface]/attribute[@name = $attribName]"/>
-				<!-- <xsl:with-param name="vardefs" select="$vardefs"/> -->
 			</xsl:call-template>
 		</xsl:when>
 		<xsl:otherwise>
 			<xsl:call-template name="produce-specific-attribute">
-				<xsl:with-param name="attribute" select="$domspec/library/interface/attribute[@name = $attribName]"/>
-				<!-- <xsl:with-param name="vardefs" select="$vardefs"/> -->
+				<xsl:with-param name="attribute" select="$domspec/library/interface/attribute[@name = $attribName]"/>	
 			</xsl:call-template>
-		</xsl:otherwise>
-    </xsl:choose>
-</xsl:template>
-
-<xsl:template name="produce-specific-attribute">
-	<!-- <xsl:param name="vardefs"/> -->
-	<xsl:param name="attribute"/>
-	<xsl:variable name="obj"   select="@obj"/>
-	<xsl:variable name="value" select="@value"/>
-	<xsl:variable name="var"   select="@var"/>
-	<xsl:variable name="obj_type" select="//*[local-name() = 'var' and @name = $obj]/@type"/>
-	<xsl:variable name="interface_type" select="$domspec/library/interface[attribute = $attribute]/@name"/>
-	<!--  check if attribute name starts with is  -->
-	<xsl:if test="@value">
-		<!-- TODO: set attribute to a value -->
-	</xsl:if>
-	<!--
-	call an attribute accessor.  this takes the form
-	err = dom_<objecttype>_get_<attributename>(<objectstruct>, &<targetattributestruct>);
-	-->
-	<xsl:if test="@var">
-		<xsl:text>
-	err = </xsl:text>
-		<xsl:call-template name="convert_var_type">
-			<xsl:with-param name="var_type"><xsl:value-of select="$interface_type"/></xsl:with-param>
-		</xsl:call-template>
-		<xsl:text>_get_</xsl:text>
-		<xsl:call-template name="convert_attribute_name">
-			<xsl:with-param name="attribute_name"><xsl:value-of select="$attribute/@name"/></xsl:with-param>
-		</xsl:call-template>
-		<xsl:text>(</xsl:text>
-		<!-- cast to target interface if this is different from the type of the variable @obj -->
-		<xsl:call-template name="cast">
-			<xsl:with-param name="vartype" select="$obj_type"/>
-			<xsl:with-param name="reqtype" select="$interface_type"/>
-		</xsl:call-template>
-		<xsl:value-of select="@obj"/>
-		<xsl:text>, </xsl:text>
-		<!-- TODO: cast the result to the that expected by the function
-		e.g. int nodeType; dom_node_get_node_type(node, (dom_node_type *) &nodeType);
-		-->
-		<xsl:call-template name="attribute-result-cast">
-			<xsl:with-param name="vartype" select="//*[local-name() = 'var' and @name = $var]/@type"/>
-			<xsl:with-param name="attribute" select="$attribute"/>
-		</xsl:call-template>
-		<xsl:text>&amp;</xsl:text><xsl:value-of select="@var"/>
-		<xsl:text>);
-	assert(err == DOM_NO_ERR);
-</xsl:text>
-
-	</xsl:if>
-</xsl:template>
-
-<xsl:template name="cast">
-	<xsl:param name="vartype"/>
-	<xsl:param name="reqtype"/>
-	<xsl:choose>
-		<xsl:when test="$vartype = $reqtype">
-		
-		</xsl:when>
-		<xsl:otherwise>
-			<xsl:text>(</xsl:text>
-			<xsl:call-template name="convert_var_declaration">
-				<xsl:with-param name="var_type"><xsl:value-of select="$reqtype"/></xsl:with-param>
-			</xsl:call-template>
-			<xsl:text>) </xsl:text>
 		</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
 
-<xsl:template name="attribute-result-cast">
-	<!--  the type of the target result variable, as defined by <var @type> -->
-	<xsl:param name="vartype"/>
-	<!--  an <attribute> from the $domspec -->
+<!-- 
+Produce a statement to get or set an attribute.
+If @var is specified, the accessor is called and @var is given the result value.
+err = dom_document_get_doctype(doc, &docType);
+assert(err == DOM_NO_ERR);
+
+If @value is specified, the mutator is called and @value is used as the parameter argument.
+
+-->
+<xsl:template name="produce-specific-attribute">
+	<!--
+	An <attribute> node in the $domspec document.
+	-->
 	<xsl:param name="attribute"/>
+	
+	<!-- the object which contains the attribute -->
+	<xsl:variable name="obj" select="@obj"/>
+	
+	<!-- the <var> for the $obj -->
+	<xsl:variable name="obj-var" select="//*[local-name() = 'var' and @name = $obj]"/>
+	
+	<!--
+	The C type for the object's type containing $attribute.
+	This may be the object's own type, or a supertype.  For example, $obj
+	may be an Element, but the nodeValue attribute is a member of the Node
+	supertype.
+	Note that this is the <type> element itself, not the @c attribute.
+	-->
+	<xsl:variable name="obj-ctype" select="$ctypes/types/type[@idl = $attribute/parent::interface/@name]"/>
+	
+	<!--
+	The C name of the attribute.  This is either $attribute/@name, or
+	the value in $ctypes if it overrides it.
+	-->
+	<xsl:variable name="attribute-cname">
+		<xsl:choose>
+			<xsl:when test="$obj-ctype/attribute[@idl = $attribute/@name]/@c">
+				<xsl:value-of select="$obj-ctype/attribute[@idl = $attribute/@name]/@c"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$attribute/@name"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:variable>
+	<xsl:message>attribute-cname: <xsl:value-of select="$attribute-cname"/></xsl:message>
+	
+	<!--
+	The attribute type.  This is either $attribute/@type, or
+	the <override-type> in $ctypes if it is specified.
+	The resulting attribute type may be an IDL-style name (e.g. DocumentType)
+	or a C-style name (e.g. dom_node_type).
+	-->
+	<xsl:variable name="attribute-type">
+		<xsl:choose>
+			<xsl:when test="$obj-ctype/attribute[@idl = $attribute/@name]/override-type">
+				<xsl:value-of select="$obj-ctype/attribute[@idl = $attribute/@name]/override-type/text()"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$attribute/@type"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:variable>
+
+	<xsl:text>	err = </xsl:text>
+	<xsl:if test="@value">
+		<xsl:text>_set_</xsl:text>
+	</xsl:if>
+	<xsl:if test="@var">
+		<xsl:variable name="var" select="@var"/>
+		<xsl:variable name="var-type" select="//*[local-name() = 'var' and @name = $var]/@type"/>
+	
+		<xsl:value-of select="$obj-ctype/@c"/>
+		<xsl:text>_get_</xsl:text>
+		<xsl:value-of select="$attribute-cname"/>
+		<xsl:text>(</xsl:text>
+		<xsl:call-template name="cast">
+			<xsl:with-param name="var-type" select="//*[local-name() = 'var' and @name = $obj]/@type"/>
+			<xsl:with-param name="interface-type" select="$obj-ctype/@c"/>
+		</xsl:call-template>
+		<xsl:value-of select="$obj"/>
+		<xsl:text>, </xsl:text>
+		<xsl:call-template name="cast">
+			<xsl:with-param name="var-type" select="$var-type"/>
+			<xsl:with-param name="interface-type" select="$attribute-type"/>
+		</xsl:call-template>
+		<xsl:text>&amp;</xsl:text>
+		<xsl:value-of select="@var"/>
+		<xsl:text>);</xsl:text>
+	</xsl:if>
+	<xsl:text>
+	assert(err == DOM_NO_ERR);
+</xsl:text>
+</xsl:template>
+
+<xsl:template name="produce-specific-method">
+	<xsl:param name="method"/>
+</xsl:template>
+
+<xsl:template name="cast">
+	<!-- the variable's type (e.g. Document, dom_node_type or int) -->
+	<xsl:param name="var-type"/>
+	
+	<!-- the required type (e.g. Document or dom_node_type) -->
+	<xsl:param name="interface-type"/>
+	
+	<!-- the variable's C-style type -->
+	<xsl:variable name="var-ctype">
+		<xsl:call-template name="get-ctype">
+			<xsl:with-param name="type" select="$var-type"/>
+		</xsl:call-template>
+	</xsl:variable>
+	
+	<!-- the interface's C-style type -->
+	<xsl:variable name="interface-ctype">
+		<xsl:call-template name="get-ctype">
+			<xsl:with-param name="type" select="$interface-type"/>
+		</xsl:call-template>
+	</xsl:variable>
+	
+	<xsl:if test="$var-ctype != $interface-ctype">
+		<xsl:text>(</xsl:text>
+		<xsl:call-template name="produce-var-type-declaration">
+			<xsl:with-param name="var-type" select="$interface-ctype"/>
+		</xsl:call-template>
+		<xsl:text>) </xsl:text>
+	</xsl:if>
+</xsl:template>
+
+<xsl:template name="get-ctype">
+	<!--
+	a type (e.g. Document, dom_node_type or int)
+	if $type is already a C-style type, or was a primitive, this is
+	used instead
+	 -->
+	<xsl:param name="type"/>
+	
 	<xsl:choose>
-		<xsl:when test="$attribute/@name = 'nodeType'">
-			<xsl:text>(</xsl:text>
-			<xsl:call-template name="convert_var_declaration">
-				<xsl:with-param name="var_type" select="'NodeType'"/>
-			</xsl:call-template>
-			<xsl:text>) </xsl:text>
+		<xsl:when test="$ctypes/types/type[@idl = $type]/@c">
+			<xsl:value-of select="$ctypes/types/type[@idl = $type]/@c"/>
 		</xsl:when>
+		<xsl:otherwise>
+			<xsl:value-of select="$type"/>
+		</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
 
@@ -338,152 +382,45 @@ Assert templates
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'assertEquals']" mode="body">
-	<xsl:variable name="actual" select="@actual"/>
-	<xsl:variable name="var_type" select="//*[local-name() = 'var' and @name = $actual]/@type"/>
-	
-	<!-- implement equality test depending upon $var_type -->
-	<xsl:choose>
-		<xsl:when test="$var_type = 'DOMString'">
-
-			<xsl:text>
-	/* begin assertEquals */
-	struct dom_string *match;
-	
-	err = dom_string_create_from_const_ptr(</xsl:text>
-	<!-- use the first variable we find that's of @type 'Document' -->
-	<xsl:value-of select="//*[local-name() = 'var' and @type = 'Document'][1]/@name"/>
-	<xsl:text>, (uint8_t *) </xsl:text><xsl:value-of select="@expected"/><xsl:text>,
-		SLEN(</xsl:text><xsl:value-of select="@expected"/><xsl:text>), &amp;match);
-	assert(err == DOM_NO_ERR); <!-- TODO: pull this line out, since it's reused everywhere -->
-	
-	assert(</xsl:text>
-			<xsl:choose>
-				<xsl:when test="@ignoreCase = 'true'">
-					<xsl:text>dom_string_icmp</xsl:text>
-				</xsl:when>
-				<xsl:when test="@ignoreCase = 'auto'">
-					<!--
-					TODO: implement auto case comparison (see java's DOMTestCase.assertEqualsAutoCase()
-					-->
-					<xsl:message>&lt;assertEquals ignoreCase='auto'&gt; not supported</xsl:message>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:text>dom_string_cmp</xsl:text>
-				</xsl:otherwise>
-			</xsl:choose>
-		<xsl:text>(</xsl:text><xsl:value-of select="@actual"/><xsl:text>, match) == 0);
-</xsl:text>
-		</xsl:when>
-		<xsl:when test="$var_type = 'int'">
-			<xsl:text>
-	assert(</xsl:text><xsl:value-of select="@actual"/><xsl:text> == </xsl:text><xsl:value-of select="@expected"/><xsl:text>);</xsl:text>
-		</xsl:when>
-		<xsl:otherwise>
-			<xsl:message terminate="no">Warning in assertEquals template: don't know how to compare variable type '<xsl:value-of select="$var_type"/>'</xsl:message>
-		</xsl:otherwise>
-	</xsl:choose>
-	<xsl:text>
-	/* end assertEquals */
-</xsl:text>
+	<!-- TODO: implement -->
 </xsl:template>
 
-<!-- helper templates -->
-
-<xsl:template name="convert_var_declaration">
-	<xsl:param name="var_type"/>
-	<!-- TODO: move these definitions out to a separate XML file -->
-	<xsl:variable name="is_struct" select="$var_type != 'int' and $var_type != 'NodeType'"/>
-	<xsl:variable name="is_pointer" select="$var_type != 'int'"/>
-	<xsl:message>is_struct <xsl:value-of select="$is_struct"/></xsl:message>
-	<xsl:if test="$is_struct">
-		<xsl:text>struct </xsl:text>
-	</xsl:if>
-	<xsl:call-template name="convert_var_type">
-		<xsl:with-param name="var_type" select="$var_type"/>
-	</xsl:call-template>
-	<xsl:text> </xsl:text>
-	<xsl:if test="$is_pointer">
-		<xsl:text>*</xsl:text>
-	</xsl:if>
-</xsl:template>
-
-<!-- 
-Convert a variable type to its equivalent C name.  C names are lower case
-separated by underscores.
+<!--
+================================
+Helper templates
+================================
 -->
-<xsl:template name="convert_var_type">
-<!-- TODO: convert certain types, e.g. from DocumentType to dom_document_type -->
-	<xsl:param name="var_type"/>
-	<xsl:choose>
-		<xsl:when test="$var_type = 'Document'">
-			<xsl:text>dom_document</xsl:text>
-		</xsl:when>
-		<xsl:when test="$var_type = 'DocumentType'">
-			<xsl:text>dom_document_type</xsl:text>
-		</xsl:when>
-		<xsl:when test="$var_type = 'DOMString'">
-			<xsl:text>dom_string</xsl:text>
-		</xsl:when>
-		<xsl:when test="$var_type = 'Element'">
-			<xsl:text>dom_element</xsl:text>
-		</xsl:when>
-		<xsl:when test="$var_type = 'Node'">
-			<xsl:text>dom_node</xsl:text>
-		</xsl:when>
-		<xsl:when test="$var_type = 'NodeType'">
-			<xsl:text>dom_node_type</xsl:text>
-		</xsl:when>
-		<xsl:otherwise>
-			<xsl:value-of select="$var_type"/>
-		</xsl:otherwise>
-	</xsl:choose>
-</xsl:template>
 
-<xsl:template name="convert_attribute_name">
-	<xsl:param name="attribute_name"/>
-	<xsl:message><xsl:value-of select="$attribute_name"/></xsl:message>
+<xsl:template name="produce-var-type-declaration">
+	<!-- a type (e.g. Document, dom_node_type or int) -->
+	<xsl:param name="var-type"/>
+	<xsl:variable name="var-ctype">
+		<xsl:call-template name="get-ctype">
+			<xsl:with-param name="type" select="$var-type"/>
+		</xsl:call-template>
+	</xsl:variable>
+	
 	<xsl:choose>
-		<xsl:when test="$attribute_name = 'nodeName'">
-			<xsl:text>node_name</xsl:text>
+		<xsl:when test="$ctypes/types/primitive[@c = $var-ctype]">
+			<!-- TODO: support the overriding of primitive name in ctypes document -->
+			<xsl:value-of select="$var-ctype"/><xsl:text> </xsl:text>
 		</xsl:when>
-		<xsl:when test="$attribute_name = 'nodeValue'">
-			<xsl:text>node_value</xsl:text>
+		<xsl:when test="$ctypes/types/type[@c = $var-ctype]">
+			<xsl:text>struct </xsl:text>
+			<xsl:value-of select="$ctypes/types/type[@c = $var-ctype]/@c"/>
+			<xsl:text> *</xsl:text>
 		</xsl:when>
-		<xsl:when test="$attribute_name = 'nodeType'">
-			<xsl:text>node_type</xsl:text>
-		</xsl:when>
+		
+		<!-- assume this is not a struct, and not a primitive (e.g. an enum) -->
 		<xsl:otherwise>
-			<!-- assume no conversion is needed -->
-			<xsl:value-of select="$attribute_name"/>
+			<xsl:value-of select="$var-ctype"/>
+			<xsl:text> *</xsl:text>
 		</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
 
 <!--
-Method name is in the form dom_<type>_<methodName>
-For example, dom_document_create_element
--->
-<xsl:template name="convert_method_name">
-	<xsl:param name="method_target"/>
-	<xsl:param name="method_name"/>
-	
-	<xsl:call-template name="convert_var_type">
-		<xsl:with-param name="var_type"><xsl:value-of select="$method_target"/></xsl:with-param>
-	</xsl:call-template>
-	<xsl:text>_</xsl:text>
-	<xsl:choose>
-		<xsl:when test="$method_name = 'createElement'">
-			<xsl:text>create_element</xsl:text>
-		</xsl:when>
-		<xsl:otherwise>
-			<!-- assume no conversion is needed -->
-			<xsl:value-of select="$method_name"/>
-		</xsl:otherwise>
-	</xsl:choose>
-</xsl:template>
-
-<!--
-stolen from test-to-java.xsl
+Taken from test-to-java.xsl
 Prepends every line with asterisks, suitable for use in a block comment
 -->
 <xsl:template name="emit-description">
