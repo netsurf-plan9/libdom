@@ -29,9 +29,14 @@ static void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
 static void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 		const xmlChar *prefix, const xmlChar *URI);
 
+static dom_exception xml_parser_link_nodes(xml_parser *parser,
+		struct dom_node *dom, xmlNodePtr xml);
+
 static void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child);
 static void xml_parser_add_element_node(xml_parser *parser,
+		struct dom_node *parent, xmlNodePtr child);
+static void xml_parser_add_text_node(xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child);
 
 static void xml_parser_internal_subset(void *ctx, const xmlChar *name,
@@ -74,6 +79,8 @@ struct xml_parser {
 	struct dom_document *doc;	/**< DOM Document we're building */
 
 	bool complete;			/**< Indicate stream completion */
+
+	struct dom_string *udkey;	/**< Key for DOM node user data */
 
 	xml_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
@@ -134,6 +141,7 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 		xml_alloc alloc, void *pw)
 {
 	xml_parser *parser;
+	dom_exception err;
 
 	UNUSED(enc);
 	UNUSED(int_enc);
@@ -153,6 +161,16 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 
 	parser->complete = false;
 
+	/* Create key for user data registration */
+	err = dom_string_create_from_ptr_no_doc(alloc, pw,
+			(const uint8_t *) "__xmlnode", SLEN("__xmlnode"),
+			&parser->udkey);
+	if (err != DOM_NO_ERR) {
+		xmlFreeParserCtxt(parser->xml_ctx);
+		alloc(parser, 0, pw);
+		return NULL;
+	}
+
 	parser->alloc = alloc;
 	parser->pw = pw;
 
@@ -166,6 +184,8 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
  */
 void xml_parser_destroy(xml_parser *parser)
 {
+	dom_string_unref(parser->udkey);
+
 	xmlFreeParserCtxt(parser->xml_ctx);
 
 	/** \todo Do we want to clean up the document here, too? */
@@ -238,9 +258,8 @@ void xml_parser_start_document(void *ctx)
 {
 	xml_parser *parser = (xml_parser *) ctx;
 	struct dom_implementation *impl;
-	struct dom_string *features, *udkey;
+	struct dom_string *features;
 	struct dom_document *doc;
-	void *ignored;
 	dom_exception err;
 
 	/* Invoke libxml2's default behaviour */
@@ -276,27 +295,12 @@ void xml_parser_start_document(void *ctx)
 	/* No longer need the implementation */
 	dom_implementation_unref(impl);
 
-	/* Create key for user data registration */
-	err = dom_string_create_from_const_ptr(doc,
-			(const uint8_t *) "__xmlnode", SLEN("__xmlnode"),
-			&udkey);
-	if (err != DOM_NO_ERR)
-		return;
-
-	/* Register xmlNode as userdata for document */
-	err = dom_node_set_user_data((struct dom_node *) doc,
-			udkey, parser->xml_ctx->myDoc, NULL, &ignored);
+	/* Link nodes together */
+	err = xml_parser_link_nodes(parser, (struct dom_node *) doc,
+			(xmlNodePtr) parser->xml_ctx->myDoc);
 	if (err != DOM_NO_ERR) {
-		dom_string_unref(udkey);
 		return;
 	}
-
-	/* No longer need the key */
-	dom_string_unref(udkey);
-
-	/* Register the DOM node with the xmlNode */
-	dom_node_ref((struct dom_node *) doc);
-	parser->xml_ctx->myDoc->_private = doc;
 
 	/* And squirrel the document away for later use */
 	parser->doc = doc;
@@ -310,7 +314,6 @@ void xml_parser_start_document(void *ctx)
 void xml_parser_end_document(void *ctx)
 {
 	xml_parser *parser = (xml_parser *) ctx;
-	struct dom_string *key;
 	xmlNodePtr node;
 	xmlNodePtr n;
 	dom_exception err;
@@ -325,23 +328,12 @@ void xml_parser_end_document(void *ctx)
 	/* We need to mirror any child nodes at the end of the list of
 	 * children which occur after the last Element node in the list */
 
-	/* Create key */
-	err = dom_string_create_from_const_ptr(parser->doc,
-			(const uint8_t *) "__xmlnode", SLEN("__xmlnode"),
-			&key);
-	if (err != DOM_NO_ERR)
-		return;
-
 	/* Get XML node */
-	err = dom_node_get_user_data((struct dom_node *) parser->doc, key,
-			(void **) &node);
+	err = dom_node_get_user_data((struct dom_node *) parser->doc,
+			parser->udkey, (void **) &node);
 	if (err != DOM_NO_ERR) {
-		dom_string_unref(key);
 		return;
 	}
-
-	/* No longer need key */
-	dom_string_unref(key);
 
 	/* Find last Element node, if any */
 	for (n = node->last; n != NULL; n = n->prev) {
@@ -487,6 +479,32 @@ void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 }
 
 /**
+ * Link a DOM and XML node together
+ *
+ * \param parser  The parser context
+ * \param dom     The DOM node
+ * \param xml     The XML node
+ * \return DOM_NO_ERR on success, appropriate error otherwise
+ */
+dom_exception xml_parser_link_nodes(xml_parser *parser, struct dom_node *dom,
+		xmlNodePtr xml)
+{
+	void *prev_data;
+	dom_exception err;
+
+	/* Register XML node as user data for DOM node */
+	err = dom_node_set_user_data(dom, parser->udkey, xml, NULL,
+			&prev_data);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	/* Register DOM node with the XML node */
+	xml->_private = dom;
+
+	return DOM_NO_ERR;
+}
+
+/**
  * Add a node to the DOM
  *
  * \param parser  The parser context
@@ -501,6 +519,8 @@ void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 		xml_parser_add_element_node(parser, parent, child);
 		break;
 	case XML_TEXT_NODE:
+		xml_parser_add_text_node(parser, parent, child);
+		break;
 	case XML_CDATA_SECTION_NODE:
 	case XML_ENTITY_REF_NODE:
 	case XML_COMMENT_NODE:
@@ -520,7 +540,7 @@ void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child)
 {
-	struct dom_element *el;
+	struct dom_element *el, *ins_el;
 	xmlAttrPtr a;
 	dom_exception err;
 
@@ -549,13 +569,57 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 		dom_string_unref(tag_name);
 	} else {
 		/* Namespace */
+		struct dom_string *namespace;
+		struct dom_string *qname;
+		size_t qnamelen = (child->ns->prefix != NULL ?
+			strlen((const char *) child->ns->prefix) : 0) +
+			(child->ns->prefix != NULL ? 1 : 0) /* ':' */ +
+			strlen((const char *) child->name);
+		uint8_t qnamebuf[qnamelen + 1 /* '\0' */];
 
-		/** \todo implement this */
+		/* Create namespace DOM string */
+		err = dom_string_create_from_const_ptr(parser->doc,
+				child->ns->href,
+				strlen((const char *) child->ns->href),
+				&namespace);
+		if (err != DOM_NO_ERR)
+			return;
+
+		/* QName is "prefix:localname",
+		 * or "localname" if there is no prefix */
+		sprintf((char *) qnamebuf, "%s%s%s",
+			child->ns->prefix != NULL ?
+				(const char *) child->ns->prefix : "",
+			child->ns->prefix != NULL ? ":" : "",
+			(const char *) child->name);
+
+		/* Create qname DOM string */
+		err = dom_string_create_from_ptr(parser->doc,
+				qnamebuf,
+				qnamelen,
+				&qname);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(namespace);
+			return;
+		}
+
+		/* Create element node */
+		err = dom_document_create_element_ns(parser->doc,
+				namespace, qname, &el);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(namespace);
+			dom_string_unref(qname);
+			return;
+		}
+
+		/* No longer need namespace / qname */
+		dom_string_unref(namespace);
+		dom_string_unref(qname);
 	}
 
 	/* Add attributes to created element */
 	for (a = child->properties; a != NULL; a = a->next) {
-		struct dom_attr *attr;
+		struct dom_attr *attr, *prev_attr;
 		xmlNodePtr c;
 
 		/* Create attribute node */
@@ -583,8 +647,52 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 			dom_string_unref(name);
 		} else {
 			/* Attribute has namespace */
+			struct dom_string *namespace;
+			struct dom_string *qname;
+			size_t qnamelen = (a->ns->prefix != NULL ?
+				strlen((const char *) a->ns->prefix) : 0) +
+				(a->ns->prefix != NULL ? 1 : 0) /* ':' */ +
+				strlen((const char *) a->name);
+			uint8_t qnamebuf[qnamelen + 1 /* '\0' */];
 
-			/** \todo implement this */
+			/* Create namespace DOM string */
+			err = dom_string_create_from_const_ptr(parser->doc,
+					a->ns->href,
+					strlen((const char *) a->ns->href),
+					&namespace);
+			if (err != DOM_NO_ERR)
+				return;
+
+			/* QName is "prefix:localname",
+			 * or "localname" if there is no prefix */
+			sprintf((char *) qnamebuf, "%s%s%s",
+				a->ns->prefix != NULL ?
+					(const char *) a->ns->prefix : "",
+				a->ns->prefix != NULL ? ":" : "",
+				(const char *) a->name);
+
+			/* Create qname DOM string */
+			err = dom_string_create_from_ptr(parser->doc,
+					qnamebuf,
+					qnamelen,
+					&qname);
+			if (err != DOM_NO_ERR) {
+				dom_string_unref(namespace);
+				return;
+			}
+
+			/* Create attribute */
+			err = dom_document_create_attribute_ns(parser->doc,
+					namespace, qname, &attr);
+			if (err != DOM_NO_ERR) {
+				dom_string_unref(namespace);
+				dom_string_unref(qname);
+				return;
+			}
+
+			/* No longer need namespace / qname */
+			dom_string_unref(namespace);
+			dom_string_unref(qname);
 		}
 
 		/* Clone subtree (attribute value) */
@@ -593,20 +701,43 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 					(struct dom_node *) attr, c);
 		}
 
-		/* And add attribute to the element */
-		err = dom_element_set_attribute_node(el, attr, &attr);
+		/* Link nodes together */
+		err = xml_parser_link_nodes(parser,
+				(struct dom_node *) attr, (xmlNodePtr) a);
 		if (err != DOM_NO_ERR) {
 			dom_node_unref((struct dom_node *) attr);
 			goto cleanup;
 		}
 
+		/* And add attribute to the element */
+		err = dom_element_set_attribute_node(el, attr, &prev_attr);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref((struct dom_node *) attr);
+			goto cleanup;
+		}
+
+		/* We're not interested in the previous attribute (if any) */
+		if (prev_attr != NULL)
+			dom_node_unref((struct dom_node *) prev_attr);
+
 		/* We're no longer interested in the attribute node */
 		dom_node_unref((struct dom_node *) attr);
 	}
 
-	/* Finally, append element to parent */
+	/* Append element to parent */
 	err = dom_node_append_child(parent, (struct dom_node *) el,
-			(struct dom_node **) &el);
+			(struct dom_node **) &ins_el);
+	if (err != DOM_NO_ERR) {
+		goto cleanup;
+	}
+
+	/* We're not interested in the inserted element */
+	if (ins_el != NULL)
+		dom_node_unref((struct dom_node *) ins_el);
+
+	/* Link nodes together */
+	err = xml_parser_link_nodes(parser, (struct dom_node *) el,
+			child);
 	if (err != DOM_NO_ERR) {
 		goto cleanup;
 	}
@@ -617,13 +748,65 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 	return;
 
 cleanup:
-
-	/** \todo clean up attributes */
-
-	/* No longer want node */
+	/* No longer want node (any attributes attached to it
+	 * will be cleaned up with it) */
 	dom_node_unref((struct dom_node *) el);
 
 	return;
+}
+
+/**
+ * Add a text node to the DOM
+ *
+ * \param parser  The parser context
+ * \param parent  The parent DOM node
+ * \param child   The xmlNode to mirror in the DOM as a child of parent
+ */
+void xml_parser_add_text_node(xml_parser *parser, struct dom_node *parent,
+		xmlNodePtr child)
+{
+	struct dom_text *text, *ins_text;
+	struct dom_string *data;
+	dom_exception err;
+
+	/* Create DOM string data for text node */
+	err = dom_string_create_from_const_ptr(parser->doc, child->content,
+			strlen((const char *) child->content), &data);
+	if (err != DOM_NO_ERR)
+		return;
+
+	/* Create text node */
+	err = dom_document_create_text_node(parser->doc, data, &text);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(data);
+		return;
+	}
+
+	/* No longer need data */
+	dom_string_unref(data);
+
+	/* Append text node to parent */
+	err = dom_node_append_child(parent, (struct dom_node *) text,
+			(struct dom_node **) &ins_text);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) text);
+		return;
+	}
+
+	/* We're not interested in the inserted text node */
+	if (ins_text != NULL)
+		dom_node_unref((struct dom_node *) ins_text);
+
+	/* Link nodes together */
+	err = xml_parser_link_nodes(parser, (struct dom_node *) text,
+			child);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) text);
+		return;
+	}
+
+	/* No longer interested in text node */
+	dom_node_unref((struct dom_node *) text);
 }
 
 /*                                                                         */
