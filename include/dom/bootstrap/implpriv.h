@@ -12,6 +12,9 @@
  * The DOMImplementation and DOMImplementationList implementations also
  * include this, as those types are defined here.
  *
+ * The Document implementation includes this as it needs the declaration of
+ * dom_document_set_doctype.
+ *
  * No other client should be including this.
  */
 
@@ -240,5 +243,9 @@ struct dom_implementation_source {
 /* Register a source with the DOM library */
 dom_exception dom_register_source(struct dom_implementation_source *source,
 		dom_alloc alloc, void *pw);
+
+/* Set a Document's DocumentType */
+dom_exception dom_document_set_doctype(struct dom_document *doc,
+		struct dom_document_type *doctype);
 
 #endif

@@ -6,6 +6,7 @@
  */
 
 #include <dom/functypes.h>
+#include <dom/bootstrap/implpriv.h>
 #include <dom/core/document.h>
 
 #include "core/characterdata.h"
@@ -751,6 +752,35 @@ dom_exception dom_document_rename_node(struct dom_document *doc,
 
 	return DOM_NOT_SUPPORTED_ERR;
 }
+
+/*                                                                         */
+/* ----------------------------------------------------------------------- */
+/*                                                                         */
+
+/**
+ * Set a Document's Document Type
+ *
+ * \param doc      Document to set type of
+ * \param doctype  The doctype to apply
+ * \return DOM_NO_ERR                   on success,
+ *         DOM_INVALID_MODIFICATION_ERR if ::doc already has a doctype.
+ *
+ * The doctype will have its reference count increased. It is the
+ * responsibility of the caller to unref the doctype once it has finished
+ * with it.
+ */
+dom_exception dom_document_set_doctype(struct dom_document *doc,
+		struct dom_document_type *doctype)
+{
+	UNUSED(doc);
+	UNUSED(doctype);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+/*                                                                         */
+/* ----------------------------------------------------------------------- */
+/*                                                                         */
 
 /**
  * Acquire a pointer to the base of the document buffer

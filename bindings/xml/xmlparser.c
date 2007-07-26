@@ -13,6 +13,7 @@
 #include <libxml/SAX2.h>
 #include <libxml/xmlerror.h>
 
+#include <dom/bootstrap/implpriv.h>
 #include <dom/dom.h>
 
 #include "xmlerror.h"
@@ -1089,9 +1090,13 @@ void xml_parser_add_document_type(xml_parser *parser,
 	dom_string_unref(public_id);
 	dom_string_unref(qname);
 
-	/** \todo Add doctype to document (requires some libdom-internal API
-	 * -- doctypes are immutable in the DOM) */
-	UNUSED(parent);
+	/* Add doctype to document */
+	err = dom_document_set_doctype((struct dom_document *) parent,
+			doctype);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) doctype);
+		return;
+	}
 
 	/* Link nodes together */
 	err = xml_parser_link_nodes(parser, (struct dom_node *) doctype,
