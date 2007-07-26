@@ -5,8 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
-#ifndef dom_internal_nodelist_h_
-#define dom_internal_nodelist_h_
+#ifndef dom_internal_core_nodelist_h_
+#define dom_internal_core_nodelist_h_
 
 #include <stdbool.h>
 

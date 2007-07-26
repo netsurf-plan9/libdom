@@ -7,6 +7,8 @@
 
 #include <dom/core/element.h>
 
+#include "core/document.h"
+#include "core/element.h"
 #include "core/node.h"
 #include "utils/utils.h"
 
@@ -18,6 +20,49 @@ struct dom_element {
 
 	struct dom_type_info *schema_type_info;	/**< Type information */
 };
+
+/**
+ * Create an element node
+ *
+ * \param doc     The owning document
+ * \param name    The name of the node to create
+ * \param result  Pointer to location to receive created element
+ * \return DOM_NO_ERR                on success,
+ *         DOM_INVALID_CHARACTER_ERR if ::name is invalid,
+ *         DOM_NO_MEM_ERR            on memory exhaustion.
+ *
+ * ::doc and ::name will have their reference counts increased.
+ *
+ * The returned element will already be referenced.
+ */
+dom_exception dom_element_create(struct dom_document *doc,
+		struct dom_string *name, struct dom_element **result)
+{
+	struct dom_element *el;
+	dom_exception err;
+
+	/** \todo Sanity check the tag name */
+
+	/* Allocate the element */
+	el = dom_document_alloc(doc, NULL, sizeof(struct dom_element));
+	if (el == NULL)
+		return DOM_NO_MEM_ERR;
+
+	/* Initialise the base class */
+	err = dom_node_initialise(&el->base, doc, DOM_ELEMENT_NODE,
+			name, NULL);
+	if (err != DOM_NO_ERR) {
+		dom_document_alloc(doc, el, 0);
+		return err;
+	}
+
+	/* Perform our type-specific initialisation */
+	el->schema_type_info = NULL;
+
+	*result = el;
+
+	return DOM_NO_ERR;
+}
 
 /**
  * Retrieve an element's tag name

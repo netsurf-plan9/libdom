@@ -5,8 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
-#ifndef dom_internal_namednodemap_h_
-#define dom_internal_namednodemap_h_
+#ifndef dom_internal_core_namednodemap_h_
+#define dom_internal_core_namednodemap_h_
 
 #include <stdbool.h>
 

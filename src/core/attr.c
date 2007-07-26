@@ -9,6 +9,8 @@
 
 #include <dom/core/attr.h>
 
+#include "core/attr.h"
+#include "core/document.h"
 #include "core/node.h"
 #include "utils/utils.h"
 
@@ -30,6 +32,52 @@ struct dom_attr {
 
 	bool is_id;			/**< Attribute is of type ID */
 };
+
+/**
+ * Create an attribute node
+ *
+ * \param doc     The owning document
+ * \param name    The name of the node to create
+ * \param result  Pointer to location to receive created attribute
+ * \return DOM_NO_ERR                on success,
+ *         DOM_INVALID_CHARACTER_ERR if ::name is invalid,
+ *         DOM_NO_MEM_ERR            on memory exhaustion.
+ *
+ * ::doc and ::name will have their reference counts increased.
+ *
+ * The returned attribute will already be referenced.
+ */
+dom_exception dom_attr_create(struct dom_document *doc,
+		struct dom_string *name, struct dom_attr **result)
+{
+	struct dom_attr *a;
+	dom_exception err;
+
+	/** \todo Sanity check the attribute name */
+
+	/* Allocate the element */
+	a = dom_document_alloc(doc, NULL, sizeof(struct dom_attr));
+	if (a == NULL)
+		return DOM_NO_MEM_ERR;
+
+	/* Initialise the base class */
+	err = dom_node_initialise(&a->base, doc, DOM_ATTRIBUTE_NODE,
+			name, NULL);
+	if (err != DOM_NO_ERR) {
+		dom_document_alloc(doc, a, 0);
+		return err;
+	}
+
+	/* Perform our type-specific initialisation */
+	a->specified = false;
+	a->owner = NULL;
+	a->schema_type_info = NULL;
+	a->is_id = false;
+
+	*result = a;
+
+	return DOM_NO_ERR;
+}
 
 /**
  * Retrieve an attribute's name

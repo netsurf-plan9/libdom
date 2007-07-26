@@ -64,7 +64,10 @@ typedef enum {
 	DOM_DOCUMENT_NODE		= 9,
 	DOM_DOCUMENT_TYPE_NODE		= 10,
 	DOM_DOCUMENT_FRAGMENT_NODE	= 11,
-	DOM_NOTATION_NODE		= 12
+	DOM_NOTATION_NODE		= 12,
+
+	/* And a count of the number of node types */
+	DOM_NODE_TYPE_COUNT		= DOM_NOTATION_NODE
 } dom_node_type;
 
 

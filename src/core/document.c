@@ -9,12 +9,17 @@
 #include <dom/bootstrap/implpriv.h>
 #include <dom/core/document.h>
 
+#include "core/attr.h"
 #include "core/characterdata.h"
 #include "core/document.h"
+#include "core/element.h"
 #include "core/namednodemap.h"
 #include "core/node.h"
 #include "core/nodelist.h"
+#include "core/text.h"
 #include "utils/utils.h"
+
+struct dom_document_type;
 
 /**
  * Item in list of active nodelists
@@ -42,9 +47,14 @@ struct dom_doc_nnm {
 struct dom_document {
 	struct dom_node base;		/**< Base node */
 
+	struct dom_document_type *type;	/**< Associated doctype */
+
 	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
 
 	struct dom_doc_nnm *maps;	/**< List of active namednodemaps */
+
+	/** Interned node name strings, indexed by node type */
+	struct dom_string *nodenames[DOM_NODE_TYPE_COUNT];
 
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
@@ -64,10 +74,12 @@ struct dom_document {
 dom_exception dom_document_get_doctype(struct dom_document *doc,
 		struct dom_document_type **result)
 {
-	UNUSED(doc);
-	UNUSED(result);
+	if (doc->type != NULL)
+		dom_node_ref((struct dom_node *) doc->type);
 
-	return DOM_NOT_SUPPORTED_ERR;
+	*result = doc->type;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -100,10 +112,20 @@ dom_exception dom_document_get_implementation(struct dom_document *doc,
 dom_exception dom_document_get_document_element(struct dom_document *doc,
 		struct dom_element **result)
 {
-	UNUSED(doc);
-	UNUSED(result);
+	struct dom_node *root;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Find first element node in child list */
+	for (root = doc->base.first_child; root != NULL; root = root->next) {
+		if (root->type == DOM_ELEMENT_NODE)
+			break;
+	}
+
+	if (root != NULL)
+		dom_node_ref(root);
+
+	*result = (struct dom_element *) root;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -115,6 +137,8 @@ dom_exception dom_document_get_document_element(struct dom_document *doc,
  * \return DOM_NO_ERR                on success,
  *         DOM_INVALID_CHARACTER_ERR if ::tag_name is invalid.
  *
+ * ::doc and ::tag_name will have their reference counts increased.
+ *
  * The returned node will have its reference count increased. It is
  * the responsibility of the caller to unref the node once it has
  * finished with it.
@@ -122,11 +146,7 @@ dom_exception dom_document_get_document_element(struct dom_document *doc,
 dom_exception dom_document_create_element(struct dom_document *doc,
 		struct dom_string *tag_name, struct dom_element **result)
 {
-	UNUSED(doc);
-	UNUSED(tag_name);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_element_create(doc, tag_name, result);
 }
 
 /**
@@ -143,10 +163,9 @@ dom_exception dom_document_create_element(struct dom_document *doc,
 dom_exception dom_document_create_document_fragment(struct dom_document *doc,
 		struct dom_node **result)
 {
-	UNUSED(doc);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_node_create(doc, DOM_DOCUMENT_FRAGMENT_NODE,
+			doc->nodenames[DOM_DOCUMENT_FRAGMENT_NODE],
+			NULL, result);
 }
 
 /**
@@ -164,11 +183,8 @@ dom_exception dom_document_create_document_fragment(struct dom_document *doc,
 dom_exception dom_document_create_text_node(struct dom_document *doc,
 		struct dom_string *data, struct dom_text **result)
 {
-	UNUSED(doc);
-	UNUSED(data);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_text_create(doc, DOM_TEXT_NODE,
+			doc->nodenames[DOM_TEXT_NODE], data, result);
 }
 
 /**
@@ -186,11 +202,8 @@ dom_exception dom_document_create_text_node(struct dom_document *doc,
 dom_exception dom_document_create_comment(struct dom_document *doc,
 		struct dom_string *data, struct dom_characterdata **result)
 {
-	UNUSED(doc);
-	UNUSED(data);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_characterdata_create(doc, DOM_COMMENT_NODE,
+			doc->nodenames[DOM_COMMENT_NODE], data, result);
 }
 
 /**
@@ -209,11 +222,9 @@ dom_exception dom_document_create_comment(struct dom_document *doc,
 dom_exception dom_document_create_cdata_section(struct dom_document *doc,
 		struct dom_string *data, struct dom_text **result)
 {
-	UNUSED(doc);
-	UNUSED(data);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_text_create(doc, DOM_CDATA_SECTION_NODE,
+			doc->nodenames[DOM_CDATA_SECTION_NODE],
+			data, result);
 }
 
 /**
@@ -236,12 +247,10 @@ dom_exception dom_document_create_processing_instruction(
 		struct dom_string *data,
 		struct dom_node **result)
 {
-	UNUSED(doc);
-	UNUSED(target);
-	UNUSED(data);
-	UNUSED(result);
+	/** \todo is the use of target as the node name correct? */
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_node_create(doc, DOM_PROCESSING_INSTRUCTION_NODE,
+			target, data, result);
 }
 
 /**
@@ -260,11 +269,7 @@ dom_exception dom_document_create_processing_instruction(
 dom_exception dom_document_create_attribute(struct dom_document *doc,
 		struct dom_string *name, struct dom_attr **result)
 {
-	UNUSED(doc);
-	UNUSED(name);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_attr_create(doc, name, result);
 }
 
 /**
@@ -284,11 +289,8 @@ dom_exception dom_document_create_attribute(struct dom_document *doc,
 dom_exception dom_document_create_entity_reference(struct dom_document *doc,
 		struct dom_string *name, struct dom_node **result)
 {
-	UNUSED(doc);
-	UNUSED(name);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_node_create(doc, DOM_ENTITY_REFERENCE_NODE,
+			name, NULL, result);
 }
 
 /**

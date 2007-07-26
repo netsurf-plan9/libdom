@@ -9,7 +9,66 @@
 #include <dom/core/string.h>
 
 #include "core/characterdata.h"
+#include "core/document.h"
 #include "utils/utils.h"
+
+/**
+ * Create a character data node of the given type
+ *
+ * \param doc     The owning document
+ * \param type    The type of node to create
+ * \param name    The node name, or NULL
+ * \param value   The node value, or NULL
+ * \param result  Pointer to location to receive created node
+ * \return DOM_NO_ERR on success, appropriate error otherwise
+ *
+ * ::doc, ::name and ::value will have their reference counts increased.
+ *
+ * The created node will already be referenced.
+ */
+dom_exception dom_characterdata_create(struct dom_document *doc,
+		dom_node_type type, struct dom_string *name,
+		struct dom_string *value, struct dom_characterdata **result)
+{
+	struct dom_characterdata *cdata;
+	dom_exception err;
+
+	/* Allocate object */
+	cdata = dom_document_alloc(doc, NULL,
+			sizeof(struct dom_characterdata));
+	if (cdata == NULL)
+		return DOM_NO_MEM_ERR;
+
+	/* Initialise node contents */
+	err = dom_characterdata_initialise(cdata, doc, type, name, value);
+	if (err != DOM_NO_ERR) {
+		dom_document_alloc(doc, cdata, 0);
+		return err;
+	}
+
+	*result = cdata;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Initialise a character data node
+ *
+ * \param node   The node to initialise
+ * \param doc    The document which owns the node
+ * \param type   The node type required
+ * \param name   The node name, or NULL
+ * \param value  The node value, or NULL
+ * \return DOM_NO_ERR on success.
+ *
+ * ::doc, ::name and ::value will have their reference counts increased.
+ */
+dom_exception dom_characterdata_initialise(struct dom_characterdata *cdata,
+		struct dom_document *doc, dom_node_type type,
+		struct dom_string *name, struct dom_string *value)
+{
+	return dom_node_initialise(&cdata->base, doc, type, name, value);
+}
 
 /**
  * Retrieve data from a character data node
