@@ -5,9 +5,13 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
+#include <string.h>
+
 #include <dom/functypes.h>
 #include <dom/bootstrap/implpriv.h>
 #include <dom/core/document.h>
+#include <dom/core/implementation.h>
+#include <dom/core/string.h>
 
 #include "core/attr.h"
 #include "core/cdatasection.h"
@@ -54,16 +58,115 @@ struct dom_document {
 
 	struct dom_document_type *type;	/**< Associated doctype */
 
+	struct dom_implementation *impl;	/**< Owning implementation */
+
 	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
 
 	struct dom_doc_nnm *maps;	/**< List of active namednodemaps */
 
 	/** Interned node name strings, indexed by node type */
-	struct dom_string *nodenames[DOM_NODE_TYPE_COUNT];
+	/* Index 0 is unused */
+	struct dom_string *nodenames[DOM_NODE_TYPE_COUNT + 1];
 
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
 };
+
+/**
+ * Create a Document
+ *
+ * \param impl   The DOM implementation owning the document
+ * \param alloc  Memory (de)allocation function
+ * \param pw     Pointer to client-specific private data
+ * \param doc    Pointer to location to receive created document
+ * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
+ *
+ * ::impl will have its reference count increased.
+ *
+ * The returned document will already be referenced.
+ */
+dom_exception dom_document_create(struct dom_implementation *impl,
+		dom_alloc alloc, void *pw, struct dom_document **doc)
+{
+	static const char *names[DOM_NODE_TYPE_COUNT + 1] = {
+		NULL,			/* Unused */
+		NULL,			/* Element */
+		NULL,			/* Attr */
+		"#text",		/* Text */
+		"#cdata-section",	/* CDATA section */
+		NULL,			/* Entity reference */
+		NULL,			/* Entity */
+		NULL,			/* Processing instruction */
+		"#comment",		/* Comment */
+		"#document",		/* Document */
+		NULL,			/* Document type */
+		"#document-fragment",	/* Document fragment */
+		NULL			/* Notation */
+	};
+	struct dom_document *d;
+	dom_exception err;
+
+	/* Create document */
+	d = alloc(NULL, sizeof(struct dom_document), pw);
+	if (d == NULL)
+		return DOM_NO_MEM_ERR;
+
+	/* Set up document allocation context - must be first */
+	d->alloc = alloc;
+	d->pw = pw;
+
+	/* Initialise interned node names */
+	for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
+		if (names[i] == NULL) {
+			/* Nothing to intern; skip this entry */
+			d->nodenames[i] = NULL;
+			continue;
+		}
+
+		/* Make string */
+		err = dom_string_create_from_const_ptr(d,
+				(const uint8_t *) names[i],
+				strlen(names[i]), &d->nodenames[i]);
+		if (err != DOM_NO_ERR) {
+			/* Failed, clean up strings we've created so far */
+			for (int j = 0; j < i; j++) {
+				if (d->nodenames[i] != NULL)
+					dom_string_unref(d->nodenames[i]);
+			}
+			/* And destroy document */
+			alloc(d, 0, pw);
+			return err;
+		}
+	}
+
+	/* Initialise base class */
+	err = dom_node_initialise(&d->base, d, DOM_DOCUMENT_NODE,
+			NULL, NULL);
+	if (err != DOM_NO_ERR) {
+		/* Clean up interned strings */
+		for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
+			if (d->nodenames[i] != NULL)
+				dom_string_unref(d->nodenames[i]);
+		}
+		/* And document */
+		alloc(d, 0, pw);
+		return err;
+	}
+
+	/* Initialise remaining type-specific data */
+	d->type = NULL;
+
+	if (impl != NULL)
+		dom_implementation_ref(impl);
+	d->impl = impl;
+
+	d->nodelists = NULL;
+	d->maps = NULL;
+
+	*doc = d;
+
+	return DOM_NO_ERR;
+}
 
 /**
  * Retrieve the doctype of a document
@@ -252,8 +355,6 @@ dom_exception dom_document_create_processing_instruction(
 		struct dom_string *data,
 		struct dom_processing_instruction **result)
 {
-	/** \todo is the use of target as the node name correct? */
-
 	return dom_processing_instruction_create(doc, target, data, result);
 }
 

@@ -244,6 +244,10 @@ struct dom_implementation_source {
 dom_exception dom_register_source(struct dom_implementation_source *source,
 		dom_alloc alloc, void *pw);
 
+/* Create a DOM document */
+dom_exception dom_document_create(struct dom_implementation *impl,
+		dom_alloc alloc, void *pw, struct dom_document **doc);
+
 /* Set a Document's DocumentType */
 dom_exception dom_document_set_doctype(struct dom_document *doc,
 		struct dom_document_type *doctype);
