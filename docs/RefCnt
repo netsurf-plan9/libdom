@@ -100,3 +100,43 @@ Example
           list of nodes pending deletion).
     2) The NodeList is destroyed.
 
+Destruction of Documents
+------------------------
+
+  Assumptions:
+  
+    1) Nodes within a document do not hold explicit references upon it.
+    2) Container data structures which address nodes in a document hold
+       an explicit reference upon the document. 
+       [FIXME: and upon the root node of the subtree they address -- this
+        implies that the explicit reference is unnecessary, as the 
+        addressed node will be added to the list of nodes pending 
+        deletion]
+    3) A document has no parent (i.e. the parent pointer is always NULL).
+    4) A given node may be located in either the document tree or the
+       list of nodes pending deletion. It may not be located in both
+       data structures simultaneously.
+    5) Nodes in the list of nodes pending deletion are in use by the 
+       client.
+
+  The above assumptions imply the following:
+  
+    + If a document has a non-zero reference count, it is in use by
+      the client. (1,2)
+    + If the document's reference count reaches zero, it is no longer
+      in use and is eligible for deletion. (1,2,3)
+    + The document destructor must attempt to forcibly delete the 
+      contents of the document tree as the nodes do not hold a reference
+      upon the document. (1)
+    + On destruction of a node, it must be removed from the list of nodes 
+      pending deletion. (4)
+    + The document may not be destroyed if the list of nodes pending
+      deletion is non-empty after the destructor has attempted to
+      destroy the document tree. (4,5)
+
+  Therefore, document destruction proceeds as follows:
+  
+    1) Forcibly destroy the document tree.
+    2) If the list of nodes pending deletion is non-empty, stop.
+    3) The list of nodes pending deletion is empty, so destroy the 
+       document.
