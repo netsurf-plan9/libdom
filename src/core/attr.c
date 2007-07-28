@@ -80,6 +80,53 @@ dom_exception dom_attr_create(struct dom_document *doc,
 }
 
 /**
+ * Destroy an attribute node
+ *
+ * \param doc   The owning document
+ * \param attr  The attribute to destroy
+ *
+ * The contents of ::attr will be destroyed and ::attr will be freed
+ */
+void dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr)
+{
+	struct dom_node *c, *d;
+
+	/* Destroy children of this node */
+	for (c = attr->base.first_child; c != NULL; c = d) {
+		d = c->next;
+
+		/* Detach child */
+		c->parent = NULL;
+
+		if (c->refcnt > 0) {
+			/* Something is using this child */
+
+			/** \todo add to list of nodes pending deletion */
+
+			continue;
+		}
+
+		/* Detach from sibling list */
+		c->previous = NULL;
+		c->next = NULL;
+
+		dom_node_destroy(c);
+	}
+
+	/* Now, clean up this node and destroy it */
+
+	if (attr->schema_type_info != NULL) {
+		/** \todo destroy schema type info */
+	}
+
+	attr->owner = NULL;
+
+	dom_node_finalise(doc, &attr->base);
+
+	dom_document_alloc(doc, attr, 0);
+}
+
+/**
  * Retrieve an attribute's name
  *
  * \param attr    Attribute to retrieve name from

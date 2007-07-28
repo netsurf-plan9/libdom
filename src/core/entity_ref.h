@@ -18,4 +18,7 @@ dom_exception dom_entity_reference_create(struct dom_document *doc,
 		struct dom_string *name, struct dom_string *value,
 		struct dom_entity_reference **result);
 
+void dom_entity_reference_destroy(struct dom_document *doc,
+		struct dom_entity_reference *entity);
+
 #endif

@@ -65,6 +65,75 @@ dom_exception dom_element_create(struct dom_document *doc,
 }
 
 /**
+ * Destroy an element
+ *
+ * \param doc      The owning document
+ * \param element  The element to destroy
+ *
+ * The contents of ::element will be destroyed and ::element will be freed.
+ */
+void dom_element_destroy(struct dom_document *doc,
+		struct dom_element *element)
+{
+	struct dom_node *c, *d;
+
+	/* Destroy children of this node */
+	for (c = element->base.first_child; c != NULL; c = d) {
+		d = c->next;
+
+		/* Detach child */
+		c->parent = NULL;
+
+		if (c->refcnt > 0) {
+			/* Something is using this child */
+
+			/** \todo add to list of nodes pending deletion */
+
+			continue;
+		}
+
+		/* Detach from sibling list */
+		c->previous = NULL;
+		c->next = NULL;
+
+		dom_node_destroy(c);
+	}
+
+	/* Destroy attributes attached to this node */
+	for (c = (struct dom_node *) element->base.attributes;
+			c != NULL; c = d) {
+		d = c->next;
+
+		/* Detach child */
+		c->parent = NULL;
+
+		if (c->refcnt > 0) {
+			/* Something is using this attribute */
+
+			/** \todo add to list of nodes pending deletion */
+
+			continue;
+		}
+
+		/* Detach from sibling list */
+		c->previous = NULL;
+		c->next = NULL;
+
+		dom_node_destroy(c);
+	}
+
+	if (element->schema_type_info != NULL) {
+		/** \todo destroy schema type info */
+	}
+
+	/* Finalise base class */
+	dom_node_finalise(doc, &element->base);
+
+	/* Free the element */
+	dom_document_alloc(doc, element, 0);
+}
+
+/**
  * Retrieve an element's tag name
  *
  * \param element  The element to retrieve the name from

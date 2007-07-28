@@ -55,3 +55,45 @@ dom_exception dom_entity_reference_create(struct dom_document *doc,
 
 	return DOM_NO_ERR;
 }
+
+/**
+ * Destroy an entity reference
+ *
+ * \param doc     The owning document
+ * \param entity  The entity reference to destroy
+ *
+ * The contents of ::entity will be destroyed and ::entity will be freed.
+ */
+void dom_entity_reference_destroy(struct dom_document *doc,
+		struct dom_entity_reference *entity)
+{
+	struct dom_node *c, *d;
+
+	/* Destroy children of this node */
+	for (c = entity->base.first_child; c != NULL; c = d) {
+		d = c->next;
+
+		/* Detach child */
+		c->parent = NULL;
+
+		if (c->refcnt > 0) {
+			/* Something is using this child */
+
+			/** \todo add to list of nodes pending deletion */
+
+			continue;
+		}
+
+		/* Detach from sibling list */
+		c->previous = NULL;
+		c->next = NULL;
+
+		dom_node_destroy(c);
+	}
+
+	/* Finalise base class */
+	dom_node_finalise(doc, &entity->base);
+
+	/* Destroy fragment */
+	dom_document_alloc(doc, entity, 0);
+}

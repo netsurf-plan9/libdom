@@ -56,3 +56,21 @@ dom_exception dom_processing_instruction_create(struct dom_document *doc,
 
 	return DOM_NO_ERR;
 }
+
+/**
+ * Destroy a processing instruction
+ *
+ * \param doc  The owning document
+ * \param pi   The processing instruction to destroy
+ *
+ * The contents of ::pi will be destroyed and ::pi will be freed.
+ */
+void dom_processing_instruction_destroy(struct dom_document *doc,
+		struct dom_processing_instruction *pi)
+{
+	/* Finalise base class */
+	dom_node_finalise(doc, &pi->base);
+
+	/* Free processing instruction */
+	dom_document_alloc(doc, pi, 0);
+}

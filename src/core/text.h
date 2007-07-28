@@ -31,8 +31,12 @@ dom_exception dom_text_create(struct dom_document *doc,
 		struct dom_string *name, struct dom_string *value,
 		struct dom_text **result);
 
+void dom_text_destroy(struct dom_document *doc, struct dom_text *text);
+
 dom_exception dom_text_initialise(struct dom_text *text,
 		struct dom_document *doc, dom_node_type type,
 		struct dom_string *name, struct dom_string *value);
+
+void dom_text_finalise(struct dom_document *doc, struct dom_text *text);
 
 #endif

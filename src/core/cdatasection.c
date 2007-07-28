@@ -54,3 +54,21 @@ dom_exception dom_cdata_section_create(struct dom_document *doc,
 
 	return DOM_NO_ERR;
 }
+
+/**
+ * Destroy a CDATA section
+ *
+ * \param doc    The owning document
+ * \param cdata  The cdata section to destroy
+ *
+ * The contents of ::cdata will be destroyed and ::cdata will be freed.
+ */
+void dom_cdata_section_destroy(struct dom_document *doc,
+		struct dom_cdata_section *cdata)
+{
+	/* Clean up base node contents */
+	dom_text_finalise(doc, &cdata->base);
+
+	/* Destroy the node */
+	dom_document_alloc(doc, cdata, 0);
+}

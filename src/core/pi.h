@@ -18,4 +18,7 @@ dom_exception dom_processing_instruction_create(struct dom_document *doc,
 		struct dom_string *name, struct dom_string *value,
 		struct dom_processing_instruction **result);
 
+void dom_processing_instruction_destroy(struct dom_document *doc,
+		struct dom_processing_instruction *pi);
+
 #endif

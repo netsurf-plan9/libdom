@@ -15,7 +15,6 @@
 
 #include "core/attr.h"
 #include "core/cdatasection.h"
-#include "core/characterdata.h"
 #include "core/comment.h"
 #include "core/document.h"
 #include "core/doc_fragment.h"

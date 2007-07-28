@@ -54,3 +54,21 @@ dom_exception dom_comment_create(struct dom_document *doc,
 
 	return DOM_NO_ERR;
 }
+
+/**
+ * Destroy a comment node
+ *
+ * \param doc      The owning document
+ * \param comment  The node to destroy
+ *
+ * The contents of ::comment will be destroyed and ::comment will be freed
+ */
+void dom_comment_destroy(struct dom_document *doc,
+		struct dom_comment *comment)
+{
+	/* Finalise base class contents */
+	dom_characterdata_finalise(doc, &comment->base);
+
+	/* Free node */
+	dom_document_alloc(doc, comment, 0);
+}

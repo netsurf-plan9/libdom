@@ -8,9 +8,88 @@
 #include <dom/core/document.h>
 #include <dom/core/string.h>
 
+#include "core/attr.h"
+#include "core/cdatasection.h"
+#include "core/comment.h"
 #include "core/document.h"
+#include "core/doc_fragment.h"
+#include "core/element.h"
+#include "core/entity_ref.h"
 #include "core/node.h"
+#include "core/pi.h"
+#include "core/text.h"
 #include "utils/utils.h"
+
+/**
+ * Destroy a DOM node
+ *
+ * \param node  The node to destroy
+ *
+ * ::node's parent link must be NULL and its reference count must be 0.
+ *
+ * ::node will be freed.
+ *
+ * This function should only be called from dom_node_unref or type-specific
+ * destructors (for destroying child nodes). Anything else should not
+ * be attempting to destroy nodes -- they should simply be unreferencing
+ * them (so destruction will occur at the appropriate time).
+ */
+void dom_node_destroy(struct dom_node *node)
+{
+	struct dom_document *owner = node->owner;
+
+	/* This function simply acts as a central despatcher
+	 * for type-specific destructors. It claims a reference upon the
+	 * owning document during destruction to ensure that the document
+	 * doesn't get destroyed before its contents. */
+
+	dom_node_ref((struct dom_node *) owner);
+
+	switch (node->type) {
+	case DOM_ELEMENT_NODE:
+		dom_element_destroy(owner, (struct dom_element *) node);
+		break;
+	case DOM_ATTRIBUTE_NODE:
+		dom_attr_destroy(owner, (struct dom_attr *) node);
+		break;
+	case DOM_TEXT_NODE:
+		dom_text_destroy(owner, (struct dom_text *) node);
+		break;
+	case DOM_CDATA_SECTION_NODE:
+		dom_cdata_section_destroy(owner,
+				(struct dom_cdata_section *) node);
+		break;
+	case DOM_ENTITY_REFERENCE_NODE:
+		dom_entity_reference_destroy(owner,
+				(struct dom_entity_reference *) node);
+		break;
+	case DOM_ENTITY_NODE:
+		/** \todo entity node */
+		break;
+	case DOM_PROCESSING_INSTRUCTION_NODE:
+		dom_processing_instruction_destroy(owner,
+				(struct dom_processing_instruction *) node);
+		break;
+	case DOM_COMMENT_NODE:
+		dom_comment_destroy(owner, (struct dom_comment *) node);
+		break;
+	case DOM_DOCUMENT_NODE:
+		/** \todo document node */
+		break;
+	case DOM_DOCUMENT_TYPE_NODE:
+		/** \todo document type node */
+		break;
+	case DOM_DOCUMENT_FRAGMENT_NODE:
+		dom_document_fragment_destroy(owner,
+				(struct dom_document_fragment *) node);
+		break;
+	case DOM_NOTATION_NODE:
+		/** \todo notation node */
+		break;
+	}
+
+	dom_node_unref((struct dom_node *) owner);
+}
 
 /**
  * Initialise a DOM node
@@ -61,6 +140,55 @@ dom_exception dom_node_initialise(struct dom_node *node,
 }
 
 /**
+ * Finalise a DOM node
+ *
+ * \param doc   The owning document
+ * \param node  The node to finalise
+ *
+ * The contents of ::node will be cleaned up. ::node will not be freed.
+ * All children of ::node should have been removed prior to finalisation.
+ */
+void dom_node_finalise(struct dom_document *doc, struct dom_node *node)
+{
+	struct dom_user_data *u, *v;
+
+	/* Destroy user data */
+	for (u = node->user_data; u != NULL; u = v) {
+		v = u->next;
+
+		dom_string_unref(u->key);
+
+		dom_document_alloc(doc, u, 0);
+	}
+
+	if (node->localname != NULL)
+		dom_string_unref(node->localname);
+
+	if (node->prefix != NULL)
+		dom_string_unref(node->prefix);
+
+	if (node->namespace != NULL)
+		dom_string_unref(node->namespace);
+
+	dom_node_unref((struct dom_node *) node->owner);
+	node->owner = NULL;
+
+	/* Paranoia */
+	node->attributes = NULL;
+	node->next = NULL;
+	node->previous = NULL;
+	node->last_child = NULL;
+	node->first_child = NULL;
+	node->parent = NULL;
+
+	if (node->value != NULL)
+		dom_string_unref(node->value);
+
+	if (node->name != NULL)
+		dom_string_unref(node->name);
+}
+
+/**
  * Claim a reference on a DOM node
  *
  * \param node  The node to claim a reference on
@@ -75,13 +203,16 @@ void dom_node_ref(struct dom_node *node)
  *
  * \param node  The node to release the reference from
  *
- * If the reference count reaches zero, any memory claimed by the
- * node will be released
+ * If the reference count reaches zero and the node is not part of any
+ * document, any memory claimed by the node will be released.
  */
 void dom_node_unref(struct dom_node *node)
 {
-	if (--node->refcnt == 0) {
-		/** \todo implement */
+	if (node->refcnt > 0)
+		node->refcnt--;
+
+	if (node->refcnt == 0 && node->parent == NULL) {
+		dom_node_destroy(node);
 	}
 }
 

@@ -55,3 +55,45 @@ dom_exception dom_document_fragment_create(struct dom_document *doc,
 
 	return DOM_NO_ERR;
 }
+
+/**
+ * Destroy a document fragment
+ *
+ * \param doc   The owning document
+ * \param frag  The document fragment to destroy
+ *
+ * The contents of ::frag will be destroyed and ::frag will be freed.
+ */
+void dom_document_fragment_destroy(struct dom_document *doc,
+		struct dom_document_fragment *frag)
+{
+	struct dom_node *c, *d;
+
+	/* Destroy children of this node */
+	for (c = frag->base.first_child; c != NULL; c = d) {
+		d = c->next;
+
+		/* Detach child */
+		c->parent = NULL;
+
+		if (c->refcnt > 0) {
+			/* Something is using this child */
+
+			/** \todo add to list of nodes pending deletion */
+
+			continue;
+		}
+
+		/* Detach from sibling list */
+		c->previous = NULL;
+		c->next = NULL;
+
+		dom_node_destroy(c);
+	}
+
+	/* Finalise base class */
+	dom_node_finalise(doc, &frag->base);
+
+	/* Destroy fragment */
+	dom_document_alloc(doc, frag, 0);
+}

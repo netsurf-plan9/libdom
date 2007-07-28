@@ -18,4 +18,7 @@ dom_exception dom_document_fragment_create(struct dom_document *doc,
 		struct dom_string *name, struct dom_string *value,
 		struct dom_document_fragment **result);
 
+void dom_document_fragment_destroy(struct dom_document *doc,
+		struct dom_document_fragment *frag);
+
 #endif

@@ -52,6 +52,23 @@ dom_exception dom_text_create(struct dom_document *doc,
 }
 
 /**
+ * Destroy a text node
+ *
+ * \param doc   The owning document
+ * \param text  The text node to destroy
+ *
+ * The contents of ::text will be destroyed and ::text will be freed.
+ */
+void dom_text_destroy(struct dom_document *doc, struct dom_text *text)
+{
+	/* Finalise node */
+	dom_text_finalise(doc, text);
+
+	/* Free node */
+	dom_document_alloc(doc, text, 0);
+}
+
+/**
  * Initialise a text node
  *
  * \param text   The node to initialise
@@ -79,6 +96,19 @@ dom_exception dom_text_initialise(struct dom_text *text,
 	text->element_content_whitespace = false;
 
 	return DOM_NO_ERR;
+}
+
+/**
+ * Finalise a text node
+ *
+ * \param doc   The owning document
+ * \param text  The text node to finalise
+ *
+ * The contents of ::text will be cleaned up. ::text will not be freed.
+ */
+void dom_text_finalise(struct dom_document *doc, struct dom_text *text)
+{
+	dom_characterdata_finalise(doc, &text->base);
 }
 
 /**

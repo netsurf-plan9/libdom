@@ -21,4 +21,7 @@ dom_exception dom_characterdata_initialise(struct dom_characterdata *cdata,
 		struct dom_document *doc, dom_node_type type,
 		struct dom_string *name, struct dom_string *value);
 
+void dom_characterdata_finalise(struct dom_document *doc,
+		struct dom_characterdata *cdata);
+
 #endif

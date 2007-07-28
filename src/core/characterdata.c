@@ -32,6 +32,20 @@ dom_exception dom_characterdata_initialise(struct dom_characterdata *cdata,
 }
 
 /**
+ * Finalise a character data node
+ *
+ * \param doc    The owning document
+ * \param cdata  The node to finalise
+ *
+ * The contents of ::cdata will be cleaned up. ::cdata will not be freed.
+ */
+void dom_characterdata_finalise(struct dom_document *doc,
+		struct dom_characterdata *cdata)
+{
+	dom_node_finalise(doc, &cdata->base);
+}
+
+/**
  * Retrieve data from a character data node
  *
  * \param cdata  Character data node to retrieve data from
