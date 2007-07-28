@@ -19,6 +19,9 @@ struct dom_node;
 struct dom_nodelist;
 struct dom_string;
 
+/* Destroy a document */
+void dom_document_destroy(struct dom_document *doc);
+
 /* Get base of document buffer */
 const uint8_t *dom_document_get_base(struct dom_document *doc);
 

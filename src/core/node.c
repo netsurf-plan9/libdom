@@ -39,10 +39,11 @@ void dom_node_destroy(struct dom_node *node)
 	struct dom_document *owner = node->owner;
 
 	/* This function simply acts as a central despatcher
-	 * for type-specific destructors. It claims a reference upon the
-	 * owning document during destruction to ensure that the document
-	 * doesn't get destroyed before its contents. */
+	 * for type-specific destructors. */
 
+	/* Claim a reference upon the owning document during destruction
+	 * to ensure that the document doesn't get destroyed before its
+	 * contents. */
 	dom_node_ref((struct dom_node *) owner);
 
 	switch (node->type) {
@@ -74,7 +75,7 @@ void dom_node_destroy(struct dom_node *node)
 		dom_comment_destroy(owner, (struct dom_comment *) node);
 		break;
 	case DOM_DOCUMENT_NODE:
-		/** \todo document node */
+		dom_document_destroy((struct dom_document *) node);
 		break;
 	case DOM_DOCUMENT_TYPE_NODE:
 		/** \todo document type node */
@@ -88,6 +89,9 @@ void dom_node_destroy(struct dom_node *node)
 		break;
 	}
 
+	/* Release the reference we claimed on the document. If this is
+	 * the last reference held on the document and the list of nodes
+	 * pending deletion is empty, then the document will be destroyed. */
 	dom_node_unref((struct dom_node *) owner);
 }
 
@@ -124,7 +128,24 @@ dom_exception dom_node_initialise(struct dom_node *node,
 	node->next = NULL;
 	node->attributes = NULL;
 
-	dom_node_ref((struct dom_node *) doc);
+	/* Note: nodes do not reference the document to which they belong,
+	 * as this would result in the document never being destroyed once
+	 * the client has finished with it. The document will be aware of
+	 * any nodes that it owns through 2 mechanisms:
+	 *
+	 * either a) Membership of the document tree
+	 * or     b) Membership of the list of nodes pending deletion
+	 *
+	 * It is not possible for any given node to be a member of both
+	 * data structures at the same time.
+	 *
+	 * The document will not be destroyed until both of these
+	 * structures are empty. It will forcibly attempt to empty
+	 * the document tree on document destruction. Any still-referenced
+	 * nodes at that time will be added to the list of nodes pending
+	 * deletion. This list will not be forcibly emptied, as it contains
+	 * those nodes (and their sub-trees) in use by client code.
+	 */
 	node->owner = doc;
 
 	/** \todo Namespace handling */
@@ -170,7 +191,9 @@ void dom_node_finalise(struct dom_document *doc, struct dom_node *node)
 	if (node->namespace != NULL)
 		dom_string_unref(node->namespace);
 
-	dom_node_unref((struct dom_node *) node->owner);
+	/** \todo check if this node is in list of nodes pending deletion.
+	 * If so, it must be removed from the list, so the document gets
+	 * destroyed once the list is empty (and no longer referenced) */
 	node->owner = NULL;
 
 	/* Paranoia */

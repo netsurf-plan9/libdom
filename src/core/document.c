@@ -138,8 +138,10 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 		}
 	}
 
-	/* Initialise base class */
-	err = dom_node_initialise(&d->base, d, DOM_DOCUMENT_NODE,
+	/* Initialise base class -- the Document has no parent, so
+	 * destruction will be attempted as soon as its reference count
+	 * reaches zero. */
+	err = dom_node_initialise(&d->base, NULL, DOM_DOCUMENT_NODE,
 			NULL, NULL);
 	if (err != DOM_NO_ERR) {
 		/* Clean up interned strings */
@@ -165,6 +167,79 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	*doc = d;
 
 	return DOM_NO_ERR;
+}
+
+/**
+ * Destroy a document
+ *
+ * \param doc  The document to destroy
+ *
+ * The contents of ::doc will be destroyed and ::doc will be freed.
+ */
+void dom_document_destroy(struct dom_document *doc)
+{
+	struct dom_node *c, *d;
+
+	/* Destroy children of this node */
+	for (c = doc->base.first_child; c != NULL; c = d) {
+		d = c->next;
+
+		/* Detach child */
+		c->parent = NULL;
+
+		if (c->refcnt > 0) {
+			/* Something is using this child */
+
+			/** \todo add to list of nodes pending deletion */
+
+			continue;
+		}
+
+		/* Detach from sibling list */
+		c->previous = NULL;
+		c->next = NULL;
+
+		dom_node_destroy(c);
+	}
+
+	/** \todo Ensure list of nodes pending deletion is empty. If not,
+	 * then we can't yet destroy the document (its destruction will
+	 * have to wait until the pending nodes are destroyed) */
+
+	/* Ok, the document tree is empty, as is the list of nodes pending
+	 * deletion. Therefore, it is safe to destroy the document. */
+
+	/* Destroy the doctype (if there is one) */
+	if (doc->type != NULL) {
+		((struct dom_node *) doc->type)->parent = NULL;
+
+		dom_node_destroy((struct dom_node *) doc->type);
+	}
+
+	doc->type = NULL;
+
+	if (doc->impl != NULL)
+		dom_implementation_unref(doc->impl);
+	doc->impl = NULL;
+
+	/* This is paranoia -- if there are any remaining nodelists or
+	 * namednodemaps, then the document's reference count will be
+	 * non-zero as these data structures reference the document because
+	 * they are held by the client. */
+	doc->nodelists = NULL;
+	doc->maps = NULL;
+
+	/* Clean up interned strings */
+	for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
+		if (doc->nodenames[i] != NULL)
+			dom_string_unref(doc->nodenames[i]);
+	}
+
+	/* Finalise base class */
+	dom_node_finalise(doc, &doc->base);
+
+	/* Free document */
+	doc->alloc(doc, 0, doc->pw);
 }
 
 /**
