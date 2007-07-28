@@ -13,14 +13,19 @@
 #include <dom/core/exceptions.h>
 
 struct dom_attr;
+struct dom_cdata_section;
 struct dom_characterdata;
+struct dom_comment;
 struct dom_configuration;
 struct dom_document;
+struct dom_document_fragment;
 struct dom_document_type;
 struct dom_element;
+struct dom_entity_reference;
 struct dom_implementation;
 struct dom_node;
 struct dom_nodelist;
+struct dom_processing_instruction;
 struct dom_string;
 struct dom_text;
 
@@ -33,20 +38,22 @@ dom_exception dom_document_get_document_element(struct dom_document *doc,
 dom_exception dom_document_create_element(struct dom_document *doc,
 		struct dom_string *tag_name, struct dom_element **result);
 dom_exception dom_document_create_document_fragment(struct dom_document *doc,
-		struct dom_node **result);
+		struct dom_document_fragment **result);
 dom_exception dom_document_create_text_node(struct dom_document *doc,
 		struct dom_string *data, struct dom_text **result);
 dom_exception dom_document_create_comment(struct dom_document *doc,
-		struct dom_string *data, struct dom_characterdata **result);
+		struct dom_string *data, struct dom_comment **result);
 dom_exception dom_document_create_cdata_section(struct dom_document *doc,
-		struct dom_string *data, struct dom_text **result);
+		struct dom_string *data, struct dom_cdata_section **result);
 dom_exception dom_document_create_processing_instruction(
 		struct dom_document *doc, struct dom_string *target,
-		struct dom_string *data, struct dom_node **result);
+		struct dom_string *data,
+		struct dom_processing_instruction **result);
 dom_exception dom_document_create_attribute(struct dom_document *doc,
 		struct dom_string *name, struct dom_attr **result);
 dom_exception dom_document_create_entity_reference(struct dom_document *doc,
-		struct dom_string *name, struct dom_node **result);
+		struct dom_string *name,
+		struct dom_entity_reference **result);
 dom_exception dom_document_get_elements_by_tag_name(struct dom_document *doc,
 		struct dom_string *tagname, struct dom_nodelist **result);
 dom_exception dom_document_import_node(struct dom_document *doc,

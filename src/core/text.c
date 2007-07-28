@@ -14,20 +14,9 @@
 #include "utils/utils.h"
 
 /**
- * A DOM text node
- */
-struct dom_text {
-	struct dom_characterdata base;	/**< Base node */
-
-	bool element_content_whitespace;	/**< This node is element
-						 * content whitespace */
-};
-
-/**
  * Create a text node
  *
  * \param doc     The owning document
- * \param type    The type of text node to create
  * \param name    The name of the node to create
  * \param value   The text content of the node
  * \param result  Pointer to location to receive created node
@@ -38,29 +27,56 @@ struct dom_text {
  *
  * The returned node will already be referenced.
  */
-dom_exception dom_text_create(struct dom_document *doc, dom_node_type type,
+dom_exception dom_text_create(struct dom_document *doc,
 		struct dom_string *name, struct dom_string *value,
 		struct dom_text **result)
 {
 	struct dom_text *t;
 	dom_exception err;
 
-	/* Allocate the element */
+	/* Allocate the text node */
 	t = dom_document_alloc(doc, NULL, sizeof(struct dom_text));
 	if (t == NULL)
 		return DOM_NO_MEM_ERR;
 
-	/* Initialise the base class */
-	err = dom_characterdata_initialise(&t->base, doc, type, name, value);
+	/* And initialise the node */
+	err = dom_text_initialise(t, doc, DOM_TEXT_NODE, name, value);
 	if (err != DOM_NO_ERR) {
 		dom_document_alloc(doc, t, 0);
 		return err;
 	}
 
-	/* Perform our type-specific initialisation */
-	t->element_content_whitespace = false;
-
 	*result = t;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Initialise a text node
+ *
+ * \param text   The node to initialise
+ * \param doc    The owning document
+ * \param type   The type of the node
+ * \param name   The name of the node to create
+ * \param value  The text content of the node
+ * \return DOM_NO_ERR on success.
+ *
+ * ::doc, ::name and ::value will have their reference counts increased.
+ */
+dom_exception dom_text_initialise(struct dom_text *text,
+		struct dom_document *doc, dom_node_type type,
+		struct dom_string *name, struct dom_string *value)
+{
+	dom_exception err;
+
+	/* Initialise the base class */
+	err = dom_characterdata_initialise(&text->base, doc, type,
+			name, value);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	/* Perform our type-specific initialisation */
+	text->element_content_whitespace = false;
 
 	return DOM_NO_ERR;
 }

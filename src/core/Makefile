@@ -22,8 +22,11 @@
 CFLAGS += -I$(CURDIR)
 
 # Objects
-OBJS = attr characterdata document document_type element implementation impllist \
-	namednodemap node nodelist string text
+OBJS = attr cdatasection characterdata comment \
+	document document_type doc_fragment \
+	element entity_ref implementation impllist \
+	namednodemap node nodelist \
+	pi string text
 
 .PHONY: clean debug distclean export release setup test
 

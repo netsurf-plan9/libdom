@@ -873,7 +873,7 @@ void xml_parser_add_text_node(xml_parser *parser, struct dom_node *parent,
 void xml_parser_add_cdata_section(xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child)
 {
-	struct dom_text *cdata, *ins_cdata;
+	struct dom_cdata_section *cdata, *ins_cdata;
 	struct dom_string *data;
 	dom_exception err;
 
@@ -927,7 +927,7 @@ void xml_parser_add_cdata_section(xml_parser *parser,
 void xml_parser_add_entity_reference(xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child)
 {
-	struct dom_node *entity, *ins_entity;
+	struct dom_entity_reference *entity, *ins_entity;
 	struct dom_string *name;
 	xmlNodePtr c;
 	dom_exception err;
@@ -988,7 +988,7 @@ void xml_parser_add_entity_reference(xml_parser *parser,
 void xml_parser_add_comment(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child)
 {
-	struct dom_characterdata *comment, *ins_comment;
+	struct dom_comment *comment, *ins_comment;
 	struct dom_string *data;
 	dom_exception err;
 

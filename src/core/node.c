@@ -13,65 +13,6 @@
 #include "utils/utils.h"
 
 /**
- * Create a DOM node of the given type
- *
- * \param doc     The owning document
- * \param type    The type of node to create
- * \param name    The node name, or NULL
- * \param value   The node value, or NULL
- * \param result  Pointer to location to receive created node
- * \return DOM_NO_ERR on success, appropriate error otherwise
- *
- * ::doc, ::name and ::value will have their reference counts increased.
- *
- * The created node will already be referenced.
- */
-dom_exception dom_node_create(struct dom_document *doc, dom_node_type type,
-		struct dom_string *name, struct dom_string *value,
-		struct dom_node **result)
-{
-	struct dom_node *node;
-	dom_exception err;
-
-	/* If there's a type-specific constructor, use that */
-	switch (type) {
-	case DOM_ELEMENT_NODE:
-		return dom_document_create_element(doc, name,
-				(struct dom_element **) result);
-	case DOM_ATTRIBUTE_NODE:
-		return dom_document_create_attribute(doc, name,
-				(struct dom_attr **) result);
-	case DOM_TEXT_NODE:
-		return dom_document_create_text_node(doc, value,
-				(struct dom_text **) result);
-	case DOM_CDATA_SECTION_NODE:
-		return dom_document_create_cdata_section(doc, value,
-				(struct dom_text **) result);
-	case DOM_COMMENT_NODE:
-		return dom_document_create_comment(doc, value,
-				(struct dom_characterdata **) result);
-	default:
-		break;
-	}
-
-	/* Otherwise, this is a generic node, so build it ourselves */
-	node = dom_document_alloc(doc, NULL, sizeof(struct dom_node));
-	if (node == NULL)
-		return DOM_NO_MEM_ERR;
-
-	/* Initialise node contents */
-	err = dom_node_initialise(node, doc, type, name, value);
-	if (err != DOM_NO_ERR) {
-		dom_document_alloc(doc, node, 0);
-		return err;
-	}
-
-	*result = node;
-
-	return DOM_NO_ERR;
-}
-
-/**
  * Initialise a DOM node
  *
  * \param node   The node to initialise

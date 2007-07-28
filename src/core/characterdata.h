@@ -17,10 +17,6 @@ struct dom_characterdata {
 	struct dom_node base;		/**< Base node */
 };
 
-dom_exception dom_characterdata_create(struct dom_document *doc,
-		dom_node_type type, struct dom_string *name,
-		struct dom_string *value, struct dom_characterdata **result);
-
 dom_exception dom_characterdata_initialise(struct dom_characterdata *cdata,
 		struct dom_document *doc, dom_node_type type,
 		struct dom_string *name, struct dom_string *value);

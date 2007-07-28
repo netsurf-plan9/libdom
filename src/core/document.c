@@ -10,12 +10,17 @@
 #include <dom/core/document.h>
 
 #include "core/attr.h"
+#include "core/cdatasection.h"
 #include "core/characterdata.h"
+#include "core/comment.h"
 #include "core/document.h"
+#include "core/doc_fragment.h"
 #include "core/element.h"
+#include "core/entity_ref.h"
 #include "core/namednodemap.h"
 #include "core/node.h"
 #include "core/nodelist.h"
+#include "core/pi.h"
 #include "core/text.h"
 #include "utils/utils.h"
 
@@ -161,9 +166,9 @@ dom_exception dom_document_create_element(struct dom_document *doc,
  * finished with it.
  */
 dom_exception dom_document_create_document_fragment(struct dom_document *doc,
-		struct dom_node **result)
+		struct dom_document_fragment **result)
 {
-	return dom_node_create(doc, DOM_DOCUMENT_FRAGMENT_NODE,
+	return dom_document_fragment_create(doc,
 			doc->nodenames[DOM_DOCUMENT_FRAGMENT_NODE],
 			NULL, result);
 }
@@ -183,8 +188,8 @@ dom_exception dom_document_create_document_fragment(struct dom_document *doc,
 dom_exception dom_document_create_text_node(struct dom_document *doc,
 		struct dom_string *data, struct dom_text **result)
 {
-	return dom_text_create(doc, DOM_TEXT_NODE,
-			doc->nodenames[DOM_TEXT_NODE], data, result);
+	return dom_text_create(doc, doc->nodenames[DOM_TEXT_NODE],
+			data, result);
 }
 
 /**
@@ -200,10 +205,10 @@ dom_exception dom_document_create_text_node(struct dom_document *doc,
  * finished with it.
  */
 dom_exception dom_document_create_comment(struct dom_document *doc,
-		struct dom_string *data, struct dom_characterdata **result)
+		struct dom_string *data, struct dom_comment **result)
 {
-	return dom_characterdata_create(doc, DOM_COMMENT_NODE,
-			doc->nodenames[DOM_COMMENT_NODE], data, result);
+	return dom_comment_create(doc, doc->nodenames[DOM_COMMENT_NODE],
+			data, result);
 }
 
 /**
@@ -220,9 +225,9 @@ dom_exception dom_document_create_comment(struct dom_document *doc,
  * finished with it.
  */
 dom_exception dom_document_create_cdata_section(struct dom_document *doc,
-		struct dom_string *data, struct dom_text **result)
+		struct dom_string *data, struct dom_cdata_section **result)
 {
-	return dom_text_create(doc, DOM_CDATA_SECTION_NODE,
+	return dom_cdata_section_create(doc,
 			doc->nodenames[DOM_CDATA_SECTION_NODE],
 			data, result);
 }
@@ -245,12 +250,11 @@ dom_exception dom_document_create_cdata_section(struct dom_document *doc,
 dom_exception dom_document_create_processing_instruction(
 		struct dom_document *doc, struct dom_string *target,
 		struct dom_string *data,
-		struct dom_node **result)
+		struct dom_processing_instruction **result)
 {
 	/** \todo is the use of target as the node name correct? */
 
-	return dom_node_create(doc, DOM_PROCESSING_INSTRUCTION_NODE,
-			target, data, result);
+	return dom_processing_instruction_create(doc, target, data, result);
 }
 
 /**
@@ -287,10 +291,10 @@ dom_exception dom_document_create_attribute(struct dom_document *doc,
  * finished with it.
  */
 dom_exception dom_document_create_entity_reference(struct dom_document *doc,
-		struct dom_string *name, struct dom_node **result)
+		struct dom_string *name,
+		struct dom_entity_reference **result)
 {
-	return dom_node_create(doc, DOM_ENTITY_REFERENCE_NODE,
-			name, NULL, result);
+	return dom_entity_reference_create(doc, name, NULL, result);
 }
 
 /**
