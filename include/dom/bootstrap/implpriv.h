@@ -13,7 +13,7 @@
  * include this, as those types are defined here.
  *
  * The Document implementation includes this as it needs the declaration of
- * dom_document_set_doctype.
+ * dom_document_create and dom_document_set_doctype.
  *
  * No other client should be including this.
  */
@@ -117,8 +117,8 @@ struct dom_implementation {
 	 * Any memory allocated by this call should be allocated using
 	 * the provided memory (de)allocation function.
 	 *
-	 * The doctype will be referenced, so the client need not do this
-	 * explicitly. The client must unref the doctype once it has
+	 * The document will be referenced, so the client need not do this
+	 * explicitly. The client must unref the document once it has
 	 * finished with it.
 	 */
 	dom_exception (*create_document)(struct dom_implementation *impl,

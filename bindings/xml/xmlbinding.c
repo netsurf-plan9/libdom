@@ -13,7 +13,7 @@
 #include "utils.h"
 
 static dom_exception xml_dom_get_dom_implementation(
-		struct dom_string *features, 
+		struct dom_string *features,
 		struct dom_implementation **impl, dom_alloc alloc, void *pw);
 static dom_exception xml_dom_get_dom_implementation_list(
 		struct dom_string *features,
@@ -86,7 +86,7 @@ static struct dom_implementation xml_dom_impl = {
  * once it has finished with it.
  */
 dom_exception xml_dom_get_dom_implementation(
-		struct dom_string *features, 
+		struct dom_string *features,
 		struct dom_implementation **impl, dom_alloc alloc, void *pw)
 {
 	UNUSED(features);
@@ -258,8 +258,8 @@ dom_exception xml_dom_implementation_create_document_type(
  * Any memory allocated by this call should be allocated using
  * the provided memory (de)allocation function.
  *
- * The doctype will be referenced, so the client need not do this
- * explicitly. The client must unref the doctype once it has
+ * The document will be referenced, so the client need not do this
+ * explicitly. The client must unref the document once it has
  * finished with it.
  */
 dom_exception xml_dom_implementation_create_document(

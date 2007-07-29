@@ -117,8 +117,8 @@ dom_exception dom_implementation_create_document_type(
  * Any memory allocated by this call should be allocated using
  * the provided memory (de)allocation function.
  *
- * The doctype will be referenced, so the client need not do this
- * explicitly. The client must unref the doctype once it has
+ * The document will be referenced, so the client need not do this
+ * explicitly. The client must unref the document once it has
  * finished with it.
  */
 dom_exception dom_implementation_create_document(
