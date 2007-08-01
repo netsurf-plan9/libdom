@@ -341,20 +341,23 @@ If @value is specified, the mutator is called and @value is used as the paramete
 				<xsl:value-of select="$method/@name"/>
 			</xsl:otherwise>
 		</xsl:choose>
-	</xsl:variable> 
+	</xsl:variable>
+	
+	<xsl:variable name="current-position" select="position()"/>
 
-	<!-- setup variables to hold parameter literals (for DOMStrings) -->
+	<!--
+	setup variables to hold parameter literals (for DOMStrings)
+	TODO: needs testing with method that takes more than one parameter
+	TODO: needs testing with more than one method call per test
+	-->
 	<xsl:for-each select="$method/parameters/param">
 		<xsl:variable name="paramDef" select="."/>
         	<xsl:variable name="value" select="$current-node/@*[name() = $paramDef/@name]"/>
         	
         	<xsl:if test="starts-with($value, '&quot;')">
-        		
         		<xsl:call-template name="produce-dom-string">
         			<xsl:with-param name="vardefs" select="$vardefs"/>
-        			
-        			<!-- FIXME: xsl:number isn't sufficient to guarantee global uniqueness -->
-        			<xsl:with-param name="var-name"><xsl:text>domString</xsl:text><xsl:number/></xsl:with-param>
+        			<xsl:with-param name="var-name"><xsl:text>domString</xsl:text><xsl:value-of select="$current-position"/>_<xsl:number/></xsl:with-param>
 				<xsl:with-param name="string" select="$value"/>
         		</xsl:call-template>
         	</xsl:if>
@@ -380,12 +383,12 @@ If @value is specified, the mutator is called and @value is used as the paramete
         	<xsl:variable name="value" select="$current-node/@*[name() = $paramDef/@name]"/>
         	
         	<xsl:text>, </xsl:text>
-        	<!-- TODO: cast, also, need to handle stuff like string constants (need turning into DOMStrings) -->
         	
         	<xsl:call-template name="produce-param">
         		<xsl:with-param name="vardefs" select="$vardefs"/>
         		<xsl:with-param name="var-or-literal" select="$value"/>
         		<xsl:with-param name="interface-type" select="./@type"/>
+        		<xsl:with-param name="current-position" select="$current-position"/>
         	</xsl:call-template>
 	</xsl:for-each>
 	
@@ -410,6 +413,13 @@ If @value is specified, the mutator is called and @value is used as the paramete
 </xsl:text>
 </xsl:template>
 
+<!--
+This template expects to be called with
+a current context of a $domspec//method/parameters/param.
+
+TODO: If this template needs to be more flexible, will need to pass $current-position
+through as a parameter
+-->
 <xsl:template name="produce-param">
 	<xsl:param name="vardefs"/>
 	
@@ -428,12 +438,16 @@ If @value is specified, the mutator is called and @value is used as the paramete
 		</xsl:call-template>
 	</xsl:variable>
 	
+	<!-- used for referencing DOMStrings  -->
+	<xsl:param name="current-position"/>
+	
 	<xsl:choose>
 		<xsl:when test="$var-type = 'DOMString'">
 			<!--
-			TODO use the dom_string that was generated for this param
-			before the method call.  somehow need to link the unique
-			identifier used there so that we can reference it here. -->
+			TODO: put this string creation in its own template so it can be reused.
+			Be careful with the behaviour of xsl:number, though.
+			-->
+			<xsl:text>domString</xsl:text><xsl:value-of select="$current-position"/>_<xsl:number/>
 		</xsl:when>
 		<xsl:otherwise>
 			<xsl:call-template name="cast">
@@ -456,7 +470,20 @@ If @value is specified, the mutator is called and @value is used as the paramete
 	<!-- the expected type of $var-or-literal -->
 	<xsl:param name="interface-type"/>
 	
-	<!-- FIXME implement me -->
+	<xsl:choose>
+		<!-- string literal -->
+		<xsl:when test="starts-with($var-or-literal, '&quot;')">
+			<xsl:text>DOMString</xsl:text>
+		</xsl:when>
+		<!-- variable -->
+		<xsl:when test="$vardefs[@name = $var-or-literal]">
+			<xsl:value-of select="$vardefs[@name = $var-or-literal]/@type"/>
+		</xsl:when>
+		<!-- unknown; return the interface type -->
+		<xsl:otherwise>
+			<xsl:value-of select="$interface-type"/>
+		</xsl:otherwise>
+	</xsl:choose>
 </xsl:template>
 
 <xsl:template name="cast">
