@@ -343,7 +343,7 @@ If @value is specified, the mutator is called and @value is used as the paramete
 		</xsl:choose>
 	</xsl:variable>
 	
-	<xsl:variable name="current-position" select="position()"/>
+	<xsl:variable name="current-position"><xsl:number level="any" count="*"/></xsl:variable>
 
 	<!--
 	setup variables to hold parameter literals (for DOMStrings)
@@ -537,7 +537,56 @@ Assert templates
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'assertEquals']" mode="body">
-	<!-- TODO: implement -->
+	<xsl:variable name="vardefs" select="//*[local-name() = 'var']"/>
+
+	<xsl:variable name="actual" select="@actual"/>
+	
+	<xsl:variable name="var-type" select="$vardefs[@name = $actual]/@type"/>
+	
+	<xsl:choose>
+		<xsl:when test="$var-type = 'DOMString'">
+			<!-- a globally unique identifier for the temporary string -->
+			<xsl:variable name="dom-string-id"><xsl:number level="any" count="*"/></xsl:variable>
+		
+			<xsl:call-template name="produce-dom-string">
+				<xsl:with-param name="vardefs" select="$vardefs"/>
+				<xsl:with-param name="var-name">matchString_<xsl:value-of select="$dom-string-id"/></xsl:with-param>
+				<xsl:with-param name="string" select="@expected"/>
+			</xsl:call-template>
+			<xsl:text>	assert(</xsl:text>
+			<xsl:choose>
+				<xsl:when test="@ignoreCase = 'true'">
+					<xsl:text>dom_string_icmp</xsl:text>
+				</xsl:when>
+				<xsl:when test="@ignoreCase = 'auto'">
+					<!--
+					TODO: implement auto case comparison (see java's DOMTestCase.assertEqualsAutoCase()
+					-->
+					<xsl:message>&lt;assertEquals ignoreCase='auto'&gt; not supported</xsl:message>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:text>dom_string_cmp</xsl:text>
+				</xsl:otherwise>
+			</xsl:choose>
+			<xsl:text>(</xsl:text>
+			<xsl:value-of select="@actual"/>
+			<xsl:text>, matchString_</xsl:text>
+			<xsl:value-of select="$dom-string-id"/>
+			<xsl:text>) == 0);
+</xsl:text>
+		</xsl:when>
+		<xsl:when test="$var-type = 'int'">
+			<xsl:text>	assert(</xsl:text>
+			<xsl:value-of select="@actual"/>
+			<xsl:text> == </xsl:text>
+			<xsl:value-of select="@expected"/>
+			<xsl:text>);
+</xsl:text>
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:message>assertEquals on unknown type <xsl:value-of select="$var-type"/></xsl:message>
+		</xsl:otherwise>
+	</xsl:choose>
 </xsl:template>
 
 <!--
