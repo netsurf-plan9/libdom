@@ -15,7 +15,7 @@
 
 struct dom_document;
 struct dom_node;
-struct dom_node_list;
+struct dom_nodelist;
 struct dom_named_node_map;
 struct dom_string;
 
@@ -85,7 +85,7 @@ dom_exception dom_node_get_node_type(struct dom_node *node,
 dom_exception dom_node_get_parent_node(struct dom_node *node,
 		struct dom_node **result);
 dom_exception dom_node_get_child_nodes(struct dom_node *node,
-		struct dom_node_list **result);
+		struct dom_nodelist **result);
 dom_exception dom_node_get_first_child(struct dom_node *node,
 		struct dom_node **result);
 dom_exception dom_node_get_last_child(struct dom_node *node,

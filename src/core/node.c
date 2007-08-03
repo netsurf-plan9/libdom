@@ -348,10 +348,10 @@ dom_exception dom_node_get_parent_node(struct dom_node *node,
  * \param result  Pointer to location to receive child list
  * \return DOM_NO_ERR.
  *
- * \todo Work out reference counting semantics of dom_node_list
+ * \todo Work out reference counting semantics of dom_nodelist
  */
 dom_exception dom_node_get_child_nodes(struct dom_node *node,
-		struct dom_node_list **result)
+		struct dom_nodelist **result)
 {
 	UNUSED(node);
 	UNUSED(result);
