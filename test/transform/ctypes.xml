@@ -19,6 +19,9 @@
 	<type idl="DocumentType" c="dom_document_type">
 	
 	</type>
+	<type idl="DocumentFragment" c="dom_document_fragment">
+	
+	</type>
 	<type idl="DOMString" c="dom_string">
 	</type>
 	<type idl="Element" c="dom_element">
@@ -31,6 +34,13 @@
 		<method idl="removeAttributeNode" c="remove_attribute_node"/>
 		<method idl="getElementsByTagName" c="get_elements_by_tag_name"/>
 	</type>
+	
+	<type idl="NamedNodeMap" c="dom_namednodemap">
+		<method idl="getNamedItem" c="get_named_item"/>
+		<method idl="setNamedItem" c="set_named_item"/>
+		<method idl="removeNamedItem" c="remove_named_item"/>
+	</type>
+	
 	<type idl="Node" c="dom_node">
 		<attribute idl="nodeName" c="node_name"/>
 		<attribute idl="nodeValue" c="node_value"/>
@@ -51,6 +61,10 @@
 		<method idl="hasChildNodes" c="has_child_nodes"/>
 		<method idl="cloneNode" c="clone_node"/>
 	</type>
+	
+	<type idl="NodeList" c="dom_nodelist">
+	</type>
+	
 	<type idl="Text" c="dom_text">
 	</type>
 </types>

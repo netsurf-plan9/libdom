@@ -5,7 +5,15 @@ test representation.
 -->
 
 <xsl:stylesheet version="1.0" 
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:str="http://xsltsl.org/string">
+    
+    	<!--
+    	Import string functions from XSLT Standard Library
+    	http://xsltsl.sourceforge.net/
+    	-->
+    	<xsl:import href="string.xsl"/>
+    
     	<!--
     	The interfaces document is generated from the W3C test suite.
     	It contains the signatures of DOM interfaces, their methods
@@ -171,6 +179,10 @@ Language construct templates
 </xsl:text>
 </xsl:template>
 
+<xsl:template match="*[local-name() = 'equals']" mode="body">
+	<xsl:message terminate="yes"><!-- FIXME: implement -->equals not implemented</xsl:message>
+</xsl:template>
+
 <!--
 ================================
 DOM templates
@@ -281,7 +293,12 @@ If @value is specified, the mutator is called and @value is used as the paramete
 
 	<xsl:text>	err = </xsl:text>
 	<xsl:if test="@value">
+		<xsl:value-of select="$obj-ctype/@c"/>
 		<xsl:text>_set_</xsl:text>
+		<xsl:value-of select="$attribute-cname"/>
+		<xsl:text>(</xsl:text>
+		<!-- TODO: function parameters -->
+		<xsl:text>);</xsl:text>
 	</xsl:if>
 	<xsl:if test="@var">
 		<xsl:variable name="var" select="@var"/>
@@ -400,9 +417,14 @@ If @value is specified, the mutator is called and @value is used as the paramete
 		<xsl:variable name="var-var" select="//*[local-name() = 'var' and @name = $var]"/>
         	
 		<xsl:text>, </xsl:text>
+		<!--
+		FIXME: any explicit cast won't work because _address of_ return params are passed (using &amp;)
+		need to use extra * on the cast
+		 -->
 		<xsl:call-template name="cast">
 			<xsl:with-param name="var-type" select="$var-var/@type"/>
 			<xsl:with-param name="interface-type" select="$method/returns/@type"/>
+			<xsl:with-param name="indirection" select="2"/>
 		</xsl:call-template>
 		<xsl:text>&amp;</xsl:text>
 		<xsl:value-of select="$var"/>
@@ -493,6 +515,8 @@ through as a parameter
 	<!-- the required type (e.g. Document or dom_node_type) -->
 	<xsl:param name="interface-type"/>
 	
+	<xsl:param name="indirection" select="1"/>
+	
 	<!-- the variable's C-style type -->
 	<xsl:variable name="var-ctype">
 		<xsl:call-template name="get-ctype">
@@ -511,6 +535,7 @@ through as a parameter
 		<xsl:text>(</xsl:text>
 		<xsl:call-template name="produce-var-type-declaration">
 			<xsl:with-param name="var-type" select="$interface-ctype"/>
+			<xsl:with-param name="indirection" select="$indirection"/>
 		</xsl:call-template>
 		<xsl:text>) </xsl:text>
 	</xsl:if>
@@ -589,6 +614,14 @@ Assert templates
 	</xsl:choose>
 </xsl:template>
 
+<xsl:template match="*[local-name() = 'assertSize']" mode="body">
+	<xsl:message terminate="yes"><!-- FIXME: implement -->assertSize not implemented</xsl:message>
+</xsl:template>
+
+<xsl:template match="*[local-name() = 'assertDOMException']" mode="body">
+	<xsl:message terminate="yes"><!-- FIXME: implement -->assertDOMException not implemented</xsl:message>
+</xsl:template>
+
 <!--
 ================================
 Helper templates
@@ -598,6 +631,14 @@ Helper templates
 <xsl:template name="produce-var-type-declaration">
 	<!-- a type (e.g. Document, dom_node_type or int) -->
 	<xsl:param name="var-type"/>
+	
+	<!--
+	Number of *s to generate.
+	Applies to structs and enums only (not primitives)
+	Default is 1
+	-->
+	<xsl:param name="indirection" select="1"/>
+	
 	<xsl:variable name="var-ctype">
 		<xsl:call-template name="get-ctype">
 			<xsl:with-param name="type" select="$var-type"/>
@@ -612,12 +653,18 @@ Helper templates
 		<xsl:when test="$ctypes/types/type[@c = $var-ctype]">
 			<xsl:text>struct </xsl:text>
 			<xsl:value-of select="$ctypes/types/type[@c = $var-ctype]/@c"/>
-			<xsl:text> *</xsl:text>
+			<xsl:text> </xsl:text>
+			<xsl:call-template name="str:generate-string">
+				<xsl:with-param name="text" select="'*'"/>
+				<xsl:with-param name="count" select="$indirection"/>
+			</xsl:call-template>
 		</xsl:when>
 		
 		<!-- assume this is not a struct, and not a primitive (e.g. an enum) -->
 		<xsl:otherwise>
 			<xsl:value-of select="$var-ctype"/>
+			<!-- TODO: should this * be here?  Probably, for normal parameters, no.
+			Probably need one fewer *s that $indirection -->
 			<xsl:text> *</xsl:text>
 		</xsl:otherwise>
 	</xsl:choose>
