@@ -16,7 +16,7 @@
 struct dom_document;
 struct dom_node;
 struct dom_nodelist;
-struct dom_named_node_map;
+struct dom_namednodemap;
 struct dom_string;
 
 /**
@@ -95,7 +95,7 @@ dom_exception dom_node_get_previous_sibling(struct dom_node *node,
 dom_exception dom_node_get_next_sibling(struct dom_node *node,
 		struct dom_node **result);
 dom_exception dom_node_get_attributes(struct dom_node *node,
-		struct dom_named_node_map **result);
+		struct dom_namednodemap **result);
 dom_exception dom_node_get_owner_document(struct dom_node *node,
 		struct dom_document **result);
 dom_exception dom_node_insert_before(struct dom_node *node,

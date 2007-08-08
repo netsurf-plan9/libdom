@@ -458,10 +458,10 @@ dom_exception dom_node_get_next_sibling(struct dom_node *node,
  * \param result  Pointer to location to receive attribute map
  * \return DOM_NO_ERR.
  *
- * \todo Work out reference counting semantics of dom_named_node_map
+ * \todo Work out reference counting semantics of dom_namednodemap
  */
 dom_exception dom_node_get_attributes(struct dom_node *node,
-		struct dom_named_node_map **result)
+		struct dom_namednodemap **result)
 {
 	UNUSED(node);
 	UNUSED(result);
