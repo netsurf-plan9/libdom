@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <types>
 	<primitive idl="int" c="int"/>
+	<primitive idl="boolean" c="bool"/>
 	
 	<type idl="Attr" c="dom_attr"/>
 	<type idl="Document" c="dom_document">

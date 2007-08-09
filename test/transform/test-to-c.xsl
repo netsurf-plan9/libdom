@@ -558,9 +558,32 @@ Assert templates
 	<!-- TODO: what does the @id string do, and do we need it here? -->
 	<xsl:text>
 	assert(</xsl:text><xsl:value-of select="@actual"/><xsl:text> == NULL);
-	</xsl:text>
+</xsl:text>
 </xsl:template>
 
+<xsl:template match="*[local-name() = 'assertTrue']" mode="body">
+	<!-- TODO: what does the @id string do, and do we need it here? -->
+	<xsl:text>
+	assert(</xsl:text><xsl:value-of select="@actual"/><xsl:text> == true);
+</xsl:text>
+</xsl:template>
+
+<xsl:template match="*[local-name() = 'assertFalse']" mode="body">
+	<!-- TODO: what does the @id string do, and do we need it here? -->
+	<xsl:text>
+	assert(</xsl:text><xsl:value-of select="@actual"/><xsl:text> == false);
+</xsl:text>
+</xsl:template>
+
+<!--
+TODO: somehow want to reuse this for <equals> tests.
+The problem is that <equals> is nested inside <if>, and for DOMStrings,
+a temporary string must be created first.
+
+Perhaps the <if> template could <xsl:apply-templates/> in two modes.
+The first generates temporary variables, and the second generates the equality
+test itself.
+ -->
 <xsl:template match="*[local-name() = 'assertEquals']" mode="body">
 	<xsl:variable name="vardefs" select="//*[local-name() = 'var']"/>
 
@@ -709,6 +732,9 @@ Helper templates
 	<xsl:choose>
 		<xsl:when test="$ctypes/types/type[@idl = $type]/@c">
 			<xsl:value-of select="$ctypes/types/type[@idl = $type]/@c"/>
+		</xsl:when>
+		<xsl:when test="$ctypes/types/primitive[@idl = $type]/@c">
+			<xsl:value-of select="$ctypes/types/primitive[@idl = $type]/@c"/>
 		</xsl:when>
 		<xsl:otherwise>
 			<xsl:value-of select="$type"/>
