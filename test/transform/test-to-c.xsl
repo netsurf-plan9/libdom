@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- 
+This file is part of libdom.
+Licensed under the MIT License,
+               http://www.opensource.org/licenses/mit-license.php
+Copyright 2007 James Shaw <jshaw@netsurf-browser.org>
+-->
 <!--   
 This transform generates C source code from a language independent
 test representation.
@@ -155,6 +161,7 @@ Language construct templates
 ================================
 -->
 
+<!-- a variable declaration -->
 <xsl:template match="*[local-name() = 'var']" mode="body">
 	<xsl:text>	</xsl:text>
 	<xsl:call-template name="produce-var-type-declaration">
@@ -164,6 +171,11 @@ Language construct templates
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'if']" mode="body">
+	<!--
+	Apply condition template in before-invocation mode
+	to give it a chance to set up temporary variables (such as DOMStrings)
+	-->
+	<xsl:apply-templates select="*[1]" mode="before-invocation"/>
 	<xsl:text>
 	if (</xsl:text><xsl:apply-templates select="*[1]" mode="body"/><xsl:text>) {
 	</xsl:text>
@@ -177,6 +189,14 @@ Language construct templates
 	</xsl:for-each>
 	<xsl:text>
 </xsl:text>
+</xsl:template>
+
+<xsl:template match="*[local-name() = 'equals']" mode="before-invocation">
+	<!-- FIXME: implement -->
+</xsl:template>
+
+<xsl:template match="*[local-name() = 'notEquals']" mode="before-invocation">
+	<!-- FIXME: implement -->
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'equals']" mode="body">
@@ -561,6 +581,7 @@ Assert templates
 </xsl:text>
 </xsl:template>
 
+<!-- TODO: implement nested elements, such as <or> -->
 <xsl:template match="*[local-name() = 'assertTrue']" mode="body">
 	<!-- TODO: what does the @id string do, and do we need it here? -->
 	<xsl:text>
@@ -589,7 +610,12 @@ test itself.
 
 	<xsl:variable name="actual" select="@actual"/>
 	
-	<xsl:variable name="var-type" select="$vardefs[@name = $actual]/@type"/>
+	<xsl:variable name="var-type">
+		<xsl:call-template name="get-idltype">
+			<xsl:with-param name="vardefs" select="$vardefs"/>
+			<xsl:with-param name="var-name" select="$actual"/>
+		</xsl:call-template>
+	</xsl:variable>
 	
 	<xsl:choose>
 		<xsl:when test="$var-type = 'DOMString'">
@@ -638,10 +664,39 @@ test itself.
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'assertSize']" mode="body">
-	<xsl:message terminate="yes"><!-- FIXME: implement -->assertSize not implemented</xsl:message>
+	<xsl:variable name="vardefs" select="//*[local-name() = 'var']"/>
+	
+	<xsl:variable name="collection" select="@collection"/>
+	
+	<xsl:variable name="current-position"><xsl:number level="any" count="*"/></xsl:variable>
+	
+	<xsl:text>
+	unsigned long len_</xsl:text>
+	<xsl:value-of select="$current-position"/>
+	<xsl:text>;</xsl:text>
+	<xsl:text>
+	err = </xsl:text>
+	<xsl:call-template name="get-ctype">
+		<xsl:with-param name="type" select="$vardefs[@name = $collection]/@type"/>
+	</xsl:call-template>
+	<xsl:text>_get_length(</xsl:text>
+	<xsl:value-of select="$collection"/>
+	<xsl:text>, &amp;len_</xsl:text>
+	<xsl:value-of select="$current-position"/>
+	<xsl:text>);</xsl:text>
+	
+	<xsl:text>
+	assert(err == DOM_NO_ERR);
+	assert(len_</xsl:text>
+	<xsl:value-of select="$current-position"/>
+	<xsl:text> == </xsl:text>
+	<xsl:value-of select="@size"/>
+	<xsl:text>);</xsl:text>
 </xsl:template>
 
+<!-- TODO: difficult, because it contains nested elements -->
 <xsl:template match="*[local-name() = 'assertDOMException']" mode="body">
+
 	<xsl:message terminate="yes"><!-- FIXME: implement -->assertDOMException not implemented</xsl:message>
 </xsl:template>
 
@@ -719,6 +774,15 @@ Helper templates
 	<xsl:text>);
 	assert(err == DOM_NO_ERR);
 </xsl:text>
+</xsl:template>
+
+<xsl:template name="get-idltype">
+	<xsl:param name="vardefs"/>
+	
+	<!-- variable name -->
+	<xsl:param name="var-name"/>
+	
+	<xsl:value-of select="$vardefs[@name = $var-name]/@type"/>
 </xsl:template>
 
 <xsl:template name="get-ctype">
