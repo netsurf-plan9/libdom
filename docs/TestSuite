@@ -1,0 +1,179 @@
+Assertions
+-------------------------------------------------------------------------------
+fail
+assertTrue
+assertFalse
+assertNull
+assertNotNull
+assertEquals
+assertNotEquals
+
+assertSame
+	Tests two objects for identity.
+	If not identical, test if either are null, or either are not Nodes.  If so, delegate to assertEquals()
+
+assertInstanceOf
+	Used in [hc_]namednodemapreturnattrnode.xml
+	Can use Node.getNodeType() to get runtime type
+
+assertSize
+assertEventCount
+assertURIEquals
+assertImplementationException
+
+assertDOMException
+
+
+Conditions
+-------------------------------------------------------------------------------
+same
+	(not used)
+
+equals
+notEquals
+less
+lessOrEquals
+greater
+greaterOrEquals
+isNull
+notNull
+and
+or
+xor
+not
+
+instanceOf
+	(not used)
+
+isTrue
+isFalse
+hasSize
+contentType
+contains
+hasFeature
+implementationAttribute
+
+
+Statements
+-------------------------------------------------------------------------------
+var
+	Can contain nested <member> elements when the var has type Collection
+
+assign
+	<assign var="..." value="..."/>
+
+increment
+decrement
+	<increment var="..." value="..."/>
+
+append
+	<append collection="..." item="..."/>
+	Append an object to the end of a Collection.
+	In Java, this is implemented with an ArrayList.
+
+plus
+subtract
+mult
+divide
+load
+implementation
+hasFeature
+
+implementationAttribute
+	Set DocumentBuilder attributes (such as validating)
+
+if
+while
+
+try
+	<try>
+		...
+		<catch>
+			<DOMException code="..."/>
+		</catch>
+	</try> 
+
+for-each
+	<for-each collection="..." member="...">
+
+comment
+	Only used in DOM Level 3 XPath.
+
+return
+	Only used in DOM Level 2/3.  Returns immediately from method call with optional @value
+
+userObj
+
+atEvents
+capturedEvents
+bubbledEvents
+allEvents
+	DOM Level 2 Evemts only
+
+createXPathEvaluator
+	DOM Level 3 XPath only
+	
+getResourceURI
+	DOM Level 3 LS only
+
+substring
+	<substringData var="..." obj="..." offset="..." count="..."/>
+	Calls @obj.substringData() where obj is an instance of CharacterData
+
+createTempURI
+	DOMImplementationRegistry.newInstance
+
+allErrors
+	Only used in DOM Level 3
+	Calls org.w3c.domts.DOMErrorMonitor.getAllErrors(), which is an instance of DOMErrorHandler
+
+assertLowerSeverity
+allNotifications
+operation
+key
+dst
+
+Datatypes
+-------------------------------------------------------------------------------
+int
+short
+double
+boolean
+	Primitives
+
+DOMString
+
+List
+	In Java, an ArrayList instance typed as a List
+
+Collection
+	In Java, an ArrayList instance typed as a Collection
+
+EventMonitor
+	DOM Level 2 Events only
+
+DOMErrorMonitor
+	DOM Level 3 only
+	
+UserDataMonitor
+UserDataNotification
+	DOM Level 3 Core only
+
+Attr
+CDATASection
+CharacterData
+Comment
+Document
+DocumentFragment
+DocumentType
+DOMImplementation
+Element
+Entity
+EntityReference
+NamedNodeMap
+Node
+NodeList
+Notation
+ProcessingInstruction
+Text
+	DOM types
