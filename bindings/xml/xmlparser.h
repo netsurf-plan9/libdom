@@ -20,7 +20,7 @@ typedef struct xml_parser xml_parser;
 
 /* Create an XML parser instance */
 xml_parser *xml_parser_create(const char *enc, const char *int_enc,
-		xml_alloc alloc, void *pw);
+		xml_alloc alloc, void *pw, xml_msg msg, void *mctx);
 
 /* Destroy an XML parser instance */
 void xml_parser_destroy(xml_parser *parser);

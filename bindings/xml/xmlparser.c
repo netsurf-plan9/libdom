@@ -6,7 +6,6 @@
  */
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 
 #include <libxml/parser.h>
@@ -95,44 +94,47 @@ struct xml_parser {
 
 	xml_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
+
+	xml_msg msg;			/**< Informational message function */
+	void *mctx;			/**< Pointer to client data */
 };
 
 /**
  * SAX callback dispatch table
  */
 static xmlSAXHandler sax_handler = {
-	.internalSubset = xml_parser_internal_subset,
-	.isStandalone = xml_parser_is_standalone,
-	.hasInternalSubset = xml_parser_has_internal_subset,
-	.hasExternalSubset = xml_parser_has_external_subset,
-	.resolveEntity = xml_parser_resolve_entity,
-	.getEntity = xml_parser_get_entity,
-	.entityDecl = xml_parser_entity_decl,
-	.notationDecl = xml_parser_notation_decl,
-	.attributeDecl = xml_parser_attribute_decl,
-	.elementDecl = xml_parser_element_decl,
-	.unparsedEntityDecl = xml_parser_unparsed_entity_decl,
-	.setDocumentLocator = xml_parser_set_document_locator,
-	.startDocument = xml_parser_start_document,
-	.endDocument = xml_parser_end_document,
-	.startElement = NULL,
-	.endElement = NULL,
-	.reference = xml_parser_reference,
-	.characters = xml_parser_characters,
-	.ignorableWhitespace = xml_parser_characters,
-	.processingInstruction = NULL,
-	.comment = xml_parser_comment,
-	.warning = NULL,
-	.error = NULL,
-	.fatalError = NULL,
-	.getParameterEntity = xml_parser_get_parameter_entity,
-	.cdataBlock = xml_parser_cdata_block,
-	.externalSubset = xml_parser_external_subset,
-	.initialized = XML_SAX2_MAGIC,
-	._private = NULL,
-	.startElementNs = xml_parser_start_element_ns,
-	.endElementNs = xml_parser_end_element_ns,
-	.serror = NULL
+	.internalSubset         = xml_parser_internal_subset,
+	.isStandalone           = xml_parser_is_standalone,
+	.hasInternalSubset      = xml_parser_has_internal_subset,
+	.hasExternalSubset      = xml_parser_has_external_subset,
+	.resolveEntity          = xml_parser_resolve_entity,
+	.getEntity              = xml_parser_get_entity,
+	.entityDecl             = xml_parser_entity_decl,
+	.notationDecl           = xml_parser_notation_decl,
+	.attributeDecl          = xml_parser_attribute_decl,
+	.elementDecl            = xml_parser_element_decl,
+	.unparsedEntityDecl     = xml_parser_unparsed_entity_decl,
+	.setDocumentLocator     = xml_parser_set_document_locator,
+	.startDocument          = xml_parser_start_document,
+	.endDocument            = xml_parser_end_document,
+	.startElement           = NULL,
+	.endElement             = NULL,
+	.reference              = xml_parser_reference,
+	.characters             = xml_parser_characters,
+	.ignorableWhitespace    = xml_parser_characters,
+	.processingInstruction  = NULL,
+	.comment                = xml_parser_comment,
+	.warning                = NULL,
+	.error                  = NULL,
+	.fatalError             = NULL,
+	.getParameterEntity     = xml_parser_get_parameter_entity,
+	.cdataBlock             = xml_parser_cdata_block,
+	.externalSubset         = xml_parser_external_subset,
+	.initialized            = XML_SAX2_MAGIC,
+	._private               = NULL,
+	.startElementNs         = xml_parser_start_element_ns,
+	.endElementNs           = xml_parser_end_element_ns,
+	.serror                 = NULL
 };
 
 /**
@@ -142,6 +144,8 @@ static xmlSAXHandler sax_handler = {
  * \param int_enc  Desired charset of document buffer (UTF-8 or UTF-16)
  * \param alloc    Memory (de)allocation function
  * \param pw       Pointer to client-specific private data
+ * \param msg      Informational message function
+ * \param mctx     Pointer to client-specific private data
  * \return Pointer to instance, or NULL on memory exhaustion
  *
  * Neither ::enc nor ::int_enc are used here.
@@ -149,7 +153,7 @@ static xmlSAXHandler sax_handler = {
  * parser encoding is not yet implemented
  */
 xml_parser *xml_parser_create(const char *enc, const char *int_enc,
-		xml_alloc alloc, void *pw)
+		xml_alloc alloc, void *pw, xml_msg msg, void *mctx)
 {
 	xml_parser *parser;
 	struct dom_string *features;
@@ -159,13 +163,16 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 	UNUSED(int_enc);
 
 	parser = alloc(NULL, sizeof(xml_parser), pw);
-	if (parser == NULL)
+	if (parser == NULL) {
+		msg(XML_MSG_CRITICAL, mctx, "No memory for parser");
 		return NULL;
+	}
 
 	parser->xml_ctx =
 		xmlCreatePushParserCtxt(&sax_handler, parser, "", 0, NULL);
 	if (parser->xml_ctx == NULL) {
 		alloc(parser, 0, pw);
+		msg(XML_MSG_CRITICAL, mctx, "Failed to create XML parser");
 		return NULL;
 	}
 
@@ -180,6 +187,7 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 	if (err != DOM_NO_ERR) {
 		xmlFreeParserCtxt(parser->xml_ctx);
 		alloc(parser, 0, pw);
+		msg(XML_MSG_CRITICAL, mctx, "No memory for userdata key");
 		return NULL;
 	}
 
@@ -191,6 +199,7 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 		dom_string_unref(parser->udkey);
 		xmlFreeParserCtxt(parser->xml_ctx);
 		alloc(parser, 0, pw);
+		msg(XML_MSG_CRITICAL, mctx, "No memory for feature string");
 		return NULL;
 	}
 
@@ -202,6 +211,7 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 		dom_string_unref(parser->udkey);
 		xmlFreeParserCtxt(parser->xml_ctx);
 		alloc(parser, 0, pw);
+		msg(XML_MSG_ERROR, mctx, "No suitable DOMImplementation");
 		return NULL;
 	}
 
@@ -210,6 +220,9 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 
 	parser->alloc = alloc;
 	parser->pw = pw;
+
+	parser->msg = msg;
+	parser->mctx = mctx;
 
 	return parser;
 }
@@ -248,8 +261,11 @@ xml_error xml_parser_parse_chunk(xml_parser *parser,
 	xmlParserErrors err;
 
 	err = xmlParseChunk(parser->xml_ctx, (char *) data, len, 0);
-	if (err != XML_ERR_OK)
+	if (err != XML_ERR_OK) {
+		parser->msg(XML_MSG_ERROR, parser->mctx, 
+				"xmlParseChunk failed: %d", err);
 		return XML_LIBXML_ERR | err;
+	}
 
 	return XML_OK;
 }
@@ -267,8 +283,11 @@ xml_error xml_parser_completed(xml_parser *parser)
 	xmlParserErrors err;
 
 	err = xmlParseChunk(parser->xml_ctx, "", 0, 1);
-	if (err != XML_ERR_OK)
+	if (err != XML_ERR_OK) {
+		parser->msg(XML_MSG_ERROR, parser->mctx,
+				"xmlParseChunk failed: %d", err);
 		return XML_LIBXML_ERR | err;
+	}
 
 	parser->complete = true;
 
@@ -311,6 +330,8 @@ void xml_parser_start_document(void *ctx)
 			(dom_alloc) parser->alloc,
 			parser->pw);
 	if (err != DOM_NO_ERR) {
+		parser->msg(XML_MSG_CRITICAL, parser->mctx, 
+				"Failed creating document");
 		return;
 	}
 
@@ -342,8 +363,11 @@ void xml_parser_end_document(void *ctx)
 	xmlSAX2EndDocument(parser->xml_ctx);
 
 	/* If there is no document, we can't do anything */
-	if (parser->doc == NULL)
+	if (parser->doc == NULL) {
+		parser->msg(XML_MSG_WARNING, parser->mctx,
+				"No document in end_document");
 		return;
+	}
 
 	/* We need to mirror any child nodes at the end of the list of
 	 * children which occur after the last Element node in the list */
@@ -352,6 +376,8 @@ void xml_parser_end_document(void *ctx)
 	err = dom_node_get_user_data((struct dom_node *) parser->doc,
 			parser->udkey, (void **) &node);
 	if (err != DOM_NO_ERR) {
+		parser->msg(XML_MSG_WARNING, parser->mctx,
+				"Failed finding XML node");
 		return;
 	}
 
@@ -407,8 +433,11 @@ void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
 			nb_defaulted, attributes);
 
 	/* If there is no document, we can't do anything */
-	if (parser->doc == NULL)
+	if (parser->doc == NULL) {
+		parser->msg(XML_MSG_WARNING, parser->mctx,
+				"No document in start_element_ns");
 		return;
+	}
 
 	if (parent == NULL) {
 		/* No parent; use document */
@@ -471,8 +500,11 @@ void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 	xmlSAX2EndElementNs(parser->xml_ctx, localname, prefix, URI);
 
 	/* If there is no document, we can't do anything */
-	if (parser->doc == NULL)
+	if (parser->doc == NULL) {
+		parser->msg(XML_MSG_WARNING, parser->mctx,
+				"No document in end_element_ns");
 		return;
+	}
 
 	/* We need to mirror any child nodes at the end of the list of
 	 * children which occur after the last Element node in the list */
@@ -515,8 +547,11 @@ dom_exception xml_parser_link_nodes(xml_parser *parser, struct dom_node *dom,
 	/* Register XML node as user data for DOM node */
 	err = dom_node_set_user_data(dom, parser->udkey, xml, NULL,
 			&prev_data);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		parser->msg(XML_MSG_ERROR, parser->mctx,
+				"Failed setting user data: %d", err);
 		return err;
+	}
 
 	/* Register DOM node with the XML node */
 	xml->_private = dom;
@@ -579,7 +614,8 @@ void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 		xml_parser_add_document_type(parser, parent, child);
 		break;
 	default:
-		fprintf(stderr, "Unsupported node type: %s\n",
+		parser->msg(XML_MSG_NOTICE, parser->mctx,
+				"Unsupported node type: %s",
 				node_types[child->type]);
 	}
 }
