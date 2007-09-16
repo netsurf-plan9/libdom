@@ -470,7 +470,10 @@ through as a parameter
 	
 	<!-- the parameter's expected type -->
 	<xsl:param name="interface-type"/>
-	
+
+	<!-- used for referencing DOMStrings  -->
+	<xsl:param name="current-position"/>
+
 	<!-- the IDL type of $var-or-literal -->
 	<xsl:variable name="var-type">
 		<xsl:call-template name="guess-var-or-literal-type">
@@ -479,10 +482,7 @@ through as a parameter
 			<xsl:with-param name="interface-type" select="$interface-type"/>
 		</xsl:call-template>
 	</xsl:variable>
-	
-	<!-- used for referencing DOMStrings  -->
-	<xsl:param name="current-position"/>
-	
+		
 	<xsl:choose>
 		<xsl:when test="$var-type = 'DOMString'">
 			<!--
