@@ -1,6 +1,7 @@
 #ifndef dom_test_testutils_h_
 #define dom_test_testutils_h_
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +40,19 @@ static void *myrealloc(void *ptr, size_t len, void *pw)
 	UNUSED(pw);
 
 	return realloc(ptr, len);
+}
+
+static void mymsg(uint32_t severity, void *ctx, const char *msg, ...)
+{
+	va_list l;
+
+	UNUSED(ctx);
+
+	va_start(l, msg);
+
+	fprintf(stderr, "%d: ", severity);
+	vfprintf(stderr, msg, l);
+	fprintf(stderr, "\n");
 }
 
 typedef struct TestObject {
@@ -82,7 +96,8 @@ TestObject *test_object_create(int argc, char **argv,
 	if (ret == NULL)
 		return NULL;
 
-	ret->parser = xml_parser_create(NULL, "UTF-8", myrealloc, NULL);
+	ret->parser = xml_parser_create(NULL, "UTF-8", myrealloc, NULL,
+			mymsg, NULL);
 	if (ret->parser == NULL) {
 		free(ret);
 		return NULL;
@@ -115,9 +130,9 @@ TestObject *test_object_create(int argc, char **argv,
 				len) == XML_OK);
 
 		len = 0;
-
-		assert(xml_parser_completed(ret->parser) == XML_OK);
 	}
+
+	assert(xml_parser_completed(ret->parser) == XML_OK);
 
 	fclose(fp);
 
