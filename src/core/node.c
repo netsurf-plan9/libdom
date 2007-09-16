@@ -5,6 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
+#include <assert.h>
+
 #include <dom/core/document.h>
 #include <dom/core/string.h>
 
@@ -41,10 +43,15 @@ void dom_node_destroy(struct dom_node *node)
 	/* This function simply acts as a central despatcher
 	 * for type-specific destructors. */
 
-	/* Claim a reference upon the owning document during destruction
-	 * to ensure that the document doesn't get destroyed before its
-	 * contents. */
-	dom_node_ref((struct dom_node *) owner);
+	assert(owner != NULL || 
+			(owner == NULL && node->type == DOM_DOCUMENT_NODE));
+
+	if (owner != NULL) {
+		/* Claim a reference upon the owning document during 
+		 * destruction to ensure that the document doesn't get 
+		 * destroyed before its contents. */
+		dom_node_ref((struct dom_node *) owner);
+	}
 
 	switch (node->type) {
 	case DOM_ELEMENT_NODE:
@@ -89,10 +96,13 @@ void dom_node_destroy(struct dom_node *node)
 		break;
 	}
 
-	/* Release the reference we claimed on the document. If this is
-	 * the last reference held on the document and the list of nodes
-	 * pending deletion is empty, then the document will be destroyed. */
-	dom_node_unref((struct dom_node *) owner);
+	if (owner != NULL) {
+		/* Release the reference we claimed on the document. If this 
+		 * is the last reference held on the document and the list 
+		 * of nodes pending deletion is empty, then the document will 
+		 * be destroyed. */
+		dom_node_unref((struct dom_node *) owner);
+	}
 }
 
 /**
