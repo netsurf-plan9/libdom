@@ -537,12 +537,36 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *ref_child,
 		struct dom_node **result)
 {
-	UNUSED(node);
-	UNUSED(new_child);
-	UNUSED(ref_child);
-	UNUSED(result);
+	/** \todo sanity checking etc. */
 
-	return DOM_NOT_SUPPORTED_ERR;
+	new_child->parent = node;
+
+	if (ref_child == NULL) {
+		new_child->previous = node->last_child;
+		new_child->next = NULL;
+
+		if (node->last_child != NULL)
+			node->last_child->next = new_child;
+		else
+			node->first_child = new_child;
+
+		node->last_child = new_child;
+	} else {
+		new_child->previous = ref_child->previous;
+		new_child->next = ref_child;
+
+		if (ref_child->previous != NULL)
+			ref_child->previous->next = new_child;
+		else
+			node->first_child = new_child;
+
+		ref_child->previous = new_child;
+	}
+
+	dom_node_ref(new_child);
+	*result = new_child;
+
+	return DOM_NO_ERR;
 }
 
 /**
