@@ -506,6 +506,13 @@ void xml_parser_end_element_ns(void *ctx, const xmlChar *localname,
 		return;
 	}
 
+	/* If node wasn't linked, we can't do anything */
+	if (node->_private == NULL) {
+		parser->msg(XML_MSG_WARNING, parser->mctx,
+				"Node '%s' not linked", node->name);
+		return;
+	}
+
 	/* We need to mirror any child nodes at the end of the list of
 	 * children which occur after the last Element node in the list */
 
@@ -644,14 +651,20 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 				child->name,
 				strlen((const char *) child->name),
 				&tag_name);
-		if (err != DOM_NO_ERR)
+		if (err != DOM_NO_ERR) {
+			parser->msg(XML_MSG_CRITICAL, parser->mctx,
+					"No memory for tag name");
 			return;
+		}
 
 		/* Create element node */
 		err = dom_document_create_element(parser->doc,
 				tag_name, &el);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(tag_name);
+			parser->msg(XML_MSG_CRITICAL, parser->mctx,
+					"Failed creating element '%s'",
+					child->name);
 			return;
 		}
 
@@ -672,8 +685,11 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 				child->ns->href,
 				strlen((const char *) child->ns->href),
 				&namespace);
-		if (err != DOM_NO_ERR)
+		if (err != DOM_NO_ERR) {
+			parser->msg(XML_MSG_CRITICAL, parser->mctx,
+					"No memory for namespace");
 			return;
+		}
 
 		/* QName is "prefix:localname",
 		 * or "localname" if there is no prefix */
@@ -690,6 +706,8 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 				&qname);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(namespace);
+			parser->msg(XML_MSG_CRITICAL, parser->mctx,
+					"No memory for qname");
 			return;
 		}
 
@@ -699,6 +717,9 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(namespace);
 			dom_string_unref(qname);
+			parser->msg(XML_MSG_CRITICAL, parser->mctx,
+					"Failed creating element '%s'",
+					qnamebuf);
 			return;
 		}
 
@@ -722,14 +743,20 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 					a->name,
 					strlen((const char *) a->name),
 					&name);
-			if (err != DOM_NO_ERR)
+			if (err != DOM_NO_ERR) {
+				parser->msg(XML_MSG_CRITICAL, parser->mctx,
+						"No memory for attribute name");
 				goto cleanup;
+			}
 
 			/* Create attribute */
 			err = dom_document_create_attribute(parser->doc,
 					name, &attr);
 			if (err != DOM_NO_ERR) {
 				dom_string_unref(name);
+				parser->msg(XML_MSG_CRITICAL, parser->mctx,
+						"Failed creating attribute '%s'",
+						a->name);
 				goto cleanup;
 			}
 
@@ -750,8 +777,11 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 					a->ns->href,
 					strlen((const char *) a->ns->href),
 					&namespace);
-			if (err != DOM_NO_ERR)
+			if (err != DOM_NO_ERR) {
+				parser->msg(XML_MSG_CRITICAL, parser->mctx,
+						"No memory for namespace");
 				return;
+			}
 
 			/* QName is "prefix:localname",
 			 * or "localname" if there is no prefix */
@@ -768,6 +798,8 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 					&qname);
 			if (err != DOM_NO_ERR) {
 				dom_string_unref(namespace);
+				parser->msg(XML_MSG_CRITICAL, parser->mctx,
+						"No memory for qname");
 				return;
 			}
 
@@ -777,6 +809,9 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 			if (err != DOM_NO_ERR) {
 				dom_string_unref(namespace);
 				dom_string_unref(qname);
+				parser->msg(XML_MSG_CRITICAL, parser->mctx,
+						"Failed creating attribute '%s'",
+						qnamebuf);
 				return;
 			}
 
@@ -803,6 +838,9 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 		err = dom_element_set_attribute_node(el, attr, &prev_attr);
 		if (err != DOM_NO_ERR) {
 			dom_node_unref((struct dom_node *) attr);
+			parser->msg(XML_MSG_ERROR, parser->mctx,
+					"Failed attaching attribute '%s'",
+					a->name);
 			goto cleanup;
 		}
 
@@ -818,6 +856,9 @@ void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 	err = dom_node_append_child(parent, (struct dom_node *) el,
 			(struct dom_node **) &ins_el);
 	if (err != DOM_NO_ERR) {
+		parser->msg(XML_MSG_ERROR, parser->mctx,
+				"Failed attaching element '%s'",
+				child->name);
 		goto cleanup;
 	}
 
