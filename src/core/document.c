@@ -140,8 +140,10 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 
 	/* Initialise base class -- the Document has no parent, so
 	 * destruction will be attempted as soon as its reference count
-	 * reaches zero. */
-	err = dom_node_initialise(&d->base, NULL, DOM_DOCUMENT_NODE,
+	 * reaches zero. Documents own themselves (this simplifies the 
+	 * rest of the code, as it doesn't need to special case Documents)
+	 */
+	err = dom_node_initialise(&d->base, d, DOM_DOCUMENT_NODE,
 			NULL, NULL);
 	if (err != DOM_NO_ERR) {
 		/* Clean up interned strings */

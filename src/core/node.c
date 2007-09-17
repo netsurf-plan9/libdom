@@ -39,14 +39,14 @@
 void dom_node_destroy(struct dom_node *node)
 {
 	struct dom_document *owner = node->owner;
+	bool document_node = (node->type == DOM_DOCUMENT_NODE);
 
 	/* This function simply acts as a central despatcher
 	 * for type-specific destructors. */
 
-	assert(owner != NULL || 
-			(owner == NULL && node->type == DOM_DOCUMENT_NODE));
+	assert(owner != NULL); 
 
-	if (owner != NULL) {
+	if (!document_node) {
 		/* Claim a reference upon the owning document during 
 		 * destruction to ensure that the document doesn't get 
 		 * destroyed before its contents. */
@@ -96,7 +96,7 @@ void dom_node_destroy(struct dom_node *node)
 		break;
 	}
 
-	if (owner != NULL) {
+	if (!document_node) {
 		/* Release the reference we claimed on the document. If this 
 		 * is the last reference held on the document and the list 
 		 * of nodes pending deletion is empty, then the document will 
@@ -115,7 +115,7 @@ void dom_node_destroy(struct dom_node *node)
  * \param value  The node value, or NULL
  * \return DOM_NO_ERR on success.
  *
- * ::doc, ::name and ::value will have their reference counts increased.
+ * ::name and ::value will have their reference counts increased.
  */
 dom_exception dom_node_initialise(struct dom_node *node,
 		struct dom_document *doc, dom_node_type type,
@@ -1105,13 +1105,62 @@ dom_exception dom_node_set_user_data(struct dom_node *node,
 		struct dom_string *key, void *data,
 		dom_user_data_handler handler, void **result)
 {
-	UNUSED(node);
-	UNUSED(key);
-	UNUSED(data);
-	UNUSED(handler);
-	UNUSED(result);
+	struct dom_user_data *ud = NULL;
+	void *prevdata = NULL;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Search for user data */
+	for (ud = node->user_data; ud != NULL; ud = ud->next) {
+		if (dom_string_cmp(ud->key, key) == 0)
+			break;
+	};
+
+	/* Remove it, if found and no new data */
+	if (data == NULL && ud != NULL) {
+		dom_string_unref(ud->key);
+
+		if (ud->next != NULL)
+			ud->next->prev = ud->prev;
+		if (ud->prev != NULL)
+			ud->prev->next = ud->next;
+		else
+			node->user_data = ud->next;
+
+		*result = ud->data;
+
+		dom_document_alloc(node->owner, ud, 0);
+
+		return DOM_NO_ERR;
+	}
+
+	/* Otherwise, create a new user data object if one wasn't found */
+	if (ud == NULL) {
+		ud = dom_document_alloc(node->owner, NULL, 
+				sizeof(struct dom_user_data));
+		if (ud == NULL)
+			return DOM_NO_MEM_ERR;
+
+		dom_string_ref(key);
+		ud->key = key;
+		ud->data = NULL;
+		ud->handler = NULL;
+
+		/* Insert into list */
+		ud->prev = NULL;
+		ud->next = node->user_data;
+		if (node->user_data)
+			node->user_data->prev = ud;
+		node->user_data = ud;
+	}
+
+	prevdata = ud->data;
+
+	/* And associate data with it */
+	ud->data = data;
+	ud->handler = handler;
+
+	*result = prevdata;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -1125,9 +1174,19 @@ dom_exception dom_node_set_user_data(struct dom_node *node,
 dom_exception dom_node_get_user_data(struct dom_node *node,
 		struct dom_string *key, void **result)
 {
-	UNUSED(node);
-	UNUSED(key);
-	UNUSED(result);
+	struct dom_user_data *ud = NULL;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Search for user data */
+	for (ud = node->user_data; ud != NULL; ud = ud->next) {
+		if (dom_string_cmp(ud->key, key) == 0)
+			break;
+	};
+
+	if (ud != NULL)
+		*result = ud->data;
+	else
+		*result = NULL;
+
+	return DOM_NO_ERR;
 }
+
