@@ -1092,7 +1092,8 @@ void xml_parser_add_document_type(xml_parser *parser,
 	/* Create public ID for doctype */
 	err = dom_string_create_from_const_ptr(parser->doc,
 			dtd->ExternalID,
-			strlen((const char *) dtd->ExternalID),
+			(dtd->ExternalID == NULL) ? 0
+				: strlen((const char *) dtd->ExternalID),
 			&public_id);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(qname);
@@ -1102,7 +1103,8 @@ void xml_parser_add_document_type(xml_parser *parser,
 	/* Create system ID for doctype */
 	err = dom_string_create_from_const_ptr(parser->doc,
 			dtd->SystemID,
-			strlen((const char *) dtd->SystemID),
+			(dtd->SystemID == NULL) ? 0
+				: strlen((const char *) dtd->SystemID),
 			&system_id);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(public_id);
