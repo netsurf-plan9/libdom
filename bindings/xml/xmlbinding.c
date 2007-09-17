@@ -7,6 +7,7 @@
 
 #include <dom/bootstrap/implpriv.h>
 #include <dom/bootstrap/implregistry.h>
+#include <dom/dom.h>
 
 #include "functypes.h"
 #include "xmlbinding.h"
@@ -270,15 +271,52 @@ dom_exception xml_dom_implementation_create_document(
 		struct dom_document **doc,
 		dom_alloc alloc, void *pw)
 {
-	UNUSED(impl);
-	UNUSED(namespace);
-	UNUSED(qname);
-	UNUSED(doctype);
-	UNUSED(doc);
-	UNUSED(alloc);
-	UNUSED(pw);
+	struct dom_document *d;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Create document object */
+	err = dom_document_create(impl, alloc, pw, &d);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	/* Set its doctype, if necessary */
+	if (doctype != NULL) {
+		err = dom_document_set_doctype(d, doctype);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref((struct dom_node *) d);
+			return err;
+		}
+	}
+
+	/* Create root element and attach it to document */
+	if (qname != NULL) {
+		struct dom_element *e;
+		struct dom_node *inserted;
+
+		err = dom_document_create_element_ns(d, namespace, qname, &e);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref((struct dom_node *) d);
+			return err;
+		}
+
+		err = dom_node_append_child((struct dom_node *) d,
+				(struct dom_node *) e, &inserted);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref((struct dom_node *) e);
+			dom_node_unref((struct dom_node *) d);
+			return err;
+		}
+
+		/* No longer interested in inserted node */
+		dom_node_unref(inserted);
+
+		/* Done with element */
+		dom_node_unref((struct dom_node *) e);
+	}
+
+	*doc = d;
+
+	return DOM_NO_ERR;
 }
 
 /**
