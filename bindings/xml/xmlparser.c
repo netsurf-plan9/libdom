@@ -903,13 +903,18 @@ void xml_parser_add_text_node(xml_parser *parser, struct dom_node *parent,
 	/* Create DOM string data for text node */
 	err = dom_string_create_from_const_ptr(parser->doc, child->content,
 			strlen((const char *) child->content), &data);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for text node contents ");
 		return;
+	}
 
 	/* Create text node */
 	err = dom_document_create_text_node(parser->doc, data, &text);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(data);
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for text node");
 		return;
 	}
 
@@ -921,6 +926,8 @@ void xml_parser_add_text_node(xml_parser *parser, struct dom_node *parent,
 			(struct dom_node **) &ins_text);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) text);
+		parser->msg(XML_MSG_ERROR, parser->mctx,
+				"Failed attaching text node");
 		return;
 	}
 
@@ -957,13 +964,18 @@ void xml_parser_add_cdata_section(xml_parser *parser,
 	/* Create DOM string data for cdata section */
 	err = dom_string_create_from_const_ptr(parser->doc, child->content,
 			strlen((const char *) child->content), &data);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for cdata section contents");
 		return;
+	}
 
-	/* Create text node */
+	/* Create cdata section */
 	err = dom_document_create_cdata_section(parser->doc, data, &cdata);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(data);
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for cdata section");
 		return;
 	}
 
@@ -975,6 +987,8 @@ void xml_parser_add_cdata_section(xml_parser *parser,
 			(struct dom_node **) &ins_cdata);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) cdata);
+		parser->msg(XML_MSG_ERROR, parser->mctx,
+				"Failed attaching cdata section");
 		return;
 	}
 
@@ -1012,14 +1026,19 @@ void xml_parser_add_entity_reference(xml_parser *parser,
 	/* Create name of entity reference */
 	err = dom_string_create_from_const_ptr(parser->doc, child->name,
 			strlen((const char *) child->name), &name);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for entity reference name");
 		return;
+	}
 
 	/* Create text node */
 	err = dom_document_create_entity_reference(parser->doc, name,
 			&entity);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(name);
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for entity reference");
 		return;
 	}
 
@@ -1036,6 +1055,8 @@ void xml_parser_add_entity_reference(xml_parser *parser,
 			(struct dom_node **) &ins_entity);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) entity);
+		parser->msg(XML_MSG_ERROR, parser->mctx,
+				"Failed attaching entity reference");
 		return;
 	}
 
@@ -1072,13 +1093,18 @@ void xml_parser_add_comment(xml_parser *parser, struct dom_node *parent,
 	/* Create DOM string data for comment */
 	err = dom_string_create_from_const_ptr(parser->doc, child->content,
 			strlen((const char *) child->content), &data);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for comment data");
 		return;
+	}
 
 	/* Create comment */
 	err = dom_document_create_comment(parser->doc, data, &comment);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(data);
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+					"No memory for comment node");
 		return;
 	}
 
@@ -1090,6 +1116,8 @@ void xml_parser_add_comment(xml_parser *parser, struct dom_node *parent,
 			(struct dom_node **) &ins_comment);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) comment);
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"Failed attaching comment node");
 		return;
 	}
 
@@ -1127,8 +1155,11 @@ void xml_parser_add_document_type(xml_parser *parser,
 	/* Create qname for doctype */
 	err = dom_string_create_from_const_ptr(parser->doc, dtd->name,
 			strlen((const char *) dtd->name), &qname);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for doctype name");
 		return;
+	}
 
 	/* Create public ID for doctype */
 	err = dom_string_create_from_const_ptr(parser->doc,
@@ -1138,6 +1169,8 @@ void xml_parser_add_document_type(xml_parser *parser,
 			&public_id);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(qname);
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for doctype public id");
 		return;
 	}
 
@@ -1150,6 +1183,8 @@ void xml_parser_add_document_type(xml_parser *parser,
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(public_id);
 		dom_string_unref(qname);
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"No memory for doctype system id");
 		return;
 	}
 
@@ -1161,6 +1196,8 @@ void xml_parser_add_document_type(xml_parser *parser,
 		dom_string_unref(system_id);
 		dom_string_unref(public_id);
 		dom_string_unref(qname);
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+				"Failed to create document type");
 		return;
 	}
 
@@ -1174,6 +1211,8 @@ void xml_parser_add_document_type(xml_parser *parser,
 			doctype);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) doctype);
+		parser->msg(XML_MSG_CRITICAL, parser->mctx,
+					"Failed attaching doctype");
 		return;
 	}
 
