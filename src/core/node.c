@@ -524,11 +524,12 @@ dom_exception dom_node_get_owner_document(struct dom_node *node,
  *         DOM_NOT_FOUND_ERR               if ::ref_child is not a child of
  *                                         ::node,
  *         DOM_NOT_SUPPORTED_ERR           if ::node is of type Document and
- *                                         ::new_child is of type
- *                                         DocumentType or Element.
+ *                                         ::new_child is of type DocumentType.
  *
  * If ::new_child is a DocumentFragment, all of its children are inserted.
  * If ::new_child is already in the tree, it is first removed.
+ *
+ * Attempting to insert a node before itself is a NOP
  *
  * ::new_child's reference count will be increased. The caller should unref
  * it (as they should already have held a reference on the node)
@@ -537,31 +538,128 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *ref_child,
 		struct dom_node **result)
 {
-	/** \todo sanity checking etc. */
+	/* Ensure that new_child and node are owned by the same document */
+	if (new_child->owner != node->owner)
+		return DOM_WRONG_DOCUMENT_ERR;
 
-	new_child->parent = node;
+	/** \todo ensure ::node may be written to */
 
-	if (ref_child == NULL) {
-		new_child->previous = node->last_child;
-		new_child->next = NULL;
+	/* Ensure that ref_child (if any) is a child of node */
+	if (ref_child != NULL && ref_child->parent != node)
+		return DOM_NOT_FOUND_ERR;
 
-		if (node->last_child != NULL)
-			node->last_child->next = new_child;
-		else
-			node->first_child = new_child;
+	/* We don't support addition of DocumentType nodes using this API */
+	/** \todo if we did, then we could purge dom_document_set_doctype() */
+	if (node->type == DOM_DOCUMENT_NODE && 
+			new_child->type == DOM_DOCUMENT_TYPE_NODE)
+		return DOM_NOT_SUPPORTED_ERR;
 
-		node->last_child = new_child;
-	} else {
-		new_child->previous = ref_child->previous;
-		new_child->next = ref_child;
-
-		if (ref_child->previous != NULL)
-			ref_child->previous->next = new_child;
-		else
-			node->first_child = new_child;
-
-		ref_child->previous = new_child;
+	/* Ensure that new_child is not an ancestor of node, nor node itself */
+	for (struct dom_node *n = node; n != NULL; n = n->parent) {
+		if (n == new_child)
+			return DOM_HIERARCHY_REQUEST_ERR;
 	}
+
+	/* Ensure that the document doesn't already have a root element */
+	if (node->type == DOM_DOCUMENT_NODE && node->type == DOM_ELEMENT_NODE) {
+		for (struct dom_node *n = node->first_child; 
+				n != NULL; n = n->next) {
+			if (n->type == DOM_ELEMENT_NODE)
+				return DOM_HIERARCHY_REQUEST_ERR;
+		}
+	}
+
+	/** \todo ensure ::new_child is permitted as a child of ::node */
+
+	/* Attempting to insert a node before itself is a NOP */
+	if (new_child == ref_child) {
+		dom_node_ref(new_child);
+		*result = new_child;
+
+		return DOM_NO_ERR;
+	}
+
+	/* If new_child is already in the tree, remove it */
+	if (new_child->parent != NULL) {
+		if (new_child->previous != NULL)
+			new_child->previous->next = new_child->next;
+		else
+			new_child->parent->first_child = new_child->next;
+
+		if (new_child->next != NULL)
+			new_child->next->previous = new_child->previous;
+		else
+			new_child->parent->last_child = new_child->previous;
+	}
+
+	/* If new_child is a DocumentFragment, insert its children 
+	 * Otherwise, insert new_child */
+	if (new_child->type == DOM_DOCUMENT_FRAGMENT_NODE) {
+		if (new_child->first_child != NULL) {
+			/* Reparent children */
+			for (struct dom_node *c = new_child->first_child;
+					c != NULL; c = c->next)
+				c->parent = node;
+
+			if (ref_child == NULL) {
+				new_child->first_child->previous = 
+						node->last_child;
+
+				if (node->last_child != NULL) {
+					node->last_child->next = 
+							new_child->first_child;
+				} else {
+					node->first_child = 
+							new_child->first_child;
+				}
+
+				node->last_child = new_child->last_child;
+			} else {
+				new_child->first_child->previous =
+						ref_child->previous;
+
+				if (ref_child->previous != NULL) {
+					ref_child->previous->next = 
+							new_child->first_child;
+				} else {
+					node->first_child =
+							new_child->first_child;
+				}
+
+				new_child->last_child->next = ref_child;
+				ref_child->previous = new_child->last_child;
+			}
+
+			new_child->first_child = NULL;
+			new_child->last_child = NULL;
+		}
+	} else {
+		new_child->parent = node;
+
+		if (ref_child == NULL) {
+			new_child->previous = node->last_child;
+			new_child->next = NULL;
+
+			if (node->last_child != NULL)
+				node->last_child->next = new_child;
+			else
+				node->first_child = new_child;
+
+			node->last_child = new_child;
+		} else {
+			new_child->previous = ref_child->previous;
+			new_child->next = ref_child;
+
+			if (ref_child->previous != NULL)
+				ref_child->previous->next = new_child;
+			else
+				node->first_child = new_child;
+
+			ref_child->previous = new_child;
+		}
+	}
+
+	/** \todo Is it correct to return DocumentFragments? */
 
 	dom_node_ref(new_child);
 	*result = new_child;
