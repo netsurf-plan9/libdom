@@ -5,7 +5,10 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
+#include <stdio.h>
+
 #include <dom/core/element.h>
+#include <dom/core/string.h>
 
 #include "core/document.h"
 #include "core/element.h"
@@ -138,7 +141,8 @@ void dom_element_destroy(struct dom_document *doc,
  *
  * \param element  The element to retrieve the name from
  * \param name     Pointer to location to receive name
- * \return DOM_NO_ERR.
+ * \return DOM_NO_ERR      on success,
+ *         DOM_NO_MEM_ERR  on memory exhaustion.
  *
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
@@ -147,10 +151,41 @@ void dom_element_destroy(struct dom_document *doc,
 dom_exception dom_element_get_tag_name(struct dom_element *element,
 		struct dom_string **name)
 {
-	UNUSED(element);
-	UNUSED(name);
+	struct dom_node *e = (struct dom_node *) element;
+	struct dom_string *tag_name;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (e->localname != NULL) {
+		/* Has a localname, so build a qname string */
+		size_t local_len = 0, prefix_len = 0;
+		const uint8_t *local = NULL, *prefix = NULL;
+		dom_exception err;
+
+		if (e->prefix != NULL)
+			dom_string_get_data(e->prefix, &prefix, &prefix_len);
+
+		dom_string_get_data(e->localname, &local, &local_len);
+
+		uint8_t qname[prefix_len + 1 /* : */ + local_len + 1 /* \0 */];
+
+		sprintf((char *) qname, "%s:%s", 
+				prefix ? (const char *) prefix : "", 
+				(const char *) local);
+
+		err = dom_string_create_from_ptr(e->owner, qname, 
+				prefix_len + 1 + local_len, &tag_name);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		/* tag_name is referenced for us */
+	} else {
+		tag_name = e->name;
+
+		dom_string_ref(tag_name);
+	}
+
+	*name = tag_name;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -254,11 +289,73 @@ dom_exception dom_element_get_attribute_node(struct dom_element *element,
 dom_exception dom_element_set_attribute_node(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
-	UNUSED(element);
-	UNUSED(attr);
-	UNUSED(result);
+	struct dom_node *e = (struct dom_node *) element;
+	struct dom_node *a = (struct dom_node *) attr;
+	struct dom_attr *prev = NULL;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Ensure element and attribute belong to the same document */
+	if (e->owner != a->owner)
+		return DOM_WRONG_DOCUMENT_ERR;
+
+	/** \todo ensure ::element can be written to */
+
+	/* Ensure attribute isn't attached to another element */
+	if (a->parent != NULL && a->parent != e)
+		return DOM_INUSE_ATTRIBUTE_ERR;
+
+	/* Attach attr to element, if not already attached */
+	if (a->parent == NULL) {
+
+		/* Search for existing attribute with same name */
+		prev = e->attributes; 
+		while (prev != NULL) {
+			struct dom_node *p = (struct dom_node *) prev;
+
+			if (dom_string_cmp(a->name, p->name) == 0)
+				break;
+
+			prev = (struct dom_attr *) p->next;
+		}
+
+		a->parent = e;
+
+		if (prev != NULL) {
+			/* Found an existing attribute, so replace it */
+			struct dom_node *p = (struct dom_node *) prev;
+
+			a->previous = p->previous;
+			a->next = p->next;
+
+			if (a->previous != NULL)
+				a->previous->next = a;
+			else
+				e->attributes = attr;
+
+			if (a->next != NULL)
+				a->next->previous = a;
+
+			/* Invalidate existing attribute's location info */
+			p->next = NULL;
+			p->previous = NULL;
+			p->parent = NULL;
+		} else {
+			/* No existing attribute, so insert at front of list */
+			a->previous = NULL;
+			a->next = (struct dom_node *) e->attributes;
+
+			if (a->next != NULL)
+				a->next->previous = a;
+
+			e->attributes = attr;
+		}
+	}
+
+	if (prev != NULL)
+		dom_node_ref((struct dom_node *) prev);
+
+	*result = prev;
+
+	return DOM_NO_ERR;
 }
 
 /**
