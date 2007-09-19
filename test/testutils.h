@@ -90,7 +90,7 @@ TestObject *test_object_create(int argc, char **argv,
 		xml_parser_initialised = true;
 	}
 
-	snprintf(fnbuf, sizeof fnbuf, "%s/%s.xml", argv[1], uri);
+	snprintf(fnbuf, sizeof fnbuf, "%s/%s", argv[1], uri);
 
 	ret = malloc(sizeof(TestObject));
 	if (ret == NULL)

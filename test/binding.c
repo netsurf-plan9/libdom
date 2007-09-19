@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 	dom_exception err;
 	TestObject *staff;
 
-	staff = test_object_create(argc, argv, "staff", false);
+	staff = test_object_create(argc, argv, "staff.xml", false);
 	assert(staff != NULL);
 
 	doc = test_object_get_doc(staff);
