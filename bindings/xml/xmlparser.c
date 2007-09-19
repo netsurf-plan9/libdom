@@ -637,7 +637,7 @@ void xml_parser_add_node(xml_parser *parser, struct dom_node *parent,
 void xml_parser_add_element_node(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child)
 {
-	struct dom_element *el, *ins_el;
+	struct dom_element *el, *ins_el = NULL;
 	xmlAttrPtr a;
 	dom_exception err;
 
@@ -896,7 +896,7 @@ cleanup:
 void xml_parser_add_text_node(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child)
 {
-	struct dom_text *text, *ins_text;
+	struct dom_text *text, *ins_text = NULL;
 	struct dom_string *data;
 	dom_exception err;
 
@@ -957,7 +957,7 @@ void xml_parser_add_text_node(xml_parser *parser, struct dom_node *parent,
 void xml_parser_add_cdata_section(xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child)
 {
-	struct dom_cdata_section *cdata, *ins_cdata;
+	struct dom_cdata_section *cdata, *ins_cdata = NULL;
 	struct dom_string *data;
 	dom_exception err;
 
@@ -1018,7 +1018,7 @@ void xml_parser_add_cdata_section(xml_parser *parser,
 void xml_parser_add_entity_reference(xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child)
 {
-	struct dom_entity_reference *entity, *ins_entity;
+	struct dom_entity_reference *entity, *ins_entity = NULL;
 	struct dom_string *name;
 	xmlNodePtr c;
 	dom_exception err;
@@ -1086,7 +1086,7 @@ void xml_parser_add_entity_reference(xml_parser *parser,
 void xml_parser_add_comment(xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child)
 {
-	struct dom_comment *comment, *ins_comment;
+	struct dom_comment *comment, *ins_comment = NULL;
 	struct dom_string *data;
 	dom_exception err;
 
@@ -1148,7 +1148,7 @@ void xml_parser_add_document_type(xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child)
 {
 	xmlDtdPtr dtd = (xmlDtdPtr) child;
-	struct dom_document_type *doctype;
+	struct dom_document_type *doctype, *ins_doctype = NULL;
 	struct dom_string *qname, *public_id, *system_id;
 	dom_exception err;
 
@@ -1207,14 +1207,18 @@ void xml_parser_add_document_type(xml_parser *parser,
 	dom_string_unref(qname);
 
 	/* Add doctype to document */
-	err = dom_document_set_doctype((struct dom_document *) parent,
-			doctype);
+	err = dom_node_append_child(parent, (struct dom_node *) doctype,
+			(struct dom_node **) &ins_doctype);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) doctype);
 		parser->msg(XML_MSG_CRITICAL, parser->mctx,
 					"Failed attaching doctype");
 		return;
 	}
+
+	/* Not interested in inserted node */
+	if (ins_doctype != NULL)
+		dom_node_unref((struct dom_node *) ins_doctype);
 
 	/* Link nodes together */
 	err = xml_parser_link_nodes(parser, (struct dom_node *) doctype,

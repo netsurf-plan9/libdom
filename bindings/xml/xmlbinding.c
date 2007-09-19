@@ -193,11 +193,7 @@ dom_exception xml_dom_implementation_has_feature(
  * \param pw         Pointer to client-specific private data
  * \return DOM_NO_ERR on success,
  *         DOM_INVALID_CHARACTER_ERR if ::qname is invalid,
- *         DOM_NAMESPACE_ERR         if ::qname is malformed,
- *         DOM_NOT_SUPPORTED_ERR     if ::impl does not support the
- *                                   feature "XML" and the language
- *                                   exposed through Document does
- *                                   not support XML namespaces.
+ *         DOM_NAMESPACE_ERR         if ::qname is malformed.
  *
  * Any memory allocated by this call should be allocated using
  * the provided memory (de)allocation function.
@@ -214,15 +210,23 @@ dom_exception xml_dom_implementation_create_document_type(
 		struct dom_document_type **doctype,
 		dom_alloc alloc, void *pw)
 {
-	UNUSED(impl);
-	UNUSED(qname);
-	UNUSED(public_id);
-	UNUSED(system_id);
-	UNUSED(doctype);
-	UNUSED(alloc);
-	UNUSED(pw);
+	struct dom_document_type *d;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* We have no use for the impl -- we only have one */
+	UNUSED(impl);
+
+	/** \todo validate qname */
+
+	/* Create the doctype */
+	err = dom_document_type_create(qname, public_id, system_id,
+			alloc, pw, &d);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	*doctype = d;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -281,11 +285,18 @@ dom_exception xml_dom_implementation_create_document(
 
 	/* Set its doctype, if necessary */
 	if (doctype != NULL) {
-		err = dom_document_set_doctype(d, doctype);
+		struct dom_node *ins_doctype = NULL;
+
+		err = dom_node_append_child((struct dom_node *) d, 
+				(struct dom_node *) doctype, &ins_doctype);
 		if (err != DOM_NO_ERR) {
 			dom_node_unref((struct dom_node *) d);
 			return err;
 		}
+
+		/* Not interested in inserted doctype */
+		if (ins_doctype != NULL)
+			dom_node_unref(ins_doctype);
 	}
 
 	/* Create root element and attach it to document */

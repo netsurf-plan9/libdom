@@ -14,6 +14,7 @@
 #include "core/cdatasection.h"
 #include "core/comment.h"
 #include "core/document.h"
+#include "core/document_type.h"
 #include "core/doc_fragment.h"
 #include "core/element.h"
 #include "core/entity_ref.h"
@@ -39,14 +40,15 @@
 void dom_node_destroy(struct dom_node *node)
 {
 	struct dom_document *owner = node->owner;
-	bool document_node = (node->type == DOM_DOCUMENT_NODE);
+	bool null_owner_permitted = (node->type == DOM_DOCUMENT_NODE || 
+			node->type == DOM_DOCUMENT_TYPE_NODE);
 
 	/* This function simply acts as a central despatcher
 	 * for type-specific destructors. */
 
-	assert(owner != NULL); 
+	assert(null_owner_permitted || owner != NULL); 
 
-	if (!document_node) {
+	if (!null_owner_permitted) {
 		/* Claim a reference upon the owning document during 
 		 * destruction to ensure that the document doesn't get 
 		 * destroyed before its contents. */
@@ -85,7 +87,7 @@ void dom_node_destroy(struct dom_node *node)
 		dom_document_destroy((struct dom_document *) node);
 		break;
 	case DOM_DOCUMENT_TYPE_NODE:
-		/** \todo document type node */
+		dom_document_type_destroy((struct dom_document_type *) node);
 		break;
 	case DOM_DOCUMENT_FRAGMENT_NODE:
 		dom_document_fragment_destroy(owner,
@@ -96,7 +98,7 @@ void dom_node_destroy(struct dom_node *node)
 		break;
 	}
 
-	if (!document_node) {
+	if (!null_owner_permitted) {
 		/* Release the reference we claimed on the document. If this 
 		 * is the last reference held on the document and the list 
 		 * of nodes pending deletion is empty, then the document will 
@@ -173,7 +175,7 @@ dom_exception dom_node_initialise(struct dom_node *node,
 /**
  * Finalise a DOM node
  *
- * \param doc   The owning document
+ * \param doc   The owning document (or NULL if it's a standalone DocumentType)
  * \param node  The node to finalise
  *
  * The contents of ::node will be cleaned up. ::node will not be freed.
@@ -182,6 +184,10 @@ dom_exception dom_node_initialise(struct dom_node *node,
 void dom_node_finalise(struct dom_document *doc, struct dom_node *node)
 {
 	struct dom_user_data *u, *v;
+
+	/* Standalone DocumentType nodes may not have user data attached */
+	assert(node->type != DOM_DOCUMENT_TYPE_NODE || 
+			node->user_data == NULL);
 
 	/* Destroy user data */
 	for (u = node->user_data; u != NULL; u = v) {
@@ -493,6 +499,15 @@ dom_exception dom_node_get_attributes(struct dom_node *node,
 dom_exception dom_node_get_owner_document(struct dom_node *node,
 		struct dom_document **result)
 {
+	/* Document nodes have no owner, as far as clients are concerned 
+	 * In reality, they own themselves as this simplifies code elsewhere
+	 */
+	if (node->type == DOM_DOCUMENT_NODE) {
+		*result = NULL;
+
+		return DOM_NO_ERR;
+	}
+
 	/* If there is an owner, increase its reference count */
 	if (node->owner != NULL)
 		dom_node_ref((struct dom_node *) node->owner);
@@ -522,14 +537,12 @@ dom_exception dom_node_get_owner_document(struct dom_node *node,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::node is readonly, or
  *                                         ::new_child's parent is readonly,
  *         DOM_NOT_FOUND_ERR               if ::ref_child is not a child of
- *                                         ::node,
- *         DOM_NOT_SUPPORTED_ERR           if ::node is of type Document and
- *                                         ::new_child is of type DocumentType.
+ *                                         ::node.
  *
  * If ::new_child is a DocumentFragment, all of its children are inserted.
  * If ::new_child is already in the tree, it is first removed.
  *
- * Attempting to insert a node before itself is a NOP
+ * Attempting to insert a node before itself is a NOP.
  *
  * ::new_child's reference count will be increased. The caller should unref
  * it (as they should already have held a reference on the node)
@@ -539,7 +552,11 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 		struct dom_node **result)
 {
 	/* Ensure that new_child and node are owned by the same document */
-	if (new_child->owner != node->owner)
+	if ((new_child->type == DOM_DOCUMENT_TYPE_NODE && 
+			new_child->owner != NULL && 
+			new_child->owner != node->owner) ||
+			(new_child->type != DOM_DOCUMENT_TYPE_NODE &&
+			new_child->owner != node->owner))
 		return DOM_WRONG_DOCUMENT_ERR;
 
 	/** \todo ensure ::node may be written to */
@@ -548,12 +565,6 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 	if (ref_child != NULL && ref_child->parent != node)
 		return DOM_NOT_FOUND_ERR;
 
-	/* We don't support addition of DocumentType nodes using this API */
-	/** \todo if we did, then we could purge dom_document_set_doctype() */
-	if (node->type == DOM_DOCUMENT_NODE && 
-			new_child->type == DOM_DOCUMENT_TYPE_NODE)
-		return DOM_NOT_SUPPORTED_ERR;
-
 	/* Ensure that new_child is not an ancestor of node, nor node itself */
 	for (struct dom_node *n = node; n != NULL; n = n->parent) {
 		if (n == new_child)
@@ -561,7 +572,8 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 	}
 
 	/* Ensure that the document doesn't already have a root element */
-	if (node->type == DOM_DOCUMENT_NODE && node->type == DOM_ELEMENT_NODE) {
+	if (node->type == DOM_DOCUMENT_NODE && 
+			new_child->type == DOM_ELEMENT_NODE) {
 		for (struct dom_node *n = node->first_child; 
 				n != NULL; n = n->next) {
 			if (n->type == DOM_ELEMENT_NODE)
@@ -569,7 +581,27 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 		}
 	}
 
+	/* Ensure that the document doesn't already have a document type */
+	if (node->type == DOM_DOCUMENT_NODE && 
+			new_child->type == DOM_DOCUMENT_TYPE_NODE) {
+		for (struct dom_node *n = node->first_child;
+				n != NULL; n = n->next) {
+			if (n->type == DOM_DOCUMENT_TYPE_NODE)
+				return DOM_HIERARCHY_REQUEST_ERR;
+		}
+	}
+
 	/** \todo ensure ::new_child is permitted as a child of ::node */
+
+	/* DocumentType nodes are created outside the Document so, 
+	 * if we're trying to attach a DocumentType node, then we
+	 * also need to set its owner. */
+	if (node->type == DOM_DOCUMENT_NODE &&
+			new_child->type == DOM_DOCUMENT_TYPE_NODE) {
+		/* See long comment in dom_node_initialise as to why 
+		 * we don't ref the document here */
+		new_child->owner = (struct dom_document *) node;
+	}
 
 	/* Attempting to insert a node before itself is a NOP */
 	if (new_child == ref_child) {
@@ -761,10 +793,7 @@ dom_exception dom_node_remove_child(struct dom_node *node,
  *         DOM_WRONG_DOCUMENT_ERR          if ::new_child was created from a
  *                                         different document than ::node,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::node is readonly, or
- *                                         ::new_child's parent is readonly,
- *         DOM_NOT_SUPPORTED_ERR           if ::node is of type Document and
- *                                         ::new_child is of type
- *                                         DocumentType or Element.
+ *                                         ::new_child's parent is readonly.
  *
  * If ::new_child is a DocumentFragment, all of its children are inserted.
  * If ::new_child is already in the tree, it is first removed.

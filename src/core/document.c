@@ -55,8 +55,6 @@ struct dom_doc_nnm {
 struct dom_document {
 	struct dom_node base;		/**< Base node */
 
-	struct dom_document_type *type;	/**< Associated doctype */
-
 	struct dom_implementation *impl;	/**< Owning implementation */
 
 	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
@@ -157,8 +155,6 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	}
 
 	/* Initialise remaining type-specific data */
-	d->type = NULL;
-
 	if (impl != NULL)
 		dom_implementation_ref(impl);
 	d->impl = impl;
@@ -211,15 +207,6 @@ void dom_document_destroy(struct dom_document *doc)
 	/* Ok, the document tree is empty, as is the list of nodes pending
 	 * deletion. Therefore, it is safe to destroy the document. */
 
-	/* Destroy the doctype (if there is one) */
-	if (doc->type != NULL) {
-		((struct dom_node *) doc->type)->parent = NULL;
-
-		dom_node_destroy((struct dom_node *) doc->type);
-	}
-
-	doc->type = NULL;
-
 	if (doc->impl != NULL)
 		dom_implementation_unref(doc->impl);
 	doc->impl = NULL;
@@ -258,10 +245,17 @@ void dom_document_destroy(struct dom_document *doc)
 dom_exception dom_document_get_doctype(struct dom_document *doc,
 		struct dom_document_type **result)
 {
-	if (doc->type != NULL)
-		dom_node_ref((struct dom_node *) doc->type);
+	struct dom_node *c;
 
-	*result = doc->type;
+	for (c = doc->base.first_child; c != NULL; c = c->next) {
+		if (c->type == DOM_DOCUMENT_TYPE_NODE)
+			break;
+	}
+
+	if (c != NULL)
+		dom_node_ref(c);
+
+	*result = (struct dom_document_type *) c;
 
 	return DOM_NO_ERR;
 }
@@ -932,31 +926,6 @@ dom_exception dom_document_rename_node(struct dom_document *doc,
 	UNUSED(namespace);
 	UNUSED(qname);
 	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
-}
-
-/*                                                                         */
-/* ----------------------------------------------------------------------- */
-/*                                                                         */
-
-/**
- * Set a Document's Document Type
- *
- * \param doc      Document to set type of
- * \param doctype  The doctype to apply
- * \return DOM_NO_ERR                   on success,
- *         DOM_INVALID_MODIFICATION_ERR if ::doc already has a doctype.
- *
- * The doctype will have its reference count increased. It is the
- * responsibility of the caller to unref the doctype once it has finished
- * with it.
- */
-dom_exception dom_document_set_doctype(struct dom_document *doc,
-		struct dom_document_type *doctype)
-{
-	UNUSED(doc);
-	UNUSED(doctype);
 
 	return DOM_NOT_SUPPORTED_ERR;
 }

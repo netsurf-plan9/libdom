@@ -15,6 +15,9 @@
  * The Document implementation includes this as it needs the declaration of
  * dom_document_create and dom_document_set_doctype.
  *
+ * The DocumentType implementation includes this as it needs the declaration
+ * of dom_document_type_create.
+ *
  * No other client should be including this.
  */
 
@@ -248,8 +251,11 @@ dom_exception dom_register_source(struct dom_implementation_source *source,
 dom_exception dom_document_create(struct dom_implementation *impl,
 		dom_alloc alloc, void *pw, struct dom_document **doc);
 
-/* Set a Document's DocumentType */
-dom_exception dom_document_set_doctype(struct dom_document *doc,
-		struct dom_document_type *doctype);
+/* Create a DOM document type */
+dom_exception dom_document_type_create(struct dom_string *qname,
+		struct dom_string *public_id, 
+		struct dom_string *system_id,
+		dom_alloc alloc, void *pw, 
+		struct dom_document_type **doctype);
 
 #endif
