@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <stdbool.h>
 
 #include <dom/core/document.h>
 #include <dom/core/string.h>
@@ -22,6 +23,10 @@
 #include "core/pi.h"
 #include "core/text.h"
 #include "utils/utils.h"
+
+static bool _dom_node_permitted_child(const struct dom_node *parent, 
+		const struct dom_node *child);
+static bool _dom_node_readonly(const struct dom_node *node);
 
 /**
  * Destroy a DOM node
@@ -269,10 +274,12 @@ void dom_node_unref(struct dom_node *node)
 dom_exception dom_node_get_node_name(struct dom_node *node,
 		struct dom_string **result)
 {
-	UNUSED(node);
-	UNUSED(result);
+	if (node->name != NULL)
+		dom_string_ref(node->name);
 
-	return DOM_NOT_SUPPORTED_ERR;
+	*result = node->name;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -292,10 +299,12 @@ dom_exception dom_node_get_node_name(struct dom_node *node,
 dom_exception dom_node_get_node_value(struct dom_node *node,
 		struct dom_string **result)
 {
-	UNUSED(node);
-	UNUSED(result);
+	if (node->value != NULL)
+		dom_string_ref(node->value);
 
-	return DOM_NOT_SUPPORTED_ERR;
+	*result = node->value;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -314,10 +323,30 @@ dom_exception dom_node_get_node_value(struct dom_node *node,
 dom_exception dom_node_set_node_value(struct dom_node *node,
 		struct dom_string *value)
 {
-	UNUSED(node);
-	UNUSED(value);
+	/* This is a NOP if the value is defined to be null. */
+	if (node->type == DOM_DOCUMENT_NODE || 
+			node->type == DOM_DOCUMENT_FRAGMENT_NODE || 
+			node->type == DOM_DOCUMENT_TYPE_NODE || 
+			node->type == DOM_ELEMENT_NODE || 
+			node->type == DOM_ENTITY_NODE || 
+			node->type == DOM_ENTITY_REFERENCE_NODE || 
+			node->type == DOM_NOTATION_NODE) {
+		return DOM_NO_ERR;
+	}
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Ensure node is writable */
+	if (_dom_node_readonly(node))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	if (node->value != NULL)
+		dom_string_unref(node->value);
+
+	if (value != NULL)
+		dom_string_ref(value);
+
+	node->value = value;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -327,7 +356,8 @@ dom_exception dom_node_set_node_value(struct dom_node *node,
  * \param result  Pointer to location to receive node type
  * \return DOM_NO_ERR.
  */
-dom_exception dom_node_get_node_type(struct dom_node *node, dom_node_type *result)
+dom_exception dom_node_get_node_type(struct dom_node *node, 
+		dom_node_type *result)
 {
 	*result = node->type;
 
@@ -559,7 +589,9 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 			new_child->owner != node->owner))
 		return DOM_WRONG_DOCUMENT_ERR;
 
-	/** \todo ensure ::node may be written to */
+	/* Ensure node isn't read only */
+	if (_dom_node_readonly(node))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
 	/* Ensure that ref_child (if any) is a child of node */
 	if (ref_child != NULL && ref_child->parent != node)
@@ -591,7 +623,9 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 		}
 	}
 
-	/** \todo ensure ::new_child is permitted as a child of ::node */
+	/* Ensure that new_child is permitted as a child of node */
+	if (!_dom_node_permitted_child(node, new_child))
+		return DOM_HIERARCHY_REQUEST_ERR;
 
 	/* DocumentType nodes are created outside the Document so, 
 	 * if we're trying to attach a DocumentType node, then we
@@ -1340,4 +1374,91 @@ dom_exception dom_node_get_user_data(struct dom_node *node,
 
 	return DOM_NO_ERR;
 }
+
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+
+/**
+ * Determine if a node is permitted as a child of another node
+ *
+ * \param parent  Prospective parent
+ * \param child   Prospective child
+ * \return true if ::child is permitted as a child of ::parent, false otherwise.
+ */
+bool _dom_node_permitted_child(const struct dom_node *parent, 
+		const struct dom_node *child)
+{
+	bool valid;
+
+	/* See DOM3Core $1.1.1 for details */
+
+	switch (parent->type) {
+	case DOM_ELEMENT_NODE:
+	case DOM_ENTITY_REFERENCE_NODE:
+	case DOM_ENTITY_NODE:
+	case DOM_DOCUMENT_FRAGMENT_NODE:
+		valid = (child->type == DOM_ELEMENT_NODE || 
+			 child->type == DOM_TEXT_NODE || 
+			 child->type == DOM_COMMENT_NODE || 
+			 child->type == DOM_PROCESSING_INSTRUCTION_NODE || 
+			 child->type == DOM_CDATA_SECTION_NODE || 
+			 child->type == DOM_ENTITY_REFERENCE_NODE);
+		break;
+
+	case DOM_ATTRIBUTE_NODE:
+		valid = (child->type == DOM_TEXT_NODE ||
+			 child->type == DOM_ENTITY_REFERENCE_NODE);
+		break;
+
+	case DOM_TEXT_NODE:
+	case DOM_CDATA_SECTION_NODE:
+	case DOM_PROCESSING_INSTRUCTION_NODE:
+	case DOM_COMMENT_NODE:
+	case DOM_DOCUMENT_TYPE_NODE:
+	case DOM_NOTATION_NODE:
+		valid = false;
+		break;
+
+	case DOM_DOCUMENT_NODE:
+		/* Cardinality constraints (for Element & DocumentType) are 
+		 * handled by _insert_before and friends */
+		valid = (child->type == DOM_ELEMENT_NODE ||
+			 child->type == DOM_PROCESSING_INSTRUCTION_NODE ||
+			 child->type == DOM_COMMENT_NODE ||
+			 child->type == DOM_DOCUMENT_TYPE_NODE);
+		break;
+	}
+
+	return valid;
+}
+
+/**
+ * Determine if a node is read only
+ *
+ * \param node  The node to consider
+ */
+bool _dom_node_readonly(const struct dom_node *node)
+{
+	/* DocumentType and Notation nodes are read only */
+	if (node->type == DOM_DOCUMENT_TYPE_NODE ||
+			node->type == DOM_NOTATION_NODE)
+		return true;
+
+	/* Entity nodes and their descendants are read only */
+	for (; node != NULL; node = node->parent) {
+		if (node->type == DOM_ENTITY_NODE)
+			return true;
+	}
+
+	/* EntityReference nodes and their descendants are read only */
+	for (; node != NULL; node = node->parent) {
+		if (node->type == DOM_ENTITY_REFERENCE_NODE)
+			return true;
+	}
+
+	/* Otherwise, it's writable */
+	return false;
+}
+
 
