@@ -7,9 +7,11 @@
 
 #include <stdio.h>
 
+#include <dom/core/attr.h>
 #include <dom/core/element.h>
 #include <dom/core/string.h>
 
+#include "core/attr.h"
 #include "core/document.h"
 #include "core/element.h"
 #include "core/node.h"
@@ -203,11 +205,22 @@ dom_exception dom_element_get_tag_name(struct dom_element *element,
 dom_exception dom_element_get_attribute(struct dom_element *element,
 		struct dom_string *name, struct dom_string **value)
 {
-	UNUSED(element);
-	UNUSED(name);
-	UNUSED(value);
+	struct dom_node *a = (struct dom_node *) element->base.attributes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Search attributes, looking for name */
+	for (; a != NULL; a = a->next) {
+		if (dom_string_cmp(a->name, name) == 0)
+			break;
+	}
+
+	/* Fill in value */
+	if (a == NULL) {
+		*value = NULL;
+	} else {
+		dom_attr_get_value(((struct dom_attr *) a), value);
+	}
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -223,11 +236,58 @@ dom_exception dom_element_get_attribute(struct dom_element *element,
 dom_exception dom_element_set_attribute(struct dom_element *element,
 		struct dom_string *name, struct dom_string *value)
 {
-	UNUSED(element);
-	UNUSED(name);
-	UNUSED(value);
+	struct dom_node *e = (struct dom_node *) element;
+	struct dom_node *a = (struct dom_node *) e->attributes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo validate name */
+
+	/* Ensure element can be written to */
+	if (_dom_node_readonly(e))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Search for existing attribute with same name */
+	for (; a != NULL; a = a->next) {
+		if (dom_string_cmp(a->name, name) == 0)
+			break;
+	}
+
+	if (a != NULL) {
+		/* Found an existing attribute, so replace its value */
+		if (a->value != NULL)
+			dom_string_unref(a->value);
+
+		if (value != NULL)
+			dom_string_ref(value);
+		a->value = value;
+	} else {
+		/* No existing attribute, so create one */
+		dom_exception err;
+		struct dom_attr *attr;
+
+		err = dom_attr_create(e->owner, name, &attr);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		/* Set its value */
+		err = dom_attr_set_value(attr, value);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref((struct dom_node *) attr);
+			return err;
+		}
+
+		a = (struct dom_node *) attr;
+
+		/* And insert it into the element */
+		a->previous = NULL;
+		a->next = (struct dom_node *) e->attributes;
+
+		if (a->next != NULL)
+			a->next->previous = a;
+
+		e->attributes = attr;
+	}
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -241,10 +301,36 @@ dom_exception dom_element_set_attribute(struct dom_element *element,
 dom_exception dom_element_remove_attribute(struct dom_element *element,
 		struct dom_string *name)
 {
-	UNUSED(element);
-	UNUSED(name);
+	struct dom_node *e = (struct dom_node *) element;
+	struct dom_node *a = (struct dom_node *) e->attributes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Ensure element can be written to */
+	if (_dom_node_readonly(e))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Search for existing attribute with same name */
+	for (; a != NULL; a = a->next) {
+		if (dom_string_cmp(a->name, name) == 0)
+			break;
+	}
+
+	/* Detach attr node from list */
+	if (a != NULL) {
+		if (a->previous != NULL)
+			a->previous->next = a->next;
+		else
+			e->attributes = (struct dom_attr *) a->next;
+
+		if (a->next != NULL)
+			a->next->previous = a->previous;
+
+		a->previous = a->next = a->parent = NULL;
+
+		/* And destroy attr */
+		dom_node_unref(a);
+	}
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -262,11 +348,19 @@ dom_exception dom_element_remove_attribute(struct dom_element *element,
 dom_exception dom_element_get_attribute_node(struct dom_element *element,
 		struct dom_string *name, struct dom_attr **result)
 {
-	UNUSED(element);
-	UNUSED(name);
-	UNUSED(result);
+	struct dom_node *a = (struct dom_node *) element->base.attributes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Search attributes, looking for name */
+	for (; a != NULL; a = a->next) {
+		if (dom_string_cmp(a->name, name) == 0)
+			break;
+	}
+
+	if (a != NULL)
+		dom_node_ref(a);
+	*result = (struct dom_attr *) a;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -297,7 +391,9 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
 	if (e->owner != a->owner)
 		return DOM_WRONG_DOCUMENT_ERR;
 
-	/** \todo ensure ::element can be written to */
+	/* Ensure element can be written to */
+	if (_dom_node_readonly(e))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
 	/* Ensure attribute isn't attached to another element */
 	if (a->parent != NULL && a->parent != e)
@@ -359,7 +455,7 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
 }
 
 /**
- * Remove an attribute node from an element by name
+ * Remove an attribute node from an element
  *
  * \param element  The element to remove attribute node from
  * \param attr     The attribute node to remove
@@ -376,11 +472,33 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
 dom_exception dom_element_remove_attribute_node(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
-	UNUSED(element);
-	UNUSED(attr);
-	UNUSED(result);
+	struct dom_node *e = (struct dom_node *) element;
+	struct dom_node *a = (struct dom_node *) attr;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Ensure element can be written to */
+	if (_dom_node_readonly(e))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Ensure attr is an attribute of element */
+	if (a->parent != e)
+		return DOM_NOT_FOUND_ERR;
+
+	/* Detach attr node from list */
+	if (a->previous != NULL)
+		a->previous->next = a->next;
+	else
+		e->attributes = (struct dom_attr *) a->next;
+
+	if (a->next != NULL)
+		a->next->previous = a->previous;
+
+	a->previous = a->next = a->parent = NULL;
+
+	/* Return the detached node */
+	dom_node_ref(a);
+	*result = attr;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -400,11 +518,8 @@ dom_exception dom_element_get_elements_by_tag_name(
 		struct dom_element *element, struct dom_string *name,
 		struct dom_nodelist **result)
 {
-	UNUSED(element);
-	UNUSED(name);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_document_get_nodelist(element->base.owner, 
+			(struct dom_node *) element, name, NULL, NULL, result);
 }
 
 /**
@@ -584,12 +699,9 @@ dom_exception dom_element_get_elements_by_tag_name_ns(
 		struct dom_element *element, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_nodelist **result)
 {
-	UNUSED(element);
-	UNUSED(namespace);
-	UNUSED(localname);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_document_get_nodelist(element->base.owner, 
+			(struct dom_node *) element, NULL, 
+			namespace, localname, result);
 }
 
 /**
@@ -603,11 +715,17 @@ dom_exception dom_element_get_elements_by_tag_name_ns(
 dom_exception dom_element_has_attribute(struct dom_element *element,
 		struct dom_string *name, bool *result)
 {
-	UNUSED(element);
-	UNUSED(name);
-	UNUSED(result);
+	struct dom_node *a = (struct dom_node *) element->base.attributes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Search attributes, looking for name */
+	for (; a != NULL; a = a->next) {
+		if (dom_string_cmp(a->name, name) == 0)
+			break;
+	}
+
+	*result = (a != NULL);
+
+	return DOM_NO_ERR;
 }
 
 /**
