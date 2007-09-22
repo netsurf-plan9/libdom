@@ -30,11 +30,13 @@ void list_add(struct list* list, void* data);
 /**
  * Tests if data is equal to any element in the list.
  */
-bool list_contains(struct list* list, void* data, int (*comparator)(const void* a, const void* b));
+bool list_contains(struct list* list, void* data, 
+		int (*comparator)(const void* a, const void* b));
 
 /**
  * Tests if superlist contains all elements in sublist.  Order is not important.
  */
-bool list_contains_all(struct list* superList, struct list* subList, int (*comparator)(const void* a, const void* b));
+bool list_contains_all(struct list* superList, struct list* subList, 
+		int (*comparator)(const void* a, const void* b));
 
 #endif

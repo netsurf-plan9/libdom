@@ -5,21 +5,26 @@
  * Copyright 2007 James Shaw <jshaw@netsurf-browser.org>
  */
 
-#include <malloc.h>
-#include <stdio.h>
+#include <assert.h>
+
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "list.h"
 
-struct list* list_new(void) {
+struct list* list_new(void)
+{
 	struct list* list = malloc(sizeof(struct list));
+	assert(list != NULL);
 	list->size = 0;
 	list->head = NULL;
 	list->tail = NULL;
 	return list;
 }
 
-void list_destroy(struct list* list) {
+void list_destroy(struct list* list)
+{
 	struct list_elt* elt = list->head;
 	while (elt != NULL) {
 		struct list_elt* nextElt = elt->next;
@@ -29,8 +34,10 @@ void list_destroy(struct list* list) {
 	free(list);
 }
 
-void list_add(struct list* list, void* data) {
+void list_add(struct list* list, void* data)
+{
 	struct list_elt* elt = malloc(sizeof(struct list_elt));
+	assert(elt != NULL);
 	elt->data = data;
 	elt->next = NULL;
 	struct list_elt* tail = list->tail;
@@ -51,7 +58,9 @@ void list_add(struct list* list, void* data) {
 	list->size++;
 }
 
-bool list_contains(struct list* list, void* data, int (*comparator)(const void* a, const void* b)) {
+bool list_contains(struct list* list, void* data, 
+		int (*comparator)(const void* a, const void* b))
+{
 	struct list_elt* elt = list->head;
 	while (elt != NULL) {
 		if (comparator(elt->data, data) == 0) {
@@ -62,7 +71,9 @@ bool list_contains(struct list* list, void* data, int (*comparator)(const void* 
 	return false;
 }
 
-bool list_contains_all(struct list* superList, struct list* subList, int (*comparator)(const void* a, const void* b)) {
+bool list_contains_all(struct list* superList, struct list* subList, 
+		int (*comparator)(const void* a, const void* b))
+{
 	struct list_elt* elt = subList->head;
 	while (elt != NULL) {
 		if (!list_contains(superList, elt->data, comparator)) {
