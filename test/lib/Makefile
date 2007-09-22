@@ -22,10 +22,10 @@
 CFLAGS += -I$(TOP) -I$(CURDIR)
 
 # Release output
-RELEASE = libdebug.a
+RELEASE = libdomtest.a
 
 # Debug output
-DEBUG = libdebug-debug.a
+DEBUG = libdomtest-debug.a
 
 # Objects
 OBJS = list testassert testobject utils

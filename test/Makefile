@@ -23,7 +23,7 @@ CFLAGS += -I${TOP}/src/ -I${TOP}/bindings/xml/ -I$(CURDIR)
 LDFLAGS += `${PKGCONFIG} ${PKGCONFIGFLAGS} --libs libxml-2.0`
 
 # Libraries we link against
-LIBS = -L./lib -ldebug -ldom-libxml-debug -ldom-debug 
+LIBS = -L./lib -ldomtest-debug -ldom-libxml-debug -ldom-debug 
 
 # Release output
 RELEASE =
