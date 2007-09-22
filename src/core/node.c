@@ -586,8 +586,9 @@ dom_exception dom_node_get_owner_document(struct dom_node *node,
  *
  * Attempting to insert a node before itself is a NOP.
  *
- * ::new_child's reference count will be increased. The caller should unref
- * it (as they should already have held a reference on the node)
+ * The returned node will have its reference count increased. It is
+ * the responsibility of the caller to unref the node once it has
+ * finished with it.
  */
 dom_exception dom_node_insert_before(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *ref_child,
@@ -702,12 +703,9 @@ dom_exception dom_node_insert_before(struct dom_node *node,
  * ::new_child's children.
  * If ::new_child is already in the tree, it is first removed.
  *
- * ::new_child's reference count will be increased. The caller should unref
- * it (as they should already have held a reference on the node)
- *
- * ::old_child's reference count remains unmodified (::node's reference is
- * transferred to the caller). The caller should unref ::old_child once it
- * is finished with it.
+ * The returned node will have its reference count increased. It is
+ * the responsibility of the caller to unref the node once it has
+ * finished with it.
  */
 dom_exception dom_node_replace_child(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *old_child,
@@ -735,9 +733,9 @@ dom_exception dom_node_replace_child(struct dom_node *node,
  *                                         ::new_child is of type
  *                                         DocumentType or Element.
  *
- * ::old_child's reference count remains unmodified (::node's reference is
- * transferred to the caller). The caller should unref ::old_child once it
- * is finished with it.
+ * The returned node will have its reference count increased. It is
+ * the responsibility of the caller to unref the node once it has
+ * finished with it.
  */
 dom_exception dom_node_remove_child(struct dom_node *node,
 		struct dom_node *old_child,
@@ -772,8 +770,9 @@ dom_exception dom_node_remove_child(struct dom_node *node,
  * If ::new_child is a DocumentFragment, all of its children are inserted.
  * If ::new_child is already in the tree, it is first removed.
  *
- * ::new_child's reference count will be increased. The caller should unref
- * it (as they should already have held a reference on the node)
+ * The returned node will have its reference count increased. It is
+ * the responsibility of the caller to unref the node once it has
+ * finished with it.
  */
 dom_exception dom_node_append_child(struct dom_node *node,
 		struct dom_node *new_child,
