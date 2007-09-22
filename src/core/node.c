@@ -795,11 +795,28 @@ dom_exception dom_node_remove_child(struct dom_node *node,
 		struct dom_node *old_child,
 		struct dom_node **result)
 {
-	UNUSED(node);
-	UNUSED(old_child);
-	UNUSED(result);
+	/* We don't support removal of DocumentType or root Element nodes */
+	if (node->type == DOM_DOCUMENT_NODE &&
+			(old_child->type == DOM_DOCUMENT_TYPE_NODE ||
+			old_child->type == DOM_ELEMENT_NODE))
+		return DOM_NOT_SUPPORTED_ERR;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Ensure old_child is a child of node */
+	if (old_child->parent != node)
+		return DOM_NOT_FOUND_ERR;
+
+	/* Ensure node is writable */
+	if (_dom_node_readonly(node))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Detach the node */
+	_dom_node_detach(old_child);
+
+	/* Sort out the return value */
+	dom_node_ref(old_child);
+	*result = old_child;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -1554,6 +1571,9 @@ inline void _dom_node_detach_range(struct dom_node *first,
 
 	for (struct dom_node *n = first; n != last->next; n = n->next)
 		n->parent = NULL;
+
+	first->previous = NULL;
+	last->next = NULL;
 }
 
 /**
@@ -1569,19 +1589,34 @@ inline void _dom_node_detach_range(struct dom_node *first,
 inline void _dom_node_replace(struct dom_node *old,
 		struct dom_node *replacement)
 {
-	replacement->previous = old->previous;
-	replacement->next = old->next;
+	struct dom_node *first, *last;
+
+	if (replacement->type == DOM_DOCUMENT_FRAGMENT_NODE) {
+		first = replacement->first_child;
+		last = replacement->last_child;
+
+		replacement->first_child = replacement->last_child = NULL;
+	} else {
+		first = replacement;
+		last = replacement;
+	}
+
+	first->previous = old->previous;
+	last->next = old->next;
 
 	if (old->previous != NULL)
-		old->previous->next = replacement;
+		old->previous->next = first;
 	else
-		old->parent->first_child = replacement;
+		old->parent->first_child = first;
 
 	if (old->next != NULL)
-		old->next->previous = replacement;
+		old->next->previous = last;
 	else
-		old->parent->last_child = replacement;
+		old->parent->last_child = last;
 
-	replacement->parent = old->parent;
+	for (struct dom_node *n = first; n != last->next; n = n->next)
+		n->parent = old->parent;
+
+	old->previous = old->next = old->parent = NULL;
 }
 
