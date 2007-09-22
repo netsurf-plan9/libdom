@@ -27,6 +27,18 @@
 static bool _dom_node_permitted_child(const struct dom_node *parent, 
 		const struct dom_node *child);
 static bool _dom_node_readonly(const struct dom_node *node);
+static inline void _dom_node_attach(struct dom_node *node, 
+		struct dom_node *parent,
+		struct dom_node *previous, 
+		struct dom_node *next);
+static inline void _dom_node_detach(struct dom_node *node);
+static inline void _dom_node_attach_range(struct dom_node *first, 
+		struct dom_node *last,
+		struct dom_node *parent, 
+		struct dom_node *previous, 
+		struct dom_node *next);
+static inline void _dom_node_detach_range(struct dom_node *first, 
+		struct dom_node *last);
 
 /**
  * Destroy a DOM node
@@ -603,26 +615,6 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 			return DOM_HIERARCHY_REQUEST_ERR;
 	}
 
-	/* Ensure that the document doesn't already have a root element */
-	if (node->type == DOM_DOCUMENT_NODE && 
-			new_child->type == DOM_ELEMENT_NODE) {
-		for (struct dom_node *n = node->first_child; 
-				n != NULL; n = n->next) {
-			if (n->type == DOM_ELEMENT_NODE)
-				return DOM_HIERARCHY_REQUEST_ERR;
-		}
-	}
-
-	/* Ensure that the document doesn't already have a document type */
-	if (node->type == DOM_DOCUMENT_NODE && 
-			new_child->type == DOM_DOCUMENT_TYPE_NODE) {
-		for (struct dom_node *n = node->first_child;
-				n != NULL; n = n->next) {
-			if (n->type == DOM_DOCUMENT_TYPE_NODE)
-				return DOM_HIERARCHY_REQUEST_ERR;
-		}
-	}
-
 	/* Ensure that new_child is permitted as a child of node */
 	if (!_dom_node_permitted_child(node, new_child))
 		return DOM_HIERARCHY_REQUEST_ERR;
@@ -646,83 +638,31 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 	}
 
 	/* If new_child is already in the tree, remove it */
-	if (new_child->parent != NULL) {
-		if (new_child->previous != NULL)
-			new_child->previous->next = new_child->next;
-		else
-			new_child->parent->first_child = new_child->next;
-
-		if (new_child->next != NULL)
-			new_child->next->previous = new_child->previous;
-		else
-			new_child->parent->last_child = new_child->previous;
-	}
+	if (new_child->parent != NULL)
+		_dom_node_detach(new_child);
 
 	/* If new_child is a DocumentFragment, insert its children 
 	 * Otherwise, insert new_child */
 	if (new_child->type == DOM_DOCUMENT_FRAGMENT_NODE) {
 		if (new_child->first_child != NULL) {
-			/* Reparent children */
-			for (struct dom_node *c = new_child->first_child;
-					c != NULL; c = c->next)
-				c->parent = node;
-
-			if (ref_child == NULL) {
-				new_child->first_child->previous = 
-						node->last_child;
-
-				if (node->last_child != NULL) {
-					node->last_child->next = 
-							new_child->first_child;
-				} else {
-					node->first_child = 
-							new_child->first_child;
-				}
-
-				node->last_child = new_child->last_child;
-			} else {
-				new_child->first_child->previous =
-						ref_child->previous;
-
-				if (ref_child->previous != NULL) {
-					ref_child->previous->next = 
-							new_child->first_child;
-				} else {
-					node->first_child =
-							new_child->first_child;
-				}
-
-				new_child->last_child->next = ref_child;
-				ref_child->previous = new_child->last_child;
-			}
+			_dom_node_attach_range(new_child->first_child, 
+					new_child->last_child, 
+					node, 
+					ref_child == NULL ? node->last_child 
+							  : ref_child->previous,
+					ref_child == NULL ? NULL 
+							  : ref_child);
 
 			new_child->first_child = NULL;
 			new_child->last_child = NULL;
 		}
 	} else {
-		new_child->parent = node;
-
-		if (ref_child == NULL) {
-			new_child->previous = node->last_child;
-			new_child->next = NULL;
-
-			if (node->last_child != NULL)
-				node->last_child->next = new_child;
-			else
-				node->first_child = new_child;
-
-			node->last_child = new_child;
-		} else {
-			new_child->previous = ref_child->previous;
-			new_child->next = ref_child;
-
-			if (ref_child->previous != NULL)
-				ref_child->previous->next = new_child;
-			else
-				node->first_child = new_child;
-
-			ref_child->previous = new_child;
-		}
+		_dom_node_attach(new_child, 
+				node, 
+				ref_child == NULL ? node->last_child 
+						  : ref_child->previous, 
+				ref_child == NULL ? NULL 
+						  : ref_child);
 	}
 
 	/** \todo Is it correct to return DocumentFragments? */
@@ -1421,12 +1361,31 @@ bool _dom_node_permitted_child(const struct dom_node *parent,
 		break;
 
 	case DOM_DOCUMENT_NODE:
-		/* Cardinality constraints (for Element & DocumentType) are 
-		 * handled by _insert_before and friends */
 		valid = (child->type == DOM_ELEMENT_NODE ||
 			 child->type == DOM_PROCESSING_INSTRUCTION_NODE ||
 			 child->type == DOM_COMMENT_NODE ||
 			 child->type == DOM_DOCUMENT_TYPE_NODE);
+
+		/* Ensure that the document doesn't already 
+		 * have a root element */
+		if (child->type == DOM_ELEMENT_NODE) {
+			for (struct dom_node *n = parent->first_child; 
+					n != NULL; n = n->next) {
+				if (n->type == DOM_ELEMENT_NODE)
+					valid = false;
+			}
+		}
+
+		/* Ensure that the document doesn't already 
+		 * have a document type */
+		if (child->type == DOM_DOCUMENT_TYPE_NODE) {
+			for (struct dom_node *n = parent->first_child;
+					n != NULL; n = n->next) {
+				if (n->type == DOM_DOCUMENT_TYPE_NODE)
+					valid = false;
+			}
+		}
+
 		break;
 	}
 
@@ -1461,4 +1420,86 @@ bool _dom_node_readonly(const struct dom_node *node)
 	return false;
 }
 
+/**
+ * Attach a node to the tree
+ *
+ * \param node      The node to attach
+ * \param parent    Node to attach ::node as child of
+ * \param previous  Previous node in sibling list, or NULL if none
+ * \param next      Next node in sibling list, or NULL if none
+ */
+inline void _dom_node_attach(struct dom_node *node, struct dom_node *parent, 
+		struct dom_node *previous, struct dom_node *next)
+{
+	_dom_node_attach_range(node, node, parent, previous, next);
+}
+
+/**
+ * Detach a node from the tree
+ *
+ * \param node  The node to detach
+ */
+inline void _dom_node_detach(struct dom_node *node)
+{
+	_dom_node_detach_range(node, node);
+}
+
+/**
+ * Attach a range of nodes to the tree
+ *
+ * \param first     First node in the range
+ * \param last      Last node in the range
+ * \param parent    Node to attach range to
+ * \param previous  Previous node in sibling list, or NULL if none
+ * \param next      Next node in sibling list, or NULL if none
+ *
+ * The range is assumed to be a linked list of sibling nodes.
+ */
+inline void _dom_node_attach_range(struct dom_node *first, 
+		struct dom_node *last,
+		struct dom_node *parent, 
+		struct dom_node *previous, 
+		struct dom_node *next)
+{
+	first->previous = previous;
+	last->next = next;
+
+	if (previous != NULL)
+		previous->next = first;
+	else
+		parent->first_child = first;
+
+	if (next != NULL)
+		next->previous = last;
+	else
+		parent->last_child = last;
+
+	for (struct dom_node *n = first; n != last->next; n = n->next)
+		n->parent = parent;
+}
+
+/**
+ * Detach a range of nodes from the tree
+ *
+ * \param first  The first node in the range
+ * \param last   The last node in the range
+ *
+ * The range is assumed to be a linked list of sibling nodes.
+ */
+inline void _dom_node_detach_range(struct dom_node *first, 
+		struct dom_node *last)
+{
+	if (first->previous != NULL)
+		first->previous->next = last->next;
+	else
+		first->parent->first_child = last->next;
+
+	if (last->next != NULL)
+		last->next->previous = first->previous;
+	else
+		last->parent->last_child = first->previous;
+
+	for (struct dom_node *n = first; n != last->next; n = n->next)
+		n->parent = NULL;
+}
 
