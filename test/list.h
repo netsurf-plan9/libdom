@@ -22,6 +22,8 @@ struct list {
 struct list* list_new(void);
 void list_destroy(struct list* list);
 
+typedef int (*list_compare_func)(const void* a, const void* b);
+
 /**
  * Add data to the tail of the list.
  */
@@ -37,6 +39,6 @@ bool list_contains(struct list* list, void* data,
  * Tests if superlist contains all elements in sublist.  Order is not important.
  */
 bool list_contains_all(struct list* superList, struct list* subList, 
-		int (*comparator)(const void* a, const void* b));
+		list_compare_func comparator);
 
 #endif

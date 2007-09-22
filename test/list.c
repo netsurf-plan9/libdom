@@ -58,8 +58,7 @@ void list_add(struct list* list, void* data)
 	list->size++;
 }
 
-bool list_contains(struct list* list, void* data, 
-		int (*comparator)(const void* a, const void* b))
+bool list_contains(struct list* list, void* data, list_compare_func comparator)
 {
 	struct list_elt* elt = list->head;
 	while (elt != NULL) {
@@ -72,7 +71,7 @@ bool list_contains(struct list* list, void* data,
 }
 
 bool list_contains_all(struct list* superList, struct list* subList, 
-		int (*comparator)(const void* a, const void* b))
+		list_compare_func comparator)
 {
 	struct list_elt* elt = subList->head;
 	while (elt != NULL) {
@@ -83,3 +82,4 @@ bool list_contains_all(struct list* superList, struct list* subList,
 	}
 	return true;
 }
+
