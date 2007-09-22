@@ -62,3 +62,13 @@ bool list_contains(struct list* list, void* data, int (*comparator)(const void* 
 	return false;
 }
 
+bool list_contains_all(struct list* superList, struct list* subList, int (*comparator)(const void* a, const void* b)) {
+	struct list_elt* elt = subList->head;
+	while (elt != NULL) {
+		if (!list_contains(superList, elt->data, comparator)) {
+			return false;
+		}
+		elt = elt->next;
+	}
+	return true;
+}
