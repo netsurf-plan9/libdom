@@ -638,9 +638,14 @@ dom_exception dom_node_insert_before(struct dom_node *node,
 		return DOM_NO_ERR;
 	}
 
-	/* If new_child is already in the tree, remove it */
-	if (new_child->parent != NULL)
+	/* If new_child is already in the tree and 
+	 * its parent isn't read only, remove it */
+	if (new_child->parent != NULL) {
+		if (_dom_node_readonly(new_child->parent))
+			return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
 		_dom_node_detach(new_child);
+	}
 
 	/* If new_child is a DocumentFragment, insert its children 
 	 * Otherwise, insert new_child */
