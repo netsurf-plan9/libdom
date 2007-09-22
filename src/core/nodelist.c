@@ -55,9 +55,11 @@ struct dom_nodelist {
  *
  * If ::tagname is non-NULL, ::namespace and ::localname must be NULL and
  * the created list will match nodes by name
+ *
  * If ::namespace is non-NULL, ::localname must be non-NULL and
  * ::tagname must be NULL and the created list will match nodes by namespace
  * and localname
+ *
  * If ::tagname, ::namespace and ::localname are NULL, the created list
  * will match the children of ::root.
  *

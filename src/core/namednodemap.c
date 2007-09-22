@@ -28,7 +28,7 @@ struct dom_namednodemap {
 /**
  * Create a namednodemap
  *
- * \param doc  The owning document
+ * \param doc   The owning document
  * \param head  Start of list containing items in map
  * \param type  The type of items in the map
  * \param map   Pointer to location to receive created map
