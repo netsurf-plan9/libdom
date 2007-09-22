@@ -6,6 +6,19 @@ assertFalse
 assertNull
 assertNotNull
 assertEquals
+	Test actual is equal to expected.
+	
+	<assertEquals actual="result" expected="expectedResult" ignoreCase="true/false/auto" context="attribute/element" bitmask="..."/>
+	
+	For Collections (or Lists), need to check neither list is null, then that both lists have the same size, then that all their elements are equal.
+	
+	ignoreCase="auto"
+		if contentType == "text/html":
+			if context == "attribute", do case insensitive test
+			if context == "element", do case sensitive test against expected.toUpperCase()
+	context attribute used in combination with ignoreCase="auto"
+	bitmask attribute used in DOM Level 3 only.  Tests: (actual & bitmask) equals (expectedResult & bitmask) where bitmask is an int
+
 assertNotEquals
 
 assertSame
@@ -17,12 +30,33 @@ assertInstanceOf
 	Can use Node.getNodeType() to get runtime type
 
 assertSize
+	Tests a Java Collection has the specified size. 
+	
+	<assertSize size="2" collection="notifications"/>
+
 assertEventCount
 assertURIEquals
 assertImplementationException
 
 assertDOMException
-
+	Tests that a DOMException is thrown with a specified code.  Try/catching not nested.
+	
+	<assertDOMException id="setValue_throws_NO_MODIFICATION_ERR">
+	    <NO_MODIFICATION_ALLOWED_ERR>
+	        <removeChild obj="attrNode" oldChild="textNode" var="removedNode"/>
+	    </NO_MODIFICATION_ALLOWED_ERR>
+	</assertDOMException>
+	
+	boolean success = false;
+	try {
+    	removedNode = attrNode.removeChild(textNode);
+    } catch (DOMException ex) {
+    	success = (ex.code == DOMException.NO_MODIFICATION_ALLOWED_ERR);
+    }
+    assertTrue(success);
+    
+assertLowerSeverity
+	DOM Level 3 Core only
 
 Conditions
 -------------------------------------------------------------------------------
@@ -86,12 +120,17 @@ if
 while
 
 try
-	<try>
+Fail if reach the end of the try without throwing an exception specified in <catch>
+<try>
+	...
+	<catch>
+		<DOMException code="..."/>
+		<DOMException code="..."/>
 		...
-		<catch>
-			<DOMException code="..."/>
-		</catch>
-	</try> 
+	</catch>
+</try>
+
+No nesting in test cases, but sometimes more than one instance in a single test.
 
 for-each
 	<for-each collection="..." member="...">
@@ -103,12 +142,13 @@ return
 	Only used in DOM Level 2/3.  Returns immediately from method call with optional @value
 
 userObj
+	(not used)
 
 atEvents
 capturedEvents
 bubbledEvents
 allEvents
-	DOM Level 2 Evemts only
+	DOM Level 2 Events only
 
 createXPathEvaluator
 	DOM Level 3 XPath only
@@ -127,7 +167,6 @@ allErrors
 	Only used in DOM Level 3
 	Calls org.w3c.domts.DOMErrorMonitor.getAllErrors(), which is an instance of DOMErrorHandler
 
-assertLowerSeverity
 allNotifications
 operation
 key
@@ -148,6 +187,10 @@ List
 
 Collection
 	In Java, an ArrayList instance typed as a Collection
+	
+	<var name="expectedResult" type="Collection">
+		<member>"ent1"</member>
+		<member>"ent2"</member>
 
 EventMonitor
 	DOM Level 2 Events only
