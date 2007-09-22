@@ -330,6 +330,8 @@ dom_exception dom_element_remove_attribute(struct dom_element *element,
 		dom_node_unref(a);
 	}
 
+	/** \todo defaulted attribute handling */
+
 	return DOM_NO_ERR;
 }
 
@@ -493,6 +495,8 @@ dom_exception dom_element_remove_attribute_node(struct dom_element *element,
 		a->next->previous = a->previous;
 
 	a->previous = a->next = a->parent = NULL;
+
+	/** \todo defaulted attribute handling */
 
 	/* Return the detached node */
 	dom_node_ref(a);
