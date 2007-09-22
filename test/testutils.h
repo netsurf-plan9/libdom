@@ -6,7 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <setjmp.h>
 
+#include "exceptions.h"
 #include "utils.h"
 #include "xmlbinding.h"
 #include "xmlparser.h"
@@ -14,6 +16,31 @@
 #ifndef UNUSED
 #define UNUSED(x) ((x) = (x))
 #endif
+
+/* Usage:
+ 	TRY
+ 		THROW(DOM_NOT_FOUND_ERR);
+		THROW_IF_ERR(dom_document_get_doctype(...));
+	CATCH(ex)
+		printf("exception: %d\n", ex);
+	ENDTRY
+*/
+#define TRY              __exvalue=setjmp(__exbuf); \
+                         if (__exvalue==0) {
+#define CATCH(x)         } else {                   \
+                         int x = __exvalue;
+#define ENDTRY           }
+#define THROW(x)         longjmp(__exbuf, x)
+
+#define THROW_IF_ERR(x)    \
+  do {                     \
+    int err = x;           \
+    if (err != DOM_NO_ERR) \
+      THROW(err);          \
+    } while (0)
+
+jmp_buf __exbuf;
+int __exvalue;
 
 /* Redefine assert, so we can simply use the standard assert mechanism
  * within testcases and exit with the right output for the testrunner
