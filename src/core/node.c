@@ -408,15 +408,21 @@ dom_exception dom_node_get_parent_node(struct dom_node *node,
  * \param result  Pointer to location to receive child list
  * \return DOM_NO_ERR.
  *
- * \todo Work out reference counting semantics of dom_nodelist
+ * The returned NodeList will be referenced. It is the responsibility
+ * of the caller to unref the list once it has finished with it.
  */
 dom_exception dom_node_get_child_nodes(struct dom_node *node,
 		struct dom_nodelist **result)
 {
-	UNUSED(node);
-	UNUSED(result);
+	/* Can't do anything without an owning document.
+	 * This is only a problem for DocumentType nodes 
+	 * which are not yet attached to a document. 
+	 * DocumentType nodes have no children, anyway. */
+	if (node->owner == NULL)
+		return DOM_NOT_SUPPORTED_ERR;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_document_get_nodelist(node->owner, node, 
+			NULL, NULL, NULL, result);
 }
 
 /**
@@ -518,15 +524,22 @@ dom_exception dom_node_get_next_sibling(struct dom_node *node,
  * \param result  Pointer to location to receive attribute map
  * \return DOM_NO_ERR.
  *
- * \todo Work out reference counting semantics of dom_namednodemap
+ * The returned NamedNodeMap will be referenced. It is the responsibility
+ * of the caller to unref the map once it has finished with it.
+ *
+ * If ::node is not an Element, then NULL will be returned.
  */
 dom_exception dom_node_get_attributes(struct dom_node *node,
 		struct dom_namednodemap **result)
 {
-	UNUSED(node);
-	UNUSED(result);
+	if (node->type != DOM_ELEMENT_NODE) {
+		*result = NULL;
 
-	return DOM_NOT_SUPPORTED_ERR;
+		return DOM_NO_ERR;
+	}
+
+	return dom_document_get_namednodemap(node->owner, node, 
+			DOM_ATTRIBUTE_NODE, result);
 }
 
 /**
