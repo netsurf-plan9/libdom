@@ -22,6 +22,9 @@
 CFLAGS += -I${TOP}/src/ -I${TOP}/bindings/xml/ -I$(CURDIR)
 LDFLAGS += `${PKGCONFIG} ${PKGCONFIGFLAGS} --libs libxml-2.0`
 
+# Libraries we link against
+LIBS = -L./lib -ldebug -ldom-libxml-debug -ldom-debug 
+
 # Release output
 RELEASE =
 
@@ -39,14 +42,17 @@ XMLOBJS = $(addprefix xml/bin/, $(notdir $(XMLFILES:.xml=)))
 OTHEROBJS = binding
 OBJS = $(OTHEROBJS) $(XMLOBJS)
 
-.PHONY: clean debug export release setup test
+.PHONY: clean debug export release setup test transform
 
 # Targets
 release:
+	@${MAKE} -C lib release
 
 debug:
+	@${MAKE} -C lib debug
 
 clean:
+	@${MAKE} -C lib clean
 ifneq (${OBJS}, )
 	-@${RM} ${RMFLAGS} $(addsuffix ${EXEEXT}, $(OTHEROBJS))
 	-@${RM} ${RMFLAGS} -r xml/c/
@@ -54,15 +60,18 @@ ifneq (${OBJS}, )
 endif
 
 distclean:
+	@${MAKE} -C lib distclean
 	-@${RM} ${RMFLAGS} log
 
 setup:
+	@${MAKE} -C lib setup
 	@${MKDIR} ${MKDIRFLAGS} $(CURDIR)/xml/c
 	@${MKDIR} ${MKDIRFLAGS} $(CURDIR)/xml/bin
 
 export:
+	@${MAKE} -C lib export
 
-test: $(OBJS)
+test: release debug $(OBJS)
 	@${PERL} testrunner.pl ${EXEEXT}
 
 transform: $(CFILES)
@@ -71,7 +80,7 @@ transform: $(CFILES)
 xml/bin/%: xml/c/%.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
 	@${CC} -c -g ${CFLAGS} -o $@.o $<
-	@${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-libxml-debug -ldom-debug
+	@${LD} -g -o $@ $@.o ${LDFLAGS} $(LIBS)
 	@${RM} ${RMFLAGS} $@.o
 
 xml/c/%.c: xml/tests/%.xml
@@ -80,5 +89,6 @@ xml/c/%.c: xml/tests/%.xml
 %: %.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
 	@${CC} -c -g ${CFLAGS} -o $@.o $<
-	@${LD} -g -o $@ $@.o ${LDFLAGS} -ldom-libxml-debug -ldom-debug
+	@${LD} -g -o $@ $@.o ${LDFLAGS} $(LIBS)
 	@${RM} ${RMFLAGS} $@.o
+

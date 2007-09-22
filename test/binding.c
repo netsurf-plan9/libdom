@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include <dom/dom.h>
 #include "testutils.h"
 

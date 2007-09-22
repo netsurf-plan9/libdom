@@ -5,13 +5,13 @@
  * Copyright 2007 James Shaw <jshaw@netsurf-browser.org>
  */
 
-#include <assert.h>
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "list.h"
+#include "testassert.h"
 
 struct list* list_new(void)
 {
