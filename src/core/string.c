@@ -48,6 +48,14 @@ struct dom_string {
 	uint32_t refcnt;		/**< Reference count */
 };
 
+static struct dom_string empty_string = { 
+	.type = DOM_STRING_CONST_PTR, 
+	.data.ptr = NULL,
+	.len = 0,
+	.ctx.doc = NULL,
+	.refcnt = 1
+};
+
 /**
  * Claim a reference on a DOM string
  *
@@ -267,6 +275,10 @@ dom_exception dom_string_create_from_ptr_no_doc(dom_alloc alloc, void *pw,
 dom_exception dom_string_get_data(struct dom_string *str,
 		const uint8_t **data, size_t *len)
 {
+	/* Assume that a NULL str pointer indicates the empty string */
+	if (str == NULL)
+		str = &empty_string;
+
 	switch (str->type) {
 	case DOM_STRING_PTR:
 		*data = str->data.ptr;
@@ -294,6 +306,8 @@ dom_exception dom_string_get_data(struct dom_string *str,
  * \param s1  The first string to compare
  * \param s2  The second string to compare
  * \return 0 if strings match, non-0 otherwise
+ *
+ * NULL and "" will match.
  */
 int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
 {
@@ -322,6 +336,8 @@ int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
  * \param s1  The first string to compare
  * \param s2  The second string to compare
  * \return 0 if strings match, non-0 otherwise
+ *
+ * NULL and "" will match.
  */
 int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
 {
@@ -343,3 +359,4 @@ int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
 
 	return strncasecmp((const char *) d1, (const char *) d2, l1);
 }
+
