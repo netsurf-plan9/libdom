@@ -8,6 +8,8 @@
 #ifndef dom_internal_core_node_h_
 #define dom_internal_core_node_h_
 
+#include <stdbool.h>
+
 #include <dom/core/node.h>
 
 struct dom_attr;
@@ -59,5 +61,7 @@ dom_exception dom_node_initialise(struct dom_node *node,
 		struct dom_string *name, struct dom_string *value);
 
 void dom_node_finalise(struct dom_document *doc, struct dom_node *node);
+
+bool _dom_node_readonly(const struct dom_node *node);
 
 #endif

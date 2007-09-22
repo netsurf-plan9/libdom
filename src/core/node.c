@@ -26,7 +26,6 @@
 
 static bool _dom_node_permitted_child(const struct dom_node *parent, 
 		const struct dom_node *child);
-static bool _dom_node_readonly(const struct dom_node *node);
 static inline void _dom_node_attach(struct dom_node *node, 
 		struct dom_node *parent,
 		struct dom_node *previous, 
