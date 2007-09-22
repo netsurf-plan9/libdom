@@ -1,3 +1,10 @@
+/*
+ * This file is part of libdom test suite.
+ * Licensed under the MIT License,
+ *                http://www.opensource.org/licenses/mit-license.php
+ * Copyright 2007 James Shaw <jshaw@netsurf-browser.org>
+ */
+
 #ifndef exceptions_h_
 #define exceptions_h_
 
@@ -5,7 +12,8 @@
 
 #include <dom/core/exceptions.h>
 
-/* Usage:
+/*  Adapted from http://www.math.princeton.edu/~asnowden/c-except.html
+    Usage:
  	TRY
  		THROW(DOM_NOT_FOUND_ERR);
 		THROW_IF_ERR(dom_document_get_doctype(...));

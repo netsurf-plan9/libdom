@@ -8,6 +8,9 @@
 #ifndef testassert_h_
 #define testassert_h_
 
+#include "comparators.h"
+#include "list.h"
+
 /* Redefine assert, so we can simply use the standard assert mechanism
  * within testcases and exit with the right output for the testrunner
  * to do the right thing. */
@@ -16,6 +19,11 @@ void __assert2(const char *expr, const char *function,
 
 #define assert(expr) \
   ((void) ((expr) || (__assert2 (#expr, __func__, __FILE__, __LINE__), 0)))
+
+void assert_equals_collection(struct list* expected, struct list* actual,
+		comparator comparator);
+void assert_equals(int expected, int actual, comparator comparator);
+void assert_not_null(void* x);
 
 
 #endif

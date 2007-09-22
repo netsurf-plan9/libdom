@@ -39,7 +39,7 @@ CFILES = $(addprefix xml/c/, $(notdir $(XMLFILES:.xml=.c)))
 
 # Objects
 XMLOBJS = $(addprefix xml/bin/, $(notdir $(XMLFILES:.xml=)))
-OTHEROBJS = binding
+OTHEROBJS = binding test-list
 OBJS = $(OTHEROBJS) $(XMLOBJS)
 
 .PHONY: clean debug export release setup test transform

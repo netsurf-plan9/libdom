@@ -28,7 +28,7 @@ RELEASE = libdomtest.a
 DEBUG = libdomtest-debug.a
 
 # Objects
-OBJS = list testassert testobject utils
+OBJS = comparators list testassert testobject utils
 
 .PHONY: clean debug export release setup test
 

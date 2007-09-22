@@ -10,8 +10,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "comparators.h"
 #include "list.h"
 #include "testassert.h"
+
+/**
+ * Private helper function.
+ * Create a new list_elt and initialise it.
+ */
+struct list_elt* list_new_elt(void* data);
+
+struct list_elt* list_new_elt(void* data) {
+	struct list_elt* elt = malloc(sizeof(struct list_elt));
+	assert(elt != NULL);
+	elt->data = data;
+	elt->next = NULL;
+	return elt;
+}
 
 struct list* list_new(void)
 {
@@ -36,10 +51,7 @@ void list_destroy(struct list* list)
 
 void list_add(struct list* list, void* data)
 {
-	struct list_elt* elt = malloc(sizeof(struct list_elt));
-	assert(elt != NULL);
-	elt->data = data;
-	elt->next = NULL;
+	struct list_elt* elt = list_new_elt(data);
 	struct list_elt* tail = list->tail;
 
 	/* if tail was set, make its 'next' ptr point to elt */
@@ -58,7 +70,50 @@ void list_add(struct list* list, void* data)
 	list->size++;
 }
 
-bool list_contains(struct list* list, void* data, list_compare_func comparator)
+bool list_remove(struct list* list, void* data)
+{	
+	struct list_elt* prevElt = NULL;
+	struct list_elt* elt = list->head;
+	
+	bool found = false;
+	
+	while (elt != NULL) {
+		struct list_elt* nextElt = elt->next;
+		
+		/* if data is identical, fix up pointers, and free the element */
+		if (data == elt->data) {
+			if (prevElt == NULL) {
+				list->head = nextElt;
+			} else {
+				prevElt->next = nextElt;
+			}
+			free(elt);
+			list->size--;
+			found = true;
+			break;
+		}
+		
+		prevElt = elt;
+		elt = nextElt;
+	}
+	
+	return found;
+}
+
+struct list* list_clone(struct list* list)
+{
+	struct list* newList = list_new();
+	struct list_elt* elt = list->head;
+	
+	while (elt != NULL) {
+		list_add(newList, elt->data);
+		elt = elt->next;
+	}
+	
+	return newList;
+}
+
+bool list_contains(struct list* list, void* data, comparator comparator)
 {
 	struct list_elt* elt = list->head;
 	while (elt != NULL) {
@@ -71,15 +126,29 @@ bool list_contains(struct list* list, void* data, list_compare_func comparator)
 }
 
 bool list_contains_all(struct list* superList, struct list* subList, 
-		list_compare_func comparator)
+		comparator comparator)
 {
-	struct list_elt* elt = subList->head;
-	while (elt != NULL) {
-		if (!list_contains(superList, elt->data, comparator)) {
-			return false;
+	struct list_elt* subElt = subList->head;
+	struct list* superListClone = list_clone(superList);
+	
+	bool found = true;
+	
+	while (subElt != NULL) {
+		struct list_elt* superElt = superListClone->head;
+
+		found = false;
+		while (superElt != NULL && found == false) {
+			if (comparator(subElt->data, superElt->data) == 0) {
+				found = true;
+				list_remove(superListClone, superElt->data);
+			}
+			superElt = superElt->next;
 		}
-		elt = elt->next;
+		
+		subElt = subElt->next;
 	}
-	return true;
+	free(superListClone);
+	
+	return found;
 }
 
