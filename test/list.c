@@ -35,19 +35,19 @@ void list_add(struct list* list, void* data) {
 	elt->next = NULL;
 	struct list_elt* tail = list->tail;
 
-	// if tail was set, make its 'next' ptr point to elt
+	/* if tail was set, make its 'next' ptr point to elt */
 	if (tail != NULL) {
 		tail->next = elt;
 	}
 
-	// make elt the new tail
+	/* make elt the new tail */
 	list->tail = elt;
 
 	if (list->head == NULL) {
 		list->head = elt;
 	}
 
-	// inc the size of the list
+	/* inc the size of the list */
 	list->size++;
 }
 
