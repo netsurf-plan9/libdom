@@ -39,6 +39,8 @@ static inline void _dom_node_attach_range(struct dom_node *first,
 		struct dom_node *next);
 static inline void _dom_node_detach_range(struct dom_node *first, 
 		struct dom_node *last);
+static inline void _dom_node_replace(struct dom_node *old, 
+		struct dom_node *replacement);
 
 /**
  * Destroy a DOM node
@@ -716,12 +718,59 @@ dom_exception dom_node_replace_child(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *old_child,
 		struct dom_node **result)
 {
-	UNUSED(node);
-	UNUSED(new_child);
-	UNUSED(old_child);
-	UNUSED(result);
+	/* We don't support replacement of DocumentType or root Elements */
+	if (node->type == DOM_DOCUMENT_NODE && 
+			(new_child->type == DOM_DOCUMENT_TYPE_NODE || 
+			new_child->type == DOM_ELEMENT_NODE))
+		return DOM_NOT_SUPPORTED_ERR;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Ensure that new_child and node are owned by the same document */
+	if (new_child->owner != node->owner)
+		return DOM_WRONG_DOCUMENT_ERR;
+
+	/* Ensure node isn't read only */
+	if (_dom_node_readonly(node))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Ensure that old_child is a child of node */
+	if (old_child->parent != node)
+		return DOM_NOT_FOUND_ERR;
+
+	/* Ensure that new_child is not an ancestor of node, nor node itself */
+	for (struct dom_node *n = node; n != NULL; n = n->parent) {
+		if (n == new_child)
+			return DOM_HIERARCHY_REQUEST_ERR;
+	}
+
+	/* Ensure that new_child is permitted as a child of node */
+	if (!_dom_node_permitted_child(node, new_child))
+		return DOM_HIERARCHY_REQUEST_ERR;
+
+	/* Attempting to replace a node with itself is a NOP */
+	if (new_child == old_child) {
+		dom_node_ref(old_child);
+		*result = old_child;
+
+		return DOM_NO_ERR;
+	}
+
+	/* If new_child is already in the tree and 
+	 * its parent isn't read only, remove it */
+	if (new_child->parent != NULL) {
+		if (_dom_node_readonly(new_child->parent))
+			return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+		_dom_node_detach(new_child);
+	}
+
+	/* Perform the replacement */
+	_dom_node_replace(old_child, new_child);
+
+	/* Sort out the return value */
+	dom_node_ref(old_child);
+	*result = old_child;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -1505,5 +1554,34 @@ inline void _dom_node_detach_range(struct dom_node *first,
 
 	for (struct dom_node *n = first; n != last->next; n = n->next)
 		n->parent = NULL;
+}
+
+/**
+ * Replace a node in the tree
+ *
+ * \param old          Node to replace
+ * \param replacement  Replacement node
+ *
+ * This is not implemented in terms of attach/detach in case 
+ * we want to perform any special replacement-related behaviour 
+ * at a later date.
+ */
+inline void _dom_node_replace(struct dom_node *old,
+		struct dom_node *replacement)
+{
+	replacement->previous = old->previous;
+	replacement->next = old->next;
+
+	if (old->previous != NULL)
+		old->previous->next = replacement;
+	else
+		old->parent->first_child = replacement;
+
+	if (old->next != NULL)
+		old->next->previous = replacement;
+	else
+		old->parent->last_child = replacement;
+
+	replacement->parent = old->parent;
 }
 
