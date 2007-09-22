@@ -8,6 +8,9 @@
 #ifndef xml_functypes_h_
 #define xml_functypes_h_
 
+#include <stddef.h>
+#include <inttypes.h>
+
 /**
  * Type of XML parser allocation function
  */
