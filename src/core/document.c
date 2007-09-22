@@ -266,14 +266,20 @@ dom_exception dom_document_get_doctype(struct dom_document *doc,
  * \param doc     The document to retrieve the implementation from
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
+ *
+ * The returned implementation will have its reference count increased.
+ * It is the responsibility of the caller to unref the implementation once
+ * it has finished with it.
  */
 dom_exception dom_document_get_implementation(struct dom_document *doc,
 		struct dom_implementation **result)
 {
-	UNUSED(doc);
-	UNUSED(result);
+	if (doc->impl != NULL)
+		dom_implementation_ref(doc->impl);
 
-	return DOM_NOT_SUPPORTED_ERR;
+	*result = doc->impl;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -483,11 +489,8 @@ dom_exception dom_document_create_entity_reference(struct dom_document *doc,
 dom_exception dom_document_get_elements_by_tag_name(struct dom_document *doc,
 		struct dom_string *tagname, struct dom_nodelist **result)
 {
-	UNUSED(doc);
-	UNUSED(tagname);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_document_get_nodelist(doc, (struct dom_node *) doc, 
+			tagname, NULL, NULL, result);
 }
 
 /**
@@ -613,12 +616,8 @@ dom_exception dom_document_get_elements_by_tag_name_ns(
 		struct dom_document *doc, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_nodelist **result)
 {
-	UNUSED(doc);
-	UNUSED(namespace);
-	UNUSED(localname);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_document_get_nodelist(doc, (struct dom_node *) doc, 
+			NULL, namespace, localname, result);
 }
 
 /**
