@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include <dom/core/attr.h>
+#include <dom/core/string.h>
 
 #include "core/attr.h"
 #include "core/document.h"
@@ -25,8 +26,6 @@ struct dom_attr {
 
 	bool specified;			/**< Whether attribute was specified
 					 * or defaulted */
-
-	struct dom_element *owner;	/**< Owning element */
 
 	struct dom_type_info *schema_type_info;	/**< Type information */
 
@@ -70,7 +69,6 @@ dom_exception dom_attr_create(struct dom_document *doc,
 
 	/* Perform our type-specific initialisation */
 	a->specified = false;
-	a->owner = NULL;
 	a->schema_type_info = NULL;
 	a->is_id = false;
 
@@ -119,8 +117,6 @@ void dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr)
 		/** \todo destroy schema type info */
 	}
 
-	attr->owner = NULL;
-
 	dom_node_finalise(doc, &attr->base);
 
 	dom_document_alloc(doc, attr, 0);
@@ -140,10 +136,15 @@ void dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr)
 dom_exception dom_attr_get_name(struct dom_attr *attr,
 		struct dom_string **result)
 {
-	UNUSED(attr);
-	UNUSED(result);
+	struct dom_node *a = (struct dom_node *) attr;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo Handle case where a->localname != NULL */
+
+	if (a->name != NULL)
+		dom_string_ref(a->name);
+	*result = a->name;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -155,7 +156,6 @@ dom_exception dom_attr_get_name(struct dom_attr *attr,
  */
 dom_exception dom_attr_get_specified(struct dom_attr *attr, bool *result)
 {
-
 	*result = attr->specified;
 
 	return DOM_NO_ERR;
@@ -178,6 +178,8 @@ dom_exception dom_attr_get_value(struct dom_attr *attr,
 	UNUSED(attr);
 	UNUSED(result);
 
+	/* Traverse children, building a string representation as we go */
+
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
@@ -192,10 +194,47 @@ dom_exception dom_attr_get_value(struct dom_attr *attr,
 dom_exception dom_attr_set_value(struct dom_attr *attr,
 		struct dom_string *value)
 {
-	UNUSED(attr);
-	UNUSED(value);
+	struct dom_node *a = (struct dom_node *) attr;
+	struct dom_node *c, *d;
+	struct dom_text *text;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Ensure attribute is writable */
+	if (_dom_node_readonly(a))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Create text node containing new value */
+	err = dom_document_create_text_node(attr->owner, value, &text);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	/* Destroy children of this node */
+	for (c = attr->first_child; c != NULL; c = d) {
+		d = c->next;
+
+		/* Detach child */
+		c->parent = NULL;
+
+		if (c->refcnt > 0) {
+			/* Something is using this child */
+
+			/** \todo add to list of nodes pending deletion */
+
+			continue;
+		}
+
+		/* Detach from sibling list */
+		c->previous = NULL;
+		c->next = NULL;
+
+		dom_node_destroy(c);
+	}
+
+	/* And insert the text node as the value */
+	text->parent = a;
+	a->first_child = a->last_child = text;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -211,11 +250,13 @@ dom_exception dom_attr_set_value(struct dom_attr *attr,
 dom_exception dom_attr_get_owner(struct dom_attr *attr,
 		struct dom_element **result)
 {
-	/* If there is an owning element, increase its reference count */
-	if (attr->owner != NULL)
-		dom_node_ref((struct dom_node *) attr->owner);
+	struct dom_node *a = (struct dom_node *) attr;
 
-	*result = attr->owner;
+	/* If there is an owning element, increase its reference count */
+	if (a->parent != NULL)
+		dom_node_ref(a->parent);
+
+	*result = (struct dom_element *) a->parent;
 
 	return DOM_NO_ERR;
 }
