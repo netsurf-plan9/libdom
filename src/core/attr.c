@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include <dom/core/attr.h>
+#include <dom/core/document.h>
 #include <dom/core/string.h>
 
 #include "core/attr.h"
@@ -204,12 +205,12 @@ dom_exception dom_attr_set_value(struct dom_attr *attr,
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
 	/* Create text node containing new value */
-	err = dom_document_create_text_node(attr->owner, value, &text);
+	err = dom_document_create_text_node(a->owner, value, &text);
 	if (err != DOM_NO_ERR)
 		return err;
 
 	/* Destroy children of this node */
-	for (c = attr->first_child; c != NULL; c = d) {
+	for (c = a->first_child; c != NULL; c = d) {
 		d = c->next;
 
 		/* Detach child */
@@ -231,8 +232,8 @@ dom_exception dom_attr_set_value(struct dom_attr *attr,
 	}
 
 	/* And insert the text node as the value */
-	text->parent = a;
-	a->first_child = a->last_child = text;
+	((struct dom_node *) text)->parent = a;
+	a->first_child = a->last_child = (struct dom_node *) text;
 
 	return DOM_NO_ERR;
 }
