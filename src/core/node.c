@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#include <dom/core/attr.h>
 #include <dom/core/document.h>
 #include <dom/core/string.h>
 
@@ -312,6 +313,10 @@ dom_exception dom_node_get_node_name(struct dom_node *node,
 dom_exception dom_node_get_node_value(struct dom_node *node,
 		struct dom_string **result)
 {
+	if (node->type == DOM_ATTRIBUTE_NODE) {
+		return dom_attr_get_value((struct dom_attr *) node, result);
+	}
+
 	if (node->value != NULL)
 		dom_string_ref(node->value);
 
@@ -350,6 +355,11 @@ dom_exception dom_node_set_node_value(struct dom_node *node,
 	/* Ensure node is writable */
 	if (_dom_node_readonly(node))
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* If it's an attribute node, then delegate setting to 
+	 * the type-specific function */
+	if (node->type == DOM_ATTRIBUTE_NODE)
+		return dom_attr_set_value((struct dom_attr *) node, value);
 
 	if (node->value != NULL)
 		dom_string_unref(node->value);
