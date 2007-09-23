@@ -8,6 +8,7 @@
 #include "core/document.h"
 #include "core/entity_ref.h"
 #include "core/node.h"
+#include "utils/utils.h"
 
 /**
  * A DOM entity reference
@@ -97,3 +98,24 @@ void dom_entity_reference_destroy(struct dom_document *doc,
 	/* Destroy fragment */
 	dom_document_alloc(doc, entity, 0);
 }
+
+/**
+ * Get the textual representation of an EntityReference
+ *
+ * \param entity  The entity reference to get the textual representation of
+ * \param result  Pointer to location to receive result
+ * \return DOM_NO_ERR on success.
+ *
+ * The returned string will have its reference count increased. It is
+ * the responsibility of the caller to unref the string once it has
+ * finished with it.
+ */
+dom_exception dom_entity_reference_get_textual_representation(
+		struct dom_entity_reference *entity, struct dom_string **result)
+{
+	UNUSED(entity);
+	UNUSED(result);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+

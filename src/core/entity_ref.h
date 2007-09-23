@@ -21,4 +21,7 @@ dom_exception dom_entity_reference_create(struct dom_document *doc,
 void dom_entity_reference_destroy(struct dom_document *doc,
 		struct dom_entity_reference *entity);
 
+dom_exception dom_entity_reference_get_textual_representation(
+		struct dom_entity_reference *entity,
+		struct dom_string **result);
 #endif

@@ -6,6 +6,7 @@
  */
 
 #include <stddef.h>
+#include <string.h>
 
 #include <dom/core/attr.h>
 #include <dom/core/document.h>
@@ -13,6 +14,7 @@
 
 #include "core/attr.h"
 #include "core/document.h"
+#include "core/entity_ref.h"
 #include "core/node.h"
 #include "utils/utils.h"
 
@@ -176,12 +178,124 @@ dom_exception dom_attr_get_specified(struct dom_attr *attr, bool *result)
 dom_exception dom_attr_get_value(struct dom_attr *attr,
 		struct dom_string **result)
 {
-	UNUSED(attr);
-	UNUSED(result);
+	struct dom_node *a = (struct dom_node *) attr;
+	struct dom_node *c;
+	uint8_t *rep;
+	size_t rep_len;
+	size_t rep_alloc;
+	dom_exception err;
+
+#define CHUNK 128
+
+	rep = dom_document_alloc(a->owner, NULL, CHUNK);
+	if (rep == NULL)
+		return DOM_NO_MEM_ERR;
+
+	rep_len = 0;
+	rep_alloc = CHUNK;
 
 	/* Traverse children, building a string representation as we go */
+	for (c = a->first_child; c != NULL; c = c->next) {
+		if (c->type == DOM_TEXT_NODE && c->value != NULL) {
+			const uint8_t *data;
+			size_t len;
 
-	return DOM_NOT_SUPPORTED_ERR;
+			err = dom_string_get_data(c->value, &data, &len);
+			if (err != DOM_NO_ERR) {
+				dom_document_alloc(a->owner, rep, 0);
+				return err;
+			}
+
+			/* Extend buffer, if necessary */
+			if (rep_len + len >= rep_alloc) {
+				uint8_t *temp;
+				size_t required = (rep_len + len) - rep_alloc;
+
+				/* Round required up to a chunk boundary */
+				required = 
+					(required + CHUNK - 1) & ~(CHUNK - 1);
+
+				temp = dom_document_alloc(a->owner, rep, 
+						rep_alloc + required);
+				if (temp == NULL) {
+					dom_document_alloc(a->owner, rep, 0);
+					return DOM_NO_MEM_ERR;
+				}
+
+				rep = temp;
+				rep_alloc += required;
+			}
+
+			/* Copy text into buffer */
+			memcpy(rep + rep_len, data, len);
+
+			/* And fix up length information */
+			rep_len += len;
+		} else if (c->type == DOM_ENTITY_REFERENCE_NODE) {
+			struct dom_string *tr;
+			const uint8_t *data;
+			size_t len;
+
+			/* Get textual representation of entity */
+			err = dom_entity_reference_get_textual_representation(
+					(struct dom_entity_reference *) c,
+					&tr);
+			if (err != DOM_NO_ERR) {
+				dom_document_alloc(a->owner, rep, 0);
+				return err;
+			}
+
+			err = dom_string_get_data(tr, &data, &len);
+			if (err != DOM_NO_ERR) {
+				dom_string_unref(tr);
+				dom_document_alloc(a->owner, rep, 0);
+				return err;
+			}
+
+			/* Extend buffer, if necessary */
+			if (rep_len + len >= rep_alloc) {
+				uint8_t *temp;
+				size_t required = (rep_len + len) - rep_alloc;
+
+				/* Round required up to a chunk boundary */
+				required = 
+					(required + CHUNK - 1) & ~(CHUNK - 1);
+
+				temp = dom_document_alloc(a->owner, rep, 
+						rep_alloc + required);
+				if (temp == NULL) {
+					dom_document_alloc(a->owner, rep, 0);
+					return DOM_NO_MEM_ERR;
+				}
+
+				rep = temp;
+				rep_alloc += required;
+			}
+
+			/* Copy text into buffer */
+			memcpy(rep + rep_len, data, len);
+
+			/* And fix up length information */
+			rep_len += len;
+
+			/* No longer need textual representation */
+			dom_string_unref(tr);
+		}
+	}
+
+#undef CHUNK
+
+	/* Create DOMString */
+	err = dom_string_create_from_ptr(a->owner, rep, rep_len, result);
+	if (err != DOM_NO_ERR) {
+		dom_document_alloc(a->owner, rep, 0);
+		return err;
+	}
+
+	/* Cleanup */
+	dom_document_alloc(a->owner, rep, 0);
+
+	return DOM_NO_ERR;
 }
 
 /**
