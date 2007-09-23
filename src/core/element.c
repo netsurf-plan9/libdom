@@ -253,12 +253,11 @@ dom_exception dom_element_set_attribute(struct dom_element *element,
 
 	if (a != NULL) {
 		/* Found an existing attribute, so replace its value */
-		if (a->value != NULL)
-			dom_string_unref(a->value);
+		dom_exception err;
 
-		if (value != NULL)
-			dom_string_ref(value);
-		a->value = value;
+		err = dom_attr_set_value((struct dom_attr *) a, value);
+		if (err != DOM_NO_ERR)
+			return err;
 	} else {
 		/* No existing attribute, so create one */
 		dom_exception err;
