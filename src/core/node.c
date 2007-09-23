@@ -391,6 +391,12 @@ dom_exception dom_node_get_node_type(struct dom_node *node,
 dom_exception dom_node_get_parent_node(struct dom_node *node,
 		struct dom_node **result)
 {
+	/* Attr nodes have no parent */
+	if (node->type == DOM_ATTRIBUTE_NODE) {
+		*result = NULL;
+		return DOM_NO_ERR;
+	}
+
 	/* If there is a parent node, then increase its reference count */
 	if (node->parent != NULL)
 		dom_node_ref(node->parent);
@@ -484,6 +490,12 @@ dom_exception dom_node_get_last_child(struct dom_node *node,
 dom_exception dom_node_get_previous_sibling(struct dom_node *node,
 		struct dom_node **result)
 {
+	/* Attr nodes have no previous siblings */
+	if (node->type == DOM_ATTRIBUTE_NODE) {
+		*result = NULL;
+		return DOM_NO_ERR;
+	}
+
 	/* If there is a previous sibling, increase its reference count */
 	if (node->previous != NULL)
 		dom_node_ref(node->previous);
@@ -507,6 +519,12 @@ dom_exception dom_node_get_previous_sibling(struct dom_node *node,
 dom_exception dom_node_get_next_sibling(struct dom_node *node,
 		struct dom_node **result)
 {
+	/* Attr nodes have no next siblings */
+	if (node->type == DOM_ATTRIBUTE_NODE) {
+		*result = NULL;
+		return DOM_NO_ERR;
+	}
+
 	/* If there is a subsequent sibling, increase its reference count */
 	if (node->next != NULL)
 		dom_node_ref(node->next);
