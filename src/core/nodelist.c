@@ -10,11 +10,10 @@
 #include <dom/core/string.h>
 
 #include "core/document.h"
+#include "core/node.h"
 #include "core/nodelist.h"
 
 #include "utils/utils.h"
-
-struct dom_node;
 
 /**
  * DOM node list
@@ -166,10 +165,58 @@ void dom_nodelist_unref(struct dom_nodelist *list)
 dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
 		unsigned long *length)
 {
-	UNUSED(list);
-	UNUSED(length);
+	struct dom_node *cur = list->root->first_child;
+	unsigned long len = 0;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Traverse data structure */
+	while (cur != NULL) {
+		/* Process current node */
+		if (list->type == DOM_NODELIST_CHILDREN) {
+			len++;
+		} else if (list->type == DOM_NODELIST_BY_NAME) {
+			if (dom_string_cmp(cur->name, list->data.name) == 0) {
+				len++;
+			}
+		} else {
+			if (dom_string_cmp(cur->namespace, 
+					list->data.ns.namespace) == 0 && 
+				dom_string_cmp(cur->localname, 
+					list->data.ns.localname) == 0) {
+				len++;
+			}
+		}
+
+		/* Now, find next node */
+		if (list->type == DOM_NODELIST_CHILDREN) {
+			/* Just interested in sibling list */
+			cur = cur->next;
+		} else {
+			/* Want a full in-order tree traversal */
+			if (cur->first_child != NULL) {
+				/* Has children */
+				cur = cur->first_child;
+			} else if (cur->next != NULL) {
+				/* No children, but has siblings */
+				cur = cur->next;
+			} else {
+				/* No children or siblings. 
+				 * Find first unvisited relation. */
+				struct dom_node *parent = cur->parent;
+
+				while (parent != list->root &&
+						cur == parent->last_child) {
+					cur = parent;
+					parent = parent->parent;
+				}
+
+				cur = cur->next;
+			}
+		}
+	}
+
+	*length = len;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -189,11 +236,66 @@ dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
 dom_exception dom_nodelist_item(struct dom_nodelist *list,
 		unsigned long index, struct dom_node **node)
 {
-	UNUSED(list);
-	UNUSED(index);
-	UNUSED(node);
+	struct dom_node *cur = list->root->first_child;
+	unsigned long count = 0;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* Traverse data structure */
+	while (cur != NULL) {
+		/* Process current node */
+		if (list->type == DOM_NODELIST_CHILDREN) {
+			count++;
+		} else if (list->type == DOM_NODELIST_BY_NAME) {
+			if (dom_string_cmp(cur->name, list->data.name) == 0) {
+				count++;
+			}
+		} else {
+			if (dom_string_cmp(cur->namespace, 
+					list->data.ns.namespace) == 0 && 
+				dom_string_cmp(cur->localname, 
+					list->data.ns.localname) == 0) {
+				count++;
+			}
+		}
+
+		/* Stop if this is the requested index */
+		if ((index + 1) == count) {
+			break;
+		}
+
+		/* Now, find next node */
+		if (list->type == DOM_NODELIST_CHILDREN) {
+			/* Just interested in sibling list */
+			cur = cur->next;
+		} else {
+			/* Want a full in-order tree traversal */
+			if (cur->first_child != NULL) {
+				/* Has children */
+				cur = cur->first_child;
+			} else if (cur->next != NULL) {
+				/* No children, but has siblings */
+				cur = cur->next;
+			} else {
+				/* No children or siblings.
+				 * Find first unvisited relation. */
+				struct dom_node *parent = cur->parent;
+
+				while (parent != list->root &&
+						cur == parent->last_child) {
+					cur = parent;
+					parent = parent->parent;
+				}
+
+				cur = cur->next;
+			}
+		}
+	}
+
+	if (cur != NULL) {
+		dom_node_ref(cur);
+	}
+	*node = cur;
+
+	return DOM_NO_ERR;
 }
 
 /**
