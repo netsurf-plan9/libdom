@@ -23,6 +23,8 @@
 struct dom_element {
 	struct dom_node base;		/**< Base node */
 
+	struct dom_attr *attributes;	/**< Element attributes */
+
 	struct dom_type_info *schema_type_info;	/**< Type information */
 };
 
@@ -62,6 +64,7 @@ dom_exception dom_element_create(struct dom_document *doc,
 	}
 
 	/* Perform our type-specific initialisation */
+	el->attributes = NULL;
 	el->schema_type_info = NULL;
 
 	*result = el;
@@ -105,7 +108,7 @@ void dom_element_destroy(struct dom_document *doc,
 	}
 
 	/* Destroy attributes attached to this node */
-	for (c = (struct dom_node *) element->base.attributes;
+	for (c = (struct dom_node *) element->attributes;
 			c != NULL; c = d) {
 		d = c->next;
 
@@ -205,7 +208,7 @@ dom_exception dom_element_get_tag_name(struct dom_element *element,
 dom_exception dom_element_get_attribute(struct dom_element *element,
 		struct dom_string *name, struct dom_string **value)
 {
-	struct dom_node *a = (struct dom_node *) element->base.attributes;
+	struct dom_node *a = (struct dom_node *) element->attributes;
 
 	/* Search attributes, looking for name */
 	for (; a != NULL; a = a->next) {
@@ -237,7 +240,7 @@ dom_exception dom_element_set_attribute(struct dom_element *element,
 		struct dom_string *name, struct dom_string *value)
 {
 	struct dom_node *e = (struct dom_node *) element;
-	struct dom_node *a = (struct dom_node *) e->attributes;
+	struct dom_node *a = (struct dom_node *) element->attributes;
 
 	/** \todo validate name */
 
@@ -278,12 +281,12 @@ dom_exception dom_element_set_attribute(struct dom_element *element,
 
 		/* And insert it into the element */
 		a->previous = NULL;
-		a->next = (struct dom_node *) e->attributes;
+		a->next = (struct dom_node *) element->attributes;
 
 		if (a->next != NULL)
 			a->next->previous = a;
 
-		e->attributes = attr;
+		element->attributes = attr;
 	}
 
 	return DOM_NO_ERR;
@@ -301,7 +304,7 @@ dom_exception dom_element_remove_attribute(struct dom_element *element,
 		struct dom_string *name)
 {
 	struct dom_node *e = (struct dom_node *) element;
-	struct dom_node *a = (struct dom_node *) e->attributes;
+	struct dom_node *a = (struct dom_node *) element->attributes;
 
 	/* Ensure element can be written to */
 	if (_dom_node_readonly(e))
@@ -318,7 +321,7 @@ dom_exception dom_element_remove_attribute(struct dom_element *element,
 		if (a->previous != NULL)
 			a->previous->next = a->next;
 		else
-			e->attributes = (struct dom_attr *) a->next;
+			element->attributes = (struct dom_attr *) a->next;
 
 		if (a->next != NULL)
 			a->next->previous = a->previous;
@@ -349,7 +352,7 @@ dom_exception dom_element_remove_attribute(struct dom_element *element,
 dom_exception dom_element_get_attribute_node(struct dom_element *element,
 		struct dom_string *name, struct dom_attr **result)
 {
-	struct dom_node *a = (struct dom_node *) element->base.attributes;
+	struct dom_node *a = (struct dom_node *) element->attributes;
 
 	/* Search attributes, looking for name */
 	for (; a != NULL; a = a->next) {
@@ -404,7 +407,7 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
 	if (a->parent == NULL) {
 
 		/* Search for existing attribute with same name */
-		prev = e->attributes; 
+		prev = element->attributes; 
 		while (prev != NULL) {
 			struct dom_node *p = (struct dom_node *) prev;
 
@@ -426,7 +429,7 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
 			if (a->previous != NULL)
 				a->previous->next = a;
 			else
-				e->attributes = attr;
+				element->attributes = attr;
 
 			if (a->next != NULL)
 				a->next->previous = a;
@@ -438,12 +441,12 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
 		} else {
 			/* No existing attribute, so insert at front of list */
 			a->previous = NULL;
-			a->next = (struct dom_node *) e->attributes;
+			a->next = (struct dom_node *) element->attributes;
 
 			if (a->next != NULL)
 				a->next->previous = a;
 
-			e->attributes = attr;
+			element->attributes = attr;
 		}
 	}
 
@@ -488,7 +491,7 @@ dom_exception dom_element_remove_attribute_node(struct dom_element *element,
 	if (a->previous != NULL)
 		a->previous->next = a->next;
 	else
-		e->attributes = (struct dom_attr *) a->next;
+		element->attributes = (struct dom_attr *) a->next;
 
 	if (a->next != NULL)
 		a->next->previous = a->previous;
@@ -718,7 +721,7 @@ dom_exception dom_element_get_elements_by_tag_name_ns(
 dom_exception dom_element_has_attribute(struct dom_element *element,
 		struct dom_string *name, bool *result)
 {
-	struct dom_node *a = (struct dom_node *) element->base.attributes;
+	struct dom_node *a = (struct dom_node *) element->attributes;
 
 	/* Search attributes, looking for name */
 	for (; a != NULL; a = a->next) {
@@ -841,5 +844,42 @@ dom_exception dom_element_set_id_attribute_node(struct dom_element *element,
 	UNUSED(is_id);
 
 	return DOM_NOT_SUPPORTED_ERR;
+}
+
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+
+/**
+ * Retrieve a map of attributes associated with an Element
+ *
+ * \param element  The element to retrieve the attributes of
+ * \param result   Pointer to location to receive attribute map
+ * \return DOM_NO_ERR.
+ *
+ * The returned NamedNodeMap will be referenced. It is the responsibility
+ * of the caller to unref the map once it has finished with it.
+ */
+dom_exception dom_element_get_attributes(struct dom_element *element,
+		struct dom_namednodemap **result)
+{
+	return dom_document_get_namednodemap(element->base.owner,
+			(struct dom_node *) element, DOM_ATTRIBUTE_NODE,
+			result);
+}
+
+/**
+ * Determine if an element has any attributes
+ *
+ * \param element  Element to inspect
+ * \param result   Pointer to location to receive result
+ * \return DOM_NO_ERR.
+ */
+dom_exception dom_element_has_attributes(struct dom_element *element,
+		bool *result)
+{
+	*result = (element->attributes != NULL);
+
+	return DOM_NO_ERR;
 }
 

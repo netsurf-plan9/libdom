@@ -157,7 +157,6 @@ dom_exception dom_node_initialise(struct dom_node *node,
 	node->last_child = NULL;
 	node->previous = NULL;
 	node->next = NULL;
-	node->attributes = NULL;
 
 	/* Note: nodes do not reference the document to which they belong,
 	 * as this would result in the document never being destroyed once
@@ -232,7 +231,6 @@ void dom_node_finalise(struct dom_document *doc, struct dom_node *node)
 	node->owner = NULL;
 
 	/* Paranoia */
-	node->attributes = NULL;
 	node->next = NULL;
 	node->previous = NULL;
 	node->last_child = NULL;
@@ -565,8 +563,7 @@ dom_exception dom_node_get_attributes(struct dom_node *node,
 		return DOM_NO_ERR;
 	}
 
-	return dom_document_get_namednodemap(node->owner, node, 
-			DOM_ATTRIBUTE_NODE, result);
+	return dom_element_get_attributes((struct dom_element *) node, result);
 }
 
 /**
@@ -1105,9 +1102,13 @@ dom_exception dom_node_get_local_name(struct dom_node *node,
  */
 dom_exception dom_node_has_attributes(struct dom_node *node, bool *result)
 {
-	*result = node->attributes != NULL;
+	if (node->type != DOM_ELEMENT_NODE) {
+		*result = false;
 
-	return DOM_NO_ERR;
+		return DOM_NO_ERR;
+	}
+
+	return dom_element_has_attributes((struct dom_element *) node, result);
 }
 
 /**

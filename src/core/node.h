@@ -12,7 +12,6 @@
 
 #include <dom/core/node.h>
 
-struct dom_attr;
 struct dom_string;
 
 /**
@@ -41,7 +40,6 @@ struct dom_node {
 	struct dom_node *last_child;	/**< Last child node */
 	struct dom_node *previous;	/**< Previous sibling */
 	struct dom_node *next;		/**< Next sibling */
-	struct dom_attr *attributes;	/**< Node attributes */
 
 	struct dom_document *owner;	/**< Owning document */
 
