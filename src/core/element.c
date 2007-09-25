@@ -883,3 +883,14 @@ dom_exception dom_element_has_attributes(struct dom_element *element,
 	return DOM_NO_ERR;
 }
 
+/**
+ * Retrieve a pointer to the first attribute attached to an element
+ *
+ * \param element  The element to retrieve the first attribute from
+ * \return Pointer to first attribute, or NULL if none.
+ */
+struct dom_node *dom_element_get_first_attribute(struct dom_element *element)
+{
+	return (struct dom_node *) element->attributes;
+}
+

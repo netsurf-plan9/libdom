@@ -15,6 +15,7 @@
 struct dom_document;
 struct dom_element;
 struct dom_namednodemap;
+struct dom_node;
 struct dom_string;
 
 dom_exception dom_element_create(struct dom_document *doc,
@@ -28,4 +29,7 @@ dom_exception dom_element_get_attributes(struct dom_element *element,
 
 dom_exception dom_element_has_attributes(struct dom_element *element,
 		bool *result);
+
+struct dom_node *dom_element_get_first_attribute(struct dom_element *element);
+
 #endif
