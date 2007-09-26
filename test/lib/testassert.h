@@ -22,9 +22,13 @@ void __assert2(const char *expr, const char *function,
 
 void assert_equals_collection(struct list* expected, struct list* actual,
 		comparator comparator);
-void assert_equals(int expected, int actual, comparator comparator);
-void assert_not_null(void* x);
 
+void assert_equals(void* expected, void* actual, comparator comparator);
+
+void assert_same(void* expected, void* actual, comparator comparator);
+
+void assert_uri_equals(char* scheme, char* path, char* host, char* file,
+		     char* name, char* query, char* fragment, bool isAbsolute,
+		     char* actual);
 
 #endif
-
