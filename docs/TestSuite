@@ -1,29 +1,42 @@
 Assertions
 -------------------------------------------------------------------------------
 fail
+	assert(false);
+
 assertTrue
 assertFalse
+	@actual is a variable name, of type boolean (or castable to boolean?)
+	or evaluate nested condition to boolean
+
 assertNull
 assertNotNull
+	@actual is a variable name
+	or evaluate nested condition
+	
 assertEquals
-	Test actual is equal to expected.
+assertNotEquals
+	Test actual is equal (or not equal) to expected.
 	
 	<assertEquals actual="result" expected="expectedResult" ignoreCase="true/false/auto" context="attribute/element" bitmask="..."/>
 	
 	For Collections (or Lists), need to check neither list is null, then that both lists have the same size, then that all their elements are equal.
 	
-	ignoreCase="auto"
+	@ignoreCase="auto"
 		if contentType == "text/html":
 			if context == "attribute", do case insensitive test
 			if context == "element", do case sensitive test against expected.toUpperCase()
-	context attribute used in combination with ignoreCase="auto"
-	bitmask attribute used in DOM Level 3 only.  Tests: (actual & bitmask) equals (expectedResult & bitmask) where bitmask is an int
+	@context used in combination with ignoreCase="auto"
+	@bitmask used in DOM Level 3 only.  Tests: (actual & bitmask) equals (expectedResult & bitmask) where bitmask is an int
 
-assertNotEquals
+	Alternatively, can include nested statement (presumably as a substitute to @actual), but can't see this is used anywhere.
 
 assertSame
 	Tests two objects for identity.
-	If not identical, test if either are null, or either are not Nodes.  If so, delegate to assertEquals()
+	If not, call assertEquals()
+	Don't really understand the point of this assert
+	
+(note about assertNull, assertNotNull, assertEquals, assertNotEquals, assertSame)
+	Alternatively, can include nested statement (presumably as a substitute to @actual), but can't see this is used anywhere.
 
 assertInstanceOf
 	Used in [hc_]namednodemapreturnattrnode.xml
@@ -35,8 +48,23 @@ assertSize
 	<assertSize size="2" collection="notifications"/>
 
 assertEventCount
+	(not used)
+	
 assertURIEquals
+	Compare pieces of the URI in @actual
+
+	@actual
+	@scheme
+	@path
+	@host
+	@file
+	@name
+	@query
+	@fragment 
+	@isAbsolute boolean
+
 assertImplementationException
+	DOM Level 2 Events dispatchEvent01.xml
 
 assertDOMException
 	Tests that a DOMException is thrown with a specified code.  Try/catching not nested.
@@ -66,14 +94,25 @@ same
 equals
 notEquals
 less
+
 lessOrEquals
+	(not used)
+	
 greater
+
 greaterOrEquals
+	(not used)
+	
 isNull
+	(not used)
+
 notNull
 and
 or
+
 xor
+	(not used)
+	
 not
 
 instanceOf
@@ -81,11 +120,26 @@ instanceOf
 
 isTrue
 isFalse
+
 hasSize
+	(not used)
+	
 contentType
+
 contains
+	DOM Level 3 Core and LS only
+	
 hasFeature
+	calls DOMImplementation.hasFeature()
+	
+	@feature quoted string e.g. "XML"
+	@version quoted string e.g. "1.0"
+	@value boolean
+	@var variable to assign the result to
+	@obj name of var holding the DOMImplementation
+	
 implementationAttribute
+	pass param to the test suite's DOMTestDocumentBuilderFactory (e.g. validating)
 
 
 Statements
@@ -110,27 +164,22 @@ subtract
 mult
 divide
 load
-implementation
-hasFeature
-
-implementationAttribute
-	Set DocumentBuilder attributes (such as validating)
 
 if
 while
 
 try
-Fail if reach the end of the try without throwing an exception specified in <catch>
-<try>
-	...
-	<catch>
-		<DOMException code="..."/>
-		<DOMException code="..."/>
+	Fail if reach the end of the try without throwing an exception specified in <catch>
+	<try>
 		...
-	</catch>
-</try>
-
-No nesting in test cases, but sometimes more than one instance in a single test.
+		<catch>
+			<DOMException code="..."/>
+			<DOMException code="..."/>
+			...
+		</catch>
+	</try>
+	
+	No nesting in test cases, but sometimes more than one instance in a single test.
 
 for-each
 	<for-each collection="..." member="...">
@@ -171,6 +220,7 @@ allNotifications
 operation
 key
 dst
+	DOM Level 3 Core only
 
 Datatypes
 -------------------------------------------------------------------------------
