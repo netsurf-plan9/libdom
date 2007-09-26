@@ -174,13 +174,17 @@ dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
 		if (list->type == DOM_NODELIST_CHILDREN) {
 			len++;
 		} else if (list->type == DOM_NODELIST_BY_NAME) {
-			if (dom_string_cmp(cur->name, list->data.name) == 0) {
+			if (cur->name != NULL && 
+					dom_string_cmp(cur->name, 
+						list->data.name) == 0) {
 				len++;
 			}
 		} else {
-			if (dom_string_cmp(cur->namespace, 
+			if (cur->namespace != NULL &&
+					dom_string_cmp(cur->namespace, 
 					list->data.ns.namespace) == 0 && 
-				dom_string_cmp(cur->localname, 
+				cur->name != NULL &&
+				dom_string_cmp(cur->name, 
 					list->data.ns.localname) == 0) {
 				len++;
 			}
@@ -245,13 +249,17 @@ dom_exception dom_nodelist_item(struct dom_nodelist *list,
 		if (list->type == DOM_NODELIST_CHILDREN) {
 			count++;
 		} else if (list->type == DOM_NODELIST_BY_NAME) {
-			if (dom_string_cmp(cur->name, list->data.name) == 0) {
+			if (cur->name != NULL &&
+					dom_string_cmp(cur->name, 
+						list->data.name) == 0) {
 				count++;
 			}
 		} else {
-			if (dom_string_cmp(cur->namespace, 
+			if (cur->namespace != NULL &&
+					dom_string_cmp(cur->namespace, 
 					list->data.ns.namespace) == 0 && 
-				dom_string_cmp(cur->localname, 
+				cur->name != NULL &&
+				dom_string_cmp(cur->name, 
 					list->data.ns.localname) == 0) {
 				count++;
 			}

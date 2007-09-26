@@ -32,7 +32,9 @@ struct dom_user_data {
  * DOM nodes are reference counted
  */
 struct dom_node {
-	struct dom_string *name;	/**< Node name */
+	struct dom_string *name;	/**< Node name (this is the local part 
+					 * of a QName in the cases where a 
+					 * namespace exists) */
 	struct dom_string *value;	/**< Node value */
 	dom_node_type type;		/**< Node type */
 	struct dom_node *parent;	/**< Parent node */
@@ -45,7 +47,6 @@ struct dom_node {
 
 	struct dom_string *namespace;	/**< Namespace URI */
 	struct dom_string *prefix;	/**< Namespace prefix */
-	struct dom_string *localname;	/**< Local part of qualified name */
 
 	struct dom_user_data *user_data;	/**< User data list */
 

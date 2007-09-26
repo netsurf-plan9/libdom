@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include <dom/core/attr.h>
 #include <dom/core/document.h>
@@ -181,7 +182,6 @@ dom_exception dom_node_initialise(struct dom_node *node,
 	/** \todo Namespace handling */
 	node->namespace = NULL;
 	node->prefix = NULL;
-	node->localname = NULL;
 
 	node->user_data = NULL;
 
@@ -215,9 +215,6 @@ void dom_node_finalise(struct dom_document *doc, struct dom_node *node)
 
 		dom_document_alloc(doc, u, 0);
 	}
-
-	if (node->localname != NULL)
-		dom_string_unref(node->localname);
 
 	if (node->prefix != NULL)
 		dom_string_unref(node->prefix);
@@ -286,10 +283,45 @@ void dom_node_unref(struct dom_node *node)
 dom_exception dom_node_get_node_name(struct dom_node *node,
 		struct dom_string **result)
 {
-	if (node->name != NULL)
+	struct dom_string *node_name;
+
+	assert(node->name != NULL);
+
+	/* If this node was created using a namespace-aware method and
+	 * has a defined prefix, then nodeName is a QName comprised
+	 * of prefix:name. */
+	if ((node->type == DOM_ELEMENT_NODE ||
+			node->type == DOM_ATTRIBUTE_NODE) &&
+			node->prefix != NULL) {
+		const uint8_t *prefix, *localname;
+		size_t prefix_len, local_len;
+		dom_exception err;
+
+		dom_string_get_data(node->prefix, &prefix, &prefix_len);
+
+		dom_string_get_data(node->name, &localname, &local_len);
+
+		uint8_t qname[prefix_len + 1 /* : */ + local_len + 1 /* \0 */];
+
+		sprintf((char *) qname, "%.*s:%.*s", 
+			prefix_len, (const char *) prefix, 
+			local_len, (const char *) localname);
+
+		/* Create the string */
+		err = dom_string_create_from_ptr(node->owner, qname, 
+				prefix_len + 1 + local_len, &node_name);
+		if (err != DOM_NO_ERR) {
+			return err;
+		}
+
+		/* QName is referenced on exit from constructor */
+	} else {
 		dom_string_ref(node->name);
 
-	*result = node->name;
+		node_name = node->name;
+	}
+
+	*result = node_name;
 
 	return DOM_NO_ERR;
 }
@@ -1064,10 +1096,45 @@ dom_exception dom_node_get_prefix(struct dom_node *node,
 dom_exception dom_node_set_prefix(struct dom_node *node,
 		struct dom_string *prefix)
 {
-	UNUSED(node);
-	UNUSED(prefix);
+	/* Only Element and Attribute nodes created using 
+	 * namespace-aware methods may have a prefix */
+	if ((node->type != DOM_ELEMENT_NODE &&
+			node->type != DOM_ATTRIBUTE_NODE) || 
+			node->namespace == NULL) {
+		return DOM_NO_ERR;
+	}
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo validate prefix */
+
+	/* Ensure node is writable */
+	if (_dom_node_readonly(node)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	/* No longer want existing prefix */
+	if (node->prefix != NULL) {
+		dom_string_unref(node->prefix);
+	}
+
+	/* Set the prefix */
+	if (prefix != NULL) {
+		const uint8_t *data;
+		size_t len;
+
+		dom_string_get_data(prefix, &data, &len);
+
+		/* Empty string is treated as NULL */
+		if (len == 0) {
+			node->prefix = NULL;
+		} else {
+			dom_string_ref(prefix);
+			node->prefix = prefix;
+		}
+	} else {
+		node->prefix = NULL;
+	}
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -1084,11 +1151,24 @@ dom_exception dom_node_set_prefix(struct dom_node *node,
 dom_exception dom_node_get_local_name(struct dom_node *node,
 		struct dom_string **result)
 {
-	/* If there is a local name, increase its reference count */
-	if (node->localname != NULL)
-		dom_string_ref(node->localname);
+	/* Only Element and Attribute nodes may have a local name */
+	if (node->type != DOM_ELEMENT_NODE && 
+			node->type != DOM_ATTRIBUTE_NODE) {
+		*result = NULL;
+		return DOM_NO_ERR;
+	}
 
-	*result = node->localname;
+	/* Node must have been created using a namespace-aware method */
+	if (node->namespace == NULL) {
+		*result = NULL;
+		return DOM_NO_ERR;
+	}
+
+	/* The node may have a local name, reference it if so */
+	if (node->name != NULL) {
+		dom_string_ref(node->name);
+	}
+	*result = node->name;
 
 	return DOM_NO_ERR;
 }

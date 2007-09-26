@@ -9,6 +9,7 @@
 
 #include <dom/core/attr.h>
 #include <dom/core/element.h>
+#include <dom/core/node.h>
 #include <dom/core/string.h>
 
 #include "core/attr.h"
@@ -156,41 +157,8 @@ void dom_element_destroy(struct dom_document *doc,
 dom_exception dom_element_get_tag_name(struct dom_element *element,
 		struct dom_string **name)
 {
-	struct dom_node *e = (struct dom_node *) element;
-	struct dom_string *tag_name;
-
-	if (e->localname != NULL) {
-		/* Has a localname, so build a qname string */
-		size_t local_len = 0, prefix_len = 0;
-		const uint8_t *local = NULL, *prefix = NULL;
-		dom_exception err;
-
-		if (e->prefix != NULL)
-			dom_string_get_data(e->prefix, &prefix, &prefix_len);
-
-		dom_string_get_data(e->localname, &local, &local_len);
-
-		uint8_t qname[prefix_len + 1 /* : */ + local_len + 1 /* \0 */];
-
-		sprintf((char *) qname, "%s:%s", 
-				prefix ? (const char *) prefix : "", 
-				(const char *) local);
-
-		err = dom_string_create_from_ptr(e->owner, qname, 
-				prefix_len + 1 + local_len, &tag_name);
-		if (err != DOM_NO_ERR)
-			return err;
-
-		/* tag_name is referenced for us */
-	} else {
-		tag_name = e->name;
-
-		dom_string_ref(tag_name);
-	}
-
-	*name = tag_name;
-
-	return DOM_NO_ERR;
+	/* This is the same as nodeName */
+	return dom_node_get_node_name((struct dom_node *) element, name);
 }
 
 /**
