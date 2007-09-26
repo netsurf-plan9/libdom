@@ -10,6 +10,7 @@
 
 #include <dom/core/attr.h>
 #include <dom/core/document.h>
+#include <dom/core/node.h>
 #include <dom/core/string.h>
 
 #include "core/attr.h"
@@ -139,15 +140,8 @@ void dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr)
 dom_exception dom_attr_get_name(struct dom_attr *attr,
 		struct dom_string **result)
 {
-	struct dom_node *a = (struct dom_node *) attr;
-
-	/** \todo Handle case where a->localname != NULL */
-
-	if (a->name != NULL)
-		dom_string_ref(a->name);
-	*result = a->name;
-
-	return DOM_NO_ERR;
+	/* This is the same as nodeName */
+	return dom_node_get_node_name((struct dom_node *) attr, result);
 }
 
 /**
