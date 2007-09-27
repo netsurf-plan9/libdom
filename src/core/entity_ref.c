@@ -46,7 +46,7 @@ dom_exception dom_entity_reference_create(struct dom_document *doc,
 
 	/* And initialise the node */
 	err = dom_node_initialise(&e->base, doc, DOM_ENTITY_REFERENCE_NODE,
-			name, value);
+			name, value, NULL, NULL);
 	if (err != DOM_NO_ERR) {
 		dom_document_alloc(doc, e, 0);
 		return err;

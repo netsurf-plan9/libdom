@@ -32,19 +32,23 @@ struct dom_element {
 /**
  * Create an element node
  *
- * \param doc     The owning document
- * \param name    The name of the node to create
- * \param result  Pointer to location to receive created element
+ * \param doc        The owning document
+ * \param name       The (local) name of the node to create
+ * \param namespace  The namespace URI of the element, or NULL
+ * \param prefix     The namespace prefix of the element, or NULL
+ * \param result     Pointer to location to receive created element
  * \return DOM_NO_ERR                on success,
  *         DOM_INVALID_CHARACTER_ERR if ::name is invalid,
  *         DOM_NO_MEM_ERR            on memory exhaustion.
  *
- * ::doc and ::name will have their reference counts increased.
+ * ::doc, ::name, ::namespace and ::prefix will have their 
+ * reference counts increased.
  *
  * The returned element will already be referenced.
  */
 dom_exception dom_element_create(struct dom_document *doc,
-		struct dom_string *name, struct dom_element **result)
+		struct dom_string *name, struct dom_string *namespace,
+		struct dom_string *prefix, struct dom_element **result)
 {
 	struct dom_element *el;
 	dom_exception err;
@@ -58,7 +62,7 @@ dom_exception dom_element_create(struct dom_document *doc,
 
 	/* Initialise the base class */
 	err = dom_node_initialise(&el->base, doc, DOM_ELEMENT_NODE,
-			name, NULL);
+			name, NULL, namespace, prefix);
 	if (err != DOM_NO_ERR) {
 		dom_document_alloc(doc, el, 0);
 		return err;
@@ -234,7 +238,7 @@ dom_exception dom_element_set_attribute(struct dom_element *element,
 		dom_exception err;
 		struct dom_attr *attr;
 
-		err = dom_attr_create(e->owner, name, &attr);
+		err = dom_attr_create(e->owner, name, NULL, NULL, &attr);
 		if (err != DOM_NO_ERR)
 			return err;
 

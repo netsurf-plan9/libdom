@@ -130,18 +130,22 @@ void dom_node_destroy(struct dom_node *node)
 /**
  * Initialise a DOM node
  *
- * \param node   The node to initialise
- * \param doc    The document which owns the node
- * \param type   The node type required
- * \param name   The node name, or NULL
- * \param value  The node value, or NULL
+ * \param node       The node to initialise
+ * \param doc        The document which owns the node
+ * \param type       The node type required
+ * \param name       The node (local) name, or NULL
+ * \param value      The node value, or NULL
+ * \param namespace  Namespace URI to use for node, or NULL
+ * \param prefix     Namespace prefix to use for node, or NULL
  * \return DOM_NO_ERR on success.
  *
- * ::name and ::value will have their reference counts increased.
+ * ::name, ::value, ::namespace, and ::prefix  will have their reference 
+ * counts increased.
  */
 dom_exception dom_node_initialise(struct dom_node *node,
 		struct dom_document *doc, dom_node_type type,
-		struct dom_string *name, struct dom_string *value)
+		struct dom_string *name, struct dom_string *value,
+		struct dom_string *namespace, struct dom_string *prefix)
 {
 	if (name != NULL)
 		dom_string_ref(name);
@@ -179,9 +183,15 @@ dom_exception dom_node_initialise(struct dom_node *node,
 	 */
 	node->owner = doc;
 
-	/** \todo Namespace handling */
-	node->namespace = NULL;
-	node->prefix = NULL;
+	if (namespace != NULL) {
+		dom_string_ref(namespace);
+	}
+	node->namespace = namespace;
+
+	if (prefix != NULL) {
+		dom_string_ref(prefix);
+	}
+	node->prefix = prefix;
 
 	node->user_data = NULL;
 

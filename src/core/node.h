@@ -57,7 +57,8 @@ void dom_node_destroy(struct dom_node *node);
 
 dom_exception dom_node_initialise(struct dom_node *node,
 		struct dom_document *doc, dom_node_type type,
-		struct dom_string *name, struct dom_string *value);
+		struct dom_string *name, struct dom_string *value,
+		struct dom_string *namespace, struct dom_string *prefix);
 
 void dom_node_finalise(struct dom_document *doc, struct dom_node *node);
 

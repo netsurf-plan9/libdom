@@ -46,7 +46,7 @@ dom_exception dom_processing_instruction_create(struct dom_document *doc,
 	/* And initialise the node */
 	err = dom_node_initialise(&p->base, doc,
 			DOM_PROCESSING_INSTRUCTION_NODE,
-			name, value);
+			name, value, NULL, NULL);
 	if (err != DOM_NO_ERR) {
 		dom_document_alloc(doc, p, 0);
 		return err;

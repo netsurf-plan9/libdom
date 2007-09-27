@@ -28,7 +28,8 @@ dom_exception dom_characterdata_initialise(struct dom_characterdata *cdata,
 		struct dom_document *doc, dom_node_type type,
 		struct dom_string *name, struct dom_string *value)
 {
-	return dom_node_initialise(&cdata->base, doc, type, name, value);
+	return dom_node_initialise(&cdata->base, doc, type, 
+			name, value, NULL, NULL);
 }
 
 /**

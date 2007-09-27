@@ -39,9 +39,11 @@ struct dom_attr {
 /**
  * Create an attribute node
  *
- * \param doc     The owning document
- * \param name    The name of the node to create
- * \param result  Pointer to location to receive created attribute
+ * \param doc        The owning document
+ * \param name       The (local) name of the node to create
+ * \param namespace  The namespace URI of the attribute, or NULL
+ * \param prefix     The namespace prefix of the attribute, or NULL
+ * \param result     Pointer to location to receive created attribute
  * \return DOM_NO_ERR                on success,
  *         DOM_INVALID_CHARACTER_ERR if ::name is invalid,
  *         DOM_NO_MEM_ERR            on memory exhaustion.
@@ -51,7 +53,8 @@ struct dom_attr {
  * The returned attribute will already be referenced.
  */
 dom_exception dom_attr_create(struct dom_document *doc,
-		struct dom_string *name, struct dom_attr **result)
+		struct dom_string *name, struct dom_string *namespace,
+		struct dom_string *prefix, struct dom_attr **result)
 {
 	struct dom_attr *a;
 	dom_exception err;
@@ -65,7 +68,7 @@ dom_exception dom_attr_create(struct dom_document *doc,
 
 	/* Initialise the base class */
 	err = dom_node_initialise(&a->base, doc, DOM_ATTRIBUTE_NODE,
-			name, NULL);
+			name, NULL, namespace, prefix);
 	if (err != DOM_NO_ERR) {
 		dom_document_alloc(doc, a, 0);
 		return err;

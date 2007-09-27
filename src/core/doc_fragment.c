@@ -45,7 +45,7 @@ dom_exception dom_document_fragment_create(struct dom_document *doc,
 
 	/* And initialise the node */
 	err = dom_node_initialise(&f->base, doc, DOM_DOCUMENT_FRAGMENT_NODE,
-			name, value);
+			name, value, NULL, NULL);
 	if (err != DOM_NO_ERR) {
 		dom_document_alloc(doc, f, 0);
 		return err;

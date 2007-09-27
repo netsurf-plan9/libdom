@@ -57,7 +57,7 @@ dom_exception dom_document_type_create(struct dom_string *qname,
 
 	/* Initialise base node */
 	err = dom_node_initialise(&result->base, NULL, DOM_DOCUMENT_TYPE_NODE,
-			qname, NULL);
+			qname, NULL, NULL, NULL);
 	if (err != DOM_NO_ERR) {
 		alloc(result, 0, pw);
 		return err;

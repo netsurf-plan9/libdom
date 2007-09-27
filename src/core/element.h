@@ -19,7 +19,8 @@ struct dom_node;
 struct dom_string;
 
 dom_exception dom_element_create(struct dom_document *doc,
-		struct dom_string *name, struct dom_element **result);
+		struct dom_string *name, struct dom_string *namespace,
+		struct dom_string *prefix, struct dom_element **result);
 
 void dom_element_destroy(struct dom_document *doc,
 		struct dom_element *element);

@@ -142,7 +142,7 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	 * rest of the code, as it doesn't need to special case Documents)
 	 */
 	err = dom_node_initialise(&d->base, d, DOM_DOCUMENT_NODE,
-			NULL, NULL);
+			NULL, NULL, NULL, NULL);
 	if (err != DOM_NO_ERR) {
 		/* Clean up interned strings */
 		for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
@@ -330,7 +330,7 @@ dom_exception dom_document_get_document_element(struct dom_document *doc,
 dom_exception dom_document_create_element(struct dom_document *doc,
 		struct dom_string *tag_name, struct dom_element **result)
 {
-	return dom_element_create(doc, tag_name, result);
+	return dom_element_create(doc, tag_name, NULL, NULL, result);
 }
 
 /**
@@ -450,7 +450,7 @@ dom_exception dom_document_create_processing_instruction(
 dom_exception dom_document_create_attribute(struct dom_document *doc,
 		struct dom_string *name, struct dom_attr **result)
 {
-	return dom_attr_create(doc, name, result);
+	return dom_attr_create(doc, name, NULL, NULL, result);
 }
 
 /**
