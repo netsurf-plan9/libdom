@@ -523,11 +523,11 @@ dom_exception dom_document_import_node(struct dom_document *doc,
  * Create an element from the qualified name and namespace URI
  *
  * \param doc        The document owning the element
- * \param namespace  The namespace URI to use
+ * \param namespace  The namespace URI to use, or NULL for none
  * \param qname      The qualified name of the element
  * \param result     Pointer to location to receive result
  * \return DOM_NO_ERR                on success,
- *         DOM_INVALID_CHARACTER_ERR if ::tag_name is invalid,
+ *         DOM_INVALID_CHARACTER_ERR if ::qname is invalid,
  *         DOM_NAMESPACE_ERR         if ::qname is malformed, or it has a
  *                                   prefix and ::namespace is NULL, or
  *                                   ::qname has a prefix "xml" and
@@ -551,12 +551,62 @@ dom_exception dom_document_create_element_ns(struct dom_document *doc,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_element **result)
 {
-	UNUSED(doc);
-	UNUSED(namespace);
-	UNUSED(qname);
-	UNUSED(result);
+	const uint8_t *qd, *c, *ln;
+	size_t qlen;
+	size_t local_len;
+	size_t prefix_len;
+	struct dom_string *prefix = NULL;
+	struct dom_string *localname;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure document supports XML feature */
+	/** \todo validate qname */
+
+	dom_string_get_data(qname, &qd, &qlen);
+
+	/* Divide QName into prefix/localname pair */
+	for (c = qd; c != qd + qlen; c++) {
+		if (*c == (const uint8_t) ':')
+			break;
+	}
+
+	if (c == qd + qlen) {
+		ln = qd;
+		local_len = qlen;
+		prefix_len = 0;
+	} else {
+		ln = ++c;
+		local_len = qlen - (c - qd);
+		prefix_len = (c - qd - 1 /* ':' */);
+	}
+
+	if (prefix_len > 0) {
+		err = dom_string_create_from_ptr(doc, qd, prefix_len, &prefix);
+		if (err != DOM_NO_ERR) {
+			return err;
+		}
+	}
+
+	err = dom_string_create_from_ptr(doc, ln, local_len, &localname);
+	if (err != DOM_NO_ERR) {
+		if (prefix != NULL) {
+			dom_string_unref(prefix);
+		}
+		return err;
+	}
+
+	/** \todo validate namespace */
+
+	/* Attempt to create element */
+	err = dom_element_create(doc, localname, namespace, prefix, result);
+
+	/* Tidy up */
+	dom_string_unref(localname);
+	if (prefix != NULL) {
+		dom_string_unref(prefix);
+	}
+
+	return err;
 }
 
 /**
@@ -567,7 +617,7 @@ dom_exception dom_document_create_element_ns(struct dom_document *doc,
  * \param qname      The qualified name of the attribute
  * \param result     Pointer to location to receive result
  * \return DOM_NO_ERR                on success,
- *         DOM_INVALID_CHARACTER_ERR if ::tag_name is invalid,
+ *         DOM_INVALID_CHARACTER_ERR if ::qname is invalid,
  *         DOM_NAMESPACE_ERR         if ::qname is malformed, or it has a
  *                                   prefix and ::namespace is NULL, or
  *                                   ::qname has a prefix "xml" and
@@ -591,12 +641,62 @@ dom_exception dom_document_create_attribute_ns(struct dom_document *doc,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_attr **result)
 {
-	UNUSED(doc);
-	UNUSED(namespace);
-	UNUSED(qname);
-	UNUSED(result);
+	const uint8_t *qd, *c, *ln;
+	size_t qlen;
+	size_t local_len;
+	size_t prefix_len;
+	struct dom_string *prefix = NULL;
+	struct dom_string *localname;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure document supports XML feature */
+	/** \todo validate qname */
+
+	dom_string_get_data(qname, &qd, &qlen);
+
+	/* Divide QName into prefix/localname pair */
+	for (c = qd; c != qd + qlen; c++) {
+		if (*c == (const uint8_t) ':')
+			break;
+	}
+
+	if (c == qd + qlen) {
+		ln = qd;
+		local_len = qlen;
+		prefix_len = 0;
+	} else {
+		ln = ++c;
+		local_len = qlen - (c - qd);
+		prefix_len = (c - qd - 1 /* ':' */);
+	}
+
+	if (prefix_len > 0) {
+		err = dom_string_create_from_ptr(doc, qd, prefix_len, &prefix);
+		if (err != DOM_NO_ERR) {
+			return err;
+		}
+	}
+
+	err = dom_string_create_from_ptr(doc, ln, local_len, &localname);
+	if (err != DOM_NO_ERR) {
+		if (prefix != NULL) {
+			dom_string_unref(prefix);
+		}
+		return err;
+	}
+
+	/** \todo validate namespace */
+
+	/* Attempt to create attribute */
+	err = dom_attr_create(doc, localname, namespace, prefix, result);
+
+	/* Tidy up */
+	dom_string_unref(localname);
+	if (prefix != NULL) {
+		dom_string_unref(prefix);
+	}
+
+	return err;
 }
 
 /**
