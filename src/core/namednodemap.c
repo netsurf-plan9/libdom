@@ -385,12 +385,38 @@ dom_exception dom_namednodemap_get_named_item_ns(
 		struct dom_namednodemap *map, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_node **node)
 {
-	UNUSED(map);
-	UNUSED(namespace);
-	UNUSED(localname);
-	UNUSED(node);
+	struct dom_node *cur;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure XML feature is supported */
+
+	switch (map->type) {
+	case DOM_ATTRIBUTE_NODE:
+		cur = dom_element_get_first_attribute(
+				(struct dom_element *) map->head);
+		break;
+	case DOM_NOTATION_NODE:
+	case DOM_ENTITY_NODE:
+		/** \todo handle notation and entity nodes */
+	default:
+		return DOM_NOT_SUPPORTED_ERR;
+		break;
+	}
+
+	for (; cur != NULL; cur = cur->next) {
+		if (((namespace == NULL && cur->namespace == NULL) || 
+			(namespace != NULL && 
+			dom_string_cmp(cur->namespace, namespace) == 0)) &&
+				dom_string_cmp(cur->name, localname) == 0) {
+			break;
+		}
+	}
+
+	if (cur != NULL) {
+		dom_node_ref(cur);
+	}
+	*node = cur;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -426,11 +452,47 @@ dom_exception dom_namednodemap_set_named_item_ns(
 		struct dom_namednodemap *map, struct dom_node *arg,
 		struct dom_node **node)
 {
-	UNUSED(map);
-	UNUSED(arg);
-	UNUSED(node);
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure XML feature is supported */
+
+	/* Ensure arg and map belong to the same document */
+	if (arg->owner != map->owner)
+		return DOM_WRONG_DOCUMENT_ERR;
+
+	/* Ensure map is writable */
+	if (_dom_node_readonly(map->head))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Ensure arg isn't attached to another element */
+	if (arg->type == DOM_ATTRIBUTE_NODE && arg->parent != NULL && 
+			arg->parent != map->head)
+		return DOM_INUSE_ATTRIBUTE_ERR;
+
+	/* Ensure arg is permitted in the map */
+	if (arg->type != map->type)
+		return DOM_HIERARCHY_REQUEST_ERR;
+
+	/* Now delegate to the container-specific function. 
+	 * NamedNodeMaps are live, so this is fine. */
+	switch (map->type) {
+	case DOM_ATTRIBUTE_NODE:
+		err = dom_element_set_attribute_node_ns(
+				(struct dom_element *) map->head, 
+				(struct dom_attr *) arg, 
+				(struct dom_attr **) node);
+		break;
+	case DOM_NOTATION_NODE:
+	case DOM_ENTITY_NODE:
+		/** \todo handle notation and entity nodes */
+	default:
+		err = DOM_NOT_SUPPORTED_ERR;
+		break;
+	}
+
+	/* Reference counting is handled by the container-specific call */
+
+	return err;
 }
 
 /**
@@ -456,12 +518,46 @@ dom_exception dom_namednodemap_remove_named_item_ns(
 		struct dom_namednodemap *map, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_node **node)
 {
-	UNUSED(map);
-	UNUSED(namespace);
-	UNUSED(localname);
-	UNUSED(node);
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure XML feature is supported */
+
+	/* Ensure map is writable */
+	if (_dom_node_readonly(map->head))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Now delegate to the container-specific function. 
+	 * NamedNodeMaps are live, so this is fine. */
+	switch (map->type) {
+	case DOM_ATTRIBUTE_NODE:
+	{
+		struct dom_attr *attr;
+
+		err = dom_element_get_attribute_node_ns(
+				(struct dom_element *) map->head,
+				namespace, localname, &attr);
+		if (err == DOM_NO_ERR) {
+			err = dom_element_remove_attribute_node(
+				(struct dom_element *) map->head, 
+				attr, (struct dom_attr **) node);
+			if (err == DOM_NO_ERR) {
+				/* No longer want attr */
+				dom_node_unref((struct dom_node *) attr);
+			}
+		}
+	}
+		break;
+	case DOM_NOTATION_NODE:
+	case DOM_ENTITY_NODE:
+		/** \todo handle notation and entity nodes */
+	default:
+		err = DOM_NOT_SUPPORTED_ERR;
+		break;
+	}
+
+	/* Reference counting is handled by the container-specific call */
+
+	return err;
 }
 
 /**
