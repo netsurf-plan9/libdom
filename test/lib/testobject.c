@@ -15,16 +15,18 @@
 #include "testobject.h"
 #include "utils.h"
 
+static bool xml_parser_initialised;
+
 struct TestObject {
 	xml_parser *parser;
 	struct dom_document *doc;
 };
 
+static void test_object_cleanup(void);
+
 TestObject *test_object_create(int argc, char **argv,
 		const char *uri, bool will_be_modified)
 {
-	static bool xml_parser_initialised;
-
 	char fnbuf[1024];
 #define CHUNK_SIZE 4096
 	uint8_t buf[CHUNK_SIZE];
@@ -41,6 +43,8 @@ TestObject *test_object_create(int argc, char **argv,
 
 	if (xml_parser_initialised == false) {
 		assert(xml_dom_binding_initialise(myrealloc, NULL) == XML_OK);
+
+		atexit(test_object_cleanup);
 
 		xml_parser_initialised = true;
 	}
@@ -113,4 +117,9 @@ const char *test_object_get_mimetype(TestObject *obj)
 	return "text/xml";
 }
 
+void test_object_cleanup(void)
+{
+	if (xml_parser_initialised)
+		xml_dom_binding_finalise();
+}
 

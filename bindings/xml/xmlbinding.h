@@ -14,4 +14,7 @@
 /* Initialise the XML DOM binding */
 xml_error xml_dom_binding_initialise(xml_alloc alloc, void *pw);
 
+/* Finalise the XML DOM binding */
+xml_error xml_dom_binding_finalise(void);
+
 #endif

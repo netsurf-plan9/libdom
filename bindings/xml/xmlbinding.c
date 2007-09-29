@@ -396,3 +396,21 @@ xml_error xml_dom_binding_initialise(xml_alloc alloc, void *pw)
 	return XML_OK;
 }
 
+/**
+ * Finalise the XML DOM binding
+ * 
+ * \return XML_OK on success.
+ */
+xml_error xml_dom_binding_finalise(void)
+{
+	dom_exception err;
+
+	err = dom_finalise();
+	if (err != DOM_NO_ERR) {
+		/** \todo Do something about it */
+	}
+
+	return XML_OK;
+}
+
+
