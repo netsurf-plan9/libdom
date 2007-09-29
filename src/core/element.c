@@ -16,6 +16,7 @@
 #include "core/document.h"
 #include "core/element.h"
 #include "core/node.h"
+#include "utils/namespace.h"
 #include "utils/utils.h"
 
 /**
@@ -504,7 +505,7 @@ dom_exception dom_element_get_elements_by_tag_name(
  * Retrieve an attribute from an element by namespace/localname
  *
  * \param element    The element to retrieve attribute from
- * \param namespace  The attribute's namespace URI
+ * \param namespace  The attribute's namespace URI, or NULL
  * \param localname  The attribute's local name
  * \param value      Pointer to location to receive attribute's value
  * \return DOM_NO_ERR            on success,
@@ -521,12 +522,27 @@ dom_exception dom_element_get_attribute_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *localname,
 		struct dom_string **value)
 {
-	UNUSED(element);
-	UNUSED(namespace);
-	UNUSED(localname);
-	UNUSED(value);
+	struct dom_node *a = (struct dom_node *) element->attributes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure implementation supports XML */
+
+	/* Search attributes, looking for namespace/localname pair */
+	for (; a != NULL; a = a->next) {
+		if (((namespace == NULL && a->namespace == NULL) || 
+			(namespace != NULL && 
+			dom_string_cmp(a->namespace, namespace) == 0)) &&
+				dom_string_cmp(a->name, localname) == 0)
+			break;
+	}
+
+	/* Fill in value */
+	if (a == NULL) {
+		*value = NULL;
+	} else {
+		dom_attr_get_value(((struct dom_attr *) a), value);
+	}
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -562,12 +578,100 @@ dom_exception dom_element_set_attribute_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_string *value)
 {
-	UNUSED(element);
-	UNUSED(namespace);
-	UNUSED(qname);
-	UNUSED(value);
+	struct dom_node *e = (struct dom_node *) element;
+	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_string *prefix, *localname;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure XML feature is supported */
+
+	/* Validate name */
+	err = _dom_namespace_validate_qname(qname, namespace);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	/* Ensure element can be written to */
+	if (_dom_node_readonly(e)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	/* Decompose QName */
+	err = _dom_namespace_split_qname(qname, e->owner, &prefix, &localname);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	/* Search for existing attribute with same namespace/localname */
+	for (; a != NULL; a = a->next) {
+		if (((namespace == NULL && a->namespace == NULL) || 
+			(namespace != NULL && 
+			dom_string_cmp(a->namespace, namespace) == 0)) &&
+				dom_string_cmp(a->name, localname) == 0)
+			break;
+	}
+
+	if (a != NULL) {
+		/* Found an existing attribute, so replace its prefix & value */
+		dom_exception err;
+
+		err = dom_node_set_prefix(a, prefix);
+		if (err != DOM_NO_ERR) {
+			if (prefix != NULL) {
+				dom_string_unref(prefix);
+			}
+			dom_string_unref(localname);
+			return err;
+		}
+
+		err = dom_attr_set_value((struct dom_attr *) a, value);
+		if (err != DOM_NO_ERR) {
+			if (prefix != NULL) {
+				dom_string_unref(prefix);
+			}
+			dom_string_unref(localname);
+			return err;
+		}
+	} else {
+		/* No existing attribute, so create one */
+		dom_exception err;
+		struct dom_attr *attr;
+
+		err = dom_attr_create(e->owner, localname, 
+				namespace, prefix, &attr);
+		if (err != DOM_NO_ERR) {
+			if (prefix != NULL) {
+				dom_string_unref(prefix);
+			}
+			dom_string_unref(localname);
+			return err;
+		}
+
+		/* Set its value */
+		err = dom_attr_set_value(attr, value);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref((struct dom_node *) attr);
+
+			if (prefix != NULL) {
+				dom_string_unref(prefix);
+			}
+			dom_string_unref(localname);
+			return err;
+		}
+
+		a = (struct dom_node *) attr;
+
+		/* And insert it into the element */
+		a->previous = NULL;
+		a->next = (struct dom_node *) element->attributes;
+
+		if (a->next != NULL)
+			a->next->previous = a;
+
+		element->attributes = attr;
+	}
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -587,11 +691,43 @@ dom_exception dom_element_set_attribute_ns(struct dom_element *element,
 dom_exception dom_element_remove_attribute_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *localname)
 {
-	UNUSED(element);
-	UNUSED(namespace);
-	UNUSED(localname);
+	struct dom_node *e = (struct dom_node *) element;
+	struct dom_node *a = (struct dom_node *) element->attributes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure XML feature is supported */
+
+	/* Ensure element can be written to */
+	if (_dom_node_readonly(e))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Search for existing attribute with same namespace/localname */
+	for (; a != NULL; a = a->next) {
+		if (((namespace == NULL && a->namespace == NULL) || 
+			(namespace != NULL && 
+			dom_string_cmp(a->namespace, namespace) == 0)) &&
+				dom_string_cmp(a->name, localname) == 0)
+			break;
+	}
+
+	/* Detach attr node from list */
+	if (a != NULL) {
+		if (a->previous != NULL)
+			a->previous->next = a->next;
+		else
+			element->attributes = (struct dom_attr *) a->next;
+
+		if (a->next != NULL)
+			a->next->previous = a->previous;
+
+		a->previous = a->next = a->parent = NULL;
+
+		/* And destroy attr */
+		dom_node_unref(a);
+	}
+
+	/** \todo defaulted attribute handling */
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -615,12 +751,24 @@ dom_exception dom_element_get_attribute_node_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *localname,
 		struct dom_attr **result)
 {
-	UNUSED(element);
-	UNUSED(namespace);
-	UNUSED(localname);
-	UNUSED(result);
+	struct dom_node *a = (struct dom_node *) element->attributes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure XML feature is supported */
+
+	/* Search attributes, looking for namespace/localname */
+	for (; a != NULL; a = a->next) {
+		if (((namespace == NULL && a->namespace == NULL) || 
+			(namespace != NULL && 
+			dom_string_cmp(a->namespace, namespace) == 0)) &&
+				dom_string_cmp(a->name, localname) == 0)
+			break;
+	}
+
+	if (a != NULL)
+		dom_node_ref(a);
+	*result = (struct dom_attr *) a;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -648,11 +796,81 @@ dom_exception dom_element_get_attribute_node_ns(struct dom_element *element,
 dom_exception dom_element_set_attribute_node_ns(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
-	UNUSED(element);
-	UNUSED(attr);
-	UNUSED(result);
+	struct dom_node *e = (struct dom_node *) element;
+	struct dom_node *a = (struct dom_node *) attr;
+	struct dom_attr *prev = NULL;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure XML feature is supported */
+
+	/* Ensure element and attribute belong to the same document */
+	if (e->owner != a->owner)
+		return DOM_WRONG_DOCUMENT_ERR;
+
+	/* Ensure element can be written to */
+	if (_dom_node_readonly(e))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+
+	/* Ensure attribute isn't attached to another element */
+	if (a->parent != NULL && a->parent != e)
+		return DOM_INUSE_ATTRIBUTE_ERR;
+
+	/* Attach attr to element, if not already attached */
+	if (a->parent == NULL) {
+
+		/* Search for existing attribute with same namespace/localname */
+		prev = element->attributes; 
+		while (prev != NULL) {
+			struct dom_node *p = (struct dom_node *) prev;
+
+			if (((a->namespace == NULL && p->namespace == NULL) || 
+				(a->namespace != NULL && 
+				dom_string_cmp(a->namespace, 
+						p->namespace) == 0)) &&
+				dom_string_cmp(a->name, p->name) == 0)
+			break;
+
+			prev = (struct dom_attr *) p->next;
+		}
+
+		a->parent = e;
+
+		if (prev != NULL) {
+			/* Found an existing attribute, so replace it */
+			struct dom_node *p = (struct dom_node *) prev;
+
+			a->previous = p->previous;
+			a->next = p->next;
+
+			if (a->previous != NULL)
+				a->previous->next = a;
+			else
+				element->attributes = attr;
+
+			if (a->next != NULL)
+				a->next->previous = a;
+
+			/* Invalidate existing attribute's location info */
+			p->next = NULL;
+			p->previous = NULL;
+			p->parent = NULL;
+		} else {
+			/* No existing attribute, so insert at front of list */
+			a->previous = NULL;
+			a->next = (struct dom_node *) element->attributes;
+
+			if (a->next != NULL)
+				a->next->previous = a;
+
+			element->attributes = attr;
+		}
+	}
+
+	if (prev != NULL)
+		dom_node_ref((struct dom_node *) prev);
+
+	*result = prev;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -677,6 +895,8 @@ dom_exception dom_element_get_elements_by_tag_name_ns(
 		struct dom_element *element, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_nodelist **result)
 {
+	/** \todo ensure XML feature is supported */
+
 	return dom_document_get_nodelist(element->base.owner, 
 			(struct dom_node *) element, NULL, 
 			namespace, localname, result);
@@ -724,12 +944,22 @@ dom_exception dom_element_has_attribute_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *localname,
 		bool *result)
 {
-	UNUSED(element);
-	UNUSED(namespace);
-	UNUSED(localname);
-	UNUSED(result);
+	struct dom_node *a = (struct dom_node *) element->attributes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/** \todo ensure XML feature is supported */
+
+	/* Search attributes, looking for namespace/localname */
+	for (; a != NULL; a = a->next) {
+		if (((namespace == NULL && a->namespace == NULL) || 
+			(namespace != NULL && 
+			dom_string_cmp(a->namespace, namespace) == 0)) &&
+				dom_string_cmp(a->name, localname) == 0)
+			break;
+	}
+
+	*result = (a != NULL);
+
+	return DOM_NO_ERR;
 }
 
 /**
