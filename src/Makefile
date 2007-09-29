@@ -36,16 +36,19 @@ OBJS =
 release: $(addprefix Release/, $(addsuffix .o, $(OBJS)))
 	@${MAKE} -C bootstrap release
 	@${MAKE} -C core release
+	@${MAKE} -C utils release
 	@${AR} ${ARFLAGS} $(RELEASE) Release/*
 
 debug: $(addprefix Debug/, $(addsuffix .o, $(OBJS)))
 	@${MAKE} -C bootstrap debug
 	@${MAKE} -C core debug
+	@${MAKE} -C utils debug
 	@${AR} ${ARFLAGS} $(DEBUG) Debug/*
 
 clean:
 	@${MAKE} -C bootstrap clean
 	@${MAKE} -C core clean
+	@${MAKE} -C utils clean
 ifneq (${OBJS}, )
 	-@${RM} ${RMFLAGS} $(addprefix Release/, $(addsuffix .o, ${OBJS}))
 	-@${RM} ${RMFLAGS} $(addprefix Debug/, $(addsuffix .o, ${OBJS}))

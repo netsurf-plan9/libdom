@@ -385,9 +385,14 @@ xml_error xml_dom_binding_initialise(xml_alloc alloc, void *pw)
 {
 	dom_exception err;
 
+	err = dom_initialise(alloc, pw);
+	if (err != DOM_NO_ERR)
+		return XML_NOMEM;
+
 	err = dom_register_source(&xml_dom_impl_src, (dom_alloc) alloc, pw);
 	if (err != DOM_NO_ERR)
 		return XML_NOMEM;
 
 	return XML_OK;
 }
+

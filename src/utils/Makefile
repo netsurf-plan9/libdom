@@ -22,7 +22,7 @@
 CFLAGS += -I$(CURDIR)
 
 # Objects
-OBJS = implregistry init_fini
+OBJS = namespace
 
 .PHONY: clean debug distclean export release setup test
 

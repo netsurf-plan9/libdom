@@ -5,8 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
-#ifndef dom_utils_h_
-#define dom_utils_h_
+#ifndef dom_utils_utils_h_
+#define dom_utils_utils_h_
 
 #ifndef max
 #define max(a,b) ((a)>(b)?(a):(b))

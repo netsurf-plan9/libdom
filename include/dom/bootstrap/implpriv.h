@@ -18,6 +18,10 @@
  * The DocumentType implementation includes this as it needs the declaration
  * of dom_document_type_create.
  *
+ * The DOM library's core initialisation/finalisation implementation also
+ * includes this as it needs the declaration of dom_initialise and 
+ * dom_finalise.
+ *
  * No other client should be including this.
  */
 
@@ -242,6 +246,12 @@ struct dom_implementation_source {
 			struct dom_implementation_list **list,
 			dom_alloc alloc, void *pw);
 };
+
+/* Initialise the DOM library */
+dom_exception dom_initialise(dom_alloc alloc, void *pw);
+
+/* Finalise the DOM library */
+dom_exception dom_finalise(void);
 
 /* Register a source with the DOM library */
 dom_exception dom_register_source(struct dom_implementation_source *source,

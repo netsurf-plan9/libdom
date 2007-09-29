@@ -25,6 +25,7 @@
 #include "core/nodelist.h"
 #include "core/pi.h"
 #include "core/text.h"
+#include "utils/namespace.h"
 #include "utils/utils.h"
 
 struct dom_document_type;
@@ -551,51 +552,22 @@ dom_exception dom_document_create_element_ns(struct dom_document *doc,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_element **result)
 {
-	const uint8_t *qd, *c, *ln;
-	size_t qlen;
-	size_t local_len;
-	size_t prefix_len;
-	struct dom_string *prefix = NULL;
-	struct dom_string *localname;
+	struct dom_string *prefix, *localname;
 	dom_exception err;
 
 	/** \todo ensure document supports XML feature */
-	/** \todo validate qname */
 
-	dom_string_get_data(qname, &qd, &qlen);
-
-	/* Divide QName into prefix/localname pair */
-	for (c = qd; c != qd + qlen; c++) {
-		if (*c == (const uint8_t) ':')
-			break;
-	}
-
-	if (c == qd + qlen) {
-		ln = qd;
-		local_len = qlen;
-		prefix_len = 0;
-	} else {
-		ln = ++c;
-		local_len = qlen - (c - qd);
-		prefix_len = (c - qd - 1 /* ':' */);
-	}
-
-	if (prefix_len > 0) {
-		err = dom_string_create_from_ptr(doc, qd, prefix_len, &prefix);
-		if (err != DOM_NO_ERR) {
-			return err;
-		}
-	}
-
-	err = dom_string_create_from_ptr(doc, ln, local_len, &localname);
+	/* Validate qname */
+	err = _dom_namespace_validate_qname(qname, namespace);
 	if (err != DOM_NO_ERR) {
-		if (prefix != NULL) {
-			dom_string_unref(prefix);
-		}
 		return err;
 	}
 
-	/** \todo validate namespace */
+	/* Divide QName into prefix/localname pair */
+	err = _dom_namespace_split_qname(qname, doc, &prefix, &localname);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
 
 	/* Attempt to create element */
 	err = dom_element_create(doc, localname, namespace, prefix, result);
@@ -641,51 +613,22 @@ dom_exception dom_document_create_attribute_ns(struct dom_document *doc,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_attr **result)
 {
-	const uint8_t *qd, *c, *ln;
-	size_t qlen;
-	size_t local_len;
-	size_t prefix_len;
-	struct dom_string *prefix = NULL;
-	struct dom_string *localname;
+	struct dom_string *prefix, *localname;
 	dom_exception err;
 
 	/** \todo ensure document supports XML feature */
-	/** \todo validate qname */
 
-	dom_string_get_data(qname, &qd, &qlen);
-
-	/* Divide QName into prefix/localname pair */
-	for (c = qd; c != qd + qlen; c++) {
-		if (*c == (const uint8_t) ':')
-			break;
-	}
-
-	if (c == qd + qlen) {
-		ln = qd;
-		local_len = qlen;
-		prefix_len = 0;
-	} else {
-		ln = ++c;
-		local_len = qlen - (c - qd);
-		prefix_len = (c - qd - 1 /* ':' */);
-	}
-
-	if (prefix_len > 0) {
-		err = dom_string_create_from_ptr(doc, qd, prefix_len, &prefix);
-		if (err != DOM_NO_ERR) {
-			return err;
-		}
-	}
-
-	err = dom_string_create_from_ptr(doc, ln, local_len, &localname);
+	/* Validate qname */
+	err = _dom_namespace_validate_qname(qname, namespace);
 	if (err != DOM_NO_ERR) {
-		if (prefix != NULL) {
-			dom_string_unref(prefix);
-		}
 		return err;
 	}
 
-	/** \todo validate namespace */
+	/* Divide QName into prefix/localname pair */
+	err = _dom_namespace_split_qname(qname, doc, &prefix, &localname);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
 
 	/* Attempt to create attribute */
 	err = dom_attr_create(doc, localname, namespace, prefix, result);
