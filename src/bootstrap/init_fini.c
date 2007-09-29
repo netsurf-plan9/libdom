@@ -5,9 +5,13 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
-#include <dom/bootstrap/implpriv.h>
+#include <stdbool.h>
+
+#include <dom/bootstrap/init_fini.h>
 
 #include "utils/namespace.h"
+
+static bool __initialised;
 
 /**
  * Initialise the dom library
@@ -16,14 +20,22 @@
  * \param pw     Pointer to client-specific private data
  * \return DOM_NO_ERR on success.
  *
- * This should be invoked by the binding's initialiser and must be
- * the first DOM library method called.
+ * This must be the first DOM library method called.
  */
 dom_exception dom_initialise(dom_alloc alloc, void *pw)
 {
 	dom_exception err;
 
+	/* Ensure we only initialise once */
+	if (__initialised) {
+		return DOM_NO_ERR;
+	}
+
 	err = _dom_namespace_initialise(alloc, pw);
+
+	if (err == DOM_NO_ERR) {
+		__initialised = true;
+	}
 
 	return err;
 }
@@ -33,14 +45,20 @@ dom_exception dom_initialise(dom_alloc alloc, void *pw)
  *
  * \return DOM_NO_ERR on success.
  *
- * This should be invoked by the binding's finaliser and must be
- * the last DOM library method called.
+ * This must be the last DOM library method called.
  */
 dom_exception dom_finalise(void)
 {
 	dom_exception err;
 
+	/* Ensure we only finalise once */
+	if (__initialised == false) {
+		return DOM_NO_ERR;
+	}
+
 	err = _dom_namespace_finalise();
+
+	__initialised = false;
 
 	return err;
 }

@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <dom/bootstrap/init_fini.h>
+
 #include "bindings/xml/xmlbinding.h"
 #include "bindings/xml/xmlparser.h"
 
@@ -42,6 +44,8 @@ TestObject *test_object_create(int argc, char **argv,
 	}
 
 	if (xml_parser_initialised == false) {
+		assert(dom_initialise(myrealloc, NULL) == DOM_NO_ERR);
+
 		assert(xml_dom_binding_initialise(myrealloc, NULL) == XML_OK);
 
 		atexit(test_object_cleanup);
@@ -119,7 +123,9 @@ const char *test_object_get_mimetype(TestObject *obj)
 
 void test_object_cleanup(void)
 {
-	if (xml_parser_initialised)
+	if (xml_parser_initialised) {
 		xml_dom_binding_finalise();
+		dom_finalise();
+	}
 }
 
