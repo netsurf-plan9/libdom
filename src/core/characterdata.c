@@ -10,6 +10,7 @@
 
 #include "core/characterdata.h"
 #include "core/document.h"
+#include "core/node.h"
 #include "utils/utils.h"
 
 /**
@@ -63,10 +64,14 @@ void dom_characterdata_finalise(struct dom_document *doc,
 dom_exception dom_characterdata_get_data(struct dom_characterdata *cdata,
 		struct dom_string **data)
 {
-	UNUSED(cdata);
-	UNUSED(data);
+	struct dom_node *c = (struct dom_node *) cdata;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (c->value != NULL) {
+		dom_string_ref(c->value);
+	}
+	*data = c->value;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -84,10 +89,20 @@ dom_exception dom_characterdata_get_data(struct dom_characterdata *cdata,
 dom_exception dom_characterdata_set_data(struct dom_characterdata *cdata,
 		struct dom_string *data)
 {
-	UNUSED(cdata);
-	UNUSED(data);
+	struct dom_node *c = (struct dom_node *) cdata;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (_dom_node_readonly(c)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	if (c->value != NULL) {
+		dom_string_unref(c->value);
+	}
+
+	dom_string_ref(data);
+	c->value = data;
+
+	return DOM_NO_ERR;
 }
 
 /**
