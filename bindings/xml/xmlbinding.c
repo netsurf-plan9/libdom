@@ -39,6 +39,7 @@ static dom_exception xml_dom_implementation_create_document(
 		struct dom_string *qname,
 		struct dom_document_type *doctype,
 		struct dom_document **doc,
+		dom_string_charset charset,
 		dom_alloc alloc, void *pw);
 static dom_exception xml_dom_implementation_get_feature(
 		struct dom_implementation *impl,
@@ -237,6 +238,7 @@ dom_exception xml_dom_implementation_create_document_type(
  * \param qname      The qualified name of the document element
  * \param doctype    The type of document to create
  * \param doc        Pointer to location to receive result
+ * \param charset    The charset to use for strings in the document
  * \param alloc      Memory (de)allocation function
  * \param pw         Pointer to client-specific private data
  * \return DOM_NO_ERR on success,
@@ -273,13 +275,14 @@ dom_exception xml_dom_implementation_create_document(
 		struct dom_string *qname,
 		struct dom_document_type *doctype,
 		struct dom_document **doc,
+		dom_string_charset charset,
 		dom_alloc alloc, void *pw)
 {
 	struct dom_document *d;
 	dom_exception err;
 
 	/* Create document object */
-	err = dom_document_create(impl, alloc, pw, &d);
+	err = dom_document_create(impl, charset, alloc, pw, &d);
 	if (err != DOM_NO_ERR)
 		return err;
 

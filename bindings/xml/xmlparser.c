@@ -182,6 +182,7 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 
 	/* Create key for user data registration */
 	err = dom_string_create_from_ptr_no_doc((dom_alloc) alloc, pw,
+			DOM_STRING_UTF8, 
 			(const uint8_t *) "__xmlnode", SLEN("__xmlnode"),
 			&parser->udkey);
 	if (err != DOM_NO_ERR) {
@@ -194,6 +195,7 @@ xml_parser *xml_parser_create(const char *enc, const char *int_enc,
 	/* Get DOM implementation */
 	/* Create a string representation of the features we want */
 	err = dom_string_create_from_ptr_no_doc((dom_alloc) alloc, pw,
+			DOM_STRING_UTF8,
 			(const uint8_t *) "XML", SLEN("XML"), &features);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(parser->udkey);
@@ -327,6 +329,7 @@ void xml_parser_start_document(void *ctx)
 			/* qname */ NULL,
 			/* doctype */ NULL,
 			&doc,
+			DOM_STRING_UTF8,
 			(dom_alloc) parser->alloc,
 			parser->pw);
 	if (err != DOM_NO_ERR) {

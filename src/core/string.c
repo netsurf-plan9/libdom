@@ -5,6 +5,7 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
+#include <ctype.h>
 #include <inttypes.h>
 #include <string.h>
 
@@ -12,6 +13,8 @@
 
 #include "core/document.h"
 #include "utils/utils.h"
+#include "utils/utf8.h"
+#include "utils/utf16.h"
 
 /**
  * A DOM string
@@ -27,6 +30,8 @@ struct dom_string {
 	       DOM_STRING_OFFSET,
 	       DOM_STRING_PTR_NODOC
 	} type;				/**< String type */
+
+	dom_string_charset charset;	/**< Charset of string */
 
 	union {
 		uint8_t *ptr;
@@ -49,7 +54,8 @@ struct dom_string {
 };
 
 static struct dom_string empty_string = { 
-	.type = DOM_STRING_CONST_PTR, 
+	.type = DOM_STRING_CONST_PTR,
+	.charset = DOM_STRING_UTF8,
 	.data.ptr = NULL,
 	.len = 0,
 	.ctx.doc = NULL,
@@ -116,6 +122,8 @@ dom_exception dom_string_create_from_off(struct dom_document *doc,
 
 	ret->type = DOM_STRING_OFFSET;
 
+	ret->charset = dom_document_get_charset(doc);
+
 	ret->data.offset = off;
 
 	ret->len = len;
@@ -161,6 +169,8 @@ dom_exception dom_string_create_from_ptr(struct dom_document *doc,
 
 	ret->type = DOM_STRING_PTR;
 
+	ret->charset = dom_document_get_charset(doc);
+
 	memcpy(ret->data.ptr, ptr, len);
 
 	ret->len = len;
@@ -200,6 +210,8 @@ dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
 
 	ret->type = DOM_STRING_CONST_PTR;
 
+	ret->charset = dom_document_get_charset(doc);
+
 	ret->data.cptr = ptr;
 
 	ret->len = len;
@@ -217,11 +229,12 @@ dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
  * Create a DOM string from a string of characters that does not belong
  * to a document
  *
- * \param alloc  Memory (de)allocation function
- * \param pw     Pointer to client-specific private data
- * \param ptr    Pointer to string of characters
- * \param len    Length, in bytes, of string of characters
- * \param str    Pointer to location to receive result
+ * \param alloc    Memory (de)allocation function
+ * \param pw       Pointer to client-specific private data
+ * \param charset  The charset of the string
+ * \param ptr      Pointer to string of characters
+ * \param len      Length, in bytes, of string of characters
+ * \param str      Pointer to location to receive result
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  *
  * The returned string will already be referenced, so there is no need
@@ -231,7 +244,8 @@ dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
  * returned DOM string.
  */
 dom_exception dom_string_create_from_ptr_no_doc(dom_alloc alloc, void *pw,
-		const uint8_t *ptr, size_t len, struct dom_string **str)
+		dom_string_charset charset, const uint8_t *ptr, size_t len, 
+		struct dom_string **str)
 {
 	struct dom_string *ret;
 
@@ -246,6 +260,8 @@ dom_exception dom_string_create_from_ptr_no_doc(dom_alloc alloc, void *pw,
 	}
 
 	ret->type = DOM_STRING_PTR_NODOC;
+
+	ret->charset = charset;
 
 	memcpy(ret->data.ptr, ptr, len);
 
@@ -324,10 +340,35 @@ int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
 	if (err != DOM_NO_ERR)
 		return 1; /* arbitrary */
 
-	if (l1 != l2)
-		return 1; /* arbitrary */
+	while (l1 > 0 && l2 > 0) {
+		uint32_t c1, c2;
+		size_t cl1, cl2;
+		charset_error err;
 
-	return strncmp((const char *) d1, (const char *) d2, l1);
+		err = (s1->charset == DOM_STRING_UTF8) 
+				? _dom_utf8_to_ucs4(d1, l1, &c1, &cl1) 
+				: _dom_utf16_to_ucs4(d1, l1, &c1, &cl1);
+		if (err != CHARSET_OK) {
+		}
+
+		err = (s2->charset == DOM_STRING_UTF8)
+				? _dom_utf8_to_ucs4(d2, l2, &c2, &cl2)
+				: _dom_utf16_to_ucs4(d2, l2, &c2, &cl2);
+		if (err != CHARSET_OK) {
+		}
+
+		if (c1 != c2) {
+			return (int)(c1 - c2);
+		}
+
+		d1 += cl1;
+		d2 += cl2;
+
+		l1 -= cl1;
+		l2 -= cl2;
+	}
+
+	return (int)(l1 - l2);
 }
 
 /**
@@ -354,9 +395,35 @@ int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
 	if (err != DOM_NO_ERR)
 		return 1; /* arbitrary */
 
-	if (l1 != l2)
-		return 1; /* arbitrary */
+	while (l1 > 0 && l2 > 0) {
+		uint32_t c1, c2;
+		size_t cl1, cl2;
+		charset_error err;
 
-	return strncasecmp((const char *) d1, (const char *) d2, l1);
+		err = (s1->charset == DOM_STRING_UTF8) 
+				? _dom_utf8_to_ucs4(d1, l1, &c1, &cl1) 
+				: _dom_utf16_to_ucs4(d1, l1, &c1, &cl1);
+		if (err != CHARSET_OK) {
+		}
+
+		err = (s2->charset == DOM_STRING_UTF8)
+				? _dom_utf8_to_ucs4(d2, l2, &c2, &cl2)
+				: _dom_utf16_to_ucs4(d2, l2, &c2, &cl2);
+		if (err != CHARSET_OK) {
+		}
+
+		/** \todo improved lower-casing algorithm */
+		if (tolower(c1) != tolower(c2)) {
+			return (int)(tolower(c1) - tolower(c2));
+		}
+
+		d1 += cl1;
+		d2 += cl2;
+
+		l1 -= cl1;
+		l2 -= cl2;
+	}
+
+	return (int)(l1 - l2);
 }
 

@@ -56,6 +56,8 @@ struct dom_doc_nnm {
 struct dom_document {
 	struct dom_node base;		/**< Base node */
 
+	dom_string_charset charset;	/**< Charset of strings in document */
+
 	struct dom_implementation *impl;	/**< Owning implementation */
 
 	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
@@ -73,10 +75,11 @@ struct dom_document {
 /**
  * Create a Document
  *
- * \param impl   The DOM implementation owning the document
- * \param alloc  Memory (de)allocation function
- * \param pw     Pointer to client-specific private data
- * \param doc    Pointer to location to receive created document
+ * \param impl     The DOM implementation owning the document
+ * \param charset  The charset used for strings in the document
+ * \param alloc    Memory (de)allocation function
+ * \param pw       Pointer to client-specific private data
+ * \param doc      Pointer to location to receive created document
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
  *
  * ::impl will have its reference count increased.
@@ -84,7 +87,8 @@ struct dom_document {
  * The returned document will already be referenced.
  */
 dom_exception dom_document_create(struct dom_implementation *impl,
-		dom_alloc alloc, void *pw, struct dom_document **doc)
+		dom_string_charset charset, dom_alloc alloc, void *pw, 
+		struct dom_document **doc)
 {
 	static const char *names[DOM_NODE_TYPE_COUNT + 1] = {
 		NULL,			/* Unused */
@@ -110,6 +114,7 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 		return DOM_NO_MEM_ERR;
 
 	/* Set up document allocation context - must be first */
+	d->charset = charset;
 	d->alloc = alloc;
 	d->pw = pw;
 
@@ -991,6 +996,35 @@ const uint8_t *dom_document_get_base(struct dom_document *doc)
 	UNUSED(doc);
 
 	return NULL;
+}
+
+/**
+ * Set the document buffer pointer
+ *
+ * \param doc         Document to set buffer pointer of
+ * \param buffer      Pointer to buffer
+ * \param buffer_len  Length of buffer, in bytes
+ *
+ * By calling this, ownership of the buffer is transferred to the document.
+ * It should be called once per document node.
+ */
+void dom_document_set_buffer(struct dom_document *doc, uint8_t *buffer,
+		size_t buffer_len)
+{
+	UNUSED(doc);
+	UNUSED(buffer);
+	UNUSED(buffer_len);
+}
+
+/**
+ * Retrieve the character set used to encode strings in the document
+ *
+ * \param doc  The document to get the charset of
+ * \return The charset in use
+ */
+dom_string_charset dom_document_get_charset(struct dom_document *doc)
+{
+	return doc->charset;
 }
 
 /**

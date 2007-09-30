@@ -17,6 +17,11 @@
 struct dom_document;
 struct dom_string;
 
+typedef enum {
+	DOM_STRING_UTF8,
+	DOM_STRING_UTF16
+} dom_string_charset;
+
 /* Claim a reference on a DOM string */
 void dom_string_ref(struct dom_string *str);
 /* Release a reference on a DOM string */
@@ -34,7 +39,8 @@ dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
 /* Create a DOM string from a string of characters that does not belong
  * to a document */
 dom_exception dom_string_create_from_ptr_no_doc(dom_alloc alloc, void *pw,
-		const uint8_t *ptr, size_t len, struct dom_string **str);
+		dom_string_charset charset, const uint8_t *ptr, size_t len, 
+		struct dom_string **str);
 
 /* Get a pointer to the string of characters within a DOM string */
 dom_exception dom_string_get_data(struct dom_string *str,

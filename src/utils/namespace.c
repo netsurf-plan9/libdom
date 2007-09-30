@@ -29,6 +29,7 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
 	dom_exception err;
 
 	err = dom_string_create_from_ptr_no_doc(alloc, pw,
+		DOM_STRING_UTF8,
 		(const uint8_t *) "http://www.w3.org/XML/1998/namespace", 
 		SLEN("http://www.w3.org/XML/1998/namespace"),
 		&xml);
@@ -37,6 +38,7 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
 	}
 
 	err = dom_string_create_from_ptr_no_doc(alloc, pw,
+		DOM_STRING_UTF8,
 		(const uint8_t *) "http://www.w3.org/2000/xmlns",
 		SLEN("http://www.w3.org/2000/xmlns"),
 		&xmlns);
