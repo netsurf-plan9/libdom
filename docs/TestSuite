@@ -145,7 +145,16 @@ implementationAttribute
 Statements
 -------------------------------------------------------------------------------
 var
-	Can contain nested <member> elements when the var has type Collection
+	Can contain nested <member> elements when the var has @type Collection
+	
+	Can contain <handleError> element when the var type @type DOMErrorHandler.
+	This then creates an class implementing DOMErrorHandler, overriding the handleError() method.
+	This is only used in DOM Level 3 Core.
+	
+	@name variable name
+	@type type of variable
+	@value initially assigned value
+	@isNull boolean assign initial value of NULL (essentially mutually exclusive with @value ?)
 
 assign
 	<assign var="..." value="..."/>
