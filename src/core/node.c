@@ -303,28 +303,43 @@ dom_exception dom_node_get_node_name(struct dom_node *node,
 	if ((node->type == DOM_ELEMENT_NODE ||
 			node->type == DOM_ATTRIBUTE_NODE) &&
 			node->prefix != NULL) {
-		const uint8_t *prefix, *localname;
-		size_t prefix_len, local_len;
+		struct dom_string *colon;
 		dom_exception err;
 
-		dom_string_get_data(node->prefix, &prefix, &prefix_len);
-
-		dom_string_get_data(node->name, &localname, &local_len);
-
-		uint8_t qname[prefix_len + 1 /* : */ + local_len + 1 /* \0 */];
-
-		sprintf((char *) qname, "%.*s:%.*s", 
-			prefix_len, (const char *) prefix, 
-			local_len, (const char *) localname);
-
-		/* Create the string */
-		err = dom_string_create_from_ptr(node->owner, qname, 
-				prefix_len + 1 + local_len, &node_name);
+		/* ugh! */
+		/** \todo Assumes little endian */
+		err = dom_string_create_from_const_ptr(node->owner,	
+			(const uint8_t *) (
+				(dom_document_get_charset(node->owner) == 
+					DOM_STRING_UTF8) ? ":" : ":\0"),
+			(dom_document_get_charset(node->owner) == 
+					DOM_STRING_UTF8) ? 1 : 2,
+			&colon);
 		if (err != DOM_NO_ERR) {
 			return err;
 		}
 
-		/* QName is referenced on exit from constructor */
+		/* Prefix + : */
+		err = dom_string_concat(node->prefix, colon, &node_name);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(colon);
+			return err;
+		}
+
+		/* Finished with colon */
+		dom_string_unref(colon);
+
+		/* Prefix + : + Localname */
+		err = dom_string_concat(node_name, node->name, &colon);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(node_name);
+			return err;
+		}
+
+		/* Finished with intermediate node name */
+		dom_string_unref(node_name);
+
+		node_name = colon;
 	} else {
 		dom_string_ref(node->name);
 
@@ -1128,13 +1143,8 @@ dom_exception dom_node_set_prefix(struct dom_node *node,
 
 	/* Set the prefix */
 	if (prefix != NULL) {
-		const uint8_t *data;
-		size_t len;
-
-		dom_string_get_data(prefix, &data, &len);
-
 		/* Empty string is treated as NULL */
-		if (len == 0) {
+		if (dom_string_length(prefix) == 0) {
 			node->prefix = NULL;
 		} else {
 			dom_string_ref(prefix);

@@ -62,6 +62,9 @@ static struct dom_string empty_string = {
 	.refcnt = 1
 };
 
+static dom_exception __dom_string_get_data(struct dom_string *str,
+		const uint8_t **data, size_t *len);
+
 /**
  * Claim a reference on a DOM string
  *
@@ -278,45 +281,6 @@ dom_exception dom_string_create_from_ptr_no_doc(dom_alloc alloc, void *pw,
 }
 
 /**
- * Get a pointer to the string of characters within a DOM string
- *
- * \param str   Pointer to DOM string to retrieve pointer from
- * \param data  Pointer to location to receive data
- * \param len   Pointer to location to receive byte length of data
- * \return DOM_NO_ERR on success
- *
- * The caller must have previously claimed a reference on the DOM string.
- * The returned pointer must not be freed.
- */
-dom_exception dom_string_get_data(struct dom_string *str,
-		const uint8_t **data, size_t *len)
-{
-	/* Assume that a NULL str pointer indicates the empty string */
-	if (str == NULL)
-		str = &empty_string;
-
-	switch (str->type) {
-	case DOM_STRING_PTR:
-		*data = str->data.ptr;
-		break;
-	case DOM_STRING_CONST_PTR:
-		*data = str->data.cptr;
-		break;
-	case DOM_STRING_OFFSET:
-		*data = dom_document_get_base(str->ctx.doc) +
-				str->data.offset;
-		break;
-	case DOM_STRING_PTR_NODOC:
-		*data = str->data.ptr;
-		break;
-	}
-
-	*len = str->len;
-
-	return DOM_NO_ERR;
-}
-
-/**
  * Case sensitively compare two DOM strings
  *
  * \param s1  The first string to compare
@@ -332,11 +296,11 @@ int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
 	size_t l1, l2;
 	dom_exception err;
 
-	err = dom_string_get_data(s1, &d1, &l1);
+	err = __dom_string_get_data(s1, &d1, &l1);
 	if (err != DOM_NO_ERR)
 		return 1; /* arbitrary */
 
-	err = dom_string_get_data(s2, &d2, &l2);
+	err = __dom_string_get_data(s2, &d2, &l2);
 	if (err != DOM_NO_ERR)
 		return 1; /* arbitrary */
 
@@ -387,11 +351,11 @@ int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
 	size_t l1, l2;
 	dom_exception err;
 
-	err = dom_string_get_data(s1, &d1, &l1);
+	err = __dom_string_get_data(s1, &d1, &l1);
 	if (err != DOM_NO_ERR)
 		return 1; /* arbitrary */
 
-	err = dom_string_get_data(s2, &d2, &l2);
+	err = __dom_string_get_data(s2, &d2, &l2);
 	if (err != DOM_NO_ERR)
 		return 1; /* arbitrary */
 
@@ -426,4 +390,376 @@ int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
 
 	return (int)(l1 - l2);
 }
+
+/**
+ * Get the index of the first occurrence of a character in a dom string 
+ * 
+ * \param str  The string to search in
+ * \param chr  UCS4 value to look for
+ * \return Character index of found character, or -1 if none found 
+ */
+uint32_t dom_string_index(struct dom_string *str, uint32_t chr)
+{
+	const uint8_t *s;
+	size_t clen, slen;
+	uint32_t c, index;
+	charset_error err;
+
+	__dom_string_get_data(str, &s, &slen);
+
+	index = 0;
+
+	while (slen > 0) {
+		if (str->charset == DOM_STRING_UTF8) {
+			err = _dom_utf8_to_ucs4(s, slen, &c, &clen);
+		} else {
+			err = _dom_utf16_to_ucs4(s, slen, &c, &clen);
+		}
+
+		if (err != CHARSET_OK) {
+			return (uint32_t) -1;
+		}
+
+		if (c == chr) {
+			return index;
+		}
+
+		s += clen;
+		slen -= clen;
+		index++;
+	}
+
+	return (uint32_t) -1;
+}
+
+/**
+ * Get the index of the last occurrence of a character in a dom string 
+ * 
+ * \param str  The string to search in
+ * \param chr  UCS4 value to look for
+ * \return Character index of found character, or -1 if none found
+ */
+uint32_t dom_string_rindex(struct dom_string *str, uint32_t chr)
+{
+	const uint8_t *s;
+	size_t clen, slen;
+	uint32_t c, index;
+	charset_error err;
+
+	__dom_string_get_data(str, &s, &slen);
+
+	index = dom_string_length(str);
+
+	while (slen > 0) {
+		if (str->charset == DOM_STRING_UTF8) {
+			err = _dom_utf8_prev(s, slen, &clen);
+			if (err == CHARSET_OK) {
+				err = _dom_utf8_to_ucs4(s + clen, slen - clen, 
+						&c, &clen);
+			}
+		} else {
+			err = _dom_utf16_prev(s, slen, &clen);
+			if (err == CHARSET_OK) {
+				err = _dom_utf16_to_ucs4(s + clen, slen - clen,
+						&c, &clen);
+			}
+		}
+
+		if (err != CHARSET_OK) {
+			return (uint32_t) -1;
+		}
+
+		if (c == chr) {
+			return index;
+		}
+
+		slen -= clen;
+		index--;
+	}
+
+	return (uint32_t) -1;
+
+}
+
+/**
+ * Get the length, in characters, of a dom string
+ *
+ * \param str  The string to measure the length of
+ * \return The length of the string, in characters
+ */
+uint32_t dom_string_length(struct dom_string *str)
+{
+	const uint8_t *s;
+	size_t slen;
+	uint32_t clen;
+	charset_error err;
+
+	__dom_string_get_data(str, &s, &slen);
+
+	if (str->charset == DOM_STRING_UTF8) {
+		err = _dom_utf8_length(s, slen, &clen);
+	} else {
+		err = _dom_utf16_length(s, slen, &clen);
+	}
+
+	if (err != CHARSET_OK) {
+		return 0;
+	}
+
+	return clen;
+}
+
+/** 
+ * Concatenate two dom strings 
+ * 
+ * \param s1      The first string
+ * \param s2      The second string
+ * \param result  Pointer to location to receive result
+ * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
+ *
+ * The returned string will be allocated using the allocation details
+ * stored in ::s1.
+ * 
+ * The returned string will have its reference count increased. The client
+ * should dereference it once it has finished with it.
+ */
+dom_exception dom_string_concat(struct dom_string *s1, struct dom_string *s2,
+		struct dom_string **result)
+{
+	struct dom_string *concat;
+	const uint8_t *s;
+	size_t slen;
+
+	if (s1->type == DOM_STRING_PTR_NODOC) {
+		concat = s1->ctx.nodoc.alloc(NULL, 
+				sizeof(struct dom_string), s1->ctx.nodoc.pw);
+	} else {
+		concat = dom_document_alloc(s1->ctx.doc, 
+				NULL, sizeof(struct dom_string));
+	}
+
+	if (concat == NULL) {
+		return DOM_NO_MEM_ERR;
+	}
+
+	/** \todo support attempted concatenation of mismatched charsets */
+
+	if (s1->type == DOM_STRING_PTR_NODOC) {
+		concat->data.ptr = s1->ctx.nodoc.alloc(NULL, 
+				s1->len + s2->len, s1->ctx.nodoc.pw);
+	} else {
+		concat->data.ptr = dom_document_alloc(s1->ctx.doc, 
+				NULL, s1->len + s2->len);
+	}
+	if (concat->data.ptr == NULL) {
+		if (s1->type == DOM_STRING_PTR_NODOC) {
+			s1->ctx.nodoc.alloc(concat, 0, s1->ctx.nodoc.pw);
+		} else {
+			dom_document_alloc(s1->ctx.doc, concat, 0);
+		}
+		return DOM_NO_MEM_ERR;
+	}
+
+	concat->type = (s1->type == DOM_STRING_PTR_NODOC) 
+			? DOM_STRING_PTR_NODOC : DOM_STRING_PTR;
+
+	concat->charset = s1->charset;
+
+	__dom_string_get_data(s1, &s, &slen);
+
+	memcpy(concat->data.ptr, s, slen);
+
+	__dom_string_get_data(s2, &s, &slen);
+
+	memcpy(concat->data.ptr + s1->len, s, slen);
+
+	concat->len = s1->len + s2->len;
+
+	if (concat->type == DOM_STRING_PTR_NODOC) {
+		concat->ctx.nodoc.alloc = s1->ctx.nodoc.alloc;
+		concat->ctx.nodoc.pw = s1->ctx.nodoc.pw;
+	} else {
+		concat->ctx.doc = s1->ctx.doc;
+	}
+
+	concat->refcnt = 1;
+
+	*result = concat;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Extract a substring from a dom string 
+ *
+ * \param str     The string to extract from
+ * \param i1      The character index of the start of the substring
+ * \param i2      The character index of the end of the substring
+ * \param result  Pointer to location to receive result
+ * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
+ *
+ * The returned string will be allocated using the allocation details
+ * stored in ::str.
+ *
+ * The returned string will have its reference count increased. The client
+ * should dereference it once it has finished with it.
+ */
+dom_exception dom_string_substr(struct dom_string *str, 
+		uint32_t i1, uint32_t i2, struct dom_string **result)
+{
+	const uint8_t *s;
+	size_t slen;
+	size_t b1, b2;
+	charset_error err;
+
+	__dom_string_get_data(str, &s, &slen);
+
+	/* Initialise the byte index of the start to 0 */
+	b1 = 0;
+	/* Make the end a character offset from the start */
+	i2 -= i1;
+
+	/* Calculate the byte index of the start */
+	while (i1 > 0) {
+		if (str->charset == DOM_STRING_UTF8) {
+			err = _dom_utf8_next(s, slen, b1, &b1);
+		} else {
+			err = _dom_utf16_next(s, slen, b1, &b1);
+		}
+
+		if (err != CHARSET_OK) {
+			return DOM_NO_MEM_ERR;
+		}
+
+		i1--;
+	}
+
+	/* Initialise the byte index of the end to that of the start */
+	b2 = b1;
+
+	/* Calculate the byte index of the end */
+	while (i2 > 0) {
+		if (str->charset == DOM_STRING_UTF8) {
+			err = _dom_utf8_next(s, slen, b2, &b2);
+		} else {
+			err = _dom_utf16_next(s, slen, b2, &b2);
+		}
+
+		if (err != CHARSET_OK) {
+			return DOM_NO_MEM_ERR;
+		}
+
+		i2--;
+	}
+
+	/* Create a string from the specified byte range */
+	return (str->type == DOM_STRING_PTR_NODOC)
+			? dom_string_create_from_ptr_no_doc(
+					str->ctx.nodoc.alloc,
+					str->ctx.nodoc.pw,
+					str->charset, 
+					s + b1, b2 - b1, result)
+			: dom_string_create_from_ptr(str->ctx.doc,
+					s + b1, b2 - b2, result);
+}
+
+/**
+ * Duplicate a dom string 
+ *
+ * \param str     The string to duplicate
+ * \param result  Pointer to location to receive result
+ * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
+ *
+ * The returned string will be allocated using the allocation details
+ * stored in ::str.
+ *
+ * The returned string will have its reference count increased. The client
+ * should dereference it once it has finished with it.
+ */
+dom_exception dom_string_dup(struct dom_string *str, 
+		struct dom_string **result)
+{
+	const uint8_t *s;
+	size_t slen;
+
+	__dom_string_get_data(str, &s, &slen);
+
+	return str->type == DOM_STRING_PTR_NODOC 
+			? dom_string_create_from_ptr_no_doc(
+				str->ctx.nodoc.alloc,
+				str->ctx.nodoc.pw,
+				str->charset,
+				s, slen, result) 
+			: dom_string_create_from_ptr(str->ctx.doc,
+					s, slen, result);
+}
+
+/**
+ * Calculate a hash value from a dom string 
+ *
+ * \param str  The string to calculate a hash of
+ * \return The hash value associated with the string
+ */
+uint32_t dom_string_hash(struct dom_string *str)
+{
+	const uint8_t *s;
+	size_t slen;
+	uint32_t hash = 0x01000193;
+
+	__dom_string_get_data(str, &s, &slen);
+
+	while (slen > 0) {
+		hash *= 0x01000193;
+		hash ^= *s;
+
+		s++;
+		slen--;
+	}
+
+	return hash;
+}
+
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+
+/**
+ * Get a pointer to the string of characters within a DOM string
+ *
+ * \param str   Pointer to DOM string to retrieve pointer from
+ * \param data  Pointer to location to receive data
+ * \param len   Pointer to location to receive byte length of data
+ * \return DOM_NO_ERR on success
+ *
+ * The caller must have previously claimed a reference on the DOM string.
+ * The returned pointer must not be freed.
+ */
+dom_exception __dom_string_get_data(struct dom_string *str,
+		const uint8_t **data, size_t *len)
+{
+	/* Assume that a NULL str pointer indicates the empty string */
+	if (str == NULL)
+		str = &empty_string;
+
+	switch (str->type) {
+	case DOM_STRING_PTR:
+		*data = str->data.ptr;
+		break;
+	case DOM_STRING_CONST_PTR:
+		*data = str->data.cptr;
+		break;
+	case DOM_STRING_OFFSET:
+		*data = dom_document_get_base(str->ctx.doc) +
+				str->data.offset;
+		break;
+	case DOM_STRING_PTR_NODOC:
+		*data = str->data.ptr;
+		break;
+	}
+
+	*len = str->len;
+
+	return DOM_NO_ERR;
+}
+
 

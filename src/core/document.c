@@ -64,13 +64,130 @@ struct dom_document {
 
 	struct dom_doc_nnm *maps;	/**< List of active namednodemaps */
 
-	/** Interned node name strings, indexed by node type */
-	/* Index 0 is unused */
-	struct dom_string *nodenames[DOM_NODE_TYPE_COUNT + 1];
+	struct dom_string **nodenames;	/**< Interned nodenames */
 
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
 };
+
+/** Interned node name strings, indexed by node type */
+/* Index 0 is unused */
+static struct dom_string *__nodenames_utf8[DOM_NODE_TYPE_COUNT + 1];
+static struct dom_string *__nodenames_utf16[DOM_NODE_TYPE_COUNT + 1];
+
+/**
+ * Initialise the document module
+ *
+ * \param alloc  Memory (de)allocation function
+ * \param pw     Pointer to client-specific private data
+ * \return DOM_NO_ERR on success
+ */
+dom_exception _dom_document_initialise(dom_alloc alloc, void *pw)
+{
+	static struct {
+		const char *name;
+		size_t len;
+	} names_utf8[DOM_NODE_TYPE_COUNT + 1] = {
+		{ NULL,			0 },	/* Unused */
+		{ NULL,			0 },	/* Element */
+		{ NULL,			0 },	/* Attr */
+		{ "#text",		5 },	/* Text */
+		{ "#cdata-section",	14 },	/* CDATA section */
+		{ NULL,			0 },	/* Entity reference */
+		{ NULL,			0 },	/* Entity */
+		{ NULL,			0 },	/* Processing instruction */
+		{ "#comment",		8 },	/* Comment */
+		{ "#document",		9 },	/* Document */
+		{ NULL,			0 },	/* Document type */
+		{ "#document-fragment",	18 },	/* Document fragment */
+		{ NULL,			0 }	/* Notation */
+	};
+
+	/** \todo This assumes Little Endian */
+	static struct {
+		const char *name;
+		size_t len;
+	} names_utf16[DOM_NODE_TYPE_COUNT + 1] = {
+		{ NULL,			0 },	/* Unused */
+		{ NULL,			0 },	/* Element */
+		{ NULL,			0 },	/* Attr */
+		{ "#\0t\0e\0x\0t\0",	10 },	/* Text */
+		{ "#\0c\0d\0a\0t\0a\0-\0s\0e\0c\0t\0i\0o\0n\0",	28 },	/* CDATA section */
+		{ NULL,			0 },	/* Entity reference */
+		{ NULL,			0 },	/* Entity */
+		{ NULL,			0 },	/* Processing instruction */
+		{ "#\0c\0o\0m\0m\0e\0n\0t\0",		16 },	/* Comment */
+		{ "#\0d\0o\0c\0u\0m\0e\0n\0t\0",		18 },	/* Document */
+		{ NULL,			0 },	/* Document type */
+		{ "#\0d\0o\0c\0u\0m\0e\0n\0t\0-\0f\0r\0a\0g\0m\0e\0n\0t\0",	36 },	/* Document fragment */
+		{ NULL,			0 }	/* Notation */
+	};
+
+	dom_exception err;
+
+	/* Initialise interned node names */
+	for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
+		if (names_utf8[i].name == NULL) {
+			/* Nothing to intern; skip this entry */
+			__nodenames_utf8[i] = NULL;
+			__nodenames_utf16[i] = NULL;
+			continue;
+		}
+
+		/* Make string */
+		err = dom_string_create_from_ptr_no_doc(alloc, pw,
+				DOM_STRING_UTF8,
+				(const uint8_t *) names_utf8[i].name,
+				names_utf8[i].len, &__nodenames_utf8[i]);
+		if (err != DOM_NO_ERR) {
+			/* Failed, clean up strings we've created so far */
+			for (int j = 0; j < i; j++) {
+				if (__nodenames_utf8[j] != NULL) {
+					dom_string_unref(__nodenames_utf8[j]);
+					dom_string_unref(__nodenames_utf16[j]);
+				}
+			}
+			return err;
+		}
+
+		err = dom_string_create_from_ptr_no_doc(alloc, pw,
+				DOM_STRING_UTF16,
+				(const uint8_t *) names_utf16[i].name,
+				names_utf16[i].len, &__nodenames_utf16[i]);
+		if (err != DOM_NO_ERR) {
+			/* Failed, clean up strings we've created so far */
+			for (int j = 0; j < i; j++) {
+				if (__nodenames_utf8[j] != NULL) {
+					dom_string_unref(__nodenames_utf8[j]);
+					dom_string_unref(__nodenames_utf16[j]);
+				}
+			}
+
+			dom_string_unref(__nodenames_utf8[i]);
+
+			return err;
+		}
+	}
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Finalise the document module
+ *
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_document_finalise(void)
+{
+	for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
+		if (__nodenames_utf8[i] != NULL) {
+			dom_string_unref(__nodenames_utf8[i]);
+			dom_string_unref(__nodenames_utf16[i]);
+		}
+	}
+
+	return DOM_NO_ERR;
+}
 
 /**
  * Create a Document
@@ -90,21 +207,6 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 		dom_string_charset charset, dom_alloc alloc, void *pw, 
 		struct dom_document **doc)
 {
-	static const char *names[DOM_NODE_TYPE_COUNT + 1] = {
-		NULL,			/* Unused */
-		NULL,			/* Element */
-		NULL,			/* Attr */
-		"#text",		/* Text */
-		"#cdata-section",	/* CDATA section */
-		NULL,			/* Entity reference */
-		NULL,			/* Entity */
-		NULL,			/* Processing instruction */
-		"#comment",		/* Comment */
-		"#document",		/* Document */
-		NULL,			/* Document type */
-		"#document-fragment",	/* Document fragment */
-		NULL			/* Notation */
-	};
 	struct dom_document *d;
 	dom_exception err;
 
@@ -114,33 +216,8 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 		return DOM_NO_MEM_ERR;
 
 	/* Set up document allocation context - must be first */
-	d->charset = charset;
 	d->alloc = alloc;
 	d->pw = pw;
-
-	/* Initialise interned node names */
-	for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
-		if (names[i] == NULL) {
-			/* Nothing to intern; skip this entry */
-			d->nodenames[i] = NULL;
-			continue;
-		}
-
-		/* Make string */
-		err = dom_string_create_from_const_ptr(d,
-				(const uint8_t *) names[i],
-				strlen(names[i]), &d->nodenames[i]);
-		if (err != DOM_NO_ERR) {
-			/* Failed, clean up strings we've created so far */
-			for (int j = 0; j < i; j++) {
-				if (d->nodenames[i] != NULL)
-					dom_string_unref(d->nodenames[i]);
-			}
-			/* And destroy document */
-			alloc(d, 0, pw);
-			return err;
-		}
-	}
 
 	/* Initialise base class -- the Document has no parent, so
 	 * destruction will be attempted as soon as its reference count
@@ -150,23 +227,22 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	err = dom_node_initialise(&d->base, d, DOM_DOCUMENT_NODE,
 			NULL, NULL, NULL, NULL);
 	if (err != DOM_NO_ERR) {
-		/* Clean up interned strings */
-		for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
-			if (d->nodenames[i] != NULL)
-				dom_string_unref(d->nodenames[i]);
-		}
-		/* And document */
+		/* Clean up document */
 		alloc(d, 0, pw);
 		return err;
 	}
 
 	/* Initialise remaining type-specific data */
+	d->charset = charset;
 	if (impl != NULL)
 		dom_implementation_ref(impl);
 	d->impl = impl;
 
 	d->nodelists = NULL;
 	d->maps = NULL;
+
+	d->nodenames = (charset == DOM_STRING_UTF8) ? __nodenames_utf8 
+						    : __nodenames_utf16;
 
 	*doc = d;
 
@@ -223,12 +299,6 @@ void dom_document_destroy(struct dom_document *doc)
 	 * they are held by the client. */
 	doc->nodelists = NULL;
 	doc->maps = NULL;
-
-	/* Clean up interned strings */
-	for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
-		if (doc->nodenames[i] != NULL)
-			dom_string_unref(doc->nodenames[i]);
-	}
 
 	/* Finalise base class */
 	dom_node_finalise(doc, &doc->base);
@@ -569,7 +639,7 @@ dom_exception dom_document_create_element_ns(struct dom_document *doc,
 	}
 
 	/* Divide QName into prefix/localname pair */
-	err = _dom_namespace_split_qname(qname, doc, &prefix, &localname);
+	err = _dom_namespace_split_qname(qname, &prefix, &localname);
 	if (err != DOM_NO_ERR) {
 		return err;
 	}
@@ -630,7 +700,7 @@ dom_exception dom_document_create_attribute_ns(struct dom_document *doc,
 	}
 
 	/* Divide QName into prefix/localname pair */
-	err = _dom_namespace_split_qname(qname, doc, &prefix, &localname);
+	err = _dom_namespace_split_qname(qname, &prefix, &localname);
 	if (err != DOM_NO_ERR) {
 		return err;
 	}

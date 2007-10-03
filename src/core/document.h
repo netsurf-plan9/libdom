@@ -19,6 +19,11 @@ struct dom_namednodemap;
 struct dom_node;
 struct dom_nodelist;
 
+/* Initialise the document module */
+dom_exception _dom_document_initialise(dom_alloc alloc, void *pw);
+/* Finalise the document module */
+dom_exception _dom_document_finalise(void);
+
 /* Destroy a document */
 void dom_document_destroy(struct dom_document *doc);
 

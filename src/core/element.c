@@ -597,7 +597,7 @@ dom_exception dom_element_set_attribute_ns(struct dom_element *element,
 	}
 
 	/* Decompose QName */
-	err = _dom_namespace_split_qname(qname, e->owner, &prefix, &localname);
+	err = _dom_namespace_split_qname(qname, &prefix, &localname);
 	if (err != DOM_NO_ERR) {
 		return err;
 	}

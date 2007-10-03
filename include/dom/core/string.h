@@ -42,14 +42,32 @@ dom_exception dom_string_create_from_ptr_no_doc(dom_alloc alloc, void *pw,
 		dom_string_charset charset, const uint8_t *ptr, size_t len, 
 		struct dom_string **str);
 
-/* Get a pointer to the string of characters within a DOM string */
-dom_exception dom_string_get_data(struct dom_string *str,
-		const uint8_t **data, size_t *len);
-
 /* Case sensitively compare two DOM strings */
 int dom_string_cmp(struct dom_string *s1, struct dom_string *s2);
 /* Case insensitively compare two DOM strings */
 int dom_string_icmp(struct dom_string *s1, struct dom_string *s2);
 
+/* Get the index of the first occurrence of a character in a dom string */
+uint32_t dom_string_index(struct dom_string *str, uint32_t chr);
+/* Get the index of the last occurrence of a character in a dom string */
+uint32_t dom_string_rindex(struct dom_string *str, uint32_t chr);
+
+/* Get the length, in characters, of a dom string */
+uint32_t dom_string_length(struct dom_string *str);
+
+/* Concatenate two dom strings */
+dom_exception dom_string_concat(struct dom_string *s1, struct dom_string *s2,
+		struct dom_string **result);
+
+/* Extract a substring from a dom string */
+dom_exception dom_string_substr(struct dom_string *str, 
+		uint32_t i1, uint32_t i2, struct dom_string **result);
+
+/* Duplicate a dom string */
+dom_exception dom_string_dup(struct dom_string *str, 
+		struct dom_string **result);
+
+/* Calculate a hash value from a dom string */
+uint32_t dom_string_hash(struct dom_string *str);
 
 #endif

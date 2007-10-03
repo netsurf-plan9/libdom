@@ -26,8 +26,7 @@ dom_exception _dom_namespace_validate_qname(struct dom_string *qname,
 
 /* Split a QName into a namespace prefix and localname string */
 dom_exception _dom_namespace_split_qname(struct dom_string *qname,
-		struct dom_document *doc, struct dom_string **prefix, 
-		struct dom_string **localname);
+		struct dom_string **prefix, struct dom_string **localname);
 
 #endif
 
