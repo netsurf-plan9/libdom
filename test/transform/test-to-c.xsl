@@ -30,12 +30,79 @@ test representation.
 	<xsl:param name="target-uri-base">http://www.w3.org/2001/DOM-Test-Suite/tests/Level-1/</xsl:param>
 	<xsl:output method="text" encoding="UTF-8"/>
 	<xsl:variable name="domspec" select="document($interfaces-docname)"/>
+	
+<xsl:template match="text()" mode="body">
+</xsl:template>
+
+<!--
+for anything that doesn't match another template,
+we expect this the element to be found in the library located
+at $interfaces-docname.
+
+This should either be a <method> or <attribute>.  If it is neither,
+we generate an <xsl:message> reporting that the element is not known, then
+terminate.
+-->
+<xsl:template match="*" mode="body">
+	<xsl:param name="vardefs"/>
+	<xsl:param name="throw"/>
+	<!-- the element name matched by this template -->
+	<xsl:variable name="feature" select="local-name(.)"/>
+	<xsl:variable name="interface" select="@interface"/>
+	
+	<!--
+	Try to find a method having the @name of $feature.
+	If $interface is defined, make sure search for
+	a match on that interface in the $domspec document.
+	-->
+	<xsl:variable name="method" select="$domspec/library/interface[not($interface) or @name = $interface]/method[@name = $feature]"/>
+	<xsl:choose>
+		<xsl:when test="$method">
+			<xsl:call-template name="produce-method">
+				<xsl:with-param name="vardefs" select="$vardefs"/>
+				<xsl:with-param name="throw" select="$throw"/>
+			</xsl:call-template>
+		</xsl:when>
+		<xsl:otherwise>
+			<!--
+			Try to find an attribute having the name of $feature.
+			Again, if $interface is defined, restrict the search to
+			that interface
+			-->
+			<xsl:variable name="attribute" select="$domspec/library/interface[not($interface) or @name = $interface]/attribute[@name = $feature]"/>
+			<xsl:choose>
+				<xsl:when test="$attribute">
+					<xsl:call-template name="produce-attribute">
+						<xsl:with-param name="vardefs" select="$vardefs"/>
+						<xsl:with-param name="throw" select="$throw"/>
+					</xsl:call-template>
+				</xsl:when>
+	
+				<xsl:otherwise>
+		                    <xsl:message terminate="yes"><xsl:text>Unrecognized element </xsl:text><xsl:value-of select="local-name(.)"/></xsl:message>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:otherwise>
+	</xsl:choose>
+	<xsl:text>
+	</xsl:text>
+</xsl:template>
 
 <xsl:template match="/">
     <xsl:apply-templates/>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'test']">
+	<xsl:text>int main(int argc, char **argv)
+{
+</xsl:text>
+	<xsl:apply-templates mode="body">
+	    <xsl:with-param name="vardefs" select="*[local-name() = 'var']"/>
+	    <xsl:with-param name="throw">false</xsl:with-param>
+	</xsl:apply-templates>
+	<xsl:text>	return 0;
+}
+</xsl:text>
 </xsl:template>
 
 <!-- 
@@ -44,7 +111,7 @@ test representation.
 	Not used.
  -->
 <xsl:template match="*[local-name() = 'package']">
-	<xsl:message terminate="yes">package not implemented</xsl:message>
+	<xsl:message terminate="yes"><xsl:text>package not implemented</xsl:text></xsl:message>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'suite']">
@@ -53,61 +120,52 @@ test representation.
 <xsl:template match="*[local-name() = 'suite.member']">
 </xsl:template>
 
-<!-- 
-	<wait>
-	
-	Not used.
- -->
-<xsl:template match="*[local-name() = 'wait']">
-	<xsl:message terminate="yes">wait not implemented</xsl:message>
-</xsl:template>
-
 <!--
 ================================================================
 Asserts
 ================================================================
 -->
 
-<xsl:template match="*[local-name() = 'fail']">
+<xsl:template match="*[local-name() = 'fail']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertNull']">
+<xsl:template match="*[local-name() = 'assertNull']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertNotNull']">
+<xsl:template match="*[local-name() = 'assertNotNull']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertTrue']">
+<xsl:template match="*[local-name() = 'assertTrue']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertFalse']">
+<xsl:template match="*[local-name() = 'assertFalse']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertEquals']">
+<xsl:template match="*[local-name() = 'assertEquals']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertNotEquals']">
+<xsl:template match="*[local-name() = 'assertNotEquals']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertInstanceOf']">
+<xsl:template match="*[local-name() = 'assertInstanceOf']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertSize']">
+<xsl:template match="*[local-name() = 'assertSize']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertDOMException']">
+<xsl:template match="*[local-name() = 'assertDOMException']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertURIEquals']">
+<xsl:template match="*[local-name() = 'assertURIEquals']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertDOMException']">
+<xsl:template match="*[local-name() = 'assertDOMException']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertImplementationException']">
+<xsl:template match="*[local-name() = 'assertImplementationException']" mode="body">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'assertLowerSeverity']">
+<xsl:template match="*[local-name() = 'assertLowerSeverity']" mode="body">
 </xsl:template>
 
 <!-- 
@@ -116,7 +174,7 @@ Asserts
 	Not used.
  -->
 <xsl:template match="*[local-name() = 'assertEventCount']">
-	<xsl:message terminate="yes">assertEventCount not implemented</xsl:message>
+	<xsl:message terminate="yes"><xsl:text>assertEventCount not implemented</xsl:text></xsl:message>
 </xsl:template>
 
 <!--
@@ -125,7 +183,10 @@ Statements
 ================================================================
 -->
 
-<xsl:template match="*[local-name() = 'var']">
+<xsl:template match="*[local-name() = 'var']" mode="body">
+	<xsl:value-of select="@name"/>
+	<xsl:text>
+</xsl:text>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'assign']">
@@ -149,7 +210,7 @@ Statements
 	Not used.
  -->
 <xsl:template match="*[local-name() = 'subtract']">
-	<xsl:message terminate="yes">subtract not implemented</xsl:message>
+	<xsl:message terminate="yes"><xsl:text>subtract not implemented</xsl:text></xsl:message>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'mult']">
@@ -161,19 +222,64 @@ Statements
 	Not used.
  -->
 <xsl:template match="*[local-name() = 'divide']">
-	<xsl:message terminate="yes">divide not implemented</xsl:message>
+	<xsl:message terminate="yes"><xsl:text>divide not implemented</xsl:text></xsl:message>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'load']">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'if']">
+<!-- 
+	<if>
+	
+	<if>
+		<condition ... />
+		<statement/>
+		...
+		<else/> (optional)
+	</if>
+		
+ -->
+<xsl:template match="*[local-name() = 'if']" mode="body">
+	<xsl:param name="vardefs"/>
+	<xsl:param name="throw"/>
+	<xsl:apply-templates mode="condition-before"/>
+	<xsl:text>	if (</xsl:text>
+		<xsl:apply-templates select="*[1]" mode="condition"/>
+	<xsl:text>) {
+</xsl:text>
+		<!-- apply body of if -->
+		<xsl:apply-templates select="*[position() &gt; 1 and local-name() != 'else']" mode="body">
+			<xsl:with-param name="vardefs" select="$vardefs"/>
+			<xsl:with-param name="throw" select="$throw"/>
+		</xsl:apply-templates>
+	<xsl:text>}</xsl:text>
+	<!-- there is only ever one <else>, this is just for convenience.
+	could replace it with an <xsl:if>, then do a <xsl:apply-templates select="..."> -->
+	<xsl:for-each select="*[local-name()='else']">
+<xsl:text> else {
+	</xsl:text>
+		<xsl:apply-templates mode="body">
+			<xsl:with-param name="vardefs" select="$vardefs"/>
+			<xsl:with-param name="throw" select="$throw"/>
+	        </xsl:apply-templates>
+	        <xsl:text>}</xsl:text>
+	</xsl:for-each>
+	<xsl:text>
+	</xsl:text>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'while']">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'try']">
+<xsl:template match="*[local-name() = 'try']" mode="body">
+	<xsl:text>	TRY
+</xsl:text>
+	<xsl:apply-templates select="*[local-name() != 'catch']" mode="body">
+		<xsl:with-param name="vardefs" select="$vardefs"/>
+		<xsl:with-param name="throw">true</xsl:with-param>
+	</xsl:apply-templates>
+	<xsl:text>	ENDTRY
+</xsl:text>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'for-each']">
@@ -183,6 +289,15 @@ Statements
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'return']">
+</xsl:template>
+
+<!-- 
+	<wait>
+	
+	Not used.
+ -->
+<xsl:template match="*[local-name() = 'wait']" mode="body">
+	<xsl:message terminate="yes"><xsl:text>wait not implemented</xsl:text></xsl:message>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'substring']">
@@ -212,7 +327,7 @@ Statements
 	Not used.
  -->
 <xsl:template match="*[local-name() = 'userObj']">
-	<xsl:message terminate="yes">userObj not implemented</xsl:message>
+	<xsl:message terminate="yes"><xsl:text>userObj not implemented</xsl:text></xsl:message>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'atEvents']">
@@ -250,14 +365,19 @@ Conditions
 	
 	Not used.
  -->
-<xsl:template match="*[local-name() = 'same']">
-	<xsl:message terminate="yes">same not implemented</xsl:message>
+<xsl:template match="*[local-name() = 'same']" mode="condition">
+	<xsl:message terminate="yes"><xsl:text>same not implemented</xsl:text></xsl:message>
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'equals']">
+<!-- set up temporary DOMStrings and stuff here.
+condition-before mode is applied before entering a statement (such as 'if') -->
+<xsl:template match="*[local-name() = 'equals']" mode="condition-before">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'notEquals']">
+<xsl:template match="*[local-name() = 'equals']" mode="condition">
+</xsl:template>
+
+<xsl:template match="*[local-name() = 'notEquals']" mode="condition">
 </xsl:template>
 
 <!-- 
@@ -265,11 +385,11 @@ Conditions
 	
 	Not used.
  -->
-<xsl:template match="*[local-name() = 'lessOrEquals']">
-	<xsl:message terminate="yes">lessOrEquals not implemented</xsl:message>
+<xsl:template match="*[local-name() = 'lessOrEquals']" mode="condition">
+	<xsl:message terminate="yes"><xsl:text>lessOrEquals not implemented</xsl:text></xsl:message>
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'greater']">
+<xsl:template match="*[local-name() = 'greater']" mode="condition">
 </xsl:template>
 
 <!-- 
@@ -277,8 +397,8 @@ Conditions
 	
 	Not used.
  -->
-<xsl:template match="*[local-name() = 'greaterOrEquals']">
-	<xsl:message terminate="yes">greaterOrEquals not implemented</xsl:message>
+<xsl:template match="*[local-name() = 'greaterOrEquals']" mode="condition">
+	<xsl:message terminate="yes"><xsl:text>greaterOrEquals not implemented</xsl:text></xsl:message>
 </xsl:template>
 
 <!-- 
@@ -286,17 +406,22 @@ Conditions
 	
 	Not used.
  -->
-<xsl:template match="*[local-name() = 'isNull']">
-	<xsl:message terminate="yes">isNull not implemented</xsl:message>
+<xsl:template match="*[local-name() = 'isNull']" mode="condition">
+	<xsl:message terminate="yes"><xsl:text>isNull not implemented</xsl:text></xsl:message>
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'notNull']">
+<xsl:template match="*[local-name() = 'notNull']" mode="condition">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'and']">
+<xsl:template match="*[local-name() = 'and']" mode="condition">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'or']">
+<xsl:template match="*[local-name() = 'or']" mode="condition">
+    (<xsl:apply-templates select="*[1]" mode="condition"/>
+    <xsl:for-each select="*[position() &gt; 1]">
+        <xsl:text> | </xsl:text>
+        <xsl:apply-templates select="." mode="condition"/>
+    </xsl:for-each>)
 </xsl:template>
 
 <!-- 
@@ -304,11 +429,11 @@ Conditions
 	
 	Not used.
  -->
-<xsl:template match="*[local-name() = 'xor']">
-	<xsl:message terminate="yes">xor not implemented</xsl:message>
+<xsl:template match="*[local-name() = 'xor']" mode="condition">
+	<xsl:message terminate="yes"><xsl:text>xor not implemented</xsl:text></xsl:message>
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'not']">
+<xsl:template match="*[local-name() = 'not']" mode="condition">
 </xsl:template>
 
 <!-- 
@@ -316,14 +441,14 @@ Conditions
 	
 	Not used.
  -->
-<xsl:template match="*[local-name() = 'instanceOf']">
-	<xsl:message terminate="yes">instanceOf not implemented</xsl:message>
+<xsl:template match="*[local-name() = 'instanceOf']" mode="condition">
+	<xsl:message terminate="yes"><xsl:text>instanceOf not implemented</xsl:text></xsl:message>
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'isTrue']">
+<xsl:template match="*[local-name() = 'isTrue']" mode="condition">
 </xsl:template>
 
-<xsl:template match="*[local-name() = 'isFalse']">
+<xsl:template match="*[local-name() = 'isFalse']" mode="condition">
 </xsl:template>
 
 <!-- 
@@ -331,8 +456,8 @@ Conditions
 	
 	Not used.
  -->
-<xsl:template match="*[local-name() = 'hasSize']">
-	<xsl:message terminate="yes">hasSize not implemented</xsl:message>
+<xsl:template match="*[local-name() = 'hasSize']" mode="condition">
+	<xsl:message terminate="yes"><xsl:text>hasSize not implemented</xsl:text></xsl:message>
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'contentType']">
@@ -345,6 +470,42 @@ Conditions
 </xsl:template>
 
 <xsl:template match="*[local-name() = 'implementationAttribute']">
+</xsl:template>
+
+
+<!--
+================================================================
+Helper templates
+================================================================
+-->
+
+<xsl:template name="produce-type">
+    <xsl:param name="type"/>
+</xsl:template>
+
+<xsl:template name="produce-attribute">
+    <xsl:param name="vardefs"/>
+    <xsl:variable name="attributeName" select="local-name(.)"/>
+    <xsl:choose>
+        <!--  if interface is specified -->
+        <xsl:when test="@interface">       
+        </xsl:when>
+        <xsl:otherwise>
+        </xsl:otherwise>
+    </xsl:choose>
+    
+</xsl:template>
+
+<xsl:template name="produce-method">
+    <xsl:param name="vardefs"/>
+    <xsl:variable name="methodName" select="local-name(.)"/>
+    <xsl:choose>
+        <!--  if interface is specified -->
+        <xsl:when test="@interface">
+        </xsl:when>
+        <xsl:otherwise>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 </xsl:stylesheet>
