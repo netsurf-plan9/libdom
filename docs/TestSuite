@@ -259,7 +259,9 @@ DOMErrorMonitor
 	
 UserDataMonitor
 UserDataNotification
+LSInputStream
 	DOM Level 3 Core only
+
 
 Attr
 CDATASection
@@ -279,3 +281,73 @@ Notation
 ProcessingInstruction
 Text
 	DOM types
+	
+-------------------------------------------------------------------------------	
+WHAT ABOUT RETURN VALUES?
+for method calls and attribute getters (&result)
+
+ASSERTIONS (other statements?)
+[temp variables for assert params]
+assertFoo(...)
+for @expected, produce a var decl/ref
+required-type is the type of @actual
+
+
+CONDITIONS IN CONTROL STRUCTURES
+[temp variables for condition params]
+if (<condition>)
+for every condition clause that requires it (e.g. <equals>), produce a var decl/ref
+required-type is the type of @actual
+	e.g. 
+	<var name="myVar" type="DOMString"/>
+	<equals actual="myVar" expected="&quot;beans&quot;"/>
+	required-type is DOMString
+
+METHOD CALL
+[temp variables for method params]
+[temp variable to hold method result]
+getElementsByTagName(doc, param_a, param_b, param_c, &result)
+[assign temp variable to real result var]
+
+produce var decl/ref for each param: a, b, c
+required-type is the method param's type in the domspec
+
+
+ATTRIBUTE SET
+[temp variables for setting attribute]
+setFoo(node, param)
+
+required-type is the attribute's type in the domspec
+
+
+ATTRIBUTE GET
+[temp variable to hold getter result]
+getFoo(node, &result)
+[assign temp variable to real result var]
+
+call produce-var-reference in getFoo() call to generate &result
+call produce-var-assignment after getFoo() to convert the temp result into the desired result 
+
+
+PSEUDO TEMPLATES
+template name="produce-var-declaration"
+param name="var-or-literal"
+param name="required-type"
+if (needs temp variable)
+	declare and assign new temporary variable $var_x$		
+/if
+
+template name="produce-var-reference"
+choose
+	when (needs temp variable)
+		print temporary variable $var_x$ using generate-id()
+	when (needs cast)
+		call-template name="cast"
+	otherwise
+		$var-or-literal
+/choose
+
+template name="produce-var-assignment"
+if (needs temp variable)
+	$var-or-literal = conversion_function($var_x$);
+/if
