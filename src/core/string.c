@@ -622,9 +622,9 @@ dom_exception dom_string_substr(struct dom_string *str,
 	/* Calculate the byte index of the start */
 	while (i1 > 0) {
 		if (str->charset == DOM_STRING_UTF8) {
-			err = _dom_utf8_next(s, slen, b1, &b1);
+			err = _dom_utf8_next(s, slen - b1, b1, &b1);
 		} else {
-			err = _dom_utf16_next(s, slen, b1, &b1);
+			err = _dom_utf16_next(s, slen - b1, b1, &b1);
 		}
 
 		if (err != CHARSET_OK) {
@@ -640,9 +640,9 @@ dom_exception dom_string_substr(struct dom_string *str,
 	/* Calculate the byte index of the end */
 	while (i2 > 0) {
 		if (str->charset == DOM_STRING_UTF8) {
-			err = _dom_utf8_next(s, slen, b2, &b2);
+			err = _dom_utf8_next(s, slen - b2, b2, &b2);
 		} else {
-			err = _dom_utf16_next(s, slen, b2, &b2);
+			err = _dom_utf16_next(s, slen - b2, b2, &b2);
 		}
 
 		if (err != CHARSET_OK) {
@@ -660,7 +660,268 @@ dom_exception dom_string_substr(struct dom_string *str,
 					str->charset, 
 					s + b1, b2 - b1, result)
 			: dom_string_create_from_ptr(str->ctx.doc,
-					s + b1, b2 - b2, result);
+					s + b1, b2 - b1, result);
+}
+
+/**
+ * Insert data into a dom string at the given location
+ *
+ * \param target  Pointer to string to insert into
+ * \param source  Pointer to string to insert
+ * \param offset  Character offset of location to insert at
+ * \param result  Pointer to location to receive result
+ * \return DOM_NO_ERR          on success, 
+ *         DOM_NO_MEM_ERR      on memory exhaustion,
+ *         DOM_INDEX_SIZE_ERR  if ::offset > len(::target).
+ *
+ * The returned string will be allocated using the allocation details
+ * stored in ::target.
+ *
+ * The returned string will have its reference count increased. The client
+ * should dereference it once it has finished with it. 
+ */
+dom_exception dom_string_insert(struct dom_string *target,
+		struct dom_string *source, uint32_t offset,
+		struct dom_string **result)
+{
+	struct dom_string *res;
+	const uint8_t *t, *s;
+	uint32_t tlen, slen, clen;
+	uint32_t ins = 0;
+	charset_error err;
+
+	__dom_string_get_data(target, &t, &tlen);
+
+	__dom_string_get_data(source, &s, &slen);
+
+	clen = dom_string_length(target);
+
+	if (offset > clen)
+		return DOM_INDEX_SIZE_ERR;
+
+	/* Calculate the byte index of the insertion point */
+	if (offset == clen) {
+		/* Optimisation for append */
+		offset = 0;
+		ins = tlen;
+	} else {
+		while (offset > 0) {
+			if (target->charset == DOM_STRING_UTF8) {
+				err = _dom_utf8_next(t, tlen - ins, ins, &ins);
+			} else {
+				err = _dom_utf16_next(t, tlen - ins, ins, &ins);
+			}
+
+			if (err != CHARSET_OK) {
+				return DOM_NO_MEM_ERR;
+			}
+
+			offset--;
+		}
+	}
+
+	/* Allocate result string */
+	if (target->type == DOM_STRING_PTR_NODOC) {
+		res = target->ctx.nodoc.alloc(NULL, sizeof(struct dom_string), 
+				target->ctx.nodoc.pw);
+	} else {
+		res = dom_document_alloc(target->ctx.doc, 
+				NULL, sizeof(struct dom_string));
+	}
+
+	if (res == NULL) {
+		return DOM_NO_MEM_ERR;
+	}
+
+	/** \todo support insertion of a string from a different charset  */
+
+	/* Allocate data buffer for result contents */
+	if (target->type == DOM_STRING_PTR_NODOC) {
+		res->data.ptr = target->ctx.nodoc.alloc(NULL, 
+				tlen + slen, target->ctx.nodoc.pw);
+	} else {
+		res->data.ptr = dom_document_alloc(target->ctx.doc, 
+				NULL, tlen + slen);
+	}
+	if (res->data.ptr == NULL) {
+		if (target->type == DOM_STRING_PTR_NODOC) {
+			target->ctx.nodoc.alloc(res, 0, target->ctx.nodoc.pw);
+		} else {
+			dom_document_alloc(target->ctx.doc, res, 0);
+		}
+		return DOM_NO_MEM_ERR;
+	}
+
+	/* Populate result members */
+	res->type = (target->type == DOM_STRING_PTR_NODOC) 
+			? DOM_STRING_PTR_NODOC : DOM_STRING_PTR;
+
+	res->charset = target->charset;
+
+	/* Copy initial portion of target, if any, into result */
+	if (ins > 0) {
+		memcpy(res->data.ptr, t, ins);
+	}
+
+	/* Copy inserted data into result */
+	memcpy(res->data.ptr + ins, s, slen);
+
+	/* Copy remainder of target, if any, into result */
+	if (tlen - ins > 0) {
+		memcpy(res->data.ptr + ins + slen, t + ins, tlen - ins);
+	}
+
+	res->len = tlen + slen;
+
+	if (res->type == DOM_STRING_PTR_NODOC) {
+		res->ctx.nodoc.alloc = target->ctx.nodoc.alloc;
+		res->ctx.nodoc.pw = target->ctx.nodoc.pw;
+	} else {
+		res->ctx.doc = target->ctx.doc;
+	}
+
+	res->refcnt = 1;
+
+	*result = res;
+
+	return DOM_NO_ERR;
+}
+
+/** 
+ * Replace a section of a dom string
+ *
+ * \param target  Pointer to string of which to replace a section
+ * \param source  Pointer to replacement string
+ * \param i1      Character index of start of region to replace
+ * \param i2      Character index of end of region to replace
+ * \param result  Pointer to location to receive result
+ * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
+ *
+ * The returned string will be allocated using the allocation details
+ * stored in ::target.
+ *
+ * The returned string will have its reference count increased. The client
+ * should dereference it once it has finished with it. 
+ */
+dom_exception dom_string_replace(struct dom_string *target,
+		struct dom_string *source, uint32_t i1, uint32_t i2,
+		struct dom_string **result)
+{
+	struct dom_string *res;
+	const uint8_t *t, *s;
+	uint32_t tlen, slen;
+	uint32_t b1, b2;
+	charset_error err;
+
+	__dom_string_get_data(target, &t, &tlen);
+
+	__dom_string_get_data(source, &s, &slen);
+
+	/* Initialise the byte index of the start to 0 */
+	b1 = 0;
+	/* Make the end a character offset from the start */
+	i2 -= i1;
+
+	/* Calculate the byte index of the start */
+	while (i1 > 0) {
+		if (target->charset == DOM_STRING_UTF8) {
+			err = _dom_utf8_next(s, slen - b1, b1, &b1);
+		} else {
+			err = _dom_utf16_next(s, slen - b1, b1, &b1);
+		}
+
+		if (err != CHARSET_OK) {
+			return DOM_NO_MEM_ERR;
+		}
+
+		i1--;
+	}
+
+	/* Initialise the byte index of the end to that of the start */
+	b2 = b1;
+
+	/* Calculate the byte index of the end */
+	while (i2 > 0) {
+		if (target->charset == DOM_STRING_UTF8) {
+			err = _dom_utf8_next(s, slen - b2, b2, &b2);
+		} else {
+			err = _dom_utf16_next(s, slen - b2, b2, &b2);
+		}
+
+		if (err != CHARSET_OK) {
+			return DOM_NO_MEM_ERR;
+		}
+
+		i2--;
+	}
+
+	/* Allocate result string */
+	if (target->type == DOM_STRING_PTR_NODOC) {
+		res = target->ctx.nodoc.alloc(NULL, sizeof(struct dom_string), 
+				target->ctx.nodoc.pw);
+	} else {
+		res = dom_document_alloc(target->ctx.doc, 
+				NULL, sizeof(struct dom_string));
+	}
+
+	if (res == NULL) {
+		return DOM_NO_MEM_ERR;
+	}
+
+	/** \todo support insertion of a string from a different charset  */
+
+	/* Allocate data buffer for result contents */
+	if (target->type == DOM_STRING_PTR_NODOC) {
+		res->data.ptr = target->ctx.nodoc.alloc(NULL, 
+				tlen + slen - (b2 - b1), target->ctx.nodoc.pw);
+	} else {
+		res->data.ptr = dom_document_alloc(target->ctx.doc, 
+				NULL, tlen + slen - (b2 - b1));
+	}
+	if (res->data.ptr == NULL) {
+		if (target->type == DOM_STRING_PTR_NODOC) {
+			target->ctx.nodoc.alloc(res, 0, target->ctx.nodoc.pw);
+		} else {
+			dom_document_alloc(target->ctx.doc, res, 0);
+		}
+		return DOM_NO_MEM_ERR;
+	}
+
+	/* Populate result members */
+	res->type = (target->type == DOM_STRING_PTR_NODOC) 
+			? DOM_STRING_PTR_NODOC : DOM_STRING_PTR;
+
+	res->charset = target->charset;
+
+	/* Copy initial portion of target, if any, into result */
+	if (b1 > 0) {
+		memcpy(res->data.ptr, t, b1);
+	}
+
+	/* Copy replacement data into result */
+	if (slen > 0) {
+		memcpy(res->data.ptr + b1, s, slen);
+	}
+
+	/* Copy remainder of target, if any, into result */
+	if (tlen - b2 > 0) {
+		memcpy(res->data.ptr + b1 + slen, t + b2, tlen - b2);
+	}
+
+	res->len = tlen + slen - (b2 - b1);
+
+	if (res->type == DOM_STRING_PTR_NODOC) {
+		res->ctx.nodoc.alloc = target->ctx.nodoc.alloc;
+		res->ctx.nodoc.pw = target->ctx.nodoc.pw;
+	} else {
+		res->ctx.doc = target->ctx.doc;
+	}
+
+	res->refcnt = 1;
+
+	*result = res;
+
+	return DOM_NO_ERR;
 }
 
 /**

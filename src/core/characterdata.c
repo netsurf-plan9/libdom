@@ -115,10 +115,15 @@ dom_exception dom_characterdata_set_data(struct dom_characterdata *cdata,
 dom_exception dom_characterdata_get_length(struct dom_characterdata *cdata,
 		unsigned long *length)
 {
-	UNUSED(cdata);
-	UNUSED(length);
+	struct dom_node *c = (struct dom_node *) cdata;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (c->value != NULL) {
+		*length = dom_string_length(c->value);
+	} else {
+		*length = 0;
+	}
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -143,12 +148,22 @@ dom_exception dom_characterdata_substring_data(
 		struct dom_characterdata *cdata, unsigned long offset,
 		unsigned long count, struct dom_string **data)
 {
-	UNUSED(cdata);
-	UNUSED(offset);
-	UNUSED(count);
-	UNUSED(data);
+	struct dom_node *c = (struct dom_node *) cdata;
+	uint32_t len, end;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (c->value != NULL) {
+		len = dom_string_length(c->value);
+	} else {
+		len = 0;
+	}
+
+	if (offset >= len) {
+		return DOM_INDEX_SIZE_ERR;
+	}
+
+	end = (offset + count) >= len ? len : offset + count;
+
+	return dom_string_substr(c->value, offset, end, data);
 }
 
 /**
@@ -162,10 +177,28 @@ dom_exception dom_characterdata_substring_data(
 dom_exception dom_characterdata_append_data(struct dom_characterdata *cdata,
 		struct dom_string *data)
 {
-	UNUSED(cdata);
-	UNUSED(data);
+	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_string *temp;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (_dom_node_readonly(c)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	err = dom_string_insert(c->value, data, 
+			c->value != NULL ? dom_string_length(c->value) : 0,
+			&temp);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	if (c->value != NULL) {
+		dom_string_unref(c->value);
+	}
+
+	c->value = temp;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -182,11 +215,37 @@ dom_exception dom_characterdata_append_data(struct dom_characterdata *cdata,
 dom_exception dom_characterdata_insert_data(struct dom_characterdata *cdata,
 		unsigned long offset, struct dom_string *data)
 {
-	UNUSED(cdata);
-	UNUSED(offset);
-	UNUSED(data);
+	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_string *temp;
+	uint32_t len;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (_dom_node_readonly(c)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	if (c->value != NULL) {
+		len = dom_string_length(c->value);
+	} else {
+		len = 0;
+	}
+
+	if (offset >= len) {
+		return DOM_INDEX_SIZE_ERR;
+	}
+
+	err = dom_string_insert(c->value, data, offset, &temp);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	if (c->value != NULL) {
+		dom_string_unref(c->value);
+	}
+
+	c->value = temp;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -203,11 +262,39 @@ dom_exception dom_characterdata_insert_data(struct dom_characterdata *cdata,
 dom_exception dom_characterdata_delete_data(struct dom_characterdata *cdata,
 		unsigned long offset, unsigned long count)
 {
-	UNUSED(cdata);
-	UNUSED(offset);
-	UNUSED(count);
+	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_string *temp;
+	uint32_t len, end;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (_dom_node_readonly(c)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	if (c->value != NULL) {
+		len = dom_string_length(c->value);
+	} else {
+		len = 0;
+	}
+
+	if (offset >= len) {
+		return DOM_INDEX_SIZE_ERR;
+	}
+
+	end = (offset + count) >= len ? len : offset + count;
+
+	err = dom_string_replace(c->value, NULL, offset, end, &temp);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	if (c->value != NULL) {
+		dom_string_unref(c->value);
+	}
+
+	c->value = temp;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -226,11 +313,38 @@ dom_exception dom_characterdata_replace_data(struct dom_characterdata *cdata,
 		unsigned long offset, unsigned long count,
 		struct dom_string *data)
 {
-	UNUSED(cdata);
-	UNUSED(offset);
-	UNUSED(count);
-	UNUSED(data);
+	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_string *temp;
+	uint32_t len, end;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (_dom_node_readonly(c)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	if (c->value != NULL) {
+		len = dom_string_length(c->value);
+	} else {
+		len = 0;
+	}
+
+	if (offset >= len) {
+		return DOM_INDEX_SIZE_ERR;
+	}
+
+	end = (offset + count) >= len ? len : offset + count;
+
+	err = dom_string_replace(c->value, data, offset, end, &temp);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	if (c->value != NULL) {
+		dom_string_unref(c->value);
+	}
+
+	c->value = temp;
+
+	return DOM_NO_ERR;
 }
 

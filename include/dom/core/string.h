@@ -63,6 +63,16 @@ dom_exception dom_string_concat(struct dom_string *s1, struct dom_string *s2,
 dom_exception dom_string_substr(struct dom_string *str, 
 		uint32_t i1, uint32_t i2, struct dom_string **result);
 
+/* Insert data into a dom string at the given location */
+dom_exception dom_string_insert(struct dom_string *target,
+		struct dom_string *source, uint32_t offset,
+		struct dom_string **result);
+
+/* Replace a section of a dom string */
+dom_exception dom_string_replace(struct dom_string *target,
+		struct dom_string *source, uint32_t i1, uint32_t i2,
+		struct dom_string **result);
+
 /* Duplicate a dom string */
 dom_exception dom_string_dup(struct dom_string *str, 
 		struct dom_string **result);
