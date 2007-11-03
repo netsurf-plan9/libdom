@@ -128,11 +128,53 @@ void dom_text_finalise(struct dom_document *doc, struct dom_text *text)
 dom_exception dom_text_split_text(struct dom_text *text,
 		unsigned long offset, struct dom_text **result)
 {
-	UNUSED(text);
-	UNUSED(offset);
-	UNUSED(result);
+	struct dom_node *t = (struct dom_node *) text;
+	struct dom_string *value;
+	struct dom_text *res;
+	unsigned long len;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (_dom_node_readonly(t)) {
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	err = dom_characterdata_get_length(&text->base, &len);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	if (offset >= len) {
+		return DOM_INDEX_SIZE_ERR;
+	}
+
+	/* Retrieve the data after the split point -- 
+	 * this will be the new node's value. */
+	err = dom_characterdata_substring_data(&text->base, offset, 
+			len - offset, &value);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	/* Create new node */
+	err = dom_text_create(t->owner, t->name, value, &res);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(value);
+		return err;
+	}
+
+	/* Release our reference on the value (the new node has its own) */
+	dom_string_unref(value);
+
+	/* Delete the data after the split point */
+	err = dom_characterdata_delete_data(&text->base, offset, len - offset);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) res);
+		return err;
+	}
+
+	*result = res;
+
+	return DOM_NO_ERR;
 }
 
 /**

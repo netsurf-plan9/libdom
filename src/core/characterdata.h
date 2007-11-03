@@ -8,6 +8,8 @@
 #ifndef dom_internal_core_characterdata_h_
 #define dom_internal_core_characterdata_h_
 
+#include <dom/core/characterdata.h>
+
 #include "core/node.h"
 
 /**
