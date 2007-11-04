@@ -9,7 +9,6 @@
 #include <dom/bootstrap/implregistry.h>
 #include <dom/dom.h>
 
-#include "functypes.h"
 #include "xmlbinding.h"
 #include "utils.h"
 
@@ -384,11 +383,11 @@ void xml_dom_implementation_destroy(struct dom_implementation *impl)
  * \param pw     Pointer to client-specific private data
  * \return XML_OK on success, XML_NOMEM on memory exhaustion
  */
-xml_error xml_dom_binding_initialise(xml_alloc alloc, void *pw)
+dom_xml_error dom_xml_binding_initialise(dom_alloc alloc, void *pw)
 {
 	dom_exception err;
 
-	err = dom_register_source(&xml_dom_impl_src, (dom_alloc) alloc, pw);
+	err = dom_register_source(&xml_dom_impl_src, alloc, pw);
 	if (err != DOM_NO_ERR)
 		return XML_NOMEM;
 
@@ -400,7 +399,7 @@ xml_error xml_dom_binding_initialise(xml_alloc alloc, void *pw)
  * 
  * \return XML_OK on success.
  */
-xml_error xml_dom_binding_finalise(void)
+dom_xml_error dom_xml_binding_finalise(void)
 {
 	return XML_OK;
 }

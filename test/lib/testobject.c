@@ -20,7 +20,7 @@
 static bool xml_parser_initialised;
 
 struct TestObject {
-	xml_parser *parser;
+	dom_xml_parser *parser;
 	struct dom_document *doc;
 };
 
@@ -46,7 +46,7 @@ TestObject *test_object_create(int argc, char **argv,
 	if (xml_parser_initialised == false) {
 		assert(dom_initialise(myrealloc, NULL) == DOM_NO_ERR);
 
-		assert(xml_dom_binding_initialise(myrealloc, NULL) == XML_OK);
+		assert(dom_xml_binding_initialise(myrealloc, NULL) == XML_OK);
 
 		atexit(test_object_cleanup);
 
@@ -59,7 +59,7 @@ TestObject *test_object_create(int argc, char **argv,
 	if (ret == NULL)
 		return NULL;
 
-	ret->parser = xml_parser_create(NULL, "UTF-8", myrealloc, NULL,
+	ret->parser = dom_xml_parser_create(NULL, "UTF-8", myrealloc, NULL,
 			mymsg, NULL);
 	if (ret->parser == NULL) {
 		free(ret);
@@ -68,7 +68,7 @@ TestObject *test_object_create(int argc, char **argv,
 
 	fp = fopen(fnbuf, "r");
 	if (fp == NULL) {
-		xml_parser_destroy(ret->parser);
+		dom_xml_parser_destroy(ret->parser);
 		free(ret);
 		return NULL;
 	}
@@ -80,7 +80,7 @@ TestObject *test_object_create(int argc, char **argv,
 	while (len > CHUNK_SIZE) {
 		fread(buf, 1, CHUNK_SIZE, fp);
 
-		assert(xml_parser_parse_chunk(ret->parser, buf,
+		assert(dom_xml_parser_parse_chunk(ret->parser, buf,
 				CHUNK_SIZE) == XML_OK);
 
 		len -= CHUNK_SIZE;
@@ -89,19 +89,19 @@ TestObject *test_object_create(int argc, char **argv,
 	if (len > 0) {
 		fread(buf, 1, len, fp);
 
-		assert(xml_parser_parse_chunk(ret->parser, buf,
+		assert(dom_xml_parser_parse_chunk(ret->parser, buf,
 				len) == XML_OK);
 
 		len = 0;
 	}
 
-	assert(xml_parser_completed(ret->parser) == XML_OK);
+	assert(dom_xml_parser_completed(ret->parser) == XML_OK);
 
 	fclose(fp);
 
-	ret->doc = xml_parser_get_document(ret->parser);
+	ret->doc = dom_xml_parser_get_document(ret->parser);
 
-	xml_parser_destroy(ret->parser);
+	dom_xml_parser_destroy(ret->parser);
 	ret->parser = NULL;
 
 	return ret;
@@ -124,7 +124,7 @@ const char *test_object_get_mimetype(TestObject *obj)
 void test_object_cleanup(void)
 {
 	if (xml_parser_initialised) {
-		xml_dom_binding_finalise();
+		dom_xml_binding_finalise();
 		dom_finalise();
 	}
 }

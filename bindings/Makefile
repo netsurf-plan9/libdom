@@ -18,55 +18,27 @@
 # setup      Perform any setup required prior to compilation
 # test       Execute any test cases
 
-# Manipulate include paths
-CFLAGS += -I$(CURDIR)
-
-# Release output
-RELEASE = ${TOP}/${COMPONENT}-libxml.a
-
-# Debug output
-DEBUG = ${TOP}/${COMPONENT}-libxml-debug.a
-
-# Objects
-OBJS = 
-
 .PHONY: clean debug distclean export release setup test
 
 # Targets
-release: $(addprefix Release/, $(addsuffix .o, $(OBJS)))
+release:
 	@${MAKE} -C xml release
-	@${AR} ${ARFLAGS} $(RELEASE) Release/*
 
-debug: $(addprefix Debug/, $(addsuffix .o, $(OBJS)))
+debug: 
 	@${MAKE} -C xml debug
-	@${AR} ${ARFLAGS} $(DEBUG) Debug/*
 
 clean:
 	@${MAKE} -C xml clean
-ifneq (${OBJS}, )
-	-@${RM} ${RMFLAGS} $(addprefix Release/, $(addsuffix .o, ${OBJS}))
-	-@${RM} ${RMFLAGS} $(addprefix Debug/, $(addsuffix .o, ${OBJS}))
-endif
-	-@${RM} ${RMFLAGS} $(RELEASE) $(DEBUG)
-
+	
 distclean:
-	-@${RM} ${RMFLAGS} -r Release
-	-@${RM} ${RMFLAGS} -r Debug
+	@${MAKE} -C xml distclean
 
 setup:
-	@${MKDIR} ${MKDIRFLAGS} Release
-	@${MKDIR} ${MKDIRFLAGS} Debug
+	@${MAKE} -C xml setup
 
 export:
-	@${CP} ${CPFLAGS} $(RELEASE) ${EXPORT}/lib/
+	@${MAKE} -C xml export
 
 test:
+	@${MAKE} -C xml test
 
-# Pattern rules
-Release/%.o: %.c
-	@${ECHO} ${ECHOFLAGS} "==> $<"
-	@${CC} -c ${CFLAGS} -DNDEBUG -o $@ $<
-
-Debug/%.o: %.c
-	@${ECHO} ${ECHOFLAGS} "==> $<"
-	@${CC} -c -g ${CFLAGS} -o $@ $<

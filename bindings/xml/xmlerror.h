@@ -14,6 +14,6 @@ typedef enum {
 	XML_NOMEM       = 1,
 
 	XML_LIBXML_ERR  = (1<<16),
-} xml_error;
+} dom_xml_error;
 
 #endif

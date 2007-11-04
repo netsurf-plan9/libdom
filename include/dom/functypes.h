@@ -9,10 +9,30 @@
 #define dom_functypes_h_
 
 #include <stddef.h>
+#include <inttypes.h>
 
 /**
  * Type of allocation function for DOM implementation
  */
 typedef void *(*dom_alloc)(void *ptr, size_t size, void *pw);
+
+/**
+ * Severity levels for dom_msg function, based on syslog(3)
+ */
+enum {
+	DOM_MSG_DEBUG,
+	DOM_MSG_INFO,
+	DOM_MSG_NOTICE,
+	DOM_MSG_WARNING,
+	DOM_MSG_ERROR,
+	DOM_MSG_CRITICAL,
+	DOM_MSG_ALERT,
+	DOM_MSG_EMERGENCY
+};
+
+/**
+ * Type of DOM message function
+ */
+typedef void (*dom_msg)(uint32_t severity, void *ctx, const char *msg, ...);
 
 #endif

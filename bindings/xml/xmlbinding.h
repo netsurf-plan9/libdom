@@ -9,12 +9,11 @@
 #define xml_xmlbinding_h_
 
 #include "xmlerror.h"
-#include "functypes.h"
 
 /* Initialise the XML DOM binding */
-xml_error xml_dom_binding_initialise(xml_alloc alloc, void *pw);
+dom_xml_error dom_xml_binding_initialise(dom_alloc alloc, void *pw);
 
 /* Finalise the XML DOM binding */
-xml_error xml_dom_binding_finalise(void);
+dom_xml_error dom_xml_binding_finalise(void);
 
 #endif

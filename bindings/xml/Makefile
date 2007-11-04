@@ -23,33 +23,47 @@ CFLAGS += -I$(CURDIR) \
 	`${PKGCONFIG} ${PKGCONFIGFLAGS} --cflags libxml-2.0` \
 	-D_POSIX_C_SOURCE
 
+# Release output
+RELEASE = ${TOP}/${COMPONENT}-libxml.a
+
+# Debug output
+DEBUG = ${TOP}/${COMPONENT}-libxml-debug.a
+
 # Objects
 OBJS = xmlbinding xmlparser
 
 .PHONY: clean debug distclean export release setup test
 
 # Targets
-release: $(addprefix ../Release/, $(addsuffix .o, $(OBJS)))
+release: $(addprefix Release/, $(addsuffix .o, $(OBJS)))
+	@${AR} ${ARFLAGS} $(RELEASE) Release/*
 
-debug: $(addprefix ../Debug/, $(addsuffix .o, $(OBJS)))
+debug: $(addprefix Debug/, $(addsuffix .o, $(OBJS)))
+	@${AR} ${ARFLAGS} $(DEBUG) Debug/*
 
 clean:
-	-@${RM} ${RMFLAGS} $(addprefix ../Release/, $(addsuffix .o, ${OBJS}))
-	-@${RM} ${RMFLAGS} $(addprefix ../Debug/, $(addsuffix .o, ${OBJS}))  
+	-@${RM} ${RMFLAGS} $(addprefix Release/, $(addsuffix .o, ${OBJS}))
+	-@${RM} ${RMFLAGS} $(addprefix Debug/, $(addsuffix .o, ${OBJS}))
+	-@${RM} ${RMFLAGS} $(RELEASE) $(DEBUG)
 
 distclean:
+	-@${RM} ${RMFLAGS} -r Release
+	-@${RM} ${RMFLAGS} -r Debug
 
 setup:
+	@${MKDIR} ${MKDIRFLAGS} Release
+	@${MKDIR} ${MKDIRFLAGS} Debug
 
 export:
+	@${CP} ${CPFLAGS} $(RELEASE) ${EXPORT}/lib/
 
 test:
 
 # Pattern rules
-../Release/%.o: %.c
+Release/%.o: %.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
 	@${CC} -c ${CFLAGS} -DNDEBUG -o $@ $<
 
-../Debug/%.o: %.c
+Debug/%.o: %.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
 	@${CC} -c -g ${CFLAGS} -o $@ $<
