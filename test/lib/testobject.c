@@ -46,7 +46,8 @@ TestObject *test_object_create(int argc, char **argv,
 	if (xml_parser_initialised == false) {
 		assert(dom_initialise(myrealloc, NULL) == DOM_NO_ERR);
 
-		assert(dom_xml_binding_initialise(myrealloc, NULL) == XML_OK);
+		assert(dom_xml_binding_initialise(myrealloc, NULL) == 
+				DOM_XML_OK);
 
 		atexit(test_object_cleanup);
 
@@ -81,7 +82,7 @@ TestObject *test_object_create(int argc, char **argv,
 		fread(buf, 1, CHUNK_SIZE, fp);
 
 		assert(dom_xml_parser_parse_chunk(ret->parser, buf,
-				CHUNK_SIZE) == XML_OK);
+				CHUNK_SIZE) == DOM_XML_OK);
 
 		len -= CHUNK_SIZE;
 	}
@@ -90,12 +91,12 @@ TestObject *test_object_create(int argc, char **argv,
 		fread(buf, 1, len, fp);
 
 		assert(dom_xml_parser_parse_chunk(ret->parser, buf,
-				len) == XML_OK);
+				len) == DOM_XML_OK);
 
 		len = 0;
 	}
 
-	assert(dom_xml_parser_completed(ret->parser) == XML_OK);
+	assert(dom_xml_parser_completed(ret->parser) == DOM_XML_OK);
 
 	fclose(fp);
 
