@@ -381,7 +381,7 @@ void xml_dom_implementation_destroy(struct dom_implementation *impl)
  *
  * \param alloc  Pointer to memory (de)allocation function
  * \param pw     Pointer to client-specific private data
- * \return XML_OK on success, XML_NOMEM on memory exhaustion
+ * \return DOM_XML_OK on success, DOM_XML_NOMEM on memory exhaustion
  */
 dom_xml_error dom_xml_binding_initialise(dom_alloc alloc, void *pw)
 {
@@ -389,19 +389,19 @@ dom_xml_error dom_xml_binding_initialise(dom_alloc alloc, void *pw)
 
 	err = dom_register_source(&xml_dom_impl_src, alloc, pw);
 	if (err != DOM_NO_ERR)
-		return XML_NOMEM;
+		return DOM_XML_NOMEM;
 
-	return XML_OK;
+	return DOM_XML_OK;
 }
 
 /**
  * Finalise the XML DOM binding
  * 
- * \return XML_OK on success.
+ * \return DOM_XML_OK on success.
  */
 dom_xml_error dom_xml_binding_finalise(void)
 {
-	return XML_OK;
+	return DOM_XML_OK;
 }
 
 
