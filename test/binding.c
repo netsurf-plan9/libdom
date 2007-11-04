@@ -10,9 +10,13 @@ int main(int argc, char **argv)
 	struct dom_string *elementName;
 	dom_exception err;
 	TestObject *staff;
+	TestObject *html;
 
 	staff = test_object_create(argc, argv, "staff.xml", false);
 	assert(staff != NULL);
+
+	html = test_object_create(argc, argv, "sample.html", false);
+	assert(html != NULL);
 
 	doc = test_object_get_doc(staff);
 	assert(doc != NULL);

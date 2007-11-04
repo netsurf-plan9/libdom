@@ -19,11 +19,15 @@
 # test       Execute any test cases
 
 # Extend toolchain settings
-CFLAGS += -I${TOP}/src/ -I${TOP}/bindings/xml/ -I$(CURDIR)
-LDFLAGS += `${PKGCONFIG} ${PKGCONFIGFLAGS} --libs libxml-2.0`
+CFLAGS += -I${TOP}/src/ -I${TOP}/bindings/xml/ -I${TOP}/bindings/hubbub/ \
+	-I$(CURDIR)
+# TODO: fix hubbub library usage -- needs hubbub to use pkgconfig
+LDFLAGS += `${PKGCONFIG} ${PKGCONFIGFLAGS} --libs libxml-2.0` \
+	-L${TOP}/../hubbub/ -lhubbub
 
 # Libraries we link against
-LIBS = -L./lib -ldomtest-debug -ldom-libxml-debug -ldom-debug 
+LIBS = -L./lib -ldomtest-debug -ldom-libxml-debug \
+	-ldom-libhubbub-debug -ldom-debug
 
 # Release output
 RELEASE =
@@ -89,6 +93,6 @@ xml/c/%.c: xml/tests/%.xml
 %: %.c
 	@${ECHO} ${ECHOFLAGS} "==> $<"
 	@${CC} -c -g ${CFLAGS} -o $@.o $<
-	@${LD} -g -o $@ $@.o ${LDFLAGS} $(LIBS)
+	@${LD} -g -o $@ $@.o $(LIBS) ${LDFLAGS}
 	@${RM} ${RMFLAGS} $@.o
 

@@ -5,6 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
+#include <stdio.h>
+
 #include <hubbub/hubbub.h>
 #include <hubbub/parser.h>
 
@@ -18,6 +20,7 @@
  */
 struct dom_hubbub_parser {
 	hubbub_parser *parser;		/**< Hubbub parser instance */
+	const uint8_t *buffer;		/**< Parser buffer pointer */
 
 	struct dom_document *doc;	/**< DOM Document we're building */
 
@@ -41,6 +44,7 @@ static bool __initialised;
 /**
  * Create a Hubbub parser instance
  *
+ * \param aliases  Path to encoding alias mapping file
  * \param enc      Source charset, or NULL
  * \param int_enc  Desired charset of document buffer (UTF-8 or UTF-16)
  * \param alloc    Memory (de)allocation function
@@ -49,9 +53,9 @@ static bool __initialised;
  * \param mctx     Pointer to client-specific private data
  * \return Pointer to instance, or NULL on memory exhaustion
  */
-dom_hubbub_parser *dom_hubbub_parser_create(const char *enc, 
-		const char *int_enc, dom_alloc alloc, void *pw, 
-		dom_msg msg, void *mctx)
+dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
+		const char *enc, const char *int_enc, 
+		dom_alloc alloc, void *pw, dom_msg msg, void *mctx)
 {
 	dom_hubbub_parser *parser;
 	hubbub_parser_optparams params;
@@ -60,8 +64,7 @@ dom_hubbub_parser *dom_hubbub_parser_create(const char *enc,
 	hubbub_error e;
 
 	if (__initialised == false) {
-		/** \todo Need path of encoding aliases file */
-		e = hubbub_initialise("", (hubbub_alloc) alloc, pw);
+		e = hubbub_initialise(aliases, (hubbub_alloc) alloc, pw);
 		if (e != HUBBUB_OK) {
 			msg(DOM_MSG_ERROR, mctx, 
 					"Failed initialising hubbub");
@@ -202,14 +205,71 @@ struct dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser)
 void __dom_hubbub_buffer_handler(const uint8_t *buffer, size_t len, 
 		void *pw)
 {
-	UNUSED(buffer);
+	dom_hubbub_parser *parser = (dom_hubbub_parser *) pw;
+
 	UNUSED(len);
-	UNUSED(pw);
+
+	parser->buffer = buffer;
 }
 
 void __dom_hubbub_token_handler(const hubbub_token *token, void *pw)
 {
-	UNUSED(token);
-	UNUSED(pw);
+	dom_hubbub_parser *parser = (dom_hubbub_parser *) pw;
+	static const char *token_names[] = {
+		"DOCTYPE", "START TAG", "END TAG",
+		"COMMENT", "CHARACTERS", "EOF"
+	};
+	size_t i;
+
+	printf("%s: ", token_names[token->type]);
+
+	switch (token->type) {
+	case HUBBUB_TOKEN_DOCTYPE:
+		printf("'%.*s' (%svalid)\n",
+				(int) token->data.doctype.name.len,
+				parser->buffer + 
+					token->data.doctype.name.data_off,
+				token->data.doctype.correct ? "" : "in");
+		break;
+	case HUBBUB_TOKEN_START_TAG:
+		printf("'%.*s' %s\n",
+				(int) token->data.tag.name.len,
+				parser->buffer + token->data.tag.name.data_off,
+				(token->data.tag.n_attributes > 0) ?
+						"attributes:" : "");
+		for (i = 0; i < token->data.tag.n_attributes; i++) {
+			printf("\t'%.*s' = '%.*s'\n",
+					(int) token->data.tag.attributes[i].name.len,
+					parser->buffer + token->data.tag.attributes[i].name.data_off,
+					(int) token->data.tag.attributes[i].value.len,
+					parser->buffer + token->data.tag.attributes[i].value.data_off);
+		}
+		break;
+	case HUBBUB_TOKEN_END_TAG:
+		printf("'%.*s' %s\n",
+				(int) token->data.tag.name.len,
+				parser->buffer + token->data.tag.name.data_off,
+				(token->data.tag.n_attributes > 0) ?
+						"attributes:" : "");
+		for (i = 0; i < token->data.tag.n_attributes; i++) {
+			printf("\t'%.*s' = '%.*s'\n",
+					(int) token->data.tag.attributes[i].name.len,
+					parser->buffer + token->data.tag.attributes[i].name.data_off,
+					(int) token->data.tag.attributes[i].value.len,
+					parser->buffer + token->data.tag.attributes[i].value.data_off);
+		}
+		break;
+	case HUBBUB_TOKEN_COMMENT:
+		printf("'%.*s'\n", (int) token->data.comment.len,
+				parser->buffer + token->data.comment.data_off);
+		break;
+	case HUBBUB_TOKEN_CHARACTER:
+		printf("'%.*s'\n", (int) token->data.character.len,
+				parser->buffer + token->data.character.data_off);
+		break;
+	case HUBBUB_TOKEN_EOF:
+		printf("\n");
+		break;
+	}
 }
 

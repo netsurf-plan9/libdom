@@ -20,9 +20,9 @@ struct dom_document;
 typedef struct dom_hubbub_parser dom_hubbub_parser;
 
 /* Create a Hubbub parser instance */
-dom_hubbub_parser *dom_hubbub_parser_create(const char *enc, 
-		const char *int_enc, dom_alloc alloc, void *pw, 
-		dom_msg msg, void *mctx);
+dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
+		const char *enc, const char *int_enc, 
+		dom_alloc alloc, void *pw, dom_msg msg, void *mctx);
 
 /* Destroy a Hubbub parser instance */
 void dom_hubbub_parser_destroy(dom_hubbub_parser *parser);
