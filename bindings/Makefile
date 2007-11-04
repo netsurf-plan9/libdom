@@ -23,22 +23,29 @@
 # Targets
 release:
 	@${MAKE} -C xml release
+	@${MAKE} -C hubbub release
 
 debug: 
 	@${MAKE} -C xml debug
+	@${MAKE} -C hubbub debug
 
 clean:
 	@${MAKE} -C xml clean
+	@${MAKE} -C hubbub clean
 	
 distclean:
 	@${MAKE} -C xml distclean
+	@${MAKE} -C hubbub distclean
 
 setup:
 	@${MAKE} -C xml setup
+	@${MAKE} -C hubbub setup
 
 export:
 	@${MAKE} -C xml export
+	@${MAKE} -C hubbub export
 
 test:
 	@${MAKE} -C xml test
+	@${MAKE} -C hubbub test
 
