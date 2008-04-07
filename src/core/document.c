@@ -41,7 +41,7 @@ struct dom_doc_nl {
 };
 
 /**
- * Iten in list of active namednodemaps
+ * Item in list of active namednodemaps
  */
 struct dom_doc_nnm {
 	struct dom_namednodemap *map;	/**< Named node map */
