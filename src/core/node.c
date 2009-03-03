@@ -306,15 +306,8 @@ dom_exception dom_node_get_node_name(struct dom_node *node,
 		struct dom_string *colon;
 		dom_exception err;
 
-		/* ugh! */
-		/** \todo Assumes little endian */
-		err = dom_string_create_from_const_ptr(node->owner,	
-			(const uint8_t *) (
-				(dom_document_get_charset(node->owner) == 
-					DOM_STRING_UTF8) ? ":" : ":\0"),
-			(dom_document_get_charset(node->owner) == 
-					DOM_STRING_UTF8) ? 1 : 2,
-			&colon);
+		err = dom_document_create_string(node->owner, 
+				(const uint8_t *) ":", SLEN(":"), &colon);
 		if (err != DOM_NO_ERR) {
 			return err;
 		}
@@ -1639,7 +1632,7 @@ bool _dom_node_readonly(const struct dom_node *node)
  * \param previous  Previous node in sibling list, or NULL if none
  * \param next      Next node in sibling list, or NULL if none
  */
-inline void _dom_node_attach(struct dom_node *node, struct dom_node *parent, 
+void _dom_node_attach(struct dom_node *node, struct dom_node *parent, 
 		struct dom_node *previous, struct dom_node *next)
 {
 	_dom_node_attach_range(node, node, parent, previous, next);
@@ -1650,7 +1643,7 @@ inline void _dom_node_attach(struct dom_node *node, struct dom_node *parent,
  *
  * \param node  The node to detach
  */
-inline void _dom_node_detach(struct dom_node *node)
+void _dom_node_detach(struct dom_node *node)
 {
 	_dom_node_detach_range(node, node);
 }
@@ -1666,7 +1659,7 @@ inline void _dom_node_detach(struct dom_node *node)
  *
  * The range is assumed to be a linked list of sibling nodes.
  */
-inline void _dom_node_attach_range(struct dom_node *first, 
+void _dom_node_attach_range(struct dom_node *first, 
 		struct dom_node *last,
 		struct dom_node *parent, 
 		struct dom_node *previous, 
@@ -1697,7 +1690,7 @@ inline void _dom_node_attach_range(struct dom_node *first,
  *
  * The range is assumed to be a linked list of sibling nodes.
  */
-inline void _dom_node_detach_range(struct dom_node *first, 
+void _dom_node_detach_range(struct dom_node *first, 
 		struct dom_node *last)
 {
 	if (first->previous != NULL)
@@ -1727,7 +1720,7 @@ inline void _dom_node_detach_range(struct dom_node *first,
  * we want to perform any special replacement-related behaviour 
  * at a later date.
  */
-inline void _dom_node_replace(struct dom_node *old,
+void _dom_node_replace(struct dom_node *old,
 		struct dom_node *replacement)
 {
 	struct dom_node *first, *last;

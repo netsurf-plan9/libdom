@@ -180,7 +180,7 @@ dom_exception dom_attr_get_value(struct dom_attr *attr,
 	struct dom_string *value, *temp;
 	dom_exception err;
 
-	err = dom_string_create_from_const_ptr(a->owner, 
+	err = dom_document_create_string(a->owner, 
 			(const uint8_t *) "", SLEN(""), &value);
 	if (err != DOM_NO_ERR) {
 		return err;

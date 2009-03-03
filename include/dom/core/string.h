@@ -14,33 +14,16 @@
 #include <dom/functypes.h>
 #include <dom/core/exceptions.h>
 
-struct dom_document;
 struct dom_string;
-
-typedef enum {
-	DOM_STRING_UTF8,
-	DOM_STRING_UTF16
-} dom_string_charset;
 
 /* Claim a reference on a DOM string */
 void dom_string_ref(struct dom_string *str);
 /* Release a reference on a DOM string */
 void dom_string_unref(struct dom_string *str);
 
-/* Create a DOM string from an offset into the document buffer */
-dom_exception dom_string_create_from_off(struct dom_document *doc,
-		uint32_t off, size_t len, struct dom_string **str);
 /* Create a DOM string from a string of characters */
-dom_exception dom_string_create_from_ptr(struct dom_document *doc,
+dom_exception dom_string_create(dom_alloc alloc, void *pw,
 		const uint8_t *ptr, size_t len, struct dom_string **str);
-/* Create a DOM string from a constant string of characters */
-dom_exception dom_string_create_from_const_ptr(struct dom_document *doc,
-		const uint8_t *ptr, size_t len, struct dom_string **str);
-/* Create a DOM string from a string of characters that does not belong
- * to a document */
-dom_exception dom_string_create_from_ptr_no_doc(dom_alloc alloc, void *pw,
-		dom_string_charset charset, const uint8_t *ptr, size_t len, 
-		struct dom_string **str);
 
 /* Case sensitively compare two DOM strings */
 int dom_string_cmp(struct dom_string *s1, struct dom_string *s2);

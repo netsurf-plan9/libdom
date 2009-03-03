@@ -56,8 +56,6 @@ struct dom_doc_nnm {
 struct dom_document {
 	struct dom_node base;		/**< Base node */
 
-	dom_string_charset charset;	/**< Charset of strings in document */
-
 	struct dom_implementation *impl;	/**< Owning implementation */
 
 	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
@@ -73,7 +71,6 @@ struct dom_document {
 /** Interned node name strings, indexed by node type */
 /* Index 0 is unused */
 static struct dom_string *__nodenames_utf8[DOM_NODE_TYPE_COUNT + 1];
-static struct dom_string *__nodenames_utf16[DOM_NODE_TYPE_COUNT + 1];
 
 /**
  * Initialise the document module
@@ -102,27 +99,6 @@ dom_exception _dom_document_initialise(dom_alloc alloc, void *pw)
 		{ "#document-fragment",	18 },	/* Document fragment */
 		{ NULL,			0 }	/* Notation */
 	};
-
-	/** \todo This assumes Little Endian */
-	static struct {
-		const char *name;
-		size_t len;
-	} names_utf16[DOM_NODE_TYPE_COUNT + 1] = {
-		{ NULL,			0 },	/* Unused */
-		{ NULL,			0 },	/* Element */
-		{ NULL,			0 },	/* Attr */
-		{ "#\0t\0e\0x\0t\0",	10 },	/* Text */
-		{ "#\0c\0d\0a\0t\0a\0-\0s\0e\0c\0t\0i\0o\0n\0",	28 },	/* CDATA section */
-		{ NULL,			0 },	/* Entity reference */
-		{ NULL,			0 },	/* Entity */
-		{ NULL,			0 },	/* Processing instruction */
-		{ "#\0c\0o\0m\0m\0e\0n\0t\0",		16 },	/* Comment */
-		{ "#\0d\0o\0c\0u\0m\0e\0n\0t\0",		18 },	/* Document */
-		{ NULL,			0 },	/* Document type */
-		{ "#\0d\0o\0c\0u\0m\0e\0n\0t\0-\0f\0r\0a\0g\0m\0e\0n\0t\0",	36 },	/* Document fragment */
-		{ NULL,			0 }	/* Notation */
-	};
-
 	dom_exception err;
 
 	/* Initialise interned node names */
@@ -130,13 +106,11 @@ dom_exception _dom_document_initialise(dom_alloc alloc, void *pw)
 		if (names_utf8[i].name == NULL) {
 			/* Nothing to intern; skip this entry */
 			__nodenames_utf8[i] = NULL;
-			__nodenames_utf16[i] = NULL;
 			continue;
 		}
 
 		/* Make string */
-		err = dom_string_create_from_ptr_no_doc(alloc, pw,
-				DOM_STRING_UTF8,
+		err = dom_string_create(alloc, pw,
 				(const uint8_t *) names_utf8[i].name,
 				names_utf8[i].len, &__nodenames_utf8[i]);
 		if (err != DOM_NO_ERR) {
@@ -144,27 +118,8 @@ dom_exception _dom_document_initialise(dom_alloc alloc, void *pw)
 			for (int j = 0; j < i; j++) {
 				if (__nodenames_utf8[j] != NULL) {
 					dom_string_unref(__nodenames_utf8[j]);
-					dom_string_unref(__nodenames_utf16[j]);
 				}
 			}
-			return err;
-		}
-
-		err = dom_string_create_from_ptr_no_doc(alloc, pw,
-				DOM_STRING_UTF16,
-				(const uint8_t *) names_utf16[i].name,
-				names_utf16[i].len, &__nodenames_utf16[i]);
-		if (err != DOM_NO_ERR) {
-			/* Failed, clean up strings we've created so far */
-			for (int j = 0; j < i; j++) {
-				if (__nodenames_utf8[j] != NULL) {
-					dom_string_unref(__nodenames_utf8[j]);
-					dom_string_unref(__nodenames_utf16[j]);
-				}
-			}
-
-			dom_string_unref(__nodenames_utf8[i]);
-
 			return err;
 		}
 	}
@@ -182,7 +137,6 @@ dom_exception _dom_document_finalise(void)
 	for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
 		if (__nodenames_utf8[i] != NULL) {
 			dom_string_unref(__nodenames_utf8[i]);
-			dom_string_unref(__nodenames_utf16[i]);
 		}
 	}
 
@@ -193,7 +147,6 @@ dom_exception _dom_document_finalise(void)
  * Create a Document
  *
  * \param impl     The DOM implementation owning the document
- * \param charset  The charset used for strings in the document
  * \param alloc    Memory (de)allocation function
  * \param pw       Pointer to client-specific private data
  * \param doc      Pointer to location to receive created document
@@ -204,8 +157,7 @@ dom_exception _dom_document_finalise(void)
  * The returned document will already be referenced.
  */
 dom_exception dom_document_create(struct dom_implementation *impl,
-		dom_string_charset charset, dom_alloc alloc, void *pw, 
-		struct dom_document **doc)
+		dom_alloc alloc, void *pw, struct dom_document **doc)
 {
 	struct dom_document *d;
 	dom_exception err;
@@ -233,7 +185,6 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	}
 
 	/* Initialise remaining type-specific data */
-	d->charset = charset;
 	if (impl != NULL)
 		dom_implementation_ref(impl);
 	d->impl = impl;
@@ -241,8 +192,7 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	d->nodelists = NULL;
 	d->maps = NULL;
 
-	d->nodenames = (charset == DOM_STRING_UTF8) ? __nodenames_utf8 
-						    : __nodenames_utf16;
+	d->nodenames = __nodenames_utf8;
 
 	*doc = d;
 
@@ -1047,55 +997,30 @@ dom_exception dom_document_rename_node(struct dom_document *doc,
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
+/**
+ * Create a DOM string, using a document's allocation context
+ *
+ * \param doc     The document
+ * \param data    Pointer to string data
+ * \param len     Length, in bytes, of string
+ * \param result  Pointer to location to receive result
+ * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
+ *
+ * The returned string will already be referenced, so there is no need
+ * to explicitly reference it.
+ *
+ * The string of characters passed in will be copied for use by the
+ * returned DOM string.
+ */
+dom_exception dom_document_create_string(struct dom_document *doc,
+		const uint8_t *data, size_t len, struct dom_string **result)
+{
+	return dom_string_create(doc->alloc, doc->pw, data, len, result);
+}
+
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
-
-/**
- * Acquire a pointer to the base of the document buffer
- *
- * \param doc  Document to retrieve pointer from
- * \return Pointer to document buffer
- *
- * The document buffer is _not_ reference counted (as it is an implicit part
- * of the document). It is destroyed with the document, and thus after all
- * users have been destroyed.
- */
-const uint8_t *dom_document_get_base(struct dom_document *doc)
-{
-	UNUSED(doc);
-
-	return NULL;
-}
-
-/**
- * Set the document buffer pointer
- *
- * \param doc         Document to set buffer pointer of
- * \param buffer      Pointer to buffer
- * \param buffer_len  Length of buffer, in bytes
- *
- * By calling this, ownership of the buffer is transferred to the document.
- * It should be called once per document node.
- */
-void dom_document_set_buffer(struct dom_document *doc, uint8_t *buffer,
-		size_t buffer_len)
-{
-	UNUSED(doc);
-	UNUSED(buffer);
-	UNUSED(buffer_len);
-}
-
-/**
- * Retrieve the character set used to encode strings in the document
- *
- * \param doc  The document to get the charset of
- * \return The charset in use
- */
-dom_string_charset dom_document_get_charset(struct dom_document *doc)
-{
-	return doc->charset;
-}
 
 /**
  * (De)allocate memory with a document's context

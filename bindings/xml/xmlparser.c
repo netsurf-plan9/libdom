@@ -181,8 +181,7 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 	parser->complete = false;
 
 	/* Create key for user data registration */
-	err = dom_string_create_from_ptr_no_doc((dom_alloc) alloc, pw,
-			DOM_STRING_UTF8, 
+	err = dom_string_create((dom_alloc) alloc, pw,
 			(const uint8_t *) "__xmlnode", SLEN("__xmlnode"),
 			&parser->udkey);
 	if (err != DOM_NO_ERR) {
@@ -194,8 +193,7 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 
 	/* Get DOM implementation */
 	/* Create a string representation of the features we want */
-	err = dom_string_create_from_ptr_no_doc((dom_alloc) alloc, pw,
-			DOM_STRING_UTF8,
+	err = dom_string_create((dom_alloc) alloc, pw,
 			(const uint8_t *) "XML", SLEN("XML"), &features);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(parser->udkey);
@@ -329,7 +327,6 @@ void xml_parser_start_document(void *ctx)
 			/* qname */ NULL,
 			/* doctype */ NULL,
 			&doc,
-			DOM_STRING_UTF8,
 			(dom_alloc) parser->alloc,
 			parser->pw);
 	if (err != DOM_NO_ERR) {
@@ -650,9 +647,8 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 		struct dom_string *tag_name;
 
 		/* Create tag name DOM string */
-		err = dom_string_create_from_const_ptr(parser->doc,
-				child->name,
-				strlen((const char *) child->name),
+		err = dom_document_create_string(parser->doc,
+				child->name, strlen((const char *) child->name),
 				&tag_name);
 		if (err != DOM_NO_ERR) {
 			parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -684,7 +680,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 		uint8_t qnamebuf[qnamelen + 1 /* '\0' */];
 
 		/* Create namespace DOM string */
-		err = dom_string_create_from_const_ptr(parser->doc,
+		err = dom_document_create_string(parser->doc,
 				child->ns->href,
 				strlen((const char *) child->ns->href),
 				&namespace);
@@ -703,7 +699,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 			(const char *) child->name);
 
 		/* Create qname DOM string */
-		err = dom_string_create_from_ptr(parser->doc,
+		err = dom_document_create_string(parser->doc,
 				qnamebuf,
 				qnamelen,
 				&qname);
@@ -742,7 +738,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 			struct dom_string *name;
 
 			/* Create attribute name DOM string */
-			err = dom_string_create_from_const_ptr(parser->doc,
+			err = dom_document_create_string(parser->doc,
 					a->name,
 					strlen((const char *) a->name),
 					&name);
@@ -776,7 +772,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 			uint8_t qnamebuf[qnamelen + 1 /* '\0' */];
 
 			/* Create namespace DOM string */
-			err = dom_string_create_from_const_ptr(parser->doc,
+			err = dom_document_create_string(parser->doc,
 					a->ns->href,
 					strlen((const char *) a->ns->href),
 					&namespace);
@@ -795,7 +791,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 				(const char *) a->name);
 
 			/* Create qname DOM string */
-			err = dom_string_create_from_ptr(parser->doc,
+			err = dom_document_create_string(parser->doc,
 					qnamebuf,
 					qnamelen,
 					&qname);
@@ -904,7 +900,7 @@ void xml_parser_add_text_node(dom_xml_parser *parser, struct dom_node *parent,
 	dom_exception err;
 
 	/* Create DOM string data for text node */
-	err = dom_string_create_from_const_ptr(parser->doc, child->content,
+	err = dom_document_create_string(parser->doc, child->content,
 			strlen((const char *) child->content), &data);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -965,7 +961,7 @@ void xml_parser_add_cdata_section(dom_xml_parser *parser,
 	dom_exception err;
 
 	/* Create DOM string data for cdata section */
-	err = dom_string_create_from_const_ptr(parser->doc, child->content,
+	err = dom_document_create_string(parser->doc, child->content,
 			strlen((const char *) child->content), &data);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -1027,7 +1023,7 @@ void xml_parser_add_entity_reference(dom_xml_parser *parser,
 	dom_exception err;
 
 	/* Create name of entity reference */
-	err = dom_string_create_from_const_ptr(parser->doc, child->name,
+	err = dom_document_create_string(parser->doc, child->name,
 			strlen((const char *) child->name), &name);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -1094,7 +1090,7 @@ void xml_parser_add_comment(dom_xml_parser *parser, struct dom_node *parent,
 	dom_exception err;
 
 	/* Create DOM string data for comment */
-	err = dom_string_create_from_const_ptr(parser->doc, child->content,
+	err = dom_document_create_string(parser->doc, child->content,
 			strlen((const char *) child->content), &data);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -1156,7 +1152,7 @@ void xml_parser_add_document_type(dom_xml_parser *parser,
 	dom_exception err;
 
 	/* Create qname for doctype */
-	err = dom_string_create_from_const_ptr(parser->doc, dtd->name,
+	err = dom_document_create_string(parser->doc, dtd->name,
 			strlen((const char *) dtd->name), &qname);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -1165,7 +1161,7 @@ void xml_parser_add_document_type(dom_xml_parser *parser,
 	}
 
 	/* Create public ID for doctype */
-	err = dom_string_create_from_const_ptr(parser->doc,
+	err = dom_document_create_string(parser->doc,
 			dtd->ExternalID,
 			(dtd->ExternalID == NULL) ? 0
 				: strlen((const char *) dtd->ExternalID),
@@ -1178,7 +1174,7 @@ void xml_parser_add_document_type(dom_xml_parser *parser,
 	}
 
 	/* Create system ID for doctype */
-	err = dom_string_create_from_const_ptr(parser->doc,
+	err = dom_document_create_string(parser->doc,
 			dtd->SystemID,
 			(dtd->SystemID == NULL) ? 0
 				: strlen((const char *) dtd->SystemID),

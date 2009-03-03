@@ -20,7 +20,6 @@
  */
 struct dom_hubbub_parser {
 	hubbub_parser *parser;		/**< Hubbub parser instance */
-	const uint8_t *buffer;		/**< Parser buffer pointer */
 
 	struct dom_document *doc;	/**< DOM Document we're building */
 
@@ -35,9 +34,8 @@ struct dom_hubbub_parser {
 	void *mctx;			/**< Pointer to client data */
 };
 
-static void __dom_hubbub_buffer_handler(const uint8_t *buffer, size_t len, 
+static hubbub_error __dom_hubbub_token_handler(const hubbub_token *token, 
 		void *pw);
-static void __dom_hubbub_token_handler(const hubbub_token *token, void *pw);
 
 static bool __initialised;
 
@@ -63,6 +61,8 @@ dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
 	dom_exception err;
 	hubbub_error e;
 
+	UNUSED(int_enc);
+
 	if (__initialised == false) {
 		e = hubbub_initialise(aliases, (hubbub_alloc) alloc, pw);
 		if (e != HUBBUB_OK) {
@@ -80,23 +80,11 @@ dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
 		return NULL;
 	}
 
-	parser->parser = hubbub_parser_create(enc, int_enc, 
-			(hubbub_alloc) alloc, pw);
-	if (parser->parser == NULL) {
+	e = hubbub_parser_create(enc, true, (hubbub_alloc) alloc, pw,
+			&parser->parser);
+	if (e != HUBBUB_OK) {
 		alloc(parser, 0, pw);
 		msg(DOM_MSG_CRITICAL, mctx, "Failed to create hubbub parser");
-		return NULL;
-	}
-
-	params.buffer_handler.handler = __dom_hubbub_buffer_handler;
-	params.buffer_handler.pw = parser;
-	e = hubbub_parser_setopt(parser->parser, HUBBUB_PARSER_BUFFER_HANDLER,
-			&params);
-	if (e != HUBBUB_OK) {
-		hubbub_parser_destroy(parser->parser);
-		alloc(parser, 0, pw);
-		msg(DOM_MSG_CRITICAL, mctx, 
-				"Failed registering hubbub buffer handler");
 		return NULL;
 	}
 
@@ -118,8 +106,7 @@ dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
 
 	/* Get DOM implementation */
 	/* Create string representation of the features we want */
-	err = dom_string_create_from_ptr_no_doc(alloc, pw,
-			DOM_STRING_UTF8,
+	err = dom_string_create(alloc, pw,
 			(const uint8_t *) "HTML", SLEN("HTML"), &features);
 	if (err != DOM_NO_ERR) {
 		hubbub_parser_destroy(parser->parser);
@@ -202,17 +189,7 @@ struct dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser)
 	return (parser->complete ? parser->doc : NULL);
 }
 
-void __dom_hubbub_buffer_handler(const uint8_t *buffer, size_t len, 
-		void *pw)
-{
-	dom_hubbub_parser *parser = (dom_hubbub_parser *) pw;
-
-	UNUSED(len);
-
-	parser->buffer = buffer;
-}
-
-void __dom_hubbub_token_handler(const hubbub_token *token, void *pw)
+hubbub_error __dom_hubbub_token_handler(const hubbub_token *token, void *pw)
 {
 	dom_hubbub_parser *parser = (dom_hubbub_parser *) pw;
 	static const char *token_names[] = {
@@ -221,55 +198,58 @@ void __dom_hubbub_token_handler(const hubbub_token *token, void *pw)
 	};
 	size_t i;
 
+	UNUSED(parser);
+
 	printf("%s: ", token_names[token->type]);
 
 	switch (token->type) {
 	case HUBBUB_TOKEN_DOCTYPE:
 		printf("'%.*s' (%svalid)\n",
 				(int) token->data.doctype.name.len,
-				parser->buffer + 
-					token->data.doctype.name.data_off,
-				token->data.doctype.correct ? "" : "in");
+				token->data.doctype.name.ptr,
+				token->data.doctype.force_quirks ? "in" : "");
 		break;
 	case HUBBUB_TOKEN_START_TAG:
 		printf("'%.*s' %s\n",
 				(int) token->data.tag.name.len,
-				parser->buffer + token->data.tag.name.data_off,
+				token->data.tag.name.ptr,
 				(token->data.tag.n_attributes > 0) ?
 						"attributes:" : "");
 		for (i = 0; i < token->data.tag.n_attributes; i++) {
 			printf("\t'%.*s' = '%.*s'\n",
 					(int) token->data.tag.attributes[i].name.len,
-					parser->buffer + token->data.tag.attributes[i].name.data_off,
+					token->data.tag.attributes[i].name.ptr,
 					(int) token->data.tag.attributes[i].value.len,
-					parser->buffer + token->data.tag.attributes[i].value.data_off);
+					token->data.tag.attributes[i].value.ptr);
 		}
 		break;
 	case HUBBUB_TOKEN_END_TAG:
 		printf("'%.*s' %s\n",
 				(int) token->data.tag.name.len,
-				parser->buffer + token->data.tag.name.data_off,
+				token->data.tag.name.ptr,
 				(token->data.tag.n_attributes > 0) ?
 						"attributes:" : "");
 		for (i = 0; i < token->data.tag.n_attributes; i++) {
 			printf("\t'%.*s' = '%.*s'\n",
 					(int) token->data.tag.attributes[i].name.len,
-					parser->buffer + token->data.tag.attributes[i].name.data_off,
+					token->data.tag.attributes[i].name.ptr,
 					(int) token->data.tag.attributes[i].value.len,
-					parser->buffer + token->data.tag.attributes[i].value.data_off);
+					token->data.tag.attributes[i].value.ptr);
 		}
 		break;
 	case HUBBUB_TOKEN_COMMENT:
 		printf("'%.*s'\n", (int) token->data.comment.len,
-				parser->buffer + token->data.comment.data_off);
+				token->data.comment.ptr);
 		break;
 	case HUBBUB_TOKEN_CHARACTER:
 		printf("'%.*s'\n", (int) token->data.character.len,
-				parser->buffer + token->data.character.data_off);
+				token->data.character.ptr);
 		break;
 	case HUBBUB_TOKEN_EOF:
 		printf("\n");
 		break;
 	}
+
+	return HUBBUB_OK;
 }
 

@@ -9,6 +9,7 @@
 #define dom_core_document_h_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <dom/core/exceptions.h>
 
@@ -98,5 +99,7 @@ dom_exception dom_document_rename_node(struct dom_document *doc,
 		struct dom_node *node,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_node **result);
+dom_exception dom_document_create_string(struct dom_document *doc,
+		const uint8_t *data, size_t len, struct dom_string **result);
 
 #endif

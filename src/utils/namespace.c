@@ -32,14 +32,13 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
 {
 	dom_exception err;
 
-	err = dom_string_create_from_ptr_no_doc(alloc, pw,
-		DOM_STRING_UTF8, (const uint8_t *) "xml", SLEN("xml"), &xml);
+	err = dom_string_create(alloc, pw,
+		(const uint8_t *) "xml", SLEN("xml"), &xml);
 	if (err != DOM_NO_ERR) {
 		return err;
 	}
 
-	err = dom_string_create_from_ptr_no_doc(alloc, pw,
-		DOM_STRING_UTF8,
+	err = dom_string_create(alloc, pw,
 		(const uint8_t *) "http://www.w3.org/XML/1998/namespace", 
 		SLEN("http://www.w3.org/XML/1998/namespace"),
 		&xml_ns);
@@ -48,8 +47,7 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
 		return err;
 	}
 
-	err = dom_string_create_from_ptr_no_doc(alloc, pw,
-		DOM_STRING_UTF8, 
+	err = dom_string_create(alloc, pw,
 		(const uint8_t *) "xmlns", SLEN("xmlns"), &xmlns);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(xml_ns);
@@ -57,8 +55,7 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
 		return err;
 	}
 
-	err = dom_string_create_from_ptr_no_doc(alloc, pw,
-		DOM_STRING_UTF8,
+	err = dom_string_create(alloc, pw,
 		(const uint8_t *) "http://www.w3.org/2000/xmlns",
 		SLEN("http://www.w3.org/2000/xmlns"),
 		&xmlns_ns);

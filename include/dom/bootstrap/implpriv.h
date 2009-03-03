@@ -94,7 +94,6 @@ struct dom_implementation {
 	 * \param qname      The qualified name of the document element
 	 * \param doctype    The type of document to create
 	 * \param doc        Pointer to location to receive result
-	 * \param charset    The charset to use for strings in the document
 	 * \param alloc      Memory (de)allocation function
 	 * \param pw         Pointer to client-specific private data
 	 * \return DOM_NO_ERR on success,
@@ -130,7 +129,6 @@ struct dom_implementation {
 			struct dom_string *qname,
 			struct dom_document_type *doctype,
 			struct dom_document **doc,
-			dom_string_charset charset,
 			dom_alloc alloc, void *pw);
 
 	/**
@@ -251,8 +249,7 @@ dom_exception dom_register_source(struct dom_implementation_source *source,
 
 /* Create a DOM document */
 dom_exception dom_document_create(struct dom_implementation *impl,
-		dom_string_charset charset, dom_alloc alloc, void *pw, 
-		struct dom_document **doc);
+		dom_alloc alloc, void *pw, struct dom_document **doc);
 
 /* Set a document's buffer */
 void dom_document_set_buffer(struct dom_document *doc, uint8_t *buffer, 

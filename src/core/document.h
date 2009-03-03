@@ -27,12 +27,6 @@ dom_exception _dom_document_finalise(void);
 /* Destroy a document */
 void dom_document_destroy(struct dom_document *doc);
 
-/* Get base of document buffer */
-const uint8_t *dom_document_get_base(struct dom_document *doc);
-
-/* Get the document character set */ 
-dom_string_charset dom_document_get_charset(struct dom_document *doc);
-
 /* (De)allocate memory */
 void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size);
 

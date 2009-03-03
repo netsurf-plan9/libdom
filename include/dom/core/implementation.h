@@ -37,7 +37,6 @@ dom_exception dom_implementation_create_document(
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_document_type *doctype,
 		struct dom_document **doc,
-		dom_string_charset charset,
 		dom_alloc alloc, void *pw);
 
 dom_exception dom_implementation_get_feature(

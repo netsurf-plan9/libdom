@@ -94,7 +94,6 @@ dom_exception dom_implementation_create_document_type(
  * \param qname      The qualified name of the document element
  * \param doctype    The type of document to create
  * \param doc        Pointer to location to receive result
- * \param charset    The charset to use for strings in the document
  * \param alloc      Memory (de)allocation function
  * \param pw         Pointer to client-specific private data
  * \return DOM_NO_ERR on success,
@@ -127,11 +126,10 @@ dom_exception dom_implementation_create_document(
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_document_type *doctype,
 		struct dom_document **doc,
-		dom_string_charset charset,
 		dom_alloc alloc, void *pw)
 {
 	return impl->create_document(impl, namespace, qname, doctype, doc,
-			charset, alloc, pw);
+			alloc, pw);
 }
 
 /**

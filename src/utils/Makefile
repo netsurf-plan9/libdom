@@ -22,7 +22,7 @@
 CFLAGS += -I$(CURDIR)
 
 # Objects
-OBJS = namespace utf8 utf16
+OBJS = namespace
 
 .PHONY: clean debug distclean export release setup test
 
