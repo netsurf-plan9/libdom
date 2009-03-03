@@ -21,9 +21,7 @@
 # Extend toolchain settings
 CFLAGS += -I${TOP}/src/ -I${TOP}/bindings/xml/ -I${TOP}/bindings/hubbub/ \
 	-I$(CURDIR)
-# TODO: fix hubbub library usage -- needs hubbub to use pkgconfig
-LDFLAGS += `${PKGCONFIG} ${PKGCONFIGFLAGS} --libs libxml-2.0` \
-	-L${TOP}/../hubbub/ -lhubbub
+LDFLAGS += `${PKGCONFIG} ${PKGCONFIGFLAGS} --libs libxml-2.0 libhubbub`
 
 # Libraries we link against
 LIBS = -L./lib -ldomtest-debug -ldom-libxml-debug \

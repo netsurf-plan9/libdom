@@ -19,9 +19,7 @@
 # test       Execute any test cases
 
 # Manipulate include paths
-# TODO: fix hubbub include path finding -- needs hubbub to use pkgconfig
-CFLAGS += -I$(CURDIR) \
-	-I../../../hubbub/include
+CFLAGS += -I$(CURDIR) `$(PKGCONFIG) --cflags libhubbub`
 
 # Release output
 RELEASE = ${TOP}/${COMPONENT}-libhubbub.a
