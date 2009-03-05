@@ -35,4 +35,18 @@
 #include <dom/core/string.h>
 #include <dom/core/text.h>
 
+typedef enum dom_namespace {
+       DOM_NAMESPACE_NULL    = 0,
+       DOM_NAMESPACE_HTML    = 1,
+       DOM_NAMESPACE_MATHML  = 2,
+       DOM_NAMESPACE_SVG     = 3,
+       DOM_NAMESPACE_XLINK   = 4,
+       DOM_NAMESPACE_XML     = 5,
+       DOM_NAMESPACE_XMLNS   = 6,
+
+       DOM_NAMESPACE_COUNT   = 7
+} dom_namespace;
+
+extern struct dom_string *dom_namespaces[DOM_NAMESPACE_COUNT];
+
 #endif

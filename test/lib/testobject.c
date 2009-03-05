@@ -114,7 +114,7 @@ TestObject *test_object_create(int argc, char **argv,
 		snprintf(abuf, sizeof abuf, "%s/Aliases", argv[1]);
 
 		ret->parser.html = dom_hubbub_parser_create(abuf, 
-				NULL, "UTF-8", myrealloc, NULL, mymsg, NULL);
+				NULL, true, myrealloc, NULL, mymsg, NULL);
 		if (ret->parser.html == NULL) {
 			free(ret);
 			return NULL;

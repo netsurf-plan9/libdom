@@ -7,19 +7,31 @@
 
 #include <string.h>
 
-#include <dom/core/string.h>
+#include <dom/dom.h>
 
 #include "utils/namespace.h"
 #include "utils/utils.h"
 
+
 /** XML prefix */
 static struct dom_string *xml;
-/** XML namespace URI */
-static struct dom_string *xml_ns;
 /** XMLNS prefix */
 static struct dom_string *xmlns;
-/** XMLNS namespace URI */
-static struct dom_string *xmlns_ns;
+
+/** The namespace strings */
+static const char *namespaces[DOM_NAMESPACE_COUNT] = {
+	NULL,
+	"http://www.w3.org/1999/xhtml",
+	"http://www.w3.org/1998/Math/MathML",
+	"http://www.w3.org/2000/svg",
+	"http://www.w3.org/1999/xlink",
+	"http://www.w3.org/XML/1998/namespace",
+	"http://www.w3.org/2000/xmlns/"
+};
+
+struct dom_string *dom_namespaces[DOM_NAMESPACE_COUNT] = {
+	NULL,
+};
 
 /**
  * Initialise the namespace component
@@ -30,6 +42,7 @@ static struct dom_string *xmlns_ns;
  */
 dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
 {
+	int i;
 	dom_exception err;
 
 	err = dom_string_create(alloc, pw,
@@ -39,31 +52,27 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
 	}
 
 	err = dom_string_create(alloc, pw,
-		(const uint8_t *) "http://www.w3.org/XML/1998/namespace", 
-		SLEN("http://www.w3.org/XML/1998/namespace"),
-		&xml_ns);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(xml);
-		return err;
-	}
-
-	err = dom_string_create(alloc, pw,
 		(const uint8_t *) "xmlns", SLEN("xmlns"), &xmlns);
 	if (err != DOM_NO_ERR) {
-		dom_string_unref(xml_ns);
 		dom_string_unref(xml);
+		xml = NULL;
+
 		return err;
 	}
 
-	err = dom_string_create(alloc, pw,
-		(const uint8_t *) "http://www.w3.org/2000/xmlns",
-		SLEN("http://www.w3.org/2000/xmlns"),
-		&xmlns_ns);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(xmlns);
-		dom_string_unref(xml_ns);
-		dom_string_unref(xml);
-		return err;
+	for (i = 1; i < DOM_NAMESPACE_COUNT; i++) {
+		err = dom_string_create(
+				alloc, pw, (const uint8_t *) namespaces[i],
+				strlen(namespaces[i]), &dom_namespaces[i]);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(xmlns);
+			xmlns = NULL;
+
+			dom_string_unref(xml);
+			xml = NULL;
+
+			return err;
+		}
 	}
 
 	return DOM_NO_ERR;
@@ -76,10 +85,24 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
  */
 dom_exception _dom_namespace_finalise(void)
 {
-	dom_string_unref(xmlns_ns);
-	dom_string_unref(xmlns);
-	dom_string_unref(xml_ns);
-	dom_string_unref(xml);
+	int i;
+
+	if (xmlns != NULL) {
+		dom_string_unref(xmlns);
+		xmlns = NULL;
+	}
+
+	if (xml != NULL) {
+		dom_string_unref(xml);
+		xml = NULL;
+	}
+
+	for (i = 1; i < DOM_NAMESPACE_COUNT; i++) {
+		if (dom_namespaces[i] != NULL) {
+			dom_string_unref(dom_namespaces[i]);
+			dom_namespaces[i] = NULL;
+		}
+	}
 
 	return DOM_NO_ERR;
 }
@@ -119,7 +142,8 @@ dom_exception _dom_namespace_validate_qname(struct dom_string *qname,
 		/* No prefix */
 		/* If namespace URI is for xmlns, ensure qname == "xmlns" */
 		if (namespace != NULL && 
-				dom_string_cmp(namespace, xmlns_ns) == 0 &&
+				dom_string_cmp(namespace, 
+				dom_namespaces[DOM_NAMESPACE_XMLNS]) == 0 &&
 				dom_string_cmp(qname, xmlns) != 0) {
 			return DOM_NAMESPACE_ERR;
 		}
@@ -140,20 +164,23 @@ dom_exception _dom_namespace_validate_qname(struct dom_string *qname,
 
 		/* Test for invalid XML namespace */
 		if (dom_string_cmp(prefix, xml) == 0 &&
-				dom_string_cmp(namespace, xml_ns) != 0) {
+				dom_string_cmp(namespace,
+				dom_namespaces[DOM_NAMESPACE_XML]) != 0) {
 			dom_string_unref(prefix);
 			return DOM_NAMESPACE_ERR;
 		}
 
 		/* Test for invalid xmlns namespace */
 		if (dom_string_cmp(prefix, xmlns) == 0 &&
-				dom_string_cmp(namespace, xmlns_ns) != 0) {
+				dom_string_cmp(namespace,
+				dom_namespaces[DOM_NAMESPACE_XMLNS]) != 0) {
 			dom_string_unref(prefix);
 			return DOM_NAMESPACE_ERR;
 		}
 
 		/* Test for presence of xmlns namespace with non xmlns prefix */
-		if (dom_string_cmp(namespace, xmlns_ns) == 0 &&
+		if (dom_string_cmp(namespace, 
+				dom_namespaces[DOM_NAMESPACE_XMLNS]) == 0 &&
 				dom_string_cmp(prefix, xmlns) != 0) {
 			dom_string_unref(prefix);
 			return DOM_NAMESPACE_ERR;

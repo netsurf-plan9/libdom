@@ -89,6 +89,14 @@ dom_exception dom_string_create(dom_alloc alloc, void *pw,
 {
 	struct dom_string *ret;
 
+	if (ptr == NULL && len == 0) {
+		dom_string_ref(&empty_string);
+
+		*str = &empty_string;
+
+		return DOM_NO_ERR;
+	}
+
 	ret = alloc(NULL, sizeof(struct dom_string), pw);
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
