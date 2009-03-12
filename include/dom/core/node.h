@@ -14,10 +14,10 @@
 #include <dom/core/exceptions.h>
 
 struct dom_document;
-struct dom_node;
 struct dom_nodelist;
 struct dom_namednodemap;
 struct dom_string;
+struct dom_node;
 
 /**
  * Bits defining position of a node in a document relative to some other node
@@ -70,87 +70,479 @@ typedef enum {
 	DOM_NODE_TYPE_COUNT		= DOM_NOTATION_NODE
 } dom_node_type;
 
+typedef struct dom_node_internal dom_node_internal;
 
-void dom_node_ref(struct dom_node *node);
-void dom_node_unref(struct dom_node *node);
+/**
+ * DOM node type
+ */
+typedef struct dom_node {
+	void *vtable;
+} dom_node;
 
-dom_exception dom_node_get_node_name(struct dom_node *node,
-		struct dom_string **result);
-dom_exception dom_node_get_node_value(struct dom_node *node,
-		struct dom_string **result);
-dom_exception dom_node_set_node_value(struct dom_node *node,
-		struct dom_string *value);
-dom_exception dom_node_get_node_type(struct dom_node *node,
-		dom_node_type *result);
-dom_exception dom_node_get_parent_node(struct dom_node *node,
-		struct dom_node **result);
-dom_exception dom_node_get_child_nodes(struct dom_node *node,
-		struct dom_nodelist **result);
-dom_exception dom_node_get_first_child(struct dom_node *node,
-		struct dom_node **result);
-dom_exception dom_node_get_last_child(struct dom_node *node,
-		struct dom_node **result);
-dom_exception dom_node_get_previous_sibling(struct dom_node *node,
-		struct dom_node **result);
-dom_exception dom_node_get_next_sibling(struct dom_node *node,
-		struct dom_node **result);
-dom_exception dom_node_get_attributes(struct dom_node *node,
-		struct dom_namednodemap **result);
-dom_exception dom_node_get_owner_document(struct dom_node *node,
-		struct dom_document **result);
-dom_exception dom_node_insert_before(struct dom_node *node,
+/* DOM node vtable */
+typedef struct dom_node_vtable {
+
+	/* The DOM level 3 node's oprations */
+	dom_exception (*dom_node_get_node_name)(dom_node_internal *node,
+			struct dom_string **result);
+	dom_exception (*dom_node_get_node_value)(dom_node_internal *node,
+			struct dom_string **result);
+	dom_exception (*dom_node_set_node_value)(dom_node_internal *node,
+			struct dom_string *value);
+	dom_exception (*dom_node_get_node_type)(dom_node_internal *node,
+			dom_node_type *result);
+	dom_exception (*dom_node_get_parent_node)(dom_node_internal *node,
+			dom_node_internal **result);
+	dom_exception (*dom_node_get_child_nodes)(dom_node_internal *node,
+			struct dom_nodelist **result);
+	dom_exception (*dom_node_get_first_child)(dom_node_internal *node,
+			dom_node_internal **result);
+	dom_exception (*dom_node_get_last_child)(dom_node_internal *node,
+			dom_node_internal **result);
+	dom_exception (*dom_node_get_previous_sibling)(dom_node_internal *node,
+			dom_node_internal **result);
+	dom_exception (*dom_node_get_next_sibling)(dom_node_internal *node,
+			dom_node_internal **result);
+	dom_exception (*dom_node_get_attributes)(dom_node_internal *node,
+			struct dom_namednodemap **result);
+	dom_exception (*dom_node_get_owner_document)(dom_node_internal *node,
+			struct dom_document **result);
+	dom_exception (*dom_node_insert_before)(dom_node_internal *node,
+			dom_node_internal *new_child, 
+			dom_node_internal *ref_child,
+			dom_node_internal **result);
+	dom_exception (*dom_node_replace_child)(dom_node_internal *node,
+			dom_node_internal *new_child, 
+			dom_node_internal *old_child,
+			dom_node_internal **result);
+	dom_exception (*dom_node_remove_child)(dom_node_internal *node,
+			dom_node_internal *old_child,
+			dom_node_internal **result);
+	dom_exception (*dom_node_append_child)(dom_node_internal *node,
+			dom_node_internal *new_child,
+			dom_node_internal **result);
+	dom_exception (*dom_node_has_child_nodes)(dom_node_internal *node, 
+			bool *result);
+	dom_exception (*dom_node_clone_node)(dom_node_internal *node, bool deep,
+			dom_node_internal **result);
+	dom_exception (*dom_node_normalize)(dom_node_internal *node);
+	dom_exception (*dom_node_is_supported)(dom_node_internal *node,
+			struct dom_string *feature, dom_node_internal *version,
+			bool *result);
+	dom_exception (*dom_node_get_namespace)(dom_node_internal *node,
+			struct dom_string **result);
+	dom_exception (*dom_node_get_prefix)(dom_node_internal *node,
+			struct dom_string **result);
+	dom_exception (*dom_node_set_prefix)(dom_node_internal *node,
+			struct dom_string *prefix);
+	dom_exception (*dom_node_get_local_name)(dom_node_internal *node,
+			struct dom_string **result);
+	dom_exception (*dom_node_has_attributes)(dom_node_internal *node, 
+			bool *result);
+	dom_exception (*dom_node_get_base)(dom_node_internal *node,
+			struct dom_string **result);
+	dom_exception (*dom_node_compare_document_position)(
+			dom_node_internal *node, dom_node_internal *other,
+			uint16_t *result);
+	dom_exception (*dom_node_get_text_content)(dom_node_internal *node,
+			struct dom_string **result);
+	dom_exception (*dom_node_set_text_content)(dom_node_internal *node,
+			struct dom_string *content);
+	dom_exception (*dom_node_is_same)(dom_node_internal *node, 
+			dom_node_internal *other, bool *result);
+	dom_exception (*dom_node_lookup_prefix)(dom_node_internal *node,
+			struct dom_string *namespace, 
+			struct dom_string **result);
+	dom_exception (*dom_node_is_default_namespace)(dom_node_internal *node,
+			struct dom_string *namespace, bool *result);
+	dom_exception (*dom_node_lookup_namespace)(dom_node_internal *node,
+			struct dom_string *prefix, struct dom_string **result);
+	dom_exception (*dom_node_is_equal)(dom_node_internal *node,
+			dom_node_internal *other, bool *result);
+	dom_exception (*dom_node_get_feature)(dom_node_internal *node,
+			struct dom_string *feature, struct dom_string *version,
+			void **result);
+	dom_exception (*dom_node_set_user_data)(dom_node_internal *node,
+			struct dom_string *key, void *data,
+			dom_user_data_handler handler, void **result);
+	dom_exception (*dom_node_get_user_data)(dom_node_internal *node,
+			struct dom_string *key, void **result);
+} dom_node_vtable;
+
+/* The ref/unref methods define */
+void _dom_node_ref(dom_node_internal *node);
+#define dom_node_ref(n) _dom_node_ref((dom_node_internal *) (n))
+void _dom_node_unref(dom_node_internal *node);
+#define dom_node_unref(n) _dom_node_unref((dom_node_internal *) (n))
+
+static inline dom_exception dom_node_get_node_name(struct dom_node *node,
+		struct dom_string **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_node_name(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_node_name(n, r) dom_node_get_node_name((dom_node *) (n), \
+		(struct dom_string **) (r))
+
+static inline dom_exception dom_node_get_node_value(struct dom_node *node,
+		struct dom_string **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_node_value(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_node_value(n, r) dom_node_get_node_value( \
+		(dom_node *) (n), (struct dom_string **) (r))
+
+static inline dom_exception dom_node_set_node_value(struct dom_node *node,
+		struct dom_string *value)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_set_node_value(
+			(dom_node_internal *) node, value);
+}
+#define dom_node_set_node_value(n, v) dom_node_set_node_value( \
+		(dom_node *) (n), (struct dom_string *) (v))
+
+static inline dom_exception dom_node_get_node_type(struct dom_node *node,
+		dom_node_type *result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_node_type(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_node_type(n, r) dom_node_get_node_type( \
+		(dom_node *) (n), (dom_node_type *) (r))
+
+static inline dom_exception dom_node_get_parent_node(struct dom_node *node,
+		dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_parent_node(
+			(dom_node_internal *) node, 
+			(dom_node_internal **) result);
+}
+#define dom_node_get_parent_node(n, r) dom_node_get_parent_node( \
+		(dom_node *) (n), (dom_node **) (r))
+
+static inline dom_exception dom_node_get_child_nodes(struct dom_node *node,
+		struct dom_nodelist **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_child_nodes(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_child_nodes(n, r) dom_node_get_child_nodes( \
+		(dom_node *) (n), (struct dom_nodeslist **) (r))
+
+static inline dom_exception dom_node_get_first_child(struct dom_node *node,
+		dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_first_child(
+			(dom_node_internal *) node, 
+			(dom_node_internal **) result);
+}
+#define dom_node_get_first_child(n, r) dom_node_get_first_child( \
+		(dom_node *) (n), (dom_node **) (r))
+
+static inline dom_exception dom_node_get_last_child(struct dom_node *node,
+		dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_last_child(
+			(dom_node_internal *) node, 
+			(dom_node_internal **) result);
+}
+#define dom_node_get_last_child(n, r) dom_node_get_last_child( \
+		(dom_node *) (n), (dom_node **) (r))
+
+static inline dom_exception dom_node_get_previous_sibling(struct dom_node *node,
+		dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_previous_sibling(
+			(dom_node_internal *) node, 
+			(dom_node_internal **) result);
+}
+#define dom_node_get_previous_sibling(n, r) dom_node_get_previous_sibling( \
+		(dom_node *) (n), (dom_node **) (r))
+
+static inline dom_exception dom_node_get_next_sibling(struct dom_node *node,
+		dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_next_sibling(
+			(dom_node_internal *) node, 
+			(dom_node_internal **) result);
+}
+#define dom_node_get_next_sibling(n, r) dom_node_get_next_sibling( \
+		(dom_node *) (n), (dom_node **) (r))
+
+static inline dom_exception dom_node_get_attributes(struct dom_node *node,
+		struct dom_namednodemap **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_attributes(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_attributes(n, r) dom_node_get_attributes( \
+		(dom_node *) (n), (struct dom_namednodemap **) (r))
+
+static inline dom_exception dom_node_get_owner_document(struct dom_node *node,
+		struct dom_document **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_owner_document(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_owner_document(n, r) dom_node_get_owner_document( \
+		(dom_node *) (n), (struct dom_document **) (r))
+
+static inline dom_exception dom_node_insert_before(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *ref_child,
-		struct dom_node **result);
-dom_exception dom_node_replace_child(struct dom_node *node,
+		struct dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_insert_before(
+			(dom_node_internal *) node,
+			(dom_node_internal *) new_child,
+			(dom_node_internal *) ref_child,
+			(dom_node_internal **) result);
+}
+#define dom_node_insert_before(n, nn, ref, ret) dom_node_insert_before( \
+		(dom_node *) (n), (dom_node *) (nn), (dom_node *) (ref),\
+		(dom_node **) (ret))
+
+static inline dom_exception dom_node_replace_child(struct dom_node *node,
 		struct dom_node *new_child, struct dom_node *old_child,
-		struct dom_node **result);
-dom_exception dom_node_remove_child(struct dom_node *node,
+		struct dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_replace_child( 
+			(dom_node_internal *) node,
+			(dom_node_internal *) new_child,
+			(dom_node_internal *) old_child,
+			(dom_node_internal **) result);
+}
+#define dom_node_replace_child(n, nn, old, ret) dom_node_replace_child( \
+		(dom_node *) (n), (dom_node *) (nn), (dom_node *) (old),\
+		(dom_node **) (ret))
+
+static inline dom_exception dom_node_remove_child(struct dom_node *node,
 		struct dom_node *old_child,
-		struct dom_node **result);
-dom_exception dom_node_append_child(struct dom_node *node,
+		struct dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_remove_child( 
+			(dom_node_internal *) node,
+			(dom_node_internal *) old_child,
+			(dom_node_internal **) result);
+}
+#define dom_node_remove_child(n, old, ret) dom_node_remove_child( \
+		(dom_node *) (n), (dom_node *) (old), (dom_node **) (ret))
+
+static inline dom_exception dom_node_append_child(struct dom_node *node,
 		struct dom_node *new_child,
-		struct dom_node **result);
-dom_exception dom_node_has_child_nodes(struct dom_node *node, bool *result);
-dom_exception dom_node_clone_node(struct dom_node *node, bool deep,
-		struct dom_node **result);
-dom_exception dom_node_normalize(struct dom_node *node);
-dom_exception dom_node_is_supported(struct dom_node *node,
+		struct dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_append_child(
+			(dom_node_internal *) node,
+			(dom_node_internal *) new_child,
+			(dom_node_internal **) result);
+}
+#define dom_node_append_child(n, nn, ret) dom_node_append_child( \
+		(dom_node *) (n), (dom_node *) (nn), (dom_node **) (ret))
+
+static inline dom_exception dom_node_has_child_nodes(struct dom_node *node, 
+		bool *result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_has_child_nodes(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_has_child_nodes(n, r) dom_node_has_child_nodes( \
+		(dom_node *) (n), (bool *) (r))
+
+static inline dom_exception dom_node_clone_node(struct dom_node *node, 
+		bool deep, struct dom_node **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_clone_node(
+			(dom_node_internal *) node, deep,
+			(dom_node_internal **) result);
+}
+#define dom_node_clone_node(n, d, r) dom_node_clone_node((dom_node *) (n), \
+		(bool) (d), (dom_node **) (r))
+
+static inline dom_exception dom_node_normalize(struct dom_node *node)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_normalize(
+			(dom_node_internal *) node);
+}
+#define dom_node_normalize(n) dom_node_normalize((dom_node *) (n))
+
+static inline dom_exception dom_node_is_supported(struct dom_node *node,
 		struct dom_string *feature, struct dom_node *version,
-		bool *result);
-dom_exception dom_node_get_namespace(struct dom_node *node,
-		struct dom_string **result);
-dom_exception dom_node_get_prefix(struct dom_node *node,
-		struct dom_string **result);
-dom_exception dom_node_set_prefix(struct dom_node *node,
-		struct dom_string *prefix);
-dom_exception dom_node_get_local_name(struct dom_node *node,
-		struct dom_string **result);
-dom_exception dom_node_has_attributes(struct dom_node *node, bool *result);
-dom_exception dom_node_get_base(struct dom_node *node,
-		struct dom_string **result);
-dom_exception dom_node_compare_document_position(struct dom_node *node,
-		struct dom_node *other, uint16_t *result);
-dom_exception dom_node_get_text_content(struct dom_node *node,
-		struct dom_string **result);
-dom_exception dom_node_set_text_content(struct dom_node *node,
-		struct dom_string *content);
-dom_exception dom_node_is_same(struct dom_node *node, struct dom_node *other,
-		bool *result);
-dom_exception dom_node_lookup_prefix(struct dom_node *node,
-		struct dom_string *namespace, struct dom_string **result);
-dom_exception dom_node_is_default_namespace(struct dom_node *node,
-		struct dom_string *namespace, bool *result);
-dom_exception dom_node_lookup_namespace(struct dom_node *node,
-		struct dom_string *prefix, struct dom_string **result);
-dom_exception dom_node_is_equal(struct dom_node *node,
-		struct dom_node *other, bool *result);
-dom_exception dom_node_get_feature(struct dom_node *node,
+		bool *result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_is_supported(
+			(dom_node_internal *) node, feature, 
+			(dom_node_internal *) version, result);
+}
+#define dom_node_is_supported(n, f, v, r) dom_node_is_supported( \
+		(dom_node *) (n), (struct dom_string *) (f), (dom_node *) (v),\
+		(bool *) (r))
+
+static inline dom_exception dom_node_get_namespace(struct dom_node *node,
+		struct dom_string **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_namespace(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_namespace(n, r) dom_node_get_namespace((dom_node *) (n), \
+		(struct dom_string *) (r))
+
+static inline dom_exception dom_node_get_prefix(struct dom_node *node,
+		struct dom_string **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_prefix(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_prefix(n, r) dom_node_get_prefix((dom_node *) (n), \
+		(struct dom_string *) (r))
+
+static inline dom_exception dom_node_set_prefix(struct dom_node *node,
+		struct dom_string *prefix)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_set_prefix(
+			(dom_node_internal *) node, prefix);
+}
+#define dom_node_set_prefix(n, p) dom_node_set_prefix((dom_node *) (n), \
+		(struct dom_string *) (p))
+
+static inline dom_exception dom_node_get_local_name(struct dom_node *node,
+		struct dom_string **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_local_name(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_local_name(n, r) dom_node_get_local_name((dom_node *) (n),\
+		(struct dom_string *) (r))
+
+static inline dom_exception dom_node_has_attributes(struct dom_node *node, 
+		bool *result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_has_attributes(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_has_attributes(n, r) dom_node_has_attributes( \
+		(dom_node *) (n), (bool *) (r))
+
+static inline dom_exception dom_node_get_base(struct dom_node *node,
+		struct dom_string **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_base(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_base(n, r) dom_node_get_base((dom_node *) (n), \
+		(struct dom_string **) (r))
+
+static inline dom_exception dom_node_compare_document_position(
+		struct dom_node *node, struct dom_node *other,
+		uint16_t *result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_compare_document_position(
+			(dom_node_internal *) node, (dom_node_internal *) other,
+			result);
+}
+#define dom_node_compare_document_position(n, o, r) \
+		dom_node_compare_document_position((dom_node *) (n), \
+		(dom_node *) (o), (uint16_t *) (r))
+
+static inline dom_exception dom_node_get_text_content(struct dom_node *node,
+		struct dom_string **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_text_content(
+			(dom_node_internal *) node, result);
+}
+#define dom_node_get_text_content(n, r) dom_node_get_text_content( \
+		(dom_node *) (n), (struct dom_string **) (r))
+
+static inline dom_exception dom_node_set_text_content(struct dom_node *node,
+		struct dom_string *content)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_set_text_content(
+			(dom_node_internal *) node, content);
+}
+#define dom_node_set_text_content(n, c) dom_node_get_text_content( \
+		(dom_node *) (n), (struct dom_string *) (c))
+
+static inline dom_exception dom_node_is_same(struct dom_node *node, 
+		struct dom_node *other, bool *result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_is_same(
+			(dom_node_internal *) node,
+			(dom_node_internal *) other,
+			result);
+}
+#define dom_node_is_same(n, o, r) dom_node_is_same((dom_node *) (n), \
+		(dom_node *) (o), (bool *) (r))
+
+static inline dom_exception dom_node_lookup_prefix(struct dom_node *node,
+		struct dom_string *namespace, struct dom_string **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_lookup_prefix(
+			(dom_node_internal *) node, namespace, result);
+}
+#define dom_node_lookup_prefix(n, ns, r) dom_node_lookup_prefix( \
+		(dom_node *) (n), (struct dom_string *) (ns), \
+		(struct dom_string **) (r))
+
+static inline dom_exception dom_node_is_default_namespace(struct dom_node *node,
+		struct dom_string *namespace, bool *result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_is_default_namespace(
+			(dom_node_internal *) node, namespace, result);
+}
+#define dom_node_is_default_namesapce(n, ns, r) dom_node_is_default_namespace(\
+		(dom_node *) (n), (struct dom_string *) (ns), (bool *) (r))
+
+static inline dom_exception dom_node_lookup_namespace(struct dom_node *node,
+		struct dom_string *prefix, struct dom_string **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_lookup_namespace(
+			(dom_node_internal *) node, prefix, result);
+}
+#define dom_node_lookup_namespace(n, p, r) dom_node_lookup_namespace( \
+		(dom_node *) (n), (struct dom_string *) (p), \
+		(struct dom_string **) (r))
+
+static inline dom_exception dom_node_is_equal(struct dom_node *node,
+		struct dom_node *other, bool *result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_is_equal(
+			(dom_node_internal *) node,
+			(dom_node_internal *) other,
+			result);
+}
+#define dom_node_is_equal(n, o, r) dom_node_is_equal((dom_node *) (n), \
+		(dom_node *) (o), (bool *) (r))
+
+static inline dom_exception dom_node_get_feature(struct dom_node *node,
 		struct dom_string *feature, struct dom_string *version,
-		void **result);
-dom_exception dom_node_set_user_data(struct dom_node *node,
+		void **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_feature(
+			(dom_node_internal *) node, feature, version, result);
+}
+#define dom_node_get_feature(n, f, v, r) dom_node_get_feature( \
+		(dom_node *) (n), (struct dom_string *) (f), \
+		(struct dom_string *) (v), (void **) (r))
+
+static inline dom_exception dom_node_set_user_data(struct dom_node *node,
 		struct dom_string *key, void *data,
-		dom_user_data_handler handler, void **result);
-dom_exception dom_node_get_user_data(struct dom_node *node,
-		struct dom_string *key, void **result);
+		dom_user_data_handler handler, void **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_set_user_data(
+			(dom_node_internal *) node, key, data, handler,
+			result);
+}
+#define dom_node_set_user_data(n, k, d, h, r) dom_node_set_user_data( \
+		(dom_node *) (n), (struct dom_string *) (k), (void *) (d), \
+		(dom_user_data_handler) h, (void **) (r))
+
+static inline dom_exception dom_node_get_user_data(struct dom_node *node,
+		struct dom_string *key, void **result)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_get_user_data(
+			(dom_node_internal *) node, key, result);
+}
+#define dom_node_get_user_data(n, k, r) dom_node_get_user_data( \
+		(dom_node *) (n), (struct dom_string *) (k), (void **) (r))
 
 #endif

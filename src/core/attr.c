@@ -26,7 +26,7 @@ struct dom_type_info;
  * DOM node attribute
  */
 struct dom_attr {
-	struct dom_node base;		/**< Base node */
+	struct dom_node_internal base;		/**< Base node */
 
 	bool specified;			/**< Whether attribute was specified
 					 * or defaulted */
@@ -34,6 +34,14 @@ struct dom_attr {
 	struct dom_type_info *schema_type_info;	/**< Type information */
 
 	bool is_id;			/**< Attribute is of type ID */
+};
+
+/* The vtable for dom attr node */
+static struct dom_attr_vtable attr_vtable = {
+	{
+		DOM_NODE_VTABLE
+	},
+	DOM_ATTR_VTABLE
 };
 
 /**
@@ -66,6 +74,10 @@ dom_exception dom_attr_create(struct dom_document *doc,
 	if (a == NULL)
 		return DOM_NO_MEM_ERR;
 
+	/* Initialize the vtable */
+	a->base.base.vtable = &attr_vtable;
+	a->base.destroy = _dom_attr_destroy;
+
 	/* Initialise the base class */
 	err = dom_node_initialise(&a->base, doc, DOM_ATTRIBUTE_NODE,
 			name, NULL, namespace, prefix);
@@ -94,7 +106,7 @@ dom_exception dom_attr_create(struct dom_document *doc,
  */
 void dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr)
 {
-	struct dom_node *c, *d;
+	struct dom_node_internal *c, *d;
 
 	/* Destroy children of this node */
 	for (c = attr->base.first_child; c != NULL; c = d) {
@@ -129,6 +141,11 @@ void dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr)
 	dom_document_alloc(doc, attr, 0);
 }
 
+void _dom_attr_destroy(dom_node_internal *node)
+{
+	UNUSED(node);
+}
+
 /**
  * Retrieve an attribute's name
  *
@@ -140,11 +157,11 @@ void dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr)
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_attr_get_name(struct dom_attr *attr,
+dom_exception _dom_attr_get_name(struct dom_attr *attr,
 		struct dom_string **result)
 {
 	/* This is the same as nodeName */
-	return dom_node_get_node_name((struct dom_node *) attr, result);
+	return dom_node_get_node_name(attr, result);
 }
 
 /**
@@ -154,7 +171,7 @@ dom_exception dom_attr_get_name(struct dom_attr *attr,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_attr_get_specified(struct dom_attr *attr, bool *result)
+dom_exception _dom_attr_get_specified(struct dom_attr *attr, bool *result)
 {
 	*result = attr->specified;
 
@@ -172,11 +189,11 @@ dom_exception dom_attr_get_specified(struct dom_attr *attr, bool *result)
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_attr_get_value(struct dom_attr *attr,
+dom_exception _dom_attr_get_value(struct dom_attr *attr,
 		struct dom_string **result)
 {
-	struct dom_node *a = (struct dom_node *) attr;
-	struct dom_node *c;
+	struct dom_node_internal *a = (struct dom_node_internal *) attr;
+	struct dom_node_internal *c;
 	struct dom_string *value, *temp;
 	dom_exception err;
 
@@ -245,11 +262,11 @@ dom_exception dom_attr_get_value(struct dom_attr *attr,
  * \return DOM_NO_ERR                      on success,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if attribute is readonly.
  */
-dom_exception dom_attr_set_value(struct dom_attr *attr,
+dom_exception _dom_attr_set_value(struct dom_attr *attr,
 		struct dom_string *value)
 {
-	struct dom_node *a = (struct dom_node *) attr;
-	struct dom_node *c, *d;
+	struct dom_node_internal *a = (struct dom_node_internal *) attr;
+	struct dom_node_internal *c, *d;
 	struct dom_text *text;
 	dom_exception err;
 
@@ -285,8 +302,8 @@ dom_exception dom_attr_set_value(struct dom_attr *attr,
 	}
 
 	/* And insert the text node as the value */
-	((struct dom_node *) text)->parent = a;
-	a->first_child = a->last_child = (struct dom_node *) text;
+	((struct dom_node_internal *) text)->parent = a;
+	a->first_child = a->last_child = (struct dom_node_internal *) text;
 
 	return DOM_NO_ERR;
 }
@@ -301,10 +318,10 @@ dom_exception dom_attr_set_value(struct dom_attr *attr,
  * The returned node will have its reference count increased. The caller
  * should unref it once it has finished with it.
  */
-dom_exception dom_attr_get_owner(struct dom_attr *attr,
+dom_exception _dom_attr_get_owner(struct dom_attr *attr,
 		struct dom_element **result)
 {
-	struct dom_node *a = (struct dom_node *) attr;
+	struct dom_node_internal *a = (struct dom_node_internal *) attr;
 
 	/* If there is an owning element, increase its reference count */
 	if (a->parent != NULL)
@@ -325,7 +342,7 @@ dom_exception dom_attr_get_owner(struct dom_attr *attr,
  * The returned type info will have its reference count increased. The caller
  * should unref it once it has finished with it.
  */
-dom_exception dom_attr_get_schema_type_info(struct dom_attr *attr,
+dom_exception _dom_attr_get_schema_type_info(struct dom_attr *attr,
 		struct dom_type_info **result)
 {
 	UNUSED(attr);
@@ -341,7 +358,7 @@ dom_exception dom_attr_get_schema_type_info(struct dom_attr *attr,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_attr_is_id(struct dom_attr *attr, bool *result)
+dom_exception _dom_attr_is_id(struct dom_attr *attr, bool *result)
 {
 	*result = attr->is_id;
 
