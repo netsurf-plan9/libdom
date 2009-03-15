@@ -34,8 +34,7 @@ dom_characterdata *dom_characterdata_create(struct dom_document *doc)
 	if (cdata == NULL)
 		return NULL;
 
-	/* Some unused variable will cause a failed compile */
-	UNUSED(characterdata_vtable);
+	cdata->base.base.vtable = &characterdata_vtable;
 	return cdata;
 }
 
