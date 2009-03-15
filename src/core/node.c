@@ -53,7 +53,7 @@ static struct dom_node_vtable node_vtable = {
  *
  * Return        The new constructed DOM node or NULL if fail.
  */
-dom_node_internal * dom_node_create()
+dom_node_internal * dom_node_create(struct dom_document *doc)
 {
 	dom_node_internal *node = dom_document_alloc(doc, NULL, 
 			sizeof(struct dom_node_internal));

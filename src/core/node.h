@@ -56,7 +56,7 @@ struct dom_node_internal {
 	uint32_t refcnt;		/**< Reference count */
 };
 
-dom_node_internal * dom_node_create(dom_alloc alloc, void *pw);
+dom_node_internal * dom_node_create(struct dom_document *doc);
 
 dom_exception dom_node_initialise(struct dom_node_internal *node,
 		struct dom_document *doc, dom_node_type type,

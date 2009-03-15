@@ -13,6 +13,32 @@
 #include "core/node.h"
 #include "utils/utils.h"
 
+/* The virtual functions for dom_characterdata */
+static struct dom_characterdata_vtable characterdata_vtable = {
+	{
+		DOM_NODE_VTABLE
+	},
+	DOM_CHARACTERDATA_VTABLE
+};
+
+/**
+ * Create a DOM characterdata node and compose the vtable
+ *
+ * Return 	The new constructed DOM characterdata node of NULL if fail
+ */
+dom_characterdata *dom_characterdata_create(struct dom_document *doc)
+{
+	dom_characterdata *cdata = dom_document_alloc(doc, NULL,
+			sizeof(struct dom_characterdata));
+
+	if (cdata == NULL)
+		return NULL;
+
+	/* Some unused variable will cause a failed compile */
+	UNUSED(characterdata_vtable);
+	return cdata;
+}
+
 /**
  * Initialise a character data node
  *
@@ -61,10 +87,10 @@ void dom_characterdata_finalise(struct dom_document *doc,
  * DOM3Core states that this can raise DOMSTRING_SIZE_ERR. It will not in
  * this implementation; dom_strings are unbounded.
  */
-dom_exception dom_characterdata_get_data(struct dom_characterdata *cdata,
+dom_exception _dom_characterdata_get_data(struct dom_characterdata *cdata,
 		struct dom_string **data)
 {
-	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 
 	if (c->value != NULL) {
 		dom_string_ref(c->value);
@@ -86,10 +112,10 @@ dom_exception dom_characterdata_get_data(struct dom_characterdata *cdata,
  * should unref it after the call (as the caller should have already claimed
  * a reference on the string). The node's existing content will be unrefed.
  */
-dom_exception dom_characterdata_set_data(struct dom_characterdata *cdata,
+dom_exception _dom_characterdata_set_data(struct dom_characterdata *cdata,
 		struct dom_string *data)
 {
-	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
@@ -112,10 +138,10 @@ dom_exception dom_characterdata_set_data(struct dom_characterdata *cdata,
  * \param length  Pointer to location to receive character length of content
  * \return DOM_NO_ERR.
  */
-dom_exception dom_characterdata_get_length(struct dom_characterdata *cdata,
+dom_exception _dom_characterdata_get_length(struct dom_characterdata *cdata,
 		unsigned long *length)
 {
-	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 
 	if (c->value != NULL) {
 		*length = dom_string_length(c->value);
@@ -144,11 +170,11 @@ dom_exception dom_characterdata_get_length(struct dom_characterdata *cdata,
  * DOM3Core states that this can raise DOMSTRING_SIZE_ERR. It will not in
  * this implementation; dom_strings are unbounded.
  */
-dom_exception dom_characterdata_substring_data(
+dom_exception _dom_characterdata_substring_data(
 		struct dom_characterdata *cdata, unsigned long offset,
 		unsigned long count, struct dom_string **data)
 {
-	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	uint32_t len, end;
 
 	if (c->value != NULL) {
@@ -174,10 +200,10 @@ dom_exception dom_characterdata_substring_data(
  * \return DOM_NO_ERR                      on success,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
-dom_exception dom_characterdata_append_data(struct dom_characterdata *cdata,
+dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
 		struct dom_string *data)
 {
-	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	struct dom_string *temp;
 	dom_exception err;
 
@@ -212,10 +238,10 @@ dom_exception dom_characterdata_append_data(struct dom_characterdata *cdata,
  *                                         number of characters in ::cdata,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
-dom_exception dom_characterdata_insert_data(struct dom_characterdata *cdata,
+dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
 		unsigned long offset, struct dom_string *data)
 {
-	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	struct dom_string *temp;
 	uint32_t len;
 	dom_exception err;
@@ -259,10 +285,10 @@ dom_exception dom_characterdata_insert_data(struct dom_characterdata *cdata,
  *                                         number of characters in ::cdata,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
-dom_exception dom_characterdata_delete_data(struct dom_characterdata *cdata,
+dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 		unsigned long offset, unsigned long count)
 {
-	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	struct dom_string *temp;
 	uint32_t len, end;
 	dom_exception err;
@@ -309,11 +335,11 @@ dom_exception dom_characterdata_delete_data(struct dom_characterdata *cdata,
  *                                         number of characters in ::cdata,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
-dom_exception dom_characterdata_replace_data(struct dom_characterdata *cdata,
+dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 		unsigned long offset, unsigned long count,
 		struct dom_string *data)
 {
-	struct dom_node *c = (struct dom_node *) cdata;
+	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	struct dom_string *temp;
 	uint32_t len, end;
 	dom_exception err;
