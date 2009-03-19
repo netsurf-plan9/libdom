@@ -114,6 +114,9 @@ typedef struct dom_document_vtable {
 			struct dom_string *qname, struct dom_node **result);
 } dom_document_vtable;
 
+dom_exception dom_document_create_string(struct dom_document *doc,
+		const uint8_t *data, size_t len, struct dom_string **result);
+
 static inline dom_exception dom_document_get_doctype(struct dom_document *doc,
 		struct dom_document_type **result)
 {
@@ -437,8 +440,5 @@ static inline dom_exception dom_document_rename_node(struct dom_document *doc,
 #define dom_document_rename_node(d, n, ns, q, r) dom_document_rename_node( \
 		(dom_document *) (d), (struct dom_string *) (ns), \
 		(struct dom_string *) (q), (dom_node **) (r))
-
-dom_exception dom_document_create_string(struct dom_document *doc,
-		const uint8_t *data, size_t len, struct dom_string **result);
 
 #endif

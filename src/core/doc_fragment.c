@@ -5,6 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
+#include <dom/core/node.h>
+
 #include "core/document.h"
 #include "core/doc_fragment.h"
 #include "core/node.h"
@@ -13,8 +15,10 @@
  * A DOM document fragment
  */
 struct dom_document_fragment {
-	struct dom_node base;		/**< Base node */
+	struct dom_node_internal base;		/**< Base node */
 };
+
+void _dom_document_fragment_destroy(struct dom_node_internal *node);
 
 /**
  * Create a document fragment
@@ -51,6 +55,9 @@ dom_exception dom_document_fragment_create(struct dom_document *doc,
 		return err;
 	}
 
+	/* Set the virtual function of destroy */
+	f->base.destroy = &_dom_document_fragment_destroy;
+
 	*result = f;
 
 	return DOM_NO_ERR;
@@ -67,7 +74,7 @@ dom_exception dom_document_fragment_create(struct dom_document *doc,
 void dom_document_fragment_destroy(struct dom_document *doc,
 		struct dom_document_fragment *frag)
 {
-	struct dom_node *c, *d;
+	struct dom_node_internal *c, *d;
 
 	/* Destroy children of this node */
 	for (c = frag->base.first_child; c != NULL; c = d) {
@@ -96,4 +103,13 @@ void dom_document_fragment_destroy(struct dom_document *doc,
 
 	/* Destroy fragment */
 	dom_document_alloc(doc, frag, 0);
+}
+
+void _dom_document_fragment_destroy(struct dom_node_internal *node)
+{
+	struct dom_document *doc;
+	dom_node_get_owner_document(node, &doc);
+
+	dom_document_fragment_destroy(doc, 
+			(struct dom_document_fragment *) node);
 }
