@@ -21,14 +21,11 @@
 #include "core/element.h"
 #include "core/entity_ref.h"
 #include "core/namednodemap.h"
-#include "core/node.h"
 #include "core/nodelist.h"
 #include "core/pi.h"
 #include "core/text.h"
 #include "utils/namespace.h"
 #include "utils/utils.h"
-
-struct dom_document_type;
 
 /**
  * Item in list of active nodelists
@@ -50,27 +47,18 @@ struct dom_doc_nnm {
 	struct dom_doc_nnm *prev;	/**< Previous map */
 };
 
-/**
- * DOM document
- */
-struct dom_document {
-	struct dom_node base;		/**< Base node */
-
-	struct dom_implementation *impl;	/**< Owning implementation */
-
-	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
-
-	struct dom_doc_nnm *maps;	/**< List of active namednodemaps */
-
-	struct dom_string **nodenames;	/**< Interned nodenames */
-
-	dom_alloc alloc;		/**< Memory (de)allocation function */
-	void *pw;			/**< Pointer to client data */
-};
 
 /** Interned node name strings, indexed by node type */
 /* Index 0 is unused */
 static struct dom_string *__nodenames_utf8[DOM_NODE_TYPE_COUNT + 1];
+
+/* The virtual functions of this dom_document */
+static struct dom_document_vtable document_vtable = {
+	{
+		DOM_NODE_VTABLE
+	},
+	DOM_DOCUMENT_VTABLE
+};
 
 /**
  * Initialise the document module
@@ -171,6 +159,10 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	d->alloc = alloc;
 	d->pw = pw;
 
+	/* Initialize the virtual table */
+	d->base.base.vtable = &document_vtable;
+	d->base.destroy = &dom_document_destroy;
+
 	/* Initialise base class -- the Document has no parent, so
 	 * destruction will be attempted as soon as its reference count
 	 * reaches zero. Documents own themselves (this simplifies the 
@@ -202,13 +194,16 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 /**
  * Destroy a document
  *
- * \param doc  The document to destroy
+ * \param doc  The document to destroy, which is passed in as a
+ * 
+ * dom_node_internl
  *
  * The contents of ::doc will be destroyed and ::doc will be freed.
  */
-void dom_document_destroy(struct dom_document *doc)
+void dom_document_destroy(struct dom_node_internal *dnode)
 {
-	struct dom_node *c, *d;
+	struct dom_document *doc = (struct dom_document *) dnode;
+	struct dom_node_internal *c, *d;
 
 	/* Destroy children of this node */
 	for (c = doc->base.first_child; c != NULL; c = d) {
@@ -268,10 +263,10 @@ void dom_document_destroy(struct dom_document *doc)
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_get_doctype(struct dom_document *doc,
+dom_exception _dom_document_get_doctype(struct dom_document *doc,
 		struct dom_document_type **result)
 {
-	struct dom_node *c;
+	struct dom_node_internal *c;
 
 	for (c = doc->base.first_child; c != NULL; c = c->next) {
 		if (c->type == DOM_DOCUMENT_TYPE_NODE)
@@ -297,7 +292,7 @@ dom_exception dom_document_get_doctype(struct dom_document *doc,
  * It is the responsibility of the caller to unref the implementation once
  * it has finished with it.
  */
-dom_exception dom_document_get_implementation(struct dom_document *doc,
+dom_exception _dom_document_get_implementation(struct dom_document *doc,
 		struct dom_implementation **result)
 {
 	if (doc->impl != NULL)
@@ -319,10 +314,10 @@ dom_exception dom_document_get_implementation(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_get_document_element(struct dom_document *doc,
+dom_exception _dom_document_get_document_element(struct dom_document *doc,
 		struct dom_element **result)
 {
-	struct dom_node *root;
+	struct dom_node_internal *root;
 
 	/* Find first element node in child list */
 	for (root = doc->base.first_child; root != NULL; root = root->next) {
@@ -353,7 +348,7 @@ dom_exception dom_document_get_document_element(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_element(struct dom_document *doc,
+dom_exception _dom_document_create_element(struct dom_document *doc,
 		struct dom_string *tag_name, struct dom_element **result)
 {
 	return dom_element_create(doc, tag_name, NULL, NULL, result);
@@ -370,7 +365,7 @@ dom_exception dom_document_create_element(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_document_fragment(struct dom_document *doc,
+dom_exception _dom_document_create_document_fragment(struct dom_document *doc,
 		struct dom_document_fragment **result)
 {
 	return dom_document_fragment_create(doc,
@@ -390,7 +385,7 @@ dom_exception dom_document_create_document_fragment(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_text_node(struct dom_document *doc,
+dom_exception _dom_document_create_text_node(struct dom_document *doc,
 		struct dom_string *data, struct dom_text **result)
 {
 	return dom_text_create(doc, doc->nodenames[DOM_TEXT_NODE],
@@ -409,7 +404,7 @@ dom_exception dom_document_create_text_node(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_comment(struct dom_document *doc,
+dom_exception _dom_document_create_comment(struct dom_document *doc,
 		struct dom_string *data, struct dom_comment **result)
 {
 	return dom_comment_create(doc, doc->nodenames[DOM_COMMENT_NODE],
@@ -429,7 +424,7 @@ dom_exception dom_document_create_comment(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_cdata_section(struct dom_document *doc,
+dom_exception _dom_document_create_cdata_section(struct dom_document *doc,
 		struct dom_string *data, struct dom_cdata_section **result)
 {
 	return dom_cdata_section_create(doc,
@@ -452,7 +447,7 @@ dom_exception dom_document_create_cdata_section(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_processing_instruction(
+dom_exception _dom_document_create_processing_instruction(
 		struct dom_document *doc, struct dom_string *target,
 		struct dom_string *data,
 		struct dom_processing_instruction **result)
@@ -473,7 +468,7 @@ dom_exception dom_document_create_processing_instruction(
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_attribute(struct dom_document *doc,
+dom_exception _dom_document_create_attribute(struct dom_document *doc,
 		struct dom_string *name, struct dom_attr **result)
 {
 	return dom_attr_create(doc, name, NULL, NULL, result);
@@ -493,7 +488,7 @@ dom_exception dom_document_create_attribute(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_entity_reference(struct dom_document *doc,
+dom_exception _dom_document_create_entity_reference(struct dom_document *doc,
 		struct dom_string *name,
 		struct dom_entity_reference **result)
 {
@@ -512,7 +507,7 @@ dom_exception dom_document_create_entity_reference(struct dom_document *doc,
  * the responsibility of the caller to unref the list once it has
  * finished with it.
  */
-dom_exception dom_document_get_elements_by_tag_name(struct dom_document *doc,
+dom_exception _dom_document_get_elements_by_tag_name(struct dom_document *doc,
 		struct dom_string *tagname, struct dom_nodelist **result)
 {
 	return dom_document_get_nodelist(doc, (struct dom_node *) doc, 
@@ -534,7 +529,7 @@ dom_exception dom_document_get_elements_by_tag_name(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_import_node(struct dom_document *doc,
+dom_exception _dom_document_import_node(struct dom_document *doc,
 		struct dom_node *node, bool deep, struct dom_node **result)
 {
 	UNUSED(doc);
@@ -573,7 +568,7 @@ dom_exception dom_document_import_node(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_element_ns(struct dom_document *doc,
+dom_exception _dom_document_create_element_ns(struct dom_document *doc,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_element **result)
 {
@@ -634,7 +629,7 @@ dom_exception dom_document_create_element_ns(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_create_attribute_ns(struct dom_document *doc,
+dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_attr **result)
 {
@@ -680,7 +675,7 @@ dom_exception dom_document_create_attribute_ns(struct dom_document *doc,
  * the responsibility of the caller to unref the list once it has
  * finished with it.
  */
-dom_exception dom_document_get_elements_by_tag_name_ns(
+dom_exception _dom_document_get_elements_by_tag_name_ns(
 		struct dom_document *doc, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_nodelist **result)
 {
@@ -700,7 +695,7 @@ dom_exception dom_document_get_elements_by_tag_name_ns(
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_get_element_by_id(struct dom_document *doc,
+dom_exception _dom_document_get_element_by_id(struct dom_document *doc,
 		struct dom_string *id, struct dom_element **result)
 {
 	UNUSED(doc);
@@ -721,7 +716,7 @@ dom_exception dom_document_get_element_by_id(struct dom_document *doc,
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_document_get_input_encoding(struct dom_document *doc,
+dom_exception _dom_document_get_input_encoding(struct dom_document *doc,
 		struct dom_string **result)
 {
 	UNUSED(doc);
@@ -741,7 +736,7 @@ dom_exception dom_document_get_input_encoding(struct dom_document *doc,
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_document_get_xml_encoding(struct dom_document *doc,
+dom_exception _dom_document_get_xml_encoding(struct dom_document *doc,
 		struct dom_string **result)
 {
 	UNUSED(doc);
@@ -757,7 +752,7 @@ dom_exception dom_document_get_xml_encoding(struct dom_document *doc,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_document_get_xml_standalone(struct dom_document *doc,
+dom_exception _dom_document_get_xml_standalone(struct dom_document *doc,
 		bool *result)
 {
 	UNUSED(doc);
@@ -775,7 +770,7 @@ dom_exception dom_document_get_xml_standalone(struct dom_document *doc,
  *         DOM_NOT_SUPPORTED_ERR if the document does not support the "XML"
  *                               feature.
  */
-dom_exception dom_document_set_xml_standalone(struct dom_document *doc,
+dom_exception _dom_document_set_xml_standalone(struct dom_document *doc,
 		bool standalone)
 {
 	UNUSED(doc);
@@ -795,7 +790,7 @@ dom_exception dom_document_set_xml_standalone(struct dom_document *doc,
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_document_get_xml_version(struct dom_document *doc,
+dom_exception _dom_document_get_xml_version(struct dom_document *doc,
 		struct dom_string **result)
 {
 	UNUSED(doc);
@@ -813,7 +808,7 @@ dom_exception dom_document_get_xml_version(struct dom_document *doc,
  *         DOM_NOT_SUPPORTED_ERR if the document does not support the "XML"
  *                               feature.
  */
-dom_exception dom_document_set_xml_version(struct dom_document *doc,
+dom_exception _dom_document_set_xml_version(struct dom_document *doc,
 		struct dom_string *version)
 {
 	UNUSED(doc);
@@ -829,7 +824,7 @@ dom_exception dom_document_set_xml_version(struct dom_document *doc,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_document_get_strict_error_checking(
+dom_exception _dom_document_get_strict_error_checking(
 		struct dom_document *doc, bool *result)
 {
 	UNUSED(doc);
@@ -845,7 +840,7 @@ dom_exception dom_document_get_strict_error_checking(
  * \param strict  Whether to use strict error checking
  * \return DOM_NO_ERR.
  */
-dom_exception dom_document_set_strict_error_checking(
+dom_exception _dom_document_set_strict_error_checking(
 		struct dom_document *doc, bool strict)
 {
 	UNUSED(doc);
@@ -865,7 +860,7 @@ dom_exception dom_document_set_strict_error_checking(
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_document_get_uri(struct dom_document *doc,
+dom_exception _dom_document_get_uri(struct dom_document *doc,
 		struct dom_string **result)
 {
 	UNUSED(doc);
@@ -885,7 +880,7 @@ dom_exception dom_document_get_uri(struct dom_document *doc,
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_document_set_uri(struct dom_document *doc,
+dom_exception _dom_document_set_uri(struct dom_document *doc,
 		struct dom_string *uri)
 {
 	UNUSED(doc);
@@ -909,7 +904,7 @@ dom_exception dom_document_set_uri(struct dom_document *doc,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_adopt_node(struct dom_document *doc,
+dom_exception _dom_document_adopt_node(struct dom_document *doc,
 		struct dom_node *node, struct dom_node **result)
 {
 	UNUSED(doc);
@@ -930,7 +925,7 @@ dom_exception dom_document_adopt_node(struct dom_document *doc,
  * the responsibility of the caller to unref the object once it has
  * finished with it.
  */
-dom_exception dom_document_get_dom_config(struct dom_document *doc,
+dom_exception _dom_document_get_dom_config(struct dom_document *doc,
 		struct dom_configuration **result)
 {
 	UNUSED(doc);
@@ -945,7 +940,7 @@ dom_exception dom_document_get_dom_config(struct dom_document *doc,
  * \param doc  The document to normalize
  * \return DOM_NO_ERR.
  */
-dom_exception dom_document_normalize(struct dom_document *doc)
+dom_exception _dom_document_normalize(struct dom_document *doc)
 {
 	UNUSED(doc);
 
@@ -983,7 +978,7 @@ dom_exception dom_document_normalize(struct dom_document *doc)
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_document_rename_node(struct dom_document *doc,
+dom_exception _dom_document_rename_node(struct dom_document *doc,
 		struct dom_node *node,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_node **result)

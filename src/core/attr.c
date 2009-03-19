@@ -20,7 +20,6 @@
 #include "utils/utils.h"
 
 struct dom_element;
-struct dom_type_info;
 
 /**
  * DOM node attribute

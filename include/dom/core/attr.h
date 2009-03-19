@@ -19,6 +19,8 @@ struct dom_node;
 struct dom_attr;
 struct dom_string;
 
+typedef struct dom_attr dom_attr;
+
 /* DOM Attr vtable */
 typedef struct dom_attr_vtable {
 	struct dom_node_vtable base;
