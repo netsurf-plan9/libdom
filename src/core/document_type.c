@@ -18,7 +18,7 @@
  * DOM DocumentType node
  */
 struct dom_document_type {
-	struct dom_node base;		/**< Base node */
+	struct dom_node_internal base;		/**< Base node */
 
 	/** \todo other members */
 	struct dom_string *public_id;	/**< Doctype public ID */
@@ -26,6 +26,13 @@ struct dom_document_type {
 
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to private data */
+};
+
+static struct dom_document_type_vtable document_type_vtable = {
+	{
+		DOM_NODE_VTABLE	
+	},
+	DOM_DOCUMENT_TYPE_VTABLE
 };
 
 /**
@@ -63,6 +70,10 @@ dom_exception dom_document_type_create(struct dom_string *qname,
 		return err;
 	}
 
+	/* Initialize the vtable */
+	result->base.base.vtable = &document_type_vtable;
+	result->base.destroy = &dom_document_type_destroy;
+
 	/* Get public and system IDs */
 	dom_string_ref(public_id);
 	result->public_id = public_id;
@@ -86,8 +97,11 @@ dom_exception dom_document_type_create(struct dom_string *qname,
  *
  * The contents of ::doctype will be destroyed and ::doctype will be freed.
  */
-void dom_document_type_destroy(struct dom_document_type *doctype)
+void dom_document_type_destroy(struct dom_node_internal *doctypenode)
 {
+	struct dom_document_type *doctype = 
+			(struct dom_document_type *)doctypenode;
+
 	/* Finish with public and system IDs */
 	dom_string_unref(doctype->system_id);
 	dom_string_unref(doctype->public_id);
@@ -110,7 +124,7 @@ void dom_document_type_destroy(struct dom_document_type *doctype)
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_document_type_get_name(struct dom_document_type *doc_type,
+dom_exception _dom_document_type_get_name(struct dom_document_type *doc_type,
 		struct dom_string **result)
 {
 	UNUSED(doc_type);
@@ -130,7 +144,7 @@ dom_exception dom_document_type_get_name(struct dom_document_type *doc_type,
  * the responsibility of the caller to unref the map once it has
  * finished with it.
  */
-dom_exception dom_document_type_get_entities(
+dom_exception _dom_document_type_get_entities(
 		struct dom_document_type *doc_type,
 		struct dom_namednodemap **result)
 {
@@ -151,7 +165,7 @@ dom_exception dom_document_type_get_entities(
  * the responsibility of the caller to unref the map once it has
  * finished with it.
  */
-dom_exception dom_document_type_get_notations(
+dom_exception _dom_document_type_get_notations(
 		struct dom_document_type *doc_type,
 		struct dom_namednodemap **result)
 {
@@ -172,7 +186,7 @@ dom_exception dom_document_type_get_notations(
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_document_type_get_public_id(
+dom_exception _dom_document_type_get_public_id(
 		struct dom_document_type *doc_type,
 		struct dom_string **result)
 {
@@ -193,7 +207,7 @@ dom_exception dom_document_type_get_public_id(
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_document_type_get_system_id(
+dom_exception _dom_document_type_get_system_id(
 		struct dom_document_type *doc_type,
 		struct dom_string **result)
 {
@@ -214,7 +228,7 @@ dom_exception dom_document_type_get_system_id(
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_document_type_get_internal_subset(
+dom_exception _dom_document_type_get_internal_subset(
 		struct dom_document_type *doc_type,
 		struct dom_string **result)
 {
