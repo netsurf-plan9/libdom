@@ -70,7 +70,7 @@ dom_exception dom_document_type_create(struct dom_string *qname,
 		return err;
 	}
 
-	/* Initialize the vtable */
+	/* Initialise the vtable */
 	result->base.base.vtable = &document_type_vtable;
 	result->base.destroy = &dom_document_type_destroy;
 

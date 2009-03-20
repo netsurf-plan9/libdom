@@ -73,7 +73,7 @@ dom_exception dom_attr_create(struct dom_document *doc,
 	if (a == NULL)
 		return DOM_NO_MEM_ERR;
 
-	/* Initialize the vtable */
+	/* Initialise the vtable */
 	a->base.base.vtable = &attr_vtable;
 	a->base.destroy = _dom_attr_destroy;
 

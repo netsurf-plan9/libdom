@@ -159,7 +159,7 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	d->alloc = alloc;
 	d->pw = pw;
 
-	/* Initialize the virtual table */
+	/* Initialise the virtual table */
 	d->base.base.vtable = &document_vtable;
 	d->base.destroy = &dom_document_destroy;
 

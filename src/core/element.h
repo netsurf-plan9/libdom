@@ -35,7 +35,7 @@ dom_exception dom_element_create(struct dom_document *doc,
 		struct dom_string *name, struct dom_string *namespace,
 		struct dom_string *prefix, struct dom_element **result);
 
-dom_exception dom_element_initialize(struct dom_element *el,
+dom_exception dom_element_initialise(struct dom_element *el,
 		struct dom_string *name, struct dom_string *namespace,
 		struct dom_string *prefix, struct dom_element **result);
 

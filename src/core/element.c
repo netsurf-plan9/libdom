@@ -27,7 +27,7 @@ static struct dom_element_vtable element_vtable = {
 };
 
 /**
- * Initialize an element node
+ * Initialise an element node
  *
  * \param doc        The owning document
  * \param name       The (local) name of the node to create
@@ -43,7 +43,7 @@ static struct dom_element_vtable element_vtable = {
  *
  * The returned element will already be referenced.
  */
-dom_exception dom_element_initialize(struct dom_element *el,
+dom_exception dom_element_initialise(struct dom_element *el,
 		struct dom_string *name, struct dom_string *namespace,
 		struct dom_string *prefix, struct dom_element **result)
 {
@@ -103,7 +103,7 @@ dom_exception dom_element_create(struct dom_document *doc,
 	if (el == NULL)
 		return DOM_NO_MEM_ERR;
 
-	dom_element_initialize(el, name, namespace, prefix, result);
+	dom_element_initialise(el, name, namespace, prefix, result);
 	
 	return DOM_NO_ERR;
 }
