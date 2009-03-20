@@ -19,16 +19,61 @@
 #include "utils/namespace.h"
 #include "utils/utils.h"
 
-/**
- * DOM element node
- */
-struct dom_element {
-	struct dom_node base;		/**< Base node */
-
-	struct dom_attr *attributes;	/**< Element attributes */
-
-	struct dom_type_info *schema_type_info;	/**< Type information */
+static struct dom_element_vtable element_vtable = {
+	{
+		DOM_NODE_VTABLE
+	},
+	DOM_ELEMENT_VTABLE
 };
+
+/**
+ * Initialize an element node
+ *
+ * \param doc        The owning document
+ * \param name       The (local) name of the node to create
+ * \param namespace  The namespace URI of the element, or NULL
+ * \param prefix     The namespace prefix of the element, or NULL
+ * \param result     Pointer to location to receive created element
+ * \return DOM_NO_ERR                on success,
+ *         DOM_INVALID_CHARACTER_ERR if ::name is invalid,
+ *         DOM_NO_MEM_ERR            on memory exhaustion.
+ *
+ * ::doc, ::name, ::namespace and ::prefix will have their 
+ * reference counts increased.
+ *
+ * The returned element will already be referenced.
+ */
+dom_exception dom_element_initialize(struct dom_element *el,
+		struct dom_string *name, struct dom_string *namespace,
+		struct dom_string *prefix, struct dom_element **result)
+{
+	dom_exception err;
+	struct dom_document *doc;
+
+	dom_node_get_owner_document(el, &doc);
+
+	/** \todo Sanity check the tag name */
+
+	/* Initialise the base class */
+	err = dom_node_initialise(&el->base, doc, DOM_ELEMENT_NODE,
+			name, NULL, namespace, prefix);
+	if (err != DOM_NO_ERR) {
+		dom_document_alloc(doc, el, 0);
+		return err;
+	}
+
+	/* Perform our type-specific initialisation */
+	el->attributes = NULL;
+	el->schema_type_info = NULL;
+
+	/* Init the vtable's destroy function */
+	el->base.base.vtable = &element_vtable;
+	el->base.destroy = &_dom_element_destroy;
+
+	*result = el;
+
+	return DOM_NO_ERR;
+}
 
 /**
  * Create an element node
@@ -52,29 +97,14 @@ dom_exception dom_element_create(struct dom_document *doc,
 		struct dom_string *prefix, struct dom_element **result)
 {
 	struct dom_element *el;
-	dom_exception err;
-
-	/** \todo Sanity check the tag name */
 
 	/* Allocate the element */
 	el = dom_document_alloc(doc, NULL, sizeof(struct dom_element));
 	if (el == NULL)
 		return DOM_NO_MEM_ERR;
 
-	/* Initialise the base class */
-	err = dom_node_initialise(&el->base, doc, DOM_ELEMENT_NODE,
-			name, NULL, namespace, prefix);
-	if (err != DOM_NO_ERR) {
-		dom_document_alloc(doc, el, 0);
-		return err;
-	}
-
-	/* Perform our type-specific initialisation */
-	el->attributes = NULL;
-	el->schema_type_info = NULL;
-
-	*result = el;
-
+	dom_element_initialize(el, name, namespace, prefix, result);
+	
 	return DOM_NO_ERR;
 }
 
@@ -89,7 +119,7 @@ dom_exception dom_element_create(struct dom_document *doc,
 void dom_element_destroy(struct dom_document *doc,
 		struct dom_element *element)
 {
-	struct dom_node *c, *d;
+	struct dom_node_internal *c, *d;
 
 	/* Destroy children of this node */
 	for (c = element->base.first_child; c != NULL; c = d) {
@@ -114,7 +144,7 @@ void dom_element_destroy(struct dom_document *doc,
 	}
 
 	/* Destroy attributes attached to this node */
-	for (c = (struct dom_node *) element->attributes;
+	for (c = (struct dom_node_internal *) element->attributes;
 			c != NULL; c = d) {
 		d = c->next;
 
@@ -148,6 +178,19 @@ void dom_element_destroy(struct dom_document *doc,
 }
 
 /**
+ * The destroy virtual function of dom_element 
+ * 
+ * \param element The element to be destroyed
+ **/
+void _dom_element_destroy(struct dom_node_internal *node)
+{
+	struct dom_document *doc;
+	dom_node_get_owner_document(node, &doc);
+
+	dom_element_destroy(doc, (struct dom_element *) node);
+}
+
+/**
  * Retrieve an element's tag name
  *
  * \param element  The element to retrieve the name from
@@ -159,7 +202,7 @@ void dom_element_destroy(struct dom_document *doc,
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_element_get_tag_name(struct dom_element *element,
+dom_exception _dom_element_get_tag_name(struct dom_element *element,
 		struct dom_string **name)
 {
 	/* This is the same as nodeName */
@@ -178,10 +221,11 @@ dom_exception dom_element_get_tag_name(struct dom_element *element,
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_element_get_attribute(struct dom_element *element,
+dom_exception _dom_element_get_attribute(struct dom_element *element,
 		struct dom_string *name, struct dom_string **value)
 {
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 
 	/* Search attributes, looking for name */
 	for (; a != NULL; a = a->next) {
@@ -209,11 +253,12 @@ dom_exception dom_element_get_attribute(struct dom_element *element,
  *         DOM_INVALID_CHARACTER_ERR       if ::name is invalid,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly.
  */
-dom_exception dom_element_set_attribute(struct dom_element *element,
+dom_exception _dom_element_set_attribute(struct dom_element *element,
 		struct dom_string *name, struct dom_string *value)
 {
-	struct dom_node *e = (struct dom_node *) element;
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *e = (struct dom_node_internal *) element;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 
 	/** \todo validate name */
 
@@ -250,11 +295,11 @@ dom_exception dom_element_set_attribute(struct dom_element *element,
 			return err;
 		}
 
-		a = (struct dom_node *) attr;
+		a = (struct dom_node_internal *) attr;
 
 		/* And insert it into the element */
 		a->previous = NULL;
-		a->next = (struct dom_node *) element->attributes;
+		a->next = (struct dom_node_internal *) element->attributes;
 
 		if (a->next != NULL)
 			a->next->previous = a;
@@ -273,11 +318,12 @@ dom_exception dom_element_set_attribute(struct dom_element *element,
  * \return DOM_NO_ERR                      on success,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly.
  */
-dom_exception dom_element_remove_attribute(struct dom_element *element,
+dom_exception _dom_element_remove_attribute(struct dom_element *element,
 		struct dom_string *name)
 {
-	struct dom_node *e = (struct dom_node *) element;
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *e = (struct dom_node_internal *) element;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 
 	/* Ensure element can be written to */
 	if (_dom_node_readonly(e))
@@ -322,10 +368,11 @@ dom_exception dom_element_remove_attribute(struct dom_element *element,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_element_get_attribute_node(struct dom_element *element,
+dom_exception _dom_element_get_attribute_node(struct dom_element *element,
 		struct dom_string *name, struct dom_attr **result)
 {
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 
 	/* Search attributes, looking for name */
 	for (; a != NULL; a = a->next) {
@@ -357,11 +404,11 @@ dom_exception dom_element_get_attribute_node(struct dom_element *element,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_element_set_attribute_node(struct dom_element *element,
+dom_exception _dom_element_set_attribute_node(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
-	struct dom_node *e = (struct dom_node *) element;
-	struct dom_node *a = (struct dom_node *) attr;
+	struct dom_node_internal *e = (struct dom_node_internal *) element;
+	struct dom_node_internal *a = (struct dom_node_internal *) attr;
 	struct dom_attr *prev = NULL;
 
 	/* Ensure element and attribute belong to the same document */
@@ -382,7 +429,8 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
 		/* Search for existing attribute with same name */
 		prev = element->attributes; 
 		while (prev != NULL) {
-			struct dom_node *p = (struct dom_node *) prev;
+			struct dom_node_internal *p = 
+					(struct dom_node_internal *) prev;
 
 			if (dom_string_cmp(a->name, p->name) == 0)
 				break;
@@ -394,7 +442,8 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
 
 		if (prev != NULL) {
 			/* Found an existing attribute, so replace it */
-			struct dom_node *p = (struct dom_node *) prev;
+			struct dom_node_internal *p = 
+					(struct dom_node_internal *) prev;
 
 			a->previous = p->previous;
 			a->next = p->next;
@@ -414,7 +463,8 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
 		} else {
 			/* No existing attribute, so insert at front of list */
 			a->previous = NULL;
-			a->next = (struct dom_node *) element->attributes;
+			a->next = (struct dom_node_internal *) 
+					element->attributes;
 
 			if (a->next != NULL)
 				a->next->previous = a;
@@ -446,11 +496,11 @@ dom_exception dom_element_set_attribute_node(struct dom_element *element,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_element_remove_attribute_node(struct dom_element *element,
+dom_exception _dom_element_remove_attribute_node(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
-	struct dom_node *e = (struct dom_node *) element;
-	struct dom_node *a = (struct dom_node *) attr;
+	struct dom_node_internal *e = (struct dom_node_internal *) element;
+	struct dom_node_internal *a = (struct dom_node_internal *) attr;
 
 	/* Ensure element can be written to */
 	if (_dom_node_readonly(e))
@@ -493,7 +543,7 @@ dom_exception dom_element_remove_attribute_node(struct dom_element *element,
  * the responsibility of the caller to unref the nodelist once it has
  * finished with it.
  */
-dom_exception dom_element_get_elements_by_tag_name(
+dom_exception _dom_element_get_elements_by_tag_name(
 		struct dom_element *element, struct dom_string *name,
 		struct dom_nodelist **result)
 {
@@ -518,11 +568,12 @@ dom_exception dom_element_get_elements_by_tag_name(
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  */
-dom_exception dom_element_get_attribute_ns(struct dom_element *element,
+dom_exception _dom_element_get_attribute_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *localname,
 		struct dom_string **value)
 {
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 
 	/** \todo ensure implementation supports XML */
 
@@ -574,12 +625,13 @@ dom_exception dom_element_get_attribute_ns(struct dom_element *element,
  *                                         Document does not support
  *                                         Namespaces.
  */
-dom_exception dom_element_set_attribute_ns(struct dom_element *element,
+dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_string *value)
 {
-	struct dom_node *e = (struct dom_node *) element;
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *e = (struct dom_node_internal *) element;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 	struct dom_string *prefix, *localname;
 	dom_exception err;
 
@@ -659,11 +711,11 @@ dom_exception dom_element_set_attribute_ns(struct dom_element *element,
 			return err;
 		}
 
-		a = (struct dom_node *) attr;
+		a = (struct dom_node_internal *) attr;
 
 		/* And insert it into the element */
 		a->previous = NULL;
-		a->next = (struct dom_node *) element->attributes;
+		a->next = (struct dom_node_internal *) element->attributes;
 
 		if (a->next != NULL)
 			a->next->previous = a;
@@ -688,11 +740,12 @@ dom_exception dom_element_set_attribute_ns(struct dom_element *element,
  *                                         Document does not support
  *                                         Namespaces.
  */
-dom_exception dom_element_remove_attribute_ns(struct dom_element *element,
+dom_exception _dom_element_remove_attribute_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *localname)
 {
-	struct dom_node *e = (struct dom_node *) element;
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *e = (struct dom_node_internal *) element;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 
 	/** \todo ensure XML feature is supported */
 
@@ -747,11 +800,12 @@ dom_exception dom_element_remove_attribute_ns(struct dom_element *element,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_element_get_attribute_node_ns(struct dom_element *element,
+dom_exception _dom_element_get_attribute_node_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *localname,
 		struct dom_attr **result)
 {
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 
 	/** \todo ensure XML feature is supported */
 
@@ -793,11 +847,11 @@ dom_exception dom_element_get_attribute_node_ns(struct dom_element *element,
  * the responsibility of the caller to unref the node once it has
  * finished with it.
  */
-dom_exception dom_element_set_attribute_node_ns(struct dom_element *element,
+dom_exception _dom_element_set_attribute_node_ns(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
-	struct dom_node *e = (struct dom_node *) element;
-	struct dom_node *a = (struct dom_node *) attr;
+	struct dom_node_internal *e = (struct dom_node_internal *) element;
+	struct dom_node_internal *a = (struct dom_node_internal *) attr;
 	struct dom_attr *prev = NULL;
 
 	/** \todo ensure XML feature is supported */
@@ -820,7 +874,8 @@ dom_exception dom_element_set_attribute_node_ns(struct dom_element *element,
 		/* Search for existing attribute with same namespace/localname */
 		prev = element->attributes; 
 		while (prev != NULL) {
-			struct dom_node *p = (struct dom_node *) prev;
+			struct dom_node_internal *p = 
+					(struct dom_node_internal *) prev;
 
 			if (((a->namespace == NULL && p->namespace == NULL) || 
 				(a->namespace != NULL && 
@@ -836,7 +891,8 @@ dom_exception dom_element_set_attribute_node_ns(struct dom_element *element,
 
 		if (prev != NULL) {
 			/* Found an existing attribute, so replace it */
-			struct dom_node *p = (struct dom_node *) prev;
+			struct dom_node_internal *p = 
+					(struct dom_node_internal *) prev;
 
 			a->previous = p->previous;
 			a->next = p->next;
@@ -856,7 +912,8 @@ dom_exception dom_element_set_attribute_node_ns(struct dom_element *element,
 		} else {
 			/* No existing attribute, so insert at front of list */
 			a->previous = NULL;
-			a->next = (struct dom_node *) element->attributes;
+			a->next = (struct dom_node_internal *) 
+					element->attributes;
 
 			if (a->next != NULL)
 				a->next->previous = a;
@@ -891,7 +948,7 @@ dom_exception dom_element_set_attribute_node_ns(struct dom_element *element,
  * the responsibility of the caller to unref the nodelist once it has
  * finished with it.
  */
-dom_exception dom_element_get_elements_by_tag_name_ns(
+dom_exception _dom_element_get_elements_by_tag_name_ns(
 		struct dom_element *element, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_nodelist **result)
 {
@@ -910,10 +967,11 @@ dom_exception dom_element_get_elements_by_tag_name_ns(
  * \param result   Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_element_has_attribute(struct dom_element *element,
+dom_exception _dom_element_has_attribute(struct dom_element *element,
 		struct dom_string *name, bool *result)
 {
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 
 	/* Search attributes, looking for name */
 	for (; a != NULL; a = a->next) {
@@ -940,11 +998,12 @@ dom_exception dom_element_has_attribute(struct dom_element *element,
  *                               through the Document does not support
  *                               Namespaces.
  */
-dom_exception dom_element_has_attribute_ns(struct dom_element *element,
+dom_exception _dom_element_has_attribute_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *localname,
 		bool *result)
 {
-	struct dom_node *a = (struct dom_node *) element->attributes;
+	struct dom_node_internal *a = (struct dom_node_internal *) 
+			element->attributes;
 
 	/** \todo ensure XML feature is supported */
 
@@ -973,7 +1032,7 @@ dom_exception dom_element_has_attribute_ns(struct dom_element *element,
  * the responsibility of the caller to unref the typeinfo once it has
  * finished with it.
  */
-dom_exception dom_element_get_schema_type_info(struct dom_element *element,
+dom_exception _dom_element_get_schema_type_info(struct dom_element *element,
 		struct dom_type_info **result)
 {
 	UNUSED(element);
@@ -993,7 +1052,7 @@ dom_exception dom_element_get_schema_type_info(struct dom_element *element,
  *         DOM_NOT_FOUND_ERR               if the specified node is not an
  *                                         attribute of ::element.
  */
-dom_exception dom_element_set_id_attribute(struct dom_element *element,
+dom_exception _dom_element_set_id_attribute(struct dom_element *element,
 		struct dom_string *name, bool is_id)
 {
 	UNUSED(element);
@@ -1015,7 +1074,7 @@ dom_exception dom_element_set_id_attribute(struct dom_element *element,
  *         DOM_NOT_FOUND_ERR               if the specified node is not an
  *                                         attribute of ::element.
  */
-dom_exception dom_element_set_id_attribute_ns(struct dom_element *element,
+dom_exception _dom_element_set_id_attribute_ns(struct dom_element *element,
 		struct dom_string *namespace, struct dom_string *localname,
 		bool is_id)
 {
@@ -1038,7 +1097,7 @@ dom_exception dom_element_set_id_attribute_ns(struct dom_element *element,
  *         DOM_NOT_FOUND_ERR               if the specified node is not an
  *                                         attribute of ::element.
  */
-dom_exception dom_element_set_id_attribute_node(struct dom_element *element,
+dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 		struct dom_attr *id_attr, bool is_id)
 {
 	UNUSED(element);
