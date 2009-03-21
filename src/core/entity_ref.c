@@ -14,7 +14,7 @@
  * A DOM entity reference
  */
 struct dom_entity_reference {
-	struct dom_node base;		/**< Base node */
+	struct dom_node_internal base;		/**< Base node */
 };
 
 /**
@@ -68,7 +68,7 @@ dom_exception dom_entity_reference_create(struct dom_document *doc,
 void dom_entity_reference_destroy(struct dom_document *doc,
 		struct dom_entity_reference *entity)
 {
-	struct dom_node *c, *d;
+	struct dom_node_internal *c, *d;
 
 	/* Destroy children of this node */
 	for (c = entity->base.first_child; c != NULL; c = d) {
