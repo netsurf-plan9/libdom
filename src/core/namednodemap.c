@@ -22,7 +22,7 @@
 struct dom_namednodemap {
 	struct dom_document *owner;	/**< Owning document */
 
-	struct dom_node *head;		/**< Start of item list */
+	struct dom_node_internal *head;		/**< Start of item list */
 
 	dom_node_type type;		/**< Type of items in map */
 
@@ -50,7 +50,7 @@ struct dom_namednodemap {
  * finished with it.
  */
 dom_exception dom_namednodemap_create(struct dom_document *doc,
-		struct dom_node *head, dom_node_type type,
+		struct dom_node_internal *head, dom_node_type type,
 		struct dom_namednodemap **map)
 {
 	struct dom_namednodemap *m;
@@ -95,7 +95,8 @@ void dom_namednodemap_ref(struct dom_namednodemap *map)
 void dom_namednodemap_unref(struct dom_namednodemap *map)
 {
 	if (--map->refcnt == 0) {
-		struct dom_node *owner = (struct dom_node *) map->owner;
+		struct dom_node_internal *owner = 
+				(struct dom_node_internal *) map->owner;
 
 		dom_node_unref(map->head);
 
@@ -122,7 +123,7 @@ void dom_namednodemap_unref(struct dom_namednodemap *map)
 dom_exception dom_namednodemap_get_length(struct dom_namednodemap *map,
 		unsigned long *length)
 {
-	struct dom_node *cur;
+	struct dom_node_internal *cur;
 	unsigned long len = 0;
 
 	switch (map->type) {
@@ -161,7 +162,7 @@ dom_exception dom_namednodemap_get_length(struct dom_namednodemap *map,
 dom_exception dom_namednodemap_get_named_item(struct dom_namednodemap *map,
 		struct dom_string *name, struct dom_node **node)
 {
-	struct dom_node *cur;
+	struct dom_node_internal *cur;
 
 	switch (map->type) {
 	case DOM_ATTRIBUTE_NODE:
@@ -185,7 +186,7 @@ dom_exception dom_namednodemap_get_named_item(struct dom_namednodemap *map,
 	if (cur != NULL) {
 		dom_node_ref(cur);
 	}
-	*node = cur;
+	*node = (struct dom_node *) cur;
 
 	return DOM_NO_ERR;
 }
@@ -218,9 +219,10 @@ dom_exception dom_namednodemap_set_named_item(struct dom_namednodemap *map,
 		struct dom_node *arg, struct dom_node **node)
 {
 	dom_exception err;
+	struct dom_node_internal *n = (struct dom_node_internal *) arg;
 
 	/* Ensure arg and map belong to the same document */
-	if (arg->owner != map->owner)
+	if (n->owner != map->owner)
 		return DOM_WRONG_DOCUMENT_ERR;
 
 	/* Ensure map is writable */
@@ -228,12 +230,12 @@ dom_exception dom_namednodemap_set_named_item(struct dom_namednodemap *map,
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
 	/* Ensure arg isn't attached to another element */
-	if (arg->type == DOM_ATTRIBUTE_NODE && arg->parent != NULL && 
-			arg->parent != map->head)
+	if (n->type == DOM_ATTRIBUTE_NODE && n->parent != NULL && 
+			n->parent != map->head)
 		return DOM_INUSE_ATTRIBUTE_ERR;
 
 	/* Ensure arg is permitted in the map */
-	if (arg->type != map->type)
+	if (n->type != map->type)
 		return DOM_HIERARCHY_REQUEST_ERR;
 
 	/* Now delegate to the container-specific function. 
@@ -333,7 +335,7 @@ dom_exception dom_namednodemap_remove_named_item(
 dom_exception dom_namednodemap_item(struct dom_namednodemap *map,
 		unsigned long index, struct dom_node **node)
 {
-	struct dom_node *cur;
+	struct dom_node_internal *cur;
 	unsigned long count = 0;
 
 	switch (map->type) {
@@ -360,7 +362,7 @@ dom_exception dom_namednodemap_item(struct dom_namednodemap *map,
 	if (cur != NULL) {
 		dom_node_ref(cur);
 	}
-	*node = cur;
+	*node = (struct dom_node *) cur;
 
 	return DOM_NO_ERR;
 }
@@ -385,7 +387,7 @@ dom_exception dom_namednodemap_get_named_item_ns(
 		struct dom_namednodemap *map, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_node **node)
 {
-	struct dom_node *cur;
+	struct dom_node_internal *cur;
 
 	/** \todo ensure XML feature is supported */
 
@@ -414,7 +416,7 @@ dom_exception dom_namednodemap_get_named_item_ns(
 	if (cur != NULL) {
 		dom_node_ref(cur);
 	}
-	*node = cur;
+	*node = (struct dom_node *) cur;
 
 	return DOM_NO_ERR;
 }
@@ -453,11 +455,12 @@ dom_exception dom_namednodemap_set_named_item_ns(
 		struct dom_node **node)
 {
 	dom_exception err;
+	struct dom_node_internal *n = (struct dom_node_internal *) arg;
 
 	/** \todo ensure XML feature is supported */
 
 	/* Ensure arg and map belong to the same document */
-	if (arg->owner != map->owner)
+	if (n->owner != map->owner)
 		return DOM_WRONG_DOCUMENT_ERR;
 
 	/* Ensure map is writable */
@@ -465,12 +468,12 @@ dom_exception dom_namednodemap_set_named_item_ns(
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
 	/* Ensure arg isn't attached to another element */
-	if (arg->type == DOM_ATTRIBUTE_NODE && arg->parent != NULL && 
-			arg->parent != map->head)
+	if (n->type == DOM_ATTRIBUTE_NODE && n->parent != NULL && 
+			n->parent != map->head)
 		return DOM_INUSE_ATTRIBUTE_ERR;
 
 	/* Ensure arg is permitted in the map */
-	if (arg->type != map->type)
+	if (n->type != map->type)
 		return DOM_HIERARCHY_REQUEST_ERR;
 
 	/* Now delegate to the container-specific function. 
@@ -547,7 +550,7 @@ dom_exception dom_namednodemap_remove_named_item_ns(
 		}
 	}
 		break;
-	case DOM_NOTATION_NODE:
+case DOM_NOTATION_NODE:
 	case DOM_ENTITY_NODE:
 		/** \todo handle notation and entity nodes */
 	default:
@@ -569,7 +572,7 @@ dom_exception dom_namednodemap_remove_named_item_ns(
  * \return true if list matches, false otherwise
  */
 bool dom_namednodemap_match(struct dom_namednodemap *map,
-		struct dom_node *head, dom_node_type type)
+		struct dom_node_internal *head, dom_node_type type)
 {
 	if (map->head == head && map->type == type)
 		return true;

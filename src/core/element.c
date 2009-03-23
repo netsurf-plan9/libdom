@@ -548,7 +548,8 @@ dom_exception _dom_element_get_elements_by_tag_name(
 		struct dom_nodelist **result)
 {
 	return dom_document_get_nodelist(element->base.owner, 
-			(struct dom_node *) element, name, NULL, NULL, result);
+			(struct dom_node_internal *) element, name, NULL, 
+			NULL, result);
 }
 
 /**
@@ -955,7 +956,7 @@ dom_exception _dom_element_get_elements_by_tag_name_ns(
 	/** \todo ensure XML feature is supported */
 
 	return dom_document_get_nodelist(element->base.owner, 
-			(struct dom_node *) element, NULL, 
+			(struct dom_node_internal *) element, NULL, 
 			namespace, localname, result);
 }
 
@@ -1125,8 +1126,8 @@ dom_exception dom_element_get_attributes(struct dom_element *element,
 		struct dom_namednodemap **result)
 {
 	return dom_document_get_namednodemap(element->base.owner,
-			(struct dom_node *) element, DOM_ATTRIBUTE_NODE,
-			result);
+			(struct dom_node_internal *) element, 
+			DOM_ATTRIBUTE_NODE, result);
 }
 
 /**
@@ -1150,8 +1151,9 @@ dom_exception dom_element_has_attributes(struct dom_element *element,
  * \param element  The element to retrieve the first attribute from
  * \return Pointer to first attribute, or NULL if none.
  */
-struct dom_node *dom_element_get_first_attribute(struct dom_element *element)
+struct dom_node_internal *dom_element_get_first_attribute(
+		struct dom_element *element)
 {
-	return (struct dom_node *) element->attributes;
+	return (struct dom_node_internal *) element->attributes;
 }
 

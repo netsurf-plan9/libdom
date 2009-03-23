@@ -50,7 +50,8 @@ dom_exception dom_element_get_attributes(struct dom_element *element,
 dom_exception dom_element_has_attributes(struct dom_element *element,
 		bool *result);
 
-struct dom_node *dom_element_get_first_attribute(struct dom_element *element);
+struct dom_node_internal *dom_element_get_first_attribute(
+		struct dom_element *element);
 
 /* The virtual functions of dom_element */
 dom_exception _dom_element_get_tag_name(struct dom_element *element,

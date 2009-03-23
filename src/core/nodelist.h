@@ -19,13 +19,13 @@ struct dom_string;
 
 /* Create a nodelist */
 dom_exception dom_nodelist_create(struct dom_document *doc,
-		struct dom_node *root, struct dom_string *tagname,
+		struct dom_node_internal *root, struct dom_string *tagname,
 		struct dom_string *namespace, struct dom_string *localname,
 		struct dom_nodelist **list);
 
 /* Match a nodelist instance against a set of nodelist creation parameters */
-bool dom_nodelist_match(struct dom_nodelist *list, struct dom_node *root,
-		struct dom_string *tagname, struct dom_string *namespace,
-		struct dom_string *localname);
+bool dom_nodelist_match(struct dom_nodelist *list, 
+		struct dom_node_internal *root, struct dom_string *tagname, 
+		struct dom_string *namespace, struct dom_string *localname);
 
 #endif

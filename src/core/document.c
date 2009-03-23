@@ -510,7 +510,7 @@ dom_exception _dom_document_create_entity_reference(struct dom_document *doc,
 dom_exception _dom_document_get_elements_by_tag_name(struct dom_document *doc,
 		struct dom_string *tagname, struct dom_nodelist **result)
 {
-	return dom_document_get_nodelist(doc, (struct dom_node *) doc, 
+	return dom_document_get_nodelist(doc, (struct dom_node_internal *) doc, 
 			tagname, NULL, NULL, result);
 }
 
@@ -679,7 +679,7 @@ dom_exception _dom_document_get_elements_by_tag_name_ns(
 		struct dom_document *doc, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_nodelist **result)
 {
-	return dom_document_get_nodelist(doc, (struct dom_node *) doc, 
+	return dom_document_get_nodelist(doc, (struct dom_node_internal *) doc, 
 			NULL, namespace, localname, result);
 }
 
@@ -1049,7 +1049,7 @@ void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size)
  * finished with it.
  */
 dom_exception dom_document_get_nodelist(struct dom_document *doc,
-		struct dom_node *root, struct dom_string *tagname,
+		struct dom_node_internal *root, struct dom_string *tagname,
 		struct dom_string *namespace, struct dom_string *localname,
 		struct dom_nodelist **list)
 {
@@ -1148,7 +1148,7 @@ void dom_document_remove_nodelist(struct dom_document *doc,
  * finished with it.
  */
 dom_exception dom_document_get_namednodemap(struct dom_document *doc,
-		struct dom_node *head, dom_node_type type,
+		struct dom_node_internal *head, dom_node_type type,
 		struct dom_namednodemap **map)
 {
 	struct dom_doc_nnm *m;

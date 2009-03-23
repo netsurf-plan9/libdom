@@ -20,12 +20,12 @@ struct dom_string;
 
 /* Create a namednodemap */
 dom_exception dom_namednodemap_create(struct dom_document *doc,
-		struct dom_node *head, dom_node_type type,
+		struct dom_node_internal *head, dom_node_type type,
 		struct dom_namednodemap **map);
 
 
 /* Match a namednodemap instance against a set of creation parameters */
 bool dom_namednodemap_match(struct dom_namednodemap *map,
-		struct dom_node *head, dom_node_type type);
+		struct dom_node_internal *head, dom_node_type type);
 
 #endif

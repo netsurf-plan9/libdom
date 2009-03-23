@@ -66,7 +66,7 @@ struct dom_nodelist {
  * do so explicitly. The client must unref the list once finished with it.
  */
 dom_exception dom_nodelist_create(struct dom_document *doc,
-		struct dom_node *root, struct dom_string *tagname,
+		struct dom_node_internal *root, struct dom_string *tagname,
 		struct dom_string *namespace, struct dom_string *localname,
 		struct dom_nodelist **list)
 {
@@ -316,9 +316,9 @@ dom_exception dom_nodelist_item(struct dom_nodelist *list,
  * \param localname  Local part of nodes in list (or NULL)
  * \return true if list matches, false otherwise
  */
-bool dom_nodelist_match(struct dom_nodelist *list, struct dom_node *root,
-		struct dom_string *tagname, struct dom_string *namespace,
-		struct dom_string *localname)
+bool dom_nodelist_match(struct dom_nodelist *list, 
+		struct dom_node_internal *root, struct dom_string *tagname, 
+		struct dom_string *namespace, struct dom_string *localname)
 {
 	if (list->root != root)
 		return false;

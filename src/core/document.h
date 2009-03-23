@@ -171,7 +171,7 @@ void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size);
 
 /* Get a nodelist, creating one if necessary */
 dom_exception dom_document_get_nodelist(struct dom_document *doc,
-		struct dom_node *root, struct dom_string *tagname,
+		struct dom_node_internal *root, struct dom_string *tagname,
 		struct dom_string *namespace, struct dom_string *localname,
 		struct dom_nodelist **list);
 /* Remove a nodelist */
@@ -180,7 +180,7 @@ void dom_document_remove_nodelist(struct dom_document *doc,
 
 /* Get a namednodemap, creating one if necessary */
 dom_exception dom_document_get_namednodemap(struct dom_document *doc,
-		struct dom_node *head, dom_node_type type,
+		struct dom_node_internal *head, dom_node_type type,
 		struct dom_namednodemap **map);
 /* Remove a namednodemap */
 void dom_document_remove_namednodemap(struct dom_document *doc,
