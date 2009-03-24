@@ -21,7 +21,7 @@
 struct dom_nodelist {
 	struct dom_document *owner;	/**< Owning document */
 
-	struct dom_node *root;		/**< Root of applicable subtree */
+	struct dom_node_internal *root;		/**< Root of applicable subtree */
 
 	enum { DOM_NODELIST_CHILDREN,
 	       DOM_NODELIST_BY_NAME,
@@ -76,7 +76,7 @@ dom_exception dom_nodelist_create(struct dom_document *doc,
 	if (l == NULL)
 		return DOM_NO_MEM_ERR;
 
-	dom_node_ref((struct dom_node *) doc);
+	dom_node_ref(doc);
 	l->owner = doc;
 
 	dom_node_ref(root);
@@ -125,7 +125,8 @@ void dom_nodelist_ref(struct dom_nodelist *list)
 void dom_nodelist_unref(struct dom_nodelist *list)
 {
 	if (--list->refcnt == 0) {
-		struct dom_node *owner = (struct dom_node *) list->owner;
+		struct dom_node_internal *owner = 
+				(struct dom_node_internal *) list->owner;
 
 		switch (list->type) {
 		case DOM_NODELIST_CHILDREN:
@@ -165,7 +166,7 @@ void dom_nodelist_unref(struct dom_nodelist *list)
 dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
 		unsigned long *length)
 {
-	struct dom_node *cur = list->root->first_child;
+	struct dom_node_internal *cur = list->root->first_child;
 	unsigned long len = 0;
 
 	/* Traverse data structure */
@@ -205,7 +206,7 @@ dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
 			} else {
 				/* No children or siblings. 
 				 * Find first unvisited relation. */
-				struct dom_node *parent = cur->parent;
+				struct dom_node_internal *parent = cur->parent;
 
 				while (parent != list->root &&
 						cur == parent->last_child) {
@@ -240,7 +241,7 @@ dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
 dom_exception dom_nodelist_item(struct dom_nodelist *list,
 		unsigned long index, struct dom_node **node)
 {
-	struct dom_node *cur = list->root->first_child;
+	struct dom_node_internal *cur = list->root->first_child;
 	unsigned long count = 0;
 
 	/* Traverse data structure */
@@ -285,7 +286,7 @@ dom_exception dom_nodelist_item(struct dom_nodelist *list,
 			} else {
 				/* No children or siblings.
 				 * Find first unvisited relation. */
-				struct dom_node *parent = cur->parent;
+				struct dom_node_internal *parent = cur->parent;
 
 				while (parent != list->root &&
 						cur == parent->last_child) {
@@ -301,7 +302,7 @@ dom_exception dom_nodelist_item(struct dom_nodelist *list,
 	if (cur != NULL) {
 		dom_node_ref(cur);
 	}
-	*node = cur;
+	*node = (struct dom_node *) cur;
 
 	return DOM_NO_ERR;
 }

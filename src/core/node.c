@@ -98,6 +98,8 @@ void _dom_node_destroy(struct dom_node_internal *node)
 		dom_node_ref(owner);
 	}
 
+/* This type dependent switch is not necessary from now.
+   But I still keep them for a while untill all the functions works well.
 	switch (node->type) {
 	case DOM_ELEMENT_NODE:
 		dom_element_destroy(owner, (struct dom_element *) node);
@@ -117,7 +119,6 @@ void _dom_node_destroy(struct dom_node_internal *node)
 				(struct dom_entity_reference *) node);
 		break;
 	case DOM_ENTITY_NODE:
-		/** \todo entity node */
 		break;
 	case DOM_PROCESSING_INSTRUCTION_NODE:
 		dom_processing_instruction_destroy(owner,
@@ -137,10 +138,9 @@ void _dom_node_destroy(struct dom_node_internal *node)
 				(struct dom_document_fragment *) node);
 		break;
 	case DOM_NOTATION_NODE:
-		/** \todo notation node */
 		break;
 	}
-
+*/
 	if (!null_owner_permitted) {
 		/* Release the reference we claimed on the document. If this 
 		 * is the last reference held on the document and the list 

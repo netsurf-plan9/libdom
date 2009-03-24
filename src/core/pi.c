@@ -13,7 +13,7 @@
  * A DOM processing instruction
  */
 struct dom_processing_instruction {
-	struct dom_node base;		/**< Base node */
+	struct dom_node_internal base;		/**< Base node */
 };
 
 /**
