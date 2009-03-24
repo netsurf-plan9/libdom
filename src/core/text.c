@@ -114,7 +114,7 @@ dom_exception dom_text_initialise(struct dom_text *text,
 		return err;
 
 	/* Compose the vtable */
-	text->base.base.base.vtable = &text_vtable;
+	((struct dom_node *) text)->vtable = &text_vtable;
 	text->base.base.destroy = &_dom_text_destroy;
 
 	/* Perform our type-specific initialisation */
