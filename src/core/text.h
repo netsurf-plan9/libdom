@@ -27,6 +27,16 @@ struct dom_text {
 						 * content whitespace */
 };
 
+/* Vitual functions for dom_text */
+dom_exception _dom_text_split_text(struct dom_text *text,
+		unsigned long offset, struct dom_text **result);
+dom_exception _dom_text_get_is_element_content_whitespace(
+		struct dom_text *text, bool *result);
+dom_exception _dom_text_get_whole_text(struct dom_text *text,
+		struct dom_string **result);
+dom_exception _dom_text_replace_whole_text(struct dom_text *text,
+		struct dom_string *content, struct dom_text **result);
+
 dom_exception dom_text_create(struct dom_document *doc,
 		struct dom_string *name, struct dom_string *value,
 		struct dom_text **result);
@@ -38,5 +48,11 @@ dom_exception dom_text_initialise(struct dom_text *text,
 		struct dom_string *name, struct dom_string *value);
 
 void dom_text_finalise(struct dom_document *doc, struct dom_text *text);
+
+#define DOM_TEXT_VTABLE \
+	_dom_text_split_text, \
+	_dom_text_get_is_element_content_whitespace, \
+	_dom_text_get_whole_text, \
+	_dom_text_replace_whole_text
 
 #endif

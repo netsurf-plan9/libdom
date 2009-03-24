@@ -13,6 +13,27 @@
 #include "core/text.h"
 #include "utils/utils.h"
 
+/* The virtual table for dom_text */
+static struct dom_text_vtable text_vtable = {
+	{
+		{
+			DOM_NODE_VTABLE
+		},
+		DOM_CHARACTERDATA_VTABLE
+	},
+	DOM_TEXT_VTABLE
+};
+
+/* The destroy virtual function */
+void _dom_text_destroy(struct dom_node_internal *node);
+void _dom_text_destroy(struct dom_node_internal *node)
+{
+	struct dom_document *doc;
+	dom_node_get_owner_document(node, &doc);
+
+	dom_text_destroy(doc, (struct dom_text *) node);
+}
+
 /**
  * Create a text node
  *
@@ -92,6 +113,10 @@ dom_exception dom_text_initialise(struct dom_text *text,
 	if (err != DOM_NO_ERR)
 		return err;
 
+	/* Compose the vtable */
+	text->base.base.base.vtable = &text_vtable;
+	text->base.base.destroy = &_dom_text_destroy;
+
 	/* Perform our type-specific initialisation */
 	text->element_content_whitespace = false;
 
@@ -125,10 +150,10 @@ void dom_text_finalise(struct dom_document *doc, struct dom_text *text)
  * The returned node will be referenced. The client should unref the node
  * once it has finished with it.
  */
-dom_exception dom_text_split_text(struct dom_text *text,
+dom_exception _dom_text_split_text(struct dom_text *text,
 		unsigned long offset, struct dom_text **result)
 {
-	struct dom_node *t = (struct dom_node *) text;
+	struct dom_node_internal *t = (struct dom_node_internal *) text;
 	struct dom_string *value;
 	struct dom_text *res;
 	unsigned long len;
@@ -168,7 +193,7 @@ dom_exception dom_text_split_text(struct dom_text *text,
 	/* Delete the data after the split point */
 	err = dom_characterdata_delete_data(&text->base, offset, len - offset);
 	if (err != DOM_NO_ERR) {
-		dom_node_unref((struct dom_node *) res);
+		dom_node_unref(res);
 		return err;
 	}
 
@@ -184,7 +209,7 @@ dom_exception dom_text_split_text(struct dom_text *text,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_text_get_is_element_content_whitespace(
+dom_exception _dom_text_get_is_element_content_whitespace(
 		struct dom_text *text, bool *result)
 {
 	*result = text->element_content_whitespace;
@@ -199,7 +224,7 @@ dom_exception dom_text_get_is_element_content_whitespace(
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception dom_text_get_whole_text(struct dom_text *text,
+dom_exception _dom_text_get_whole_text(struct dom_text *text,
 		struct dom_string **result)
 {
 	UNUSED(text);
@@ -221,7 +246,7 @@ dom_exception dom_text_get_whole_text(struct dom_text *text,
  * The returned node will be referenced. The client should unref the node
  * once it has finished with it.
  */
-dom_exception dom_text_replace_whole_text(struct dom_text *text,
+dom_exception _dom_text_replace_whole_text(struct dom_text *text,
 		struct dom_string *content, struct dom_text **result)
 {
 	UNUSED(text);
