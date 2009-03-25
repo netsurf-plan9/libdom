@@ -1556,7 +1556,7 @@ dom_exception _dom_node_get_user_data(dom_node_internal *node,
 bool _dom_node_permitted_child(const dom_node_internal *parent, 
 		const dom_node_internal *child)
 {
-	bool valid;
+	bool valid = false;
 
 	/* See DOM3Core $1.1.1 for details */
 

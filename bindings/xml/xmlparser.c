@@ -374,7 +374,7 @@ void xml_parser_end_document(void *ctx)
 
 	/* Get XML node */
 	err = dom_node_get_user_data((struct dom_node *) parser->doc,
-			parser->udkey, (void **) &node);
+			parser->udkey, (void **) (void *) &node);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_WARNING, parser->mctx,
 				"Failed finding XML node");
@@ -853,7 +853,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 
 	/* Append element to parent */
 	err = dom_node_append_child(parent, (struct dom_node *) el,
-			(struct dom_node **) &ins_el);
+			(struct dom_node **) (void *) &ins_el);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_ERROR, parser->mctx,
 				"Failed attaching element '%s'",
@@ -922,7 +922,7 @@ void xml_parser_add_text_node(dom_xml_parser *parser, struct dom_node *parent,
 
 	/* Append text node to parent */
 	err = dom_node_append_child(parent, (struct dom_node *) text,
-			(struct dom_node **) &ins_text);
+			(struct dom_node **) (void *) &ins_text);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) text);
 		parser->msg(DOM_MSG_ERROR, parser->mctx,
@@ -983,7 +983,7 @@ void xml_parser_add_cdata_section(dom_xml_parser *parser,
 
 	/* Append cdata section to parent */
 	err = dom_node_append_child(parent, (struct dom_node *) cdata,
-			(struct dom_node **) &ins_cdata);
+			(struct dom_node **) (void *) &ins_cdata);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) cdata);
 		parser->msg(DOM_MSG_ERROR, parser->mctx,
@@ -1051,7 +1051,7 @@ void xml_parser_add_entity_reference(dom_xml_parser *parser,
 
 	/* Append entity reference to parent */
 	err = dom_node_append_child(parent, (struct dom_node *) entity,
-			(struct dom_node **) &ins_entity);
+			(struct dom_node **) (void *) &ins_entity);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) entity);
 		parser->msg(DOM_MSG_ERROR, parser->mctx,
@@ -1112,7 +1112,7 @@ void xml_parser_add_comment(dom_xml_parser *parser, struct dom_node *parent,
 
 	/* Append comment to parent */
 	err = dom_node_append_child(parent, (struct dom_node *) comment,
-			(struct dom_node **) &ins_comment);
+			(struct dom_node **) (void *) &ins_comment);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) comment);
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -1207,7 +1207,7 @@ void xml_parser_add_document_type(dom_xml_parser *parser,
 
 	/* Add doctype to document */
 	err = dom_node_append_child(parent, (struct dom_node *) doctype,
-			(struct dom_node **) &ins_doctype);
+			(struct dom_node **) (void *) &ins_doctype);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) doctype);
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,

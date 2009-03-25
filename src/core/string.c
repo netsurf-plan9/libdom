@@ -248,7 +248,7 @@ uint32_t dom_string_rindex(struct dom_string *str, uint32_t chr)
 {
 	const uint8_t *s;
 	size_t clen, slen;
-	uint32_t c, index;
+	uint32_t c, coff, index;
 	parserutils_error err;
 
 	if (str == NULL)
@@ -261,9 +261,9 @@ uint32_t dom_string_rindex(struct dom_string *str, uint32_t chr)
 
 	while (slen > 0) {
 		err = parserutils_charset_utf8_prev(s, slen, 
-				(uint32_t *) &clen);
+				(uint32_t *) &coff);
 		if (err == PARSERUTILS_OK) {
-			err = parserutils_charset_utf8_to_ucs4(s + clen, 
+			err = parserutils_charset_utf8_to_ucs4(s + coff, 
 					slen - clen, &c, &clen);
 		}
 
@@ -372,7 +372,7 @@ dom_exception dom_string_substr(struct dom_string *str,
 {
 	const uint8_t *s = str->ptr;
 	size_t slen = str->len;
-	size_t b1, b2;
+	uint32_t b1, b2;
 	parserutils_error err;
 
 	/* Initialise the byte index of the start to 0 */
@@ -382,8 +382,7 @@ dom_exception dom_string_substr(struct dom_string *str,
 
 	/* Calculate the byte index of the start */
 	while (i1 > 0) {
-		err = parserutils_charset_utf8_next(s, slen - b1, b1, 
-				(uint32_t *) &b1);
+		err = parserutils_charset_utf8_next(s, slen - b1, b1, &b1);
 		if (err != PARSERUTILS_OK) {
 			return DOM_NO_MEM_ERR;
 		}
@@ -396,9 +395,7 @@ dom_exception dom_string_substr(struct dom_string *str,
 
 	/* Calculate the byte index of the end */
 	while (i2 > 0) {
-		err = parserutils_charset_utf8_next(s, slen - b2, b2, 
-				(uint32_t *) &b2);
-
+		err = parserutils_charset_utf8_next(s, slen - b2, b2, &b2);
 		if (err != PARSERUTILS_OK) {
 			return DOM_NO_MEM_ERR;
 		}
