@@ -1,6 +1,8 @@
 testlib_files := lib/comparators.c;lib/list.c;lib/testassert.c;
 testlib_files := $(testlib_files);lib/testobject.c;lib/utils.c
 
+TESTCFLAGS := $(TESTCFLAGS) -I$(CURDIR)
+
 DIR_TEST_ITEMS := binding:binding.c;$(testlib_files) \
 		test-list:test-list.c;$(testlib_files)
 
