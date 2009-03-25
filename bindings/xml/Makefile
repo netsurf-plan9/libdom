@@ -1,69 +1,16 @@
-# Makefile for libdom
-#
-# Toolchain is exported by top-level makefile
-#
-# Top-level makefile also exports the following variables:
-#
-# COMPONENT  Name of component
-# EXPORT     Absolute path of export directory
-# TOP        Absolute path of source tree root
-#
-# The top-level makefile requires the following targets to exist:
-#
-# clean      Clean source tree
-# debug      Create a debug binary
-# distclean  Fully clean source tree, back to pristine condition
-# export     Export distributable components to ${EXPORT}
-# release    Create a release binary
-# setup      Perform any setup required prior to compilation
-# test       Execute any test cases
+ifeq ($(WITH_LIBXML_BINDING),yes)
+  DIR_SOURCES := xmlbinding.c xmlparser.c
 
-# Manipulate include paths
-CFLAGS += -I$(CURDIR) \
-	`${PKGCONFIG} ${PKGCONFIGFLAGS} --cflags libxml-2.0` \
-	-D_POSIX_C_SOURCE
+  DIR_INSTALL_ITEMS := /include/dom/bindings/libxml:xmlbinding.h;xmlerror.h;xmlparser.h
 
-# Release output
-RELEASE = ${TOP}/${COMPONENT}-libxml.a
+  # LibXML2
+  ifneq ($(PKGCONFIG),)
+    CFLAGS := $(CFLAGS) $(shell $(PKGCONFIG) libxml-2.0 --cflags)
+    LDFLAGS := $(LDFLAGS) $(shell $(PKGCONFIG) libxml-2.0 --libs)
+  else
+    LDFLAGS := $(LDFLAGS) -lxml2
+  endif
+endif
 
-# Debug output
-DEBUG = ${TOP}/${COMPONENT}-libxml-debug.a
+include build/makefiles/Makefile.subdir
 
-# Objects
-OBJS = xmlbinding xmlparser
-
-.PHONY: clean debug distclean export release setup test
-
-# Targets
-release: $(addprefix Release/, $(addsuffix .o, $(OBJS)))
-	@${AR} ${ARFLAGS} $(RELEASE) Release/*
-
-debug: $(addprefix Debug/, $(addsuffix .o, $(OBJS)))
-	@${AR} ${ARFLAGS} $(DEBUG) Debug/*
-
-clean:
-	-@${RM} ${RMFLAGS} $(addprefix Release/, $(addsuffix .o, ${OBJS}))
-	-@${RM} ${RMFLAGS} $(addprefix Debug/, $(addsuffix .o, ${OBJS}))
-	-@${RM} ${RMFLAGS} $(RELEASE) $(DEBUG)
-
-distclean:
-	-@${RM} ${RMFLAGS} -r Release
-	-@${RM} ${RMFLAGS} -r Debug
-
-setup:
-	@${MKDIR} ${MKDIRFLAGS} Release
-	@${MKDIR} ${MKDIRFLAGS} Debug
-
-export:
-	@${CP} ${CPFLAGS} $(RELEASE) ${EXPORT}/lib/
-
-test:
-
-# Pattern rules
-Release/%.o: %.c
-	@${ECHO} ${ECHOFLAGS} "==> $<"
-	@${CC} -c ${CFLAGS} -DNDEBUG -o $@ $<
-
-Debug/%.o: %.c
-	@${ECHO} ${ECHOFLAGS} "==> $<"
-	@${CC} -c -g ${CFLAGS} -o $@ $<

@@ -1,36 +1,38 @@
-# Toolchain definitions for building on the destination platform
-export CC = gcc
-export AR = ar
-export LD = gcc
+# Component settings
+COMPONENT := dom
+# Default to a static library
+COMPONENT_TYPE ?= lib-static
 
-export CP = cp
-export RM = rm
-export MKDIR = mkdir
-export MV = mv
-export ECHO = echo
-export MAKE = make
-export PERL = perl
-export PKGCONFIG = pkg-config
-export XSLT = xsltproc
+# Setup the tooling
+include build/makefiles/Makefile.tools
+
+TESTRUNNER := $(PERL) build/testtools/testrunner.pl
 
 # Toolchain flags
-WARNFLAGS = -Wall -Wextra -Wundef -Wpointer-arith -Wcast-align \
+WARNFLAGS := -Wall -Wextra -Wundef -Wpointer-arith -Wcast-align \
 	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes \
 	-Wmissing-declarations -Wnested-externs -Werror -pedantic
-export CFLAGS = -std=c99 -D_BSD_SOURCE -I$(TOP)/include/ $(WARNFLAGS) 
-export ARFLAGS = -cru
-export LDFLAGS = -L$(TOP)/
+CFLAGS := $(CFLAGS) -std=c99 -D_BSD_SOURCE -I$(CURDIR)/include/ \
+	-I$(CURDIR)/src $(WARNFLAGS) 
 
-export CPFLAGS =
-export RMFLAGS = 
-export MKDIRFLAGS = -p
-export MVFLAGS =
-export ECHOFLAGS = 
-export MAKEFLAGS =
-export PKGCONFIGFLAGS =
-export XSLTFLAGS =
+include build/makefiles/Makefile.top
 
-export EXEEXT =
+# Extra installation rules
+I := include/dom
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/dom.h;$(I)/functypes.h
 
+I := include/dom/bootstrap
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/implpriv.h;$(I)/implregistry.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/init_fini.h
 
-include build/Makefile.common
+I := include/dom/core
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/attr.h;$(I)/characterdata.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/document.h;$(I)/document_type.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/element.h;$(I)/exceptions.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/implementation.h;$(I)/impllist.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/namednodemap.h;$(I)/node.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/nodelist.h;$(I)/string.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/text.h
+
+INSTALL_ITEMS := $(INSTALL_ITEMS) /lib/pkgconfig:lib$(COMPONENT).pc.in
+INSTALL_ITEMS := $(INSTALL_ITEMS) /lib:$(BUILDDIR)/lib$(COMPONENT)$(LIBEXT)
