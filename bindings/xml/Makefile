@@ -10,6 +10,10 @@ ifeq ($(WITH_LIBXML_BINDING),yes)
   else
     LDFLAGS := $(LDFLAGS) -lxml2
   endif
+
+  # LibXML 2.6.26 has a bug in its headers that expects _POSIX_C_SOURCE to be 
+  # defined. Define it here, even though we don't need it.
+  CFLAGS := $(CFLAGS) -D_POSIX_C_SOURCE
 endif
 
 include build/makefiles/Makefile.subdir
