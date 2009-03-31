@@ -11,8 +11,9 @@
 #include <dom/core/exceptions.h>
 
 struct dom_node;
-struct dom_namednodemap;
 struct dom_string;
+
+typedef struct dom_namednodemap dom_namednodemap;
 
 void dom_namednodemap_ref(struct dom_namednodemap *map);
 void dom_namednodemap_unref(struct dom_namednodemap *map);

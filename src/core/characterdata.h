@@ -15,9 +15,9 @@
 /**
  * DOM character data node
  */
-typedef struct dom_characterdata {
+struct dom_characterdata {
 	struct dom_node_internal base;		/**< Base node */
-} dom_characterdata;
+};
 
 dom_characterdata *dom_characterdata_create(struct dom_document *doc);
 dom_exception dom_characterdata_initialise(struct dom_characterdata *cdata,

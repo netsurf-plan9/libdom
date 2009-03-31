@@ -16,7 +16,8 @@
 
 struct dom_document;
 struct dom_document_type;
-struct dom_implementation;
+
+typedef struct dom_implementation dom_implementation;
 
 void dom_implementation_ref(struct dom_implementation *impl);
 void dom_implementation_unref(struct dom_implementation *impl);

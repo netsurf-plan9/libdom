@@ -14,7 +14,7 @@
 #include <dom/functypes.h>
 #include <dom/core/exceptions.h>
 
-struct dom_string;
+typedef struct dom_string dom_string;
 
 /* Claim a reference on a DOM string */
 void dom_string_ref(struct dom_string *str);

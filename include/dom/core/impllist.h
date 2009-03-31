@@ -11,7 +11,8 @@
 #include <dom/core/exceptions.h>
 
 struct dom_implementation;
-struct dom_implementation_list;
+
+typedef struct dom_implementation_list dom_implementation_list;
 
 void dom_implementation_list_ref(struct dom_implementation_list *list);
 void dom_implementation_list_unref(struct dom_implementation_list *list);

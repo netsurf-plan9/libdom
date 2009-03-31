@@ -11,8 +11,9 @@
 #include <dom/core/exceptions.h>
 #include <dom/core/node.h>
 
-struct dom_characterdata;
 struct dom_string;
+
+typedef struct dom_characterdata dom_characterdata;
 
 /* The vtable for characterdata */
 typedef struct dom_characterdata_vtable {

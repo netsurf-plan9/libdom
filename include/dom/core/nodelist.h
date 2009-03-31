@@ -11,7 +11,8 @@
 #include <dom/core/exceptions.h>
 
 struct dom_node;
-struct dom_nodelist;
+
+typedef struct dom_nodelist dom_nodelist;
 
 void dom_nodelist_ref(struct dom_nodelist *list);
 void dom_nodelist_unref(struct dom_nodelist *list);
