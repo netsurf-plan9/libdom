@@ -36,3 +36,12 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/text.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib:$(BUILDDIR)/lib$(COMPONENT)$(LIBEXT)
+
+ifeq ($(WITH_LIBXML_BINDING),yes)
+  REQUIRED_PKGS := $(REQUIRED_PKGS) libxml-2.0
+endif
+
+ifeq ($(WITH_HUBBUB_BINDING),yes)
+  REQUIRED_PKGS := $(REQUIRED_PKGS) libhubbub
+endif
+
