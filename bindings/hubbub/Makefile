@@ -5,10 +5,10 @@ ifeq ($(WITH_HUBBUB_BINDING),yes)
 
   # Hubbub
   ifneq ($(PKGCONFIG),)
-    CFLAGS := $(CFLAGS) $(shell $(PKGCONFIG) libhubbub --cflags)
-    LDFLAGS := $(LDFLAGS) $(shell $(PKGCONFIG) libhubbub --libs)
+    CFLAGS := $(CFLAGS) $(shell $(PKGCONFIG) libhubbub-0 --cflags)
+    LDFLAGS := $(LDFLAGS) $(shell $(PKGCONFIG) libhubbub-0 --libs)
   else
-    LDFLAGS := $(LDFLAGS) -lhubbub -lparserutils
+    LDFLAGS := $(LDFLAGS) -lhubbub0 -lparserutils0
   endif
 endif
 

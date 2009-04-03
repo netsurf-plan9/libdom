@@ -1,5 +1,6 @@
 # Component settings
 COMPONENT := dom
+COMPONENT_VERSION := 0.0.1
 # Default to a static library
 COMPONENT_TYPE ?= lib-static
 
@@ -18,30 +19,33 @@ CFLAGS := $(CFLAGS) -std=c99 -D_BSD_SOURCE -I$(CURDIR)/include/ \
 include build/makefiles/Makefile.top
 
 # Extra installation rules
-I := include/dom
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/dom.h;$(I)/functypes.h
+Is := include/dom
+I := /include/dom$(major-version)/dom
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/dom.h;$(Is)/functypes.h
 
-I := include/dom/bootstrap
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/implpriv.h;$(I)/implregistry.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/init_fini.h
+Is := include/dom/bootstrap
+I := /include/dom$(major-version)/dom/bootstrap
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/implpriv.h;$(Is)/implregistry.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/init_fini.h
 
-I := include/dom/core
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/attr.h;$(I)/characterdata.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/document.h;$(I)/document_type.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/element.h;$(I)/exceptions.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/implementation.h;$(I)/impllist.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/namednodemap.h;$(I)/node.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/nodelist.h;$(I)/string.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) /$(I):$(I)/text.h
+Is := include/dom/core
+I := /include/dom$(major-version)/dom/core
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/attr.h;$(Is)/characterdata.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/document.h;$(Is)/document_type.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/element.h;$(Is)/exceptions.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/implementation.h;$(Is)/impllist.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/namednodemap.h;$(Is)/node.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/nodelist.h;$(Is)/string.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/text.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib/pkgconfig:lib$(COMPONENT).pc.in
-INSTALL_ITEMS := $(INSTALL_ITEMS) /lib:$(BUILDDIR)/lib$(COMPONENT)$(LIBEXT)
+INSTALL_ITEMS := $(INSTALL_ITEMS) /lib:$(OUTPUT)
 
 ifeq ($(WITH_LIBXML_BINDING),yes)
   REQUIRED_PKGS := $(REQUIRED_PKGS) libxml-2.0
 endif
 
 ifeq ($(WITH_HUBBUB_BINDING),yes)
-  REQUIRED_PKGS := $(REQUIRED_PKGS) libhubbub
+  REQUIRED_PKGS := $(REQUIRED_PKGS) libhubbub-0
 endif
 
