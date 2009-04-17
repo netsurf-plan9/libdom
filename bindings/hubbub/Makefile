@@ -8,6 +8,8 @@ ifeq ($(WITH_HUBBUB_BINDING),yes)
     CFLAGS := $(CFLAGS) $(shell $(PKGCONFIG) libhubbub-0 --cflags)
     LDFLAGS := $(LDFLAGS) $(shell $(PKGCONFIG) libhubbub-0 --libs)
   else
+    CFLAGS := $(CFLAGS) -I$(PREFIX)/include/hubbub0 \
+		-I$(PREFIX)/include/parserutils0
     LDFLAGS := $(LDFLAGS) -lhubbub0 -lparserutils0
   endif
 endif

@@ -8,6 +8,7 @@ ifeq ($(WITH_LIBXML_BINDING),yes)
     CFLAGS := $(CFLAGS) $(shell $(PKGCONFIG) libxml-2.0 --cflags)
     LDFLAGS := $(LDFLAGS) $(shell $(PKGCONFIG) libxml-2.0 --libs)
   else
+    CFLAGS := $(CFLAGS) -I$(PREFIX)/include/libxml2
     LDFLAGS := $(LDFLAGS) -lxml2
   endif
 
