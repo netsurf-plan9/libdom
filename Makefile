@@ -20,16 +20,16 @@ include build/makefiles/Makefile.top
 
 # Extra installation rules
 Is := include/dom
-I := /include/dom$(major-version)/dom
+I := /include/dom
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/dom.h;$(Is)/functypes.h
 
 Is := include/dom/bootstrap
-I := /include/dom$(major-version)/dom/bootstrap
+I := /include/dom/bootstrap
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/implpriv.h;$(Is)/implregistry.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/init_fini.h
 
 Is := include/dom/core
-I := /include/dom$(major-version)/dom/core
+I := /include/dom/core
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/attr.h;$(Is)/characterdata.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/document.h;$(Is)/document_type.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/element.h;$(Is)/exceptions.h
@@ -46,6 +46,6 @@ ifeq ($(WITH_LIBXML_BINDING),yes)
 endif
 
 ifeq ($(WITH_HUBBUB_BINDING),yes)
-  REQUIRED_PKGS := $(REQUIRED_PKGS) libhubbub-0
+  REQUIRED_PKGS := $(REQUIRED_PKGS) libhubbub
 endif
 
