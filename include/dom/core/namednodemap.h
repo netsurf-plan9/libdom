@@ -21,24 +21,63 @@ void dom_namednodemap_unref(struct dom_namednodemap *map);
 dom_exception dom_namednodemap_get_length(struct dom_namednodemap *map,
 		unsigned long *length);
 
-dom_exception dom_namednodemap_get_named_item(struct dom_namednodemap *map,
+dom_exception _dom_namednodemap_get_named_item(struct dom_namednodemap *map,
 		struct dom_string *name, struct dom_node **node);
-dom_exception dom_namednodemap_set_named_item(struct dom_namednodemap *map,
+
+#define dom_namednodemap_get_named_item(m, n, r)  \
+		_dom_namednodemap_get_named_item((dom_namednodemap *) (m), \
+		(dom_string *) (n), (dom_node **) (r))
+		
+
+dom_exception _dom_namednodemap_set_named_item(struct dom_namednodemap *map,
 		struct dom_node *arg, struct dom_node **node);
-dom_exception dom_namednodemap_remove_named_item(
+
+#define dom_namednodemap_set_named_item(m, a, n) \
+		_dom_namednodemap_set_named_item((dom_namednodemap *) (m), \
+		(dom_node *) (a), (dom_node **) (n))
+
+
+dom_exception _dom_namednodemap_remove_named_item(
 		struct dom_namednodemap *map, struct dom_string *name,
 		struct dom_node **node);
-dom_exception dom_namednodemap_item(struct dom_namednodemap *map,
+
+#define dom_namednodemap_remove_named_item(m, n, r) \
+		_dom_namednodemap_remove_named_item((dom_namednodemap *) (m), \
+		(dom_string *) (n), (dom_node **) (n))
+
+
+dom_exception _dom_namednodemap_item(struct dom_namednodemap *map,
 		unsigned long index, struct dom_node **node);
 
-dom_exception dom_namednodemap_get_named_item_ns(
+#define dom_namednodemap_item(m, i, n) _dom_namednodemap_item( \
+		(dom_namednodemap *) (m), (unsigned long) (i), \
+		(dom_node **) (n))
+
+
+dom_exception _dom_namednodemap_get_named_item_ns(
 		struct dom_namednodemap *map, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_node **node);
-dom_exception dom_namednodemap_set_named_item_ns(
+
+#define dom_namednodemap_get_named_item_ns(m, n, l, r) \
+		_dom_namednodemap_get_named_item_ns((dom_namednodemap *) (m), \
+		(dom_string *) (n), (dom_string *) (l), (dom_node **) (n))
+
+
+dom_exception _dom_namednodemap_set_named_item_ns(
 		struct dom_namednodemap *map, struct dom_node *arg,
 		struct dom_node **node);
-dom_exception dom_namednodemap_remove_named_item_ns(
+
+#define dom_namednodemap_set_named_item_ns(m, a, n) \
+		_dom_namednodemap_set_named_item_ns((dom_namednodemap *) (m), \
+		(dom_node *) (a), (dom_node **) (n))
+
+
+dom_exception _dom_namednodemap_remove_named_item_ns(
 		struct dom_namednodemap *map, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_node **node);
+
+#define dom_namednodemap_remove_named_item_ns(m, n, l, r) \
+		_dom_namednodemap_remove_named_item_ns((dom_namednodemap *) (m), \
+		(dom_string *) (n), (dom_string *) (l), (dom_node **) (r))
 
 #endif

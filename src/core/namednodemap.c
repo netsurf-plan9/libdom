@@ -159,7 +159,7 @@ dom_exception dom_namednodemap_get_length(struct dom_namednodemap *map,
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
  */
-dom_exception dom_namednodemap_get_named_item(struct dom_namednodemap *map,
+dom_exception _dom_namednodemap_get_named_item(struct dom_namednodemap *map,
 		struct dom_string *name, struct dom_node **node)
 {
 	struct dom_node_internal *cur;
@@ -215,7 +215,7 @@ dom_exception dom_namednodemap_get_named_item(struct dom_namednodemap *map,
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
  */
-dom_exception dom_namednodemap_set_named_item(struct dom_namednodemap *map,
+dom_exception _dom_namednodemap_set_named_item(struct dom_namednodemap *map,
 		struct dom_node *arg, struct dom_node **node)
 {
 	dom_exception err;
@@ -274,7 +274,7 @@ dom_exception dom_namednodemap_set_named_item(struct dom_namednodemap *map,
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
  */
-dom_exception dom_namednodemap_remove_named_item(
+dom_exception _dom_namednodemap_remove_named_item(
 		struct dom_namednodemap *map, struct dom_string *name,
 		struct dom_node **node)
 {
@@ -332,7 +332,7 @@ dom_exception dom_namednodemap_remove_named_item(
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
  */
-dom_exception dom_namednodemap_item(struct dom_namednodemap *map,
+dom_exception _dom_namednodemap_item(struct dom_namednodemap *map,
 		unsigned long index, struct dom_node **node)
 {
 	struct dom_node_internal *cur;
@@ -383,7 +383,7 @@ dom_exception dom_namednodemap_item(struct dom_namednodemap *map,
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
  */
-dom_exception dom_namednodemap_get_named_item_ns(
+dom_exception _dom_namednodemap_get_named_item_ns(
 		struct dom_namednodemap *map, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_node **node)
 {
@@ -450,7 +450,7 @@ dom_exception dom_namednodemap_get_named_item_ns(
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
  */
-dom_exception dom_namednodemap_set_named_item_ns(
+dom_exception _dom_namednodemap_set_named_item_ns(
 		struct dom_namednodemap *map, struct dom_node *arg,
 		struct dom_node **node)
 {
@@ -517,7 +517,7 @@ dom_exception dom_namednodemap_set_named_item_ns(
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
  */
-dom_exception dom_namednodemap_remove_named_item_ns(
+dom_exception _dom_namednodemap_remove_named_item_ns(
 		struct dom_namednodemap *map, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_node **node)
 {

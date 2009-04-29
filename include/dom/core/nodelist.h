@@ -19,7 +19,10 @@ void dom_nodelist_unref(struct dom_nodelist *list);
 
 dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
 		unsigned long *length);
-dom_exception dom_nodelist_item(struct dom_nodelist *list,
+dom_exception _dom_nodelist_item(struct dom_nodelist *list,
 		unsigned long index, struct dom_node **node);
+
+#define dom_nodelist_item(l, i, n) _dom_nodelist_item((dom_nodelist *) (l), \
+		(unsigned long) (i), (dom_node **) (n))
 
 #endif

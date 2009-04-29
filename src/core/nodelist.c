@@ -238,7 +238,7 @@ dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
  */
-dom_exception dom_nodelist_item(struct dom_nodelist *list,
+dom_exception _dom_nodelist_item(struct dom_nodelist *list,
 		unsigned long index, struct dom_node **node)
 {
 	struct dom_node_internal *cur = list->root->first_child;
