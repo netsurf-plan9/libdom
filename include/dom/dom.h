@@ -31,9 +31,13 @@
 #include <dom/core/impllist.h>
 #include <dom/core/namednodemap.h>
 #include <dom/core/node.h>
+#include <dom/core/cdatasection.h>
+#include <dom/core/doc_fragment.h>
+#include <dom/core/entity_ref.h>
 #include <dom/core/nodelist.h>
 #include <dom/core/string.h>
 #include <dom/core/text.h>
+#include <dom/core/pi.h>
 
 typedef enum dom_namespace {
        DOM_NAMESPACE_NULL    = 0,
