@@ -57,7 +57,7 @@ static inline dom_exception dom_document_type_get_entities(
 			->dom_document_type_get_entities(doc_type, result);
 }
 #define dom_document_type_get_entities(dt, r) dom_document_type_get_entities( \
-		(dom_document_type *) (dt), (struct dom_string **) (r))
+		(dom_document_type *) (dt), (struct dom_namednodemap **) (r))
 
 static inline dom_exception dom_document_type_get_notations(
 		struct dom_document_type *doc_type,
@@ -67,7 +67,7 @@ static inline dom_exception dom_document_type_get_notations(
 			->dom_document_type_get_notations(doc_type, result);
 }
 #define dom_document_type_get_notations(dt, r) dom_document_type_get_notations(\
-		(dom_document_type *) (dt), (struct dom_string **) (r))
+		(dom_document_type *) (dt), (struct dom_namednodemap **) (r))
 
 static inline dom_exception dom_document_type_get_public_id(
 		struct dom_document_type *doc_type,
