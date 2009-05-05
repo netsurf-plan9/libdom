@@ -228,7 +228,7 @@ static inline dom_exception dom_node_get_child_nodes(struct dom_node *node,
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_child_nodes(n, r) dom_node_get_child_nodes( \
-		(dom_node *) (n), (struct dom_nodeslist **) (r))
+		(dom_node *) (n), (struct dom_nodelist **) (r))
 
 static inline dom_exception dom_node_get_first_child(struct dom_node *node,
 		dom_node **result)
