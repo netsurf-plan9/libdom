@@ -54,7 +54,7 @@ static inline dom_exception dom_attr_get_specified(struct dom_attr *attr, bool *
 			dom_attr_get_specified(attr, result);
 }
 #define dom_attr_get_specified(a, r) dom_attr_get_specified( \
-		(struct dom_attr *) (a), (struct dom_string **) (r))
+		(struct dom_attr *) (a), (bool *) (r))
 
 static inline dom_exception dom_attr_get_value(struct dom_attr *attr,
 		struct dom_string **result)
