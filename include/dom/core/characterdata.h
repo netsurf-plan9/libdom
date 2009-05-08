@@ -62,7 +62,7 @@ static inline dom_exception dom_characterdata_set_data(
 			dom_characterdata_set_data(cdata, data);
 }
 #define dom_characterdata_set_data(c, d) dom_characterdata_set_data( \
-		(struct dom_characterdata *) (c), (struct dom_string **) (d))
+		(struct dom_characterdata *) (c), (struct dom_string *) (d))
 
 static inline dom_exception dom_characterdata_get_length(
 		struct dom_characterdata *cdata, unsigned long *length)
@@ -93,7 +93,7 @@ static inline dom_exception dom_characterdata_append_data(
 			dom_characterdata_append_data(cdata, data);
 }
 #define dom_characterdata_append_data(c, d) dom_characterdata_append_data( \
-		(struct dom_characterdata *) (c), (struct dom_string **) (d))
+		(struct dom_characterdata *) (c), (struct dom_string *) (d))
 
 static inline dom_exception dom_characterdata_insert_data(
 		struct dom_characterdata *cdata, unsigned long offset, 
@@ -104,7 +104,7 @@ static inline dom_exception dom_characterdata_insert_data(
 }
 #define dom_characterdata_insert_data(c, o, d) dom_characterdata_insert_data( \
 		(struct dom_characterdata *) (c), (unsigned long) (o), \
-		(struct dom_string **) (d))
+		(struct dom_string *) (d))
 
 static inline dom_exception dom_characterdata_delete_data(
 		struct dom_characterdata *cdata, unsigned long offset, 
