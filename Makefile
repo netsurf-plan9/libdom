@@ -16,6 +16,17 @@ WARNFLAGS := -Wall -Wextra -Wundef -Wpointer-arith -Wcast-align \
 CFLAGS := $(CFLAGS) -std=c99 -D_BSD_SOURCE -I$(CURDIR)/include/ \
 	-I$(CURDIR)/src $(WARNFLAGS) 
 
+# Parserutils
+ifneq ($(findstring clean,$(MAKECMDGOALS)),clean)
+  ifneq ($(PKGCONFIG),)
+    CFLAGS := $(CFLAGS) $(shell $(PKGCONFIG) libparserutils --cflags)
+    LDFLAGS := $(LDFLAGS) $(shell $(PKGCONFIG) libparserutils --libs)
+  else
+    CFLAGS := $(CFLAGS) -I$(PREFIX)/include
+    LDFLAGS := $(LDFLAGS) -lparserutils
+  endif
+endif
+
 include build/makefiles/Makefile.top
 
 # Extra installation rules
