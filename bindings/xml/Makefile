@@ -1,5 +1,5 @@
 ifeq ($(WITH_LIBXML_BINDING),yes)
-  DIR_SOURCES := xmlbinding.c xmlparser.c
+  DIR_SOURCES := xmlparser.c
 
   DIR_INSTALL_ITEMS := /include/dom/bindings/libxml:xmlbinding.h;xmlerror.h;xmlparser.h
 

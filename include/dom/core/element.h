@@ -46,8 +46,9 @@ typedef struct dom_element_vtable {
 			struct dom_nodelist **result);
 	dom_exception (*dom_element_get_attribute_ns)(
 			struct dom_element *element, 
-			struct dom_string *namespace, 
-			struct dom_string *localname, struct dom_string **value);
+			struct dom_string *namespace,
+			struct dom_string *localname,
+			struct dom_string **value);
 	dom_exception (*dom_element_set_attribute_ns)(
 			struct dom_element *element,
 			struct dom_string *namespace, struct dom_string *qname,
@@ -211,7 +212,7 @@ static inline dom_exception dom_element_remove_attribute_ns(
 			dom_element_remove_attribute_ns(element, namespace, 
 			localname);
 }
-#define dom_element_remove_attribute_ns(e, n, l, v) \
+#define dom_element_remove_attribute_ns(e, n, l) \
 		dom_element_remove_attribute_ns((dom_element *) (e), \
 		(struct dom_string *) (n), (struct dom_string *) (l))
 

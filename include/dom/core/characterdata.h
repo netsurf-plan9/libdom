@@ -113,7 +113,7 @@ static inline dom_exception dom_characterdata_delete_data(
 	return ((dom_characterdata_vtable *) ((dom_node *) cdata)->vtable)->
 			dom_characterdata_delete_data(cdata, offset, count);
 }
-#define dom_characterdata_delete_data(c, o, ct) dom_characterdata_delete_data( \
+#define dom_characterdata_delete_data(c, o, ct) dom_characterdata_delete_data(\
 		(struct dom_characterdata *) (c), (unsigned long) (o), \
 		(unsigned long) (ct))
 
@@ -126,8 +126,8 @@ static inline dom_exception dom_characterdata_replace_data(
 			data);
 }
 #define dom_characterdata_replace_data(c, o, ct, d) \
-		dom_characterdata_replace_data((struct dom_characterdata *) (c),\
-		(unsigned long) (o), (unsigned long) (ct), \
-		(struct dom_string *) (d))
+		dom_characterdata_replace_data(\
+		(struct dom_characterdata *) (c), (unsigned long) (o),\
+		(unsigned long) (ct), (struct dom_string *) (d))
 
 #endif

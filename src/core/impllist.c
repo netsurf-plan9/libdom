@@ -9,6 +9,9 @@
 #include <dom/core/implementation.h>
 #include <dom/core/impllist.h>
 
+extern void dom_implementation_list_destroy(
+		struct dom_implementation_list *list);
+
 /**
  * Claim a reference on a DOM implementation list
  *
@@ -29,22 +32,8 @@ void dom_implementation_list_ref(struct dom_implementation_list *list)
  */
 void dom_implementation_list_unref(struct dom_implementation_list *list)
 {
-	struct dom_implementation_list_item *i, *j;
-
 	if (--list->refcnt == 0) {
-		/* Destroy all list entries */
-		for (i = list->head; i; i = j) {
-			j = i->next;
-
-			/* Unreference the implementation */
-			dom_implementation_unref(i->impl);
-
-			/* And free the entry */
-			list->alloc(i, 0, list->pw);
-		}
-
-		/* Free the list object */
-		list->alloc(list, 0, list->pw);
+		dom_implementation_list_destroy(list);
 	}
 }
 

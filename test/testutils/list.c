@@ -1,8 +1,9 @@
 /*
  * This file is part of libdom test suite.
  * Licensed under the MIT License,
- *                http://www.opensource.org/licenses/mit-license.php
+ *				http://www.opensource.org/licenses/mit-license.php
  * Copyright 2007 James Shaw <jshaw@netsurf-browser.org>
+ * Copyright 2009 Bo Yang <struggeleyb.nku@gmail.com>
  */
 
 
@@ -10,9 +11,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <dom/core/string.h>
+#include <dom/core/node.h>
+
 #include "comparators.h"
 #include "list.h"
-#include "testassert.h"
+#include "domtsasserts.h"
 
 /**
  * Private helper function.
@@ -28,11 +32,12 @@ struct list_elt* list_new_elt(void* data) {
 	return elt;
 }
 
-struct list* list_new(void)
+struct list* list_new(TYPE type)
 {
 	struct list* list = malloc(sizeof(struct list));
 	assert(list != NULL);
 	list->size = 0;
+	list->type = type;
 	list->head = NULL;
 	list->tail = NULL;
 	return list;
@@ -42,6 +47,10 @@ void list_destroy(struct list* list)
 {
 	struct list_elt* elt = list->head;
 	while (elt != NULL) {
+		if (list->type == DOM_STRING)
+			dom_string_unref((dom_string *) elt->data);
+		if (list->type == NODE)
+			dom_node_unref(elt->data);
 		struct list_elt* nextElt = elt->next;
 		free(elt);
 		elt = nextElt;
@@ -68,6 +77,10 @@ void list_add(struct list* list, void* data)
 
 	/* inc the size of the list */
 	list->size++;
+	if (list->type == DOM_STRING)
+		dom_string_ref((dom_string *) data);
+	if (list->type == NODE)
+		dom_node_ref(data);
 }
 
 bool list_remove(struct list* list, void* data)
@@ -102,7 +115,7 @@ bool list_remove(struct list* list, void* data)
 
 struct list* list_clone(struct list* list)
 {
-	struct list* newList = list_new();
+	struct list* newList = list_new(list->type);
 	struct list_elt* elt = list->head;
 	
 	while (elt != NULL) {
@@ -138,15 +151,19 @@ bool list_contains_all(struct list* superList, struct list* subList,
 
 		found = false;
 		while (superElt != NULL && found == false) {
-			if (comparator(subElt->data, superElt->data) == 0) {
+			if (comparator(superElt->data, subElt->data) == 0) {
 				found = true;
 				list_remove(superListClone, superElt->data);
+				break;
 			}
 			superElt = superElt->next;
 		}
 		
+		if (found == false)
+			break;
 		subElt = subElt->next;
 	}
+
 	free(superListClone);
 	
 	return found;

@@ -28,7 +28,8 @@ typedef enum {
 	DOM_INVALID_ACCESS_ERR		= 15,
 	DOM_VALIDATION_ERR		= 16,
 	DOM_TYPE_MISMATCH_ERR		= 17,
-	DOM_NO_MEM_ERR			= (1<<16) /* our own internal error */
+	DOM_NO_MEM_ERR			= (1<<16)
+			/* our own internal error */
 } dom_exception;
 
 #endif

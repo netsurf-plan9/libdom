@@ -1,8 +1,11 @@
 # Sources
-DIR_SOURCES := attr.c cdatasection.c characterdata.c comment.c \
-	document.c document_type.c doc_fragment.c \
-	element.c entity_ref.c implementation.c impllist.c \
-	namednodemap.c node.c nodelist.c \
-	pi.c string.c text.c
+DIR_SOURCES := \
+	string.c node.c \
+	attr.c characterdata.c element.c \
+	implementation.c impllist.c \
+	text.c typeinfo.c comment.c \
+	namednodemap.c nodelist.c \
+	cdatasection.c document_type.c entity_ref.c pi.c \
+	doc_fragment.c document.c 
 
 include build/makefiles/Makefile.subdir

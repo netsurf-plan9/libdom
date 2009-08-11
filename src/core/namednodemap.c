@@ -3,7 +3,10 @@
  * Licensed under the MIT License,
  *                http://www.opensource.org/licenses/mit-license.php
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
+ * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
+
+#include <assert.h>
 
 #include <dom/core/element.h>
 #include <dom/core/node.h>
@@ -22,9 +25,10 @@
 struct dom_namednodemap {
 	struct dom_document *owner;	/**< Owning document */
 
-	struct dom_node_internal *head;		/**< Start of item list */
+	void *priv;			/**< Private data */
 
-	dom_node_type type;		/**< Type of items in map */
+	struct nnm_operation *opt;	/**< The underlaid operation 
+		 			 * implementations */
 
 	uint32_t refcnt;		/**< Reference count */
 };
@@ -33,8 +37,8 @@ struct dom_namednodemap {
  * Create a namednodemap
  *
  * \param doc   The owning document
- * \param head  Start of list containing items in map
- * \param type  The type of items in the map
+ * \param priv  The private data of this dom_namednodemap
+ * \param opt   The operation function pointer
  * \param map   Pointer to location to receive created map
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  *
@@ -49,23 +53,20 @@ struct dom_namednodemap {
  * explicitly reference it. The client must unref the map once it is
  * finished with it.
  */
-dom_exception dom_namednodemap_create(struct dom_document *doc,
-		struct dom_node_internal *head, dom_node_type type,
+dom_exception _dom_namednodemap_create(struct dom_document *doc,
+		void *priv, struct nnm_operation *opt,
 		struct dom_namednodemap **map)
 {
 	struct dom_namednodemap *m;
 
-	m = dom_document_alloc(doc, NULL, sizeof(struct dom_namednodemap));
+	m = _dom_document_alloc(doc, NULL, sizeof(struct dom_namednodemap));
 	if (m == NULL)
 		return DOM_NO_MEM_ERR;
 
-	dom_node_ref((struct dom_node *) doc);
 	m->owner = doc;
 
-	dom_node_ref(head);
-	m->head = head;
-
-	m->type = type;
+	m->priv = priv;
+	m->opt = opt;
 
 	m->refcnt = 1;
 
@@ -81,6 +82,7 @@ dom_exception dom_namednodemap_create(struct dom_document *doc,
  */
 void dom_namednodemap_ref(struct dom_namednodemap *map)
 {
+	assert(map != NULL);
 	map->refcnt++;
 }
 
@@ -94,22 +96,15 @@ void dom_namednodemap_ref(struct dom_namednodemap *map)
  */
 void dom_namednodemap_unref(struct dom_namednodemap *map)
 {
+	if (map == NULL)
+		return;
+
 	if (--map->refcnt == 0) {
-		struct dom_node_internal *owner = 
-				(struct dom_node_internal *) map->owner;
-
-		dom_node_unref(map->head);
-
-		/* Remove map from document */
-		dom_document_remove_namednodemap(map->owner, map);
+		/* Call the implementation specific destroy */
+		map->opt->namednodemap_destroy(map->priv);
 
 		/* Destroy the map object */
-		dom_document_alloc(map->owner, map, 0);
-
-		/* And release our reference on the owning document
-		 * This must be last as, otherwise, it's possible that
-		 * the document is destroyed before we are */
-		dom_node_unref(owner);
+		_dom_document_alloc(map->owner, map, 0);
 	}
 }
 
@@ -123,29 +118,8 @@ void dom_namednodemap_unref(struct dom_namednodemap *map)
 dom_exception dom_namednodemap_get_length(struct dom_namednodemap *map,
 		unsigned long *length)
 {
-	struct dom_node_internal *cur;
-	unsigned long len = 0;
-
-	switch (map->type) {
-	case DOM_ATTRIBUTE_NODE:
-		cur = dom_element_get_first_attribute(
-				(struct dom_element *) map->head);
-		break;
-	case DOM_NOTATION_NODE:
-	case DOM_ENTITY_NODE:
-		/** \todo handle notation and entity nodes */
-	default:
-		return DOM_NOT_SUPPORTED_ERR;
-		break;
-	}
-
-	for (; cur != NULL; cur = cur->next) {
-		len++;
-	}
-
-	*length = len;
-
-	return DOM_NO_ERR;
+	assert(map->opt != NULL);
+	return map->opt->namednodemap_get_length(map->priv, length);
 }
 
 /**
@@ -162,33 +136,8 @@ dom_exception dom_namednodemap_get_length(struct dom_namednodemap *map,
 dom_exception _dom_namednodemap_get_named_item(struct dom_namednodemap *map,
 		struct dom_string *name, struct dom_node **node)
 {
-	struct dom_node_internal *cur;
-
-	switch (map->type) {
-	case DOM_ATTRIBUTE_NODE:
-		cur = dom_element_get_first_attribute(
-				(struct dom_element *) map->head);
-		break;
-	case DOM_NOTATION_NODE:
-	case DOM_ENTITY_NODE:
-		/** \todo handle notation and entity nodes */
-	default:
-		return DOM_NOT_SUPPORTED_ERR;
-		break;
-	}
-
-	for (; cur != NULL; cur = cur->next) {
-		if (dom_string_cmp(cur->name, name) == 0) {
-			break;
-		}
-	}
-
-	if (cur != NULL) {
-		dom_node_ref(cur);
-	}
-	*node = (struct dom_node *) cur;
-
-	return DOM_NO_ERR;
+	assert(map->opt != NULL);
+	return map->opt->namednodemap_get_named_item(map->priv, name, node);
 }
 
 /**
@@ -218,46 +167,8 @@ dom_exception _dom_namednodemap_get_named_item(struct dom_namednodemap *map,
 dom_exception _dom_namednodemap_set_named_item(struct dom_namednodemap *map,
 		struct dom_node *arg, struct dom_node **node)
 {
-	dom_exception err;
-	struct dom_node_internal *n = (struct dom_node_internal *) arg;
-
-	/* Ensure arg and map belong to the same document */
-	if (n->owner != map->owner)
-		return DOM_WRONG_DOCUMENT_ERR;
-
-	/* Ensure map is writable */
-	if (_dom_node_readonly(map->head))
-		return DOM_NO_MODIFICATION_ALLOWED_ERR;
-
-	/* Ensure arg isn't attached to another element */
-	if (n->type == DOM_ATTRIBUTE_NODE && n->parent != NULL && 
-			n->parent != map->head)
-		return DOM_INUSE_ATTRIBUTE_ERR;
-
-	/* Ensure arg is permitted in the map */
-	if (n->type != map->type)
-		return DOM_HIERARCHY_REQUEST_ERR;
-
-	/* Now delegate to the container-specific function. 
-	 * NamedNodeMaps are live, so this is fine. */
-	switch (map->type) {
-	case DOM_ATTRIBUTE_NODE:
-		err = dom_element_set_attribute_node(
-				(struct dom_element *) map->head, 
-				(struct dom_attr *) arg, 
-				(struct dom_attr **) node);
-		break;
-	case DOM_NOTATION_NODE:
-	case DOM_ENTITY_NODE:
-		/** \todo handle notation and entity nodes */
-	default:
-		err = DOM_NOT_SUPPORTED_ERR;
-		break;
-	}
-
-	/* Reference counting is handled by the container-specific call */
-
-	return err;
+	assert(map->opt != NULL);
+	return map->opt->namednodemap_set_named_item(map->priv, arg, node);
 }
 
 /**
@@ -278,44 +189,8 @@ dom_exception _dom_namednodemap_remove_named_item(
 		struct dom_namednodemap *map, struct dom_string *name,
 		struct dom_node **node)
 {
-	dom_exception err;
-
-	/* Ensure map is writable */
-	if (_dom_node_readonly(map->head))
-		return DOM_NO_MODIFICATION_ALLOWED_ERR;
-
-	/* Now delegate to the container-specific function. 
-	 * NamedNodeMaps are live, so this is fine. */
-	switch (map->type) {
-	case DOM_ATTRIBUTE_NODE:
-	{
-		struct dom_attr *attr;
-
-		err = dom_element_get_attribute_node(
-				(struct dom_element *) map->head,
-				name, &attr);
-		if (err == DOM_NO_ERR) {
-			err = dom_element_remove_attribute_node(
-				(struct dom_element *) map->head, 
-				attr, (struct dom_attr **) node);
-			if (err == DOM_NO_ERR) {
-				/* No longer want attr */
-				dom_node_unref((struct dom_node *) attr);
-			}
-		}
-	}
-		break;
-	case DOM_NOTATION_NODE:
-	case DOM_ENTITY_NODE:
-		/** \todo handle notation and entity nodes */
-	default:
-		err = DOM_NOT_SUPPORTED_ERR;
-		break;
-	}
-
-	/* Reference counting is handled by the container-specific call */
-
-	return err;
+	assert(map->opt != NULL);
+	return map->opt->namednodemap_remove_named_item(map->priv, name, node);
 }
 
 /**
@@ -335,36 +210,8 @@ dom_exception _dom_namednodemap_remove_named_item(
 dom_exception _dom_namednodemap_item(struct dom_namednodemap *map,
 		unsigned long index, struct dom_node **node)
 {
-	struct dom_node_internal *cur;
-	unsigned long count = 0;
-
-	switch (map->type) {
-	case DOM_ATTRIBUTE_NODE:
-		cur = dom_element_get_first_attribute(
-				(struct dom_element *) map->head);
-		break;
-	case DOM_NOTATION_NODE:
-	case DOM_ENTITY_NODE:
-		/** \todo handle notation and entity nodes */
-	default:
-		return DOM_NOT_SUPPORTED_ERR;
-		break;
-	}
-
-	for (; cur != NULL; cur = cur->next) {
-		count++;
-
-		if ((index + 1) == count) {
-			break;
-		}
-	}
-
-	if (cur != NULL) {
-		dom_node_ref(cur);
-	}
-	*node = (struct dom_node *) cur;
-
-	return DOM_NO_ERR;
+	assert(map->opt != NULL);
+	return map->opt->namednodemap_item(map->priv, index, node);
 }
 
 /**
@@ -387,38 +234,9 @@ dom_exception _dom_namednodemap_get_named_item_ns(
 		struct dom_namednodemap *map, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_node **node)
 {
-	struct dom_node_internal *cur;
-
-	/** \todo ensure XML feature is supported */
-
-	switch (map->type) {
-	case DOM_ATTRIBUTE_NODE:
-		cur = dom_element_get_first_attribute(
-				(struct dom_element *) map->head);
-		break;
-	case DOM_NOTATION_NODE:
-	case DOM_ENTITY_NODE:
-		/** \todo handle notation and entity nodes */
-	default:
-		return DOM_NOT_SUPPORTED_ERR;
-		break;
-	}
-
-	for (; cur != NULL; cur = cur->next) {
-		if (((namespace == NULL && cur->namespace == NULL) || 
-			(namespace != NULL && 
-			dom_string_cmp(cur->namespace, namespace) == 0)) &&
-				dom_string_cmp(cur->name, localname) == 0) {
-			break;
-		}
-	}
-
-	if (cur != NULL) {
-		dom_node_ref(cur);
-	}
-	*node = (struct dom_node *) cur;
-
-	return DOM_NO_ERR;
+	assert(map->opt != NULL);
+	return map->opt->namednodemap_get_named_item_ns(map->priv, namespace,
+			localname, node);
 }
 
 /**
@@ -454,48 +272,8 @@ dom_exception _dom_namednodemap_set_named_item_ns(
 		struct dom_namednodemap *map, struct dom_node *arg,
 		struct dom_node **node)
 {
-	dom_exception err;
-	struct dom_node_internal *n = (struct dom_node_internal *) arg;
-
-	/** \todo ensure XML feature is supported */
-
-	/* Ensure arg and map belong to the same document */
-	if (n->owner != map->owner)
-		return DOM_WRONG_DOCUMENT_ERR;
-
-	/* Ensure map is writable */
-	if (_dom_node_readonly(map->head))
-		return DOM_NO_MODIFICATION_ALLOWED_ERR;
-
-	/* Ensure arg isn't attached to another element */
-	if (n->type == DOM_ATTRIBUTE_NODE && n->parent != NULL && 
-			n->parent != map->head)
-		return DOM_INUSE_ATTRIBUTE_ERR;
-
-	/* Ensure arg is permitted in the map */
-	if (n->type != map->type)
-		return DOM_HIERARCHY_REQUEST_ERR;
-
-	/* Now delegate to the container-specific function. 
-	 * NamedNodeMaps are live, so this is fine. */
-	switch (map->type) {
-	case DOM_ATTRIBUTE_NODE:
-		err = dom_element_set_attribute_node_ns(
-				(struct dom_element *) map->head, 
-				(struct dom_attr *) arg, 
-				(struct dom_attr **) node);
-		break;
-	case DOM_NOTATION_NODE:
-	case DOM_ENTITY_NODE:
-		/** \todo handle notation and entity nodes */
-	default:
-		err = DOM_NOT_SUPPORTED_ERR;
-		break;
-	}
-
-	/* Reference counting is handled by the container-specific call */
-
-	return err;
+	assert(map->opt != NULL);
+	return map->opt->namednodemap_set_named_item_ns(map->priv, arg, node);
 }
 
 /**
@@ -521,61 +299,30 @@ dom_exception _dom_namednodemap_remove_named_item_ns(
 		struct dom_namednodemap *map, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_node **node)
 {
-	dom_exception err;
-
-	/** \todo ensure XML feature is supported */
-
-	/* Ensure map is writable */
-	if (_dom_node_readonly(map->head))
-		return DOM_NO_MODIFICATION_ALLOWED_ERR;
-
-	/* Now delegate to the container-specific function. 
-	 * NamedNodeMaps are live, so this is fine. */
-	switch (map->type) {
-	case DOM_ATTRIBUTE_NODE:
-	{
-		struct dom_attr *attr;
-
-		err = dom_element_get_attribute_node_ns(
-				(struct dom_element *) map->head,
-				namespace, localname, &attr);
-		if (err == DOM_NO_ERR) {
-			err = dom_element_remove_attribute_node(
-				(struct dom_element *) map->head, 
-				attr, (struct dom_attr **) node);
-			if (err == DOM_NO_ERR) {
-				/* No longer want attr */
-				dom_node_unref((struct dom_node *) attr);
-			}
-		}
-	}
-		break;
-case DOM_NOTATION_NODE:
-	case DOM_ENTITY_NODE:
-		/** \todo handle notation and entity nodes */
-	default:
-		err = DOM_NOT_SUPPORTED_ERR;
-		break;
-	}
-
-	/* Reference counting is handled by the container-specific call */
-
-	return err;
+	assert(map->opt != NULL);
+	return map->opt->namednodemap_remove_named_item_ns(map->priv, namespace,
+			localname, node);
 }
 
 /**
- * Match a namednodemap instance against a set of creation parameters
+ * Compare whether two NamedNodeMap are equal.
  *
- * \param map   The map to match
- * \param head  Start of list containing items in map
- * \param type  The type of items in the map
- * \return true if list matches, false otherwise
  */
-bool dom_namednodemap_match(struct dom_namednodemap *map,
-		struct dom_node_internal *head, dom_node_type type)
+bool _dom_namednodemap_equal(struct dom_namednodemap *m1, 
+		struct dom_namednodemap *m2)
 {
-	if (map->head == head && map->type == type)
-		return true;
+	assert(m1->opt != NULL);
+	return (m1->opt == m2->opt && m1->opt->namednodemap_equal(m1->priv,
+			m2->priv));
+}
 
-	return false;
+/**
+ * Update the dom_namednodemap to make it as a proxy of another object
+ *
+ * \param map	The dom_namednodemap
+ * \param priv	The private data to change to
+ */
+void _dom_namednodemap_update(struct dom_namednodemap *map, void *priv)
+{
+	map->priv = priv;
 }

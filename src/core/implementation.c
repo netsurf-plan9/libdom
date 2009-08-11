@@ -59,8 +59,6 @@ dom_exception dom_implementation_has_feature(
  * \param public_id  The external subset public identifier
  * \param system_id  The external subset system identifier
  * \param doctype    Pointer to location to receive result
- * \param alloc      Memory (de)allocation function
- * \param pw         Pointer to client-specific private data
  * \return DOM_NO_ERR on success,
  *         DOM_INVALID_CHARACTER_ERR if ::qname is invalid,
  *         DOM_NAMESPACE_ERR         if ::qname is malformed,
@@ -79,11 +77,11 @@ dom_exception dom_implementation_has_feature(
 dom_exception dom_implementation_create_document_type(
 		struct dom_implementation *impl, struct dom_string *qname,
 		struct dom_string *public_id, struct dom_string *system_id,
-		struct dom_document_type **doctype,
-		dom_alloc alloc, void *pw)
+		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		struct dom_document_type **doctype)
 {
 	return impl->create_document_type(impl, qname, public_id, system_id,
-			doctype, alloc, pw);
+			alloc, pw, ctx, doctype);
 }
 
 /**
@@ -94,8 +92,6 @@ dom_exception dom_implementation_create_document_type(
  * \param qname      The qualified name of the document element
  * \param doctype    The type of document to create
  * \param doc        Pointer to location to receive result
- * \param alloc      Memory (de)allocation function
- * \param pw         Pointer to client-specific private data
  * \return DOM_NO_ERR on success,
  *         DOM_INVALID_CHARACTER_ERR if ::qname is invalid,
  *         DOM_NAMESPACE_ERR         if ::qname is malformed, or if ::qname
@@ -125,11 +121,11 @@ dom_exception dom_implementation_create_document(
 		struct dom_implementation *impl,
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_document_type *doctype,
-		struct dom_document **doc,
-		dom_alloc alloc, void *pw)
+		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		struct dom_document **doc)
 {
-	return impl->create_document(impl, namespace, qname, doctype, doc,
-			alloc, pw);
+	return impl->create_document(impl, namespace, qname, doctype, alloc, 
+			pw, ctx, doc);
 }
 
 /**
@@ -140,8 +136,6 @@ dom_exception dom_implementation_create_document(
  * \param feature  The requested feature
  * \param version  The version number of the feature
  * \param object   Pointer to location to receive object
- * \param alloc    Memory (de)allocation function
- * \param pw       Pointer to client-specific private data
  * \return DOM_NO_ERR.
  *
  * Any memory allocated by this call should be allocated using
@@ -150,8 +144,7 @@ dom_exception dom_implementation_create_document(
 dom_exception dom_implementation_get_feature(
 		struct dom_implementation *impl,
 		struct dom_string *feature, struct dom_string *version,
-		void **object,
-		dom_alloc alloc, void *pw)
+		void **object)
 {
-	return impl->get_feature(impl, feature, version, object, alloc, pw);
+	return impl->get_feature(impl, feature, version, object);
 }

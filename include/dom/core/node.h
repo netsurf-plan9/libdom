@@ -127,7 +127,7 @@ typedef struct dom_node_vtable {
 			dom_node_internal **result);
 	dom_exception (*dom_node_normalize)(dom_node_internal *node);
 	dom_exception (*dom_node_is_supported)(dom_node_internal *node,
-			struct dom_string *feature, dom_node_internal *version,
+			struct dom_string *feature, struct dom_string *version,
 			bool *result);
 	dom_exception (*dom_node_get_namespace)(dom_node_internal *node,
 			struct dom_string **result);
@@ -250,10 +250,11 @@ static inline dom_exception dom_node_get_last_child(struct dom_node *node,
 #define dom_node_get_last_child(n, r) dom_node_get_last_child( \
 		(dom_node *) (n), (dom_node **) (r))
 
-static inline dom_exception dom_node_get_previous_sibling(struct dom_node *node,
-		dom_node **result)
+static inline dom_exception dom_node_get_previous_sibling(
+		struct dom_node *node, dom_node **result)
 {
-	return ((dom_node_vtable *) node->vtable)->dom_node_get_previous_sibling(
+	return ((dom_node_vtable *) node->vtable)->
+			dom_node_get_previous_sibling(
 			(dom_node_internal *) node, 
 			(dom_node_internal **) result);
 }
@@ -367,16 +368,16 @@ static inline dom_exception dom_node_normalize(struct dom_node *node)
 #define dom_node_normalize(n) dom_node_normalize((dom_node *) (n))
 
 static inline dom_exception dom_node_is_supported(struct dom_node *node,
-		struct dom_string *feature, struct dom_node *version,
+		struct dom_string *feature, struct dom_string *version,
 		bool *result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_is_supported(
 			(dom_node_internal *) node, feature, 
-			(dom_node_internal *) version, result);
+			version, result);
 }
 #define dom_node_is_supported(n, f, v, r) dom_node_is_supported( \
-		(dom_node *) (n), (struct dom_string *) (f), (dom_node *) (v),\
-		(bool *) (r))
+		(dom_node *) (n), (struct dom_string *) (f), \
+		(struct dom_string *) (v), (bool *) (r))
 
 static inline dom_exception dom_node_get_namespace(struct dom_node *node,
 		struct dom_string **result)
@@ -385,7 +386,7 @@ static inline dom_exception dom_node_get_namespace(struct dom_node *node,
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_namespace(n, r) dom_node_get_namespace((dom_node *) (n), \
-		(struct dom_string *) (r))
+		(struct dom_string **) (r))
 
 static inline dom_exception dom_node_get_prefix(struct dom_node *node,
 		struct dom_string **result)
@@ -394,7 +395,7 @@ static inline dom_exception dom_node_get_prefix(struct dom_node *node,
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_prefix(n, r) dom_node_get_prefix((dom_node *) (n), \
-		(struct dom_string *) (r))
+		(struct dom_string **) (r))
 
 static inline dom_exception dom_node_set_prefix(struct dom_node *node,
 		struct dom_string *prefix)
@@ -412,7 +413,7 @@ static inline dom_exception dom_node_get_local_name(struct dom_node *node,
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_local_name(n, r) dom_node_get_local_name((dom_node *) (n),\
-		(struct dom_string *) (r))
+		(struct dom_string **) (r))
 
 static inline dom_exception dom_node_has_attributes(struct dom_node *node, 
 		bool *result)
@@ -436,9 +437,10 @@ static inline dom_exception dom_node_compare_document_position(
 		struct dom_node *node, struct dom_node *other,
 		uint16_t *result)
 {
-	return ((dom_node_vtable *) node->vtable)->dom_node_compare_document_position(
-			(dom_node_internal *) node, (dom_node_internal *) other,
-			result);
+	return ((dom_node_vtable *) node->vtable)->
+			dom_node_compare_document_position(
+			(dom_node_internal *) node,
+			(dom_node_internal *) other, result);
 }
 #define dom_node_compare_document_position(n, o, r) \
 		dom_node_compare_document_position((dom_node *) (n), \
@@ -483,13 +485,15 @@ static inline dom_exception dom_node_lookup_prefix(struct dom_node *node,
 		(dom_node *) (n), (struct dom_string *) (ns), \
 		(struct dom_string **) (r))
 
-static inline dom_exception dom_node_is_default_namespace(struct dom_node *node,
-		struct dom_string *namespace, bool *result)
+static inline dom_exception dom_node_is_default_namespace(
+		struct dom_node *node, struct dom_string *namespace,
+		bool *result)
 {
-	return ((dom_node_vtable *) node->vtable)->dom_node_is_default_namespace(
+	return ((dom_node_vtable *) node->vtable)->
+			dom_node_is_default_namespace(
 			(dom_node_internal *) node, namespace, result);
 }
-#define dom_node_is_default_namesapce(n, ns, r) dom_node_is_default_namespace(\
+#define dom_node_is_default_namespace(n, ns, r) dom_node_is_default_namespace(\
 		(dom_node *) (n), (struct dom_string *) (ns), (bool *) (r))
 
 static inline dom_exception dom_node_lookup_namespace(struct dom_node *node,

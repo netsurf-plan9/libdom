@@ -3,16 +3,21 @@
  * Licensed under the MIT License,
  *                http://www.opensource.org/licenses/mit-license.php
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
+ * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
-#include <string.h>
+#include <assert.h>
+
+#include <libwapcaplet/libwapcaplet.h>
 
 #include <dom/functypes.h>
 #include <dom/bootstrap/implpriv.h>
+#include <dom/core/attr.h>
+#include <dom/core/element.h>
 #include <dom/core/document.h>
 #include <dom/core/implementation.h>
-#include <dom/core/string.h>
 
+#include "core/string.h"
 #include "core/attr.h"
 #include "core/cdatasection.h"
 #include "core/comment.h"
@@ -24,6 +29,7 @@
 #include "core/nodelist.h"
 #include "core/pi.h"
 #include "core/text.h"
+#include "utils/validate.h"
 #include "utils/namespace.h"
 #include "utils/utils.h"
 
@@ -37,21 +43,6 @@ struct dom_doc_nl {
 	struct dom_doc_nl *prev;	/**< Previous item */
 };
 
-/**
- * Item in list of active namednodemaps
- */
-struct dom_doc_nnm {
-	struct dom_namednodemap *map;	/**< Named node map */
-
-	struct dom_doc_nnm *next;	/**< Next map */
-	struct dom_doc_nnm *prev;	/**< Previous map */
-};
-
-
-/** Interned node name strings, indexed by node type */
-/* Index 0 is unused */
-static struct dom_string *__nodenames_utf8[DOM_NODE_TYPE_COUNT + 1];
-
 /* The virtual functions of this dom_document */
 static struct dom_document_vtable document_vtable = {
 	{
@@ -60,84 +51,31 @@ static struct dom_document_vtable document_vtable = {
 	DOM_DOCUMENT_VTABLE
 };
 
-/**
- * Initialise the document module
- *
- * \param alloc  Memory (de)allocation function
- * \param pw     Pointer to client-specific private data
- * \return DOM_NO_ERR on success
- */
-dom_exception _dom_document_initialise(dom_alloc alloc, void *pw)
-{
-	static struct {
-		const char *name;
-		size_t len;
-	} names_utf8[DOM_NODE_TYPE_COUNT + 1] = {
-		{ NULL,			0 },	/* Unused */
-		{ NULL,			0 },	/* Element */
-		{ NULL,			0 },	/* Attr */
-		{ "#text",		5 },	/* Text */
-		{ "#cdata-section",	14 },	/* CDATA section */
-		{ NULL,			0 },	/* Entity reference */
-		{ NULL,			0 },	/* Entity */
-		{ NULL,			0 },	/* Processing instruction */
-		{ "#comment",		8 },	/* Comment */
-		{ "#document",		9 },	/* Document */
-		{ NULL,			0 },	/* Document type */
-		{ "#document-fragment",	18 },	/* Document fragment */
-		{ NULL,			0 }	/* Notation */
-	};
-	dom_exception err;
+static struct dom_node_protect_vtable document_protect_vtable = {
+	DOM_DOCUMENT_PROTECT_VTABLE
+};
 
-	/* Initialise interned node names */
-	for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
-		if (names_utf8[i].name == NULL) {
-			/* Nothing to intern; skip this entry */
-			__nodenames_utf8[i] = NULL;
-			continue;
-		}
 
-		/* Make string */
-		err = dom_string_create(alloc, pw,
-				(const uint8_t *) names_utf8[i].name,
-				names_utf8[i].len, &__nodenames_utf8[i]);
-		if (err != DOM_NO_ERR) {
-			/* Failed, clean up strings we've created so far */
-			for (int j = 0; j < i; j++) {
-				if (__nodenames_utf8[j] != NULL) {
-					dom_string_unref(__nodenames_utf8[j]);
-				}
-			}
-			return err;
-		}
-	}
+/*----------------------------------------------------------------------*/
 
-	return DOM_NO_ERR;
-}
+/* Internally used helper functions */
+static dom_exception dom_document_dup_node(dom_document *doc, 
+		struct dom_node *node, bool deep, struct dom_node **result, 
+		dom_node_operation opt);
 
-/**
- * Finalise the document module
- *
- * \return DOM_NO_ERR.
- */
-dom_exception _dom_document_finalise(void)
-{
-	for (int i = 0; i <= DOM_NODE_TYPE_COUNT; i++) {
-		if (__nodenames_utf8[i] != NULL) {
-			dom_string_unref(__nodenames_utf8[i]);
-		}
-	}
 
-	return DOM_NO_ERR;
-}
+/*----------------------------------------------------------------------*/
+
+/* The constructors and destructors */
 
 /**
  * Create a Document
  *
- * \param impl     The DOM implementation owning the document
- * \param alloc    Memory (de)allocation function
- * \param pw       Pointer to client-specific private data
- * \param doc      Pointer to location to receive created document
+ * \param impl   The DOM implementation owning the document
+ * \param alloc  Memory (de)allocation function
+ * \param pw     Pointer to client-specific private data
+ * \param doc    Pointer to location to receive created document
+ * \param ctx    The intern string context of this document
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
  *
  * ::impl will have its reference count increased.
@@ -145,7 +83,8 @@ dom_exception _dom_document_finalise(void)
  * The returned document will already be referenced.
  */
 dom_exception dom_document_create(struct dom_implementation *impl,
-		dom_alloc alloc, void *pw, struct dom_document **doc)
+		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		struct dom_document **doc)
 {
 	struct dom_document *d;
 	dom_exception err;
@@ -155,102 +94,106 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	if (d == NULL)
 		return DOM_NO_MEM_ERR;
 
-	/* Set up document allocation context - must be first */
-	d->alloc = alloc;
-	d->pw = pw;
-
 	/* Initialise the virtual table */
 	d->base.base.vtable = &document_vtable;
-	d->base.destroy = &dom_document_destroy;
+	d->base.vtable = &document_protect_vtable;
 
 	/* Initialise base class -- the Document has no parent, so
 	 * destruction will be attempted as soon as its reference count
 	 * reaches zero. Documents own themselves (this simplifies the 
 	 * rest of the code, as it doesn't need to special case Documents)
 	 */
-	err = dom_node_initialise(&d->base, d, DOM_DOCUMENT_NODE,
-			NULL, NULL, NULL, NULL);
+	err = _dom_document_initialise(d, impl, alloc, pw, ctx);
 	if (err != DOM_NO_ERR) {
 		/* Clean up document */
 		alloc(d, 0, pw);
 		return err;
 	}
 
-	/* Initialise remaining type-specific data */
-	if (impl != NULL)
-		dom_implementation_ref(impl);
-	d->impl = impl;
-
-	d->nodelists = NULL;
-	d->maps = NULL;
-
-	d->nodenames = __nodenames_utf8;
-
 	*doc = d;
 
 	return DOM_NO_ERR;
 }
 
-/**
- * Destroy a document
- *
- * \param doc  The document to destroy, which is passed in as a
- * 
- * dom_node_internl
- *
- * The contents of ::doc will be destroyed and ::doc will be freed.
- */
-void dom_document_destroy(struct dom_node_internal *dnode)
+/* Initialise the document */
+dom_exception _dom_document_initialise(struct dom_document *doc, 
+		struct dom_implementation *impl, dom_alloc alloc, void *pw, 
+		struct lwc_context_s *ctx)
 {
-	struct dom_document *doc = (struct dom_document *) dnode;
-	struct dom_node_internal *c, *d;
+	assert(ctx != NULL);
+	assert(alloc != NULL);
+	assert(impl != NULL);
 
-	/* Destroy children of this node */
-	for (c = doc->base.first_child; c != NULL; c = d) {
-		d = c->next;
+	dom_exception err;
+	lwc_string *name;
+	lwc_error lerr;
+	
+	lerr = lwc_context_intern(ctx, "#document", SLEN("#document"), &name);
+	if (lerr != lwc_error_ok)
+		return _dom_exception_from_lwc_error(lerr);
 
-		/* Detach child */
-		c->parent = NULL;
+	dom_implementation_ref(impl);
+	doc->impl = impl;
 
-		if (c->refcnt > 0) {
-			/* Something is using this child */
+	doc->nodelists = NULL;
 
-			/** \todo add to list of nodes pending deletion */
+	/* Set up document allocation context - must be first */
+	doc->alloc = alloc;
+	doc->pw = pw;
+	doc->context = lwc_context_ref(ctx);
 
-			continue;
-		}
+	err = _dom_node_initialise(&doc->base, doc, DOM_DOCUMENT_NODE,
+			name, NULL, NULL, NULL);
+	lwc_context_string_unref(ctx, name);
 
-		/* Detach from sibling list */
-		c->previous = NULL;
-		c->next = NULL;
+	list_init(&doc->pending_nodes);
 
-		dom_node_destroy(c);
-	}
+	doc->id_name = NULL;
 
-	/** \todo Ensure list of nodes pending deletion is empty. If not,
+	return err;
+}
+
+
+/* Finalise the document */
+bool _dom_document_finalise(struct dom_document *doc)
+{
+	/* Finalise base class, delete the tree in force */
+	_dom_node_finalise(doc, &doc->base);
+
+	/* Now, the first_child and last_child should be null */
+	doc->base.first_child = NULL;
+	doc->base.last_child = NULL;
+
+	/* Ensure list of nodes pending deletion is empty. If not,
 	 * then we can't yet destroy the document (its destruction will
 	 * have to wait until the pending nodes are destroyed) */
+	if (doc->pending_nodes.next != &doc->pending_nodes)
+		return false;
 
 	/* Ok, the document tree is empty, as is the list of nodes pending
 	 * deletion. Therefore, it is safe to destroy the document. */
-
 	if (doc->impl != NULL)
 		dom_implementation_unref(doc->impl);
 	doc->impl = NULL;
 
-	/* This is paranoia -- if there are any remaining nodelists or
-	 * namednodemaps, then the document's reference count will be
+	/* This is paranoia -- if there are any remaining nodelists,
+	 * then the document's reference count will be
 	 * non-zero as these data structures reference the document because
 	 * they are held by the client. */
 	doc->nodelists = NULL;
-	doc->maps = NULL;
 
-	/* Finalise base class */
-	dom_node_finalise(doc, &doc->base);
+	if (doc->id_name != NULL)
+		lwc_context_string_unref(doc->context, doc->id_name);
+	lwc_context_unref(doc->context);
 
-	/* Free document */
-	doc->alloc(doc, 0, doc->pw);
+	return true;
 }
+
+
+
+/*----------------------------------------------------------------------*/
+
+/* Public virtual functions */
 
 /**
  * Retrieve the doctype of a document
@@ -319,7 +262,7 @@ dom_exception _dom_document_get_document_element(struct dom_document *doc,
 {
 	struct dom_node_internal *root;
 
-	/* Find first element node in child list */
+	/* Find the first element node in child list */
 	for (root = doc->base.first_child; root != NULL; root = root->next) {
 		if (root->type == DOM_ELEMENT_NODE)
 			break;
@@ -351,7 +294,21 @@ dom_exception _dom_document_get_document_element(struct dom_document *doc,
 dom_exception _dom_document_create_element(struct dom_document *doc,
 		struct dom_string *tag_name, struct dom_element **result)
 {
-	return dom_element_create(doc, tag_name, NULL, NULL, result);
+	lwc_string *name;
+	dom_exception err;
+
+	if (_dom_validate_name(tag_name) == false)
+		return DOM_INVALID_CHARACTER_ERR;
+
+	assert(doc->context != NULL);
+	err = _dom_string_intern(tag_name, doc->context, &name);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	err = _dom_element_create(doc, name, NULL, NULL, result);
+	lwc_context_string_unref(doc->context, name);
+
+	return err;
 }
 
 /**
@@ -368,9 +325,21 @@ dom_exception _dom_document_create_element(struct dom_document *doc,
 dom_exception _dom_document_create_document_fragment(struct dom_document *doc,
 		struct dom_document_fragment **result)
 {
-	return dom_document_fragment_create(doc,
-			doc->nodenames[DOM_DOCUMENT_FRAGMENT_NODE],
-			NULL, result);
+	lwc_string *name;
+	dom_exception err;
+	lwc_error lerr;
+
+	assert(doc->context != NULL);
+
+	lerr = lwc_context_intern(doc->context, "#document-fragment", 
+			SLEN("#document-fragment"), &name);
+	if (lerr != lwc_error_ok)
+		return _dom_exception_from_lwc_error(lerr);
+	
+	err = _dom_document_fragment_create(doc, name, NULL, result);
+	lwc_context_string_unref(doc->context, name);
+
+	return err;
 }
 
 /**
@@ -388,8 +357,20 @@ dom_exception _dom_document_create_document_fragment(struct dom_document *doc,
 dom_exception _dom_document_create_text_node(struct dom_document *doc,
 		struct dom_string *data, struct dom_text **result)
 {
-	return dom_text_create(doc, doc->nodenames[DOM_TEXT_NODE],
-			data, result);
+	lwc_string *name;
+	dom_exception err;
+	lwc_error lerr;
+
+	assert(doc->context != NULL);
+
+	lerr = lwc_context_intern(doc->context, "#text", SLEN("#text"), &name);
+	if (lerr != lwc_error_ok)
+		return _dom_exception_from_lwc_error(lerr);
+	
+	err = _dom_text_create(doc, name, data, result);
+	lwc_context_string_unref(doc->context, name);
+
+	return err;
 }
 
 /**
@@ -407,8 +388,21 @@ dom_exception _dom_document_create_text_node(struct dom_document *doc,
 dom_exception _dom_document_create_comment(struct dom_document *doc,
 		struct dom_string *data, struct dom_comment **result)
 {
-	return dom_comment_create(doc, doc->nodenames[DOM_COMMENT_NODE],
-			data, result);
+	lwc_string *name;
+	dom_exception err;
+	lwc_error lerr;
+
+	assert(doc->context != NULL);
+
+	lerr = lwc_context_intern(doc->context, "#comment", SLEN("#comment"),
+			&name);
+	if (lerr != lwc_error_ok)
+		return _dom_exception_from_lwc_error(lerr);
+	
+	err = _dom_comment_create(doc, name, data, result);
+	lwc_context_string_unref(doc->context, name);
+
+	return err;
 }
 
 /**
@@ -427,9 +421,21 @@ dom_exception _dom_document_create_comment(struct dom_document *doc,
 dom_exception _dom_document_create_cdata_section(struct dom_document *doc,
 		struct dom_string *data, struct dom_cdata_section **result)
 {
-	return dom_cdata_section_create(doc,
-			doc->nodenames[DOM_CDATA_SECTION_NODE],
-			data, result);
+	lwc_string *name;
+	dom_exception err;
+	lwc_error lerr;
+
+	assert(doc->context != NULL);
+
+	lerr = lwc_context_intern(doc->context, "#cdata-section", 
+			SLEN("#cdata-section"), &name);
+	if (lerr != lwc_error_ok)
+		return _dom_exception_from_lwc_error(lerr);
+
+	err = _dom_cdata_section_create(doc, name, data, result);
+	lwc_context_string_unref(doc->context, name);
+
+	return err;
 }
 
 /**
@@ -452,7 +458,21 @@ dom_exception _dom_document_create_processing_instruction(
 		struct dom_string *data,
 		struct dom_processing_instruction **result)
 {
-	return dom_processing_instruction_create(doc, target, data, result);
+	lwc_string *name;
+	dom_exception err;
+
+	if (_dom_validate_name(target) == false)
+		return DOM_INVALID_CHARACTER_ERR;
+
+	assert(doc->context != NULL);
+	err = _dom_string_intern(target, doc->context, &name);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = _dom_processing_instruction_create(doc, name, data, result);
+	lwc_context_string_unref(doc->context, name);
+
+	return err;
 }
 
 /**
@@ -471,7 +491,20 @@ dom_exception _dom_document_create_processing_instruction(
 dom_exception _dom_document_create_attribute(struct dom_document *doc,
 		struct dom_string *name, struct dom_attr **result)
 {
-	return dom_attr_create(doc, name, NULL, NULL, result);
+	lwc_string *n;
+	dom_exception err;
+
+	if (_dom_validate_name(name) == false)
+		return DOM_INVALID_CHARACTER_ERR;
+
+	assert(doc->context != NULL);
+	err = _dom_string_intern(name, doc->context, &n);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = _dom_attr_create(doc, n, NULL, NULL, true, result);
+	lwc_context_string_unref(doc->context, n);
+	return err;
 }
 
 /**
@@ -492,7 +525,20 @@ dom_exception _dom_document_create_entity_reference(struct dom_document *doc,
 		struct dom_string *name,
 		struct dom_entity_reference **result)
 {
-	return dom_entity_reference_create(doc, name, NULL, result);
+	lwc_string *n;
+	dom_exception err;
+
+	if (_dom_validate_name(name) == false)
+		return DOM_INVALID_CHARACTER_ERR;
+
+	assert(doc->context != NULL);
+	err = _dom_string_intern(name, doc->context, &n);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = _dom_entity_reference_create(doc, n, NULL, result);
+	lwc_context_string_unref(doc->context, n);
+	return err;
 }
 
 /**
@@ -510,8 +556,20 @@ dom_exception _dom_document_create_entity_reference(struct dom_document *doc,
 dom_exception _dom_document_get_elements_by_tag_name(struct dom_document *doc,
 		struct dom_string *tagname, struct dom_nodelist **result)
 {
-	return dom_document_get_nodelist(doc, (struct dom_node_internal *) doc, 
-			tagname, NULL, NULL, result);
+	lwc_string *name;
+	dom_exception err;
+
+	assert(doc->context != NULL);
+	err = _dom_string_intern(tagname, doc->context, &name);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = _dom_document_get_nodelist(doc, DOM_NODELIST_BY_NAME, 
+			(struct dom_node_internal *) doc,  name, NULL, NULL, 
+			result);
+	lwc_context_string_unref(doc->context, name);
+
+	return err;
 }
 
 /**
@@ -532,12 +590,10 @@ dom_exception _dom_document_get_elements_by_tag_name(struct dom_document *doc,
 dom_exception _dom_document_import_node(struct dom_document *doc,
 		struct dom_node *node, bool deep, struct dom_node **result)
 {
-	UNUSED(doc);
-	UNUSED(node);
-	UNUSED(deep);
-	UNUSED(result);
+	/* TODO: The DOM_INVALID_CHARACTER_ERR exception */
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_document_dup_node(doc, node, deep, result,
+			DOM_NODE_IMPORTED);
 }
 
 /**
@@ -575,7 +631,8 @@ dom_exception _dom_document_create_element_ns(struct dom_document *doc,
 	struct dom_string *prefix, *localname;
 	dom_exception err;
 
-	/** \todo ensure document supports XML feature */
+	if (_dom_validate_name(qname) == false)
+		return DOM_INVALID_CHARACTER_ERR;
 
 	/* Validate qname */
 	err = _dom_namespace_validate_qname(qname, namespace);
@@ -589,13 +646,57 @@ dom_exception _dom_document_create_element_ns(struct dom_document *doc,
 		return err;
 	}
 
+	/* Get the interned string from the dom_string */
+	assert(doc->context != NULL);
+	lwc_string *l = NULL, *n = NULL, *p = NULL;
+	if (localname != NULL) {
+		err = _dom_string_intern(localname, doc->context, &l);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(localname);
+			if (prefix != NULL)
+				dom_string_unref(prefix);
+
+			return err;
+		}
+	}
+	if (namespace != NULL) {
+		err = _dom_string_intern(namespace, doc->context, &n);
+		if (err != DOM_NO_ERR) {
+			lwc_context_string_unref(doc->context, l);
+			dom_string_unref(localname);
+			if (prefix != NULL)
+				dom_string_unref(prefix);
+
+			return err;
+		}
+	}
+	if (prefix != NULL) {
+		err = _dom_string_intern(prefix, doc->context, &p);
+		if (err != DOM_NO_ERR) {
+			lwc_context_string_unref(doc->context, l);
+			lwc_context_string_unref(doc->context, n);
+			dom_string_unref(localname);
+			if (prefix != NULL)
+				dom_string_unref(prefix);
+
+			return err;
+		}
+	}
+
 	/* Attempt to create element */
-	err = dom_element_create(doc, localname, namespace, prefix, result);
+	err = _dom_element_create(doc, l, n, p, result);
 
 	/* Tidy up */
-	dom_string_unref(localname);
+	if (localname != NULL) {
+		dom_string_unref(localname);
+		lwc_context_string_unref(doc->context, l);
+	}
 	if (prefix != NULL) {
 		dom_string_unref(prefix);
+		lwc_context_string_unref(doc->context, p);
+	}
+	if (namespace != NULL) {
+		lwc_context_string_unref(doc->context, n);
 	}
 
 	return err;
@@ -636,7 +737,8 @@ dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
 	struct dom_string *prefix, *localname;
 	dom_exception err;
 
-	/** \todo ensure document supports XML feature */
+	if (_dom_validate_name(qname) == false)
+		return DOM_INVALID_CHARACTER_ERR;
 
 	/* Validate qname */
 	err = _dom_namespace_validate_qname(qname, namespace);
@@ -650,13 +752,56 @@ dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
 		return err;
 	}
 
+	/* Get the interned string from the dom_string */
+	assert(doc->context != NULL);
+	lwc_string *l = NULL, *n = NULL, *p = NULL;
+	if (localname != NULL) {
+		err = _dom_string_intern(localname, doc->context, &l);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(localname);
+			if (prefix != NULL)
+				dom_string_unref(prefix);
+
+			return err;
+		}
+	}
+	if (namespace != NULL) {
+		err = _dom_string_intern(namespace, doc->context, &n);
+		if (err != DOM_NO_ERR) {
+			lwc_context_string_unref(doc->context, l);
+			dom_string_unref(localname);
+			if (prefix != NULL)
+				dom_string_unref(prefix);
+
+			return err;
+		}
+	}
+	if (prefix != NULL) {
+		err = _dom_string_intern(prefix, doc->context, &p);
+		if (err != DOM_NO_ERR) {
+			lwc_context_string_unref(doc->context, l);
+			lwc_context_string_unref(doc->context, n);
+			dom_string_unref(localname);
+			if (prefix != NULL)
+				dom_string_unref(prefix);
+
+			return err;
+		}
+	}
 	/* Attempt to create attribute */
-	err = dom_attr_create(doc, localname, namespace, prefix, result);
+	err = _dom_attr_create(doc, l, n, p, true, result);
 
 	/* Tidy up */
-	dom_string_unref(localname);
+	if (localname != NULL) {
+		dom_string_unref(localname);
+		lwc_context_string_unref(doc->context, l);
+	}
 	if (prefix != NULL) {
 		dom_string_unref(prefix);
+		lwc_context_string_unref(doc->context, p);
+	}
+	if (namespace != NULL) {
+		lwc_context_string_unref(doc->context, n);
 	}
 
 	return err;
@@ -669,7 +814,7 @@ dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
  * \param namespace  The namespace URI
  * \param localname  The local name
  * \param result     Pointer to location to receive result
- * \return DOM_NO_ERR.
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  *
  * The returned list will have its reference count increased. It is
  * the responsibility of the caller to unref the list once it has
@@ -679,8 +824,33 @@ dom_exception _dom_document_get_elements_by_tag_name_ns(
 		struct dom_document *doc, struct dom_string *namespace,
 		struct dom_string *localname, struct dom_nodelist **result)
 {
-	return dom_document_get_nodelist(doc, (struct dom_node_internal *) doc, 
-			NULL, namespace, localname, result);
+	dom_exception err;
+	lwc_string *l = NULL, *n = NULL;
+
+	/* Get the interned string from the dom_string */
+	assert(doc->context != NULL);
+	if (localname != NULL) {
+		err = _dom_string_intern(localname, doc->context, &l);
+		if (err != DOM_NO_ERR)
+			return err;
+	}
+	if (namespace != NULL) {
+		err = _dom_string_intern(namespace, doc->context, &n);
+		if (err != DOM_NO_ERR) {
+			lwc_context_string_unref(doc->context, l);
+			return err;
+		}
+	}
+
+	err = _dom_document_get_nodelist(doc, DOM_NODELIST_BY_NAMESPACE, 
+			(struct dom_node_internal *) doc, NULL, n, l, result);
+	
+	if (l != NULL)
+		lwc_context_string_unref(doc->context, l);
+	if (n != NULL)
+		lwc_context_string_unref(doc->context, n);
+
+	return err;
 }
 
 /**
@@ -689,7 +859,7 @@ dom_exception _dom_document_get_elements_by_tag_name_ns(
  * \param doc     The document to search in
  * \param id      The ID to search for
  * \param result  Pointer to location to receive result
- * \return DOM_NO_ERR.
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  *
  * The returned node will have its reference count increased. It is
  * the responsibility of the caller to unref the node once it has
@@ -698,11 +868,25 @@ dom_exception _dom_document_get_elements_by_tag_name_ns(
 dom_exception _dom_document_get_element_by_id(struct dom_document *doc,
 		struct dom_string *id, struct dom_element **result)
 {
-	UNUSED(doc);
-	UNUSED(id);
-	UNUSED(result);
+	lwc_string *i;
+	dom_node_internal *root;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	*result = NULL;
+
+	assert(doc->context != NULL);
+	err = _dom_string_intern(id, doc->context, &i);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	err = dom_document_get_document_element(doc, (void *) &root);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = _dom_find_element_by_id(root, i, result);
+	dom_node_unref(root);
+
+	return err;
 }
 
 /**
@@ -710,7 +894,7 @@ dom_exception _dom_document_get_element_by_id(struct dom_document *doc,
  *
  * \param doc     The document to query
  * \param result  Pointer to location to receive result
- * \return DOM_NO_ERR.
+ * \return DOM_NOT_SUPPORTED_ERR, we don't support this API now.
  *
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
@@ -730,7 +914,7 @@ dom_exception _dom_document_get_input_encoding(struct dom_document *doc,
  *
  * \param doc     The document to query
  * \param result  Pointer to location to receive result
- * \return DOM_NO_ERR.
+ * \return DOM_NOT_SUPPORTED_ERR, we don't support this API now.
  *
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
@@ -750,7 +934,7 @@ dom_exception _dom_document_get_xml_encoding(struct dom_document *doc,
  *
  * \param doc     The document to query
  * \param result  Pointer to location to receive result
- * \return DOM_NO_ERR.
+ * \return DOM_NOT_SUPPORTED_ERR, we don't support this API now.
  */
 dom_exception _dom_document_get_xml_standalone(struct dom_document *doc,
 		bool *result)
@@ -769,6 +953,9 @@ dom_exception _dom_document_get_xml_standalone(struct dom_document *doc,
  * \return DOM_NO_ERR            on success,
  *         DOM_NOT_SUPPORTED_ERR if the document does not support the "XML"
  *                               feature.
+ *
+ * We don't support this API now, so the return value is always 
+ * DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_set_xml_standalone(struct dom_document *doc,
 		bool standalone)
@@ -784,11 +971,14 @@ dom_exception _dom_document_set_xml_standalone(struct dom_document *doc,
  *
  * \param doc     The document to query
  * \param result  Pointer to location to receive result
- * \return DOM_NO_ERR.
+ * \return DOM_NO_ERR
  *
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
  * finished with it.
+ *
+ * We don't support this API now, so the return value is always 
+ * DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_get_xml_version(struct dom_document *doc,
 		struct dom_string **result)
@@ -807,6 +997,9 @@ dom_exception _dom_document_get_xml_version(struct dom_document *doc,
  * \return DOM_NO_ERR            on success,
  *         DOM_NOT_SUPPORTED_ERR if the document does not support the "XML"
  *                               feature.
+ *
+ * We don't support this API now, so the return value is always 
+ * DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_set_xml_version(struct dom_document *doc,
 		struct dom_string *version)
@@ -822,7 +1015,7 @@ dom_exception _dom_document_set_xml_version(struct dom_document *doc,
  *
  * \param doc     The document to query
  * \param result  Pointer to location to receive result
- * \return DOM_NO_ERR.
+ * \return DOM_NOT_SUPPORTED_ERR, we don't support this API now.
  */
 dom_exception _dom_document_get_strict_error_checking(
 		struct dom_document *doc, bool *result)
@@ -838,7 +1031,7 @@ dom_exception _dom_document_get_strict_error_checking(
  *
  * \param doc     The document to query
  * \param strict  Whether to use strict error checking
- * \return DOM_NO_ERR.
+ * \return DOM_NOT_SUPPORTED_ERR, we don't support this API now.
  */
 dom_exception _dom_document_set_strict_error_checking(
 		struct dom_document *doc, bool strict)
@@ -863,10 +1056,10 @@ dom_exception _dom_document_set_strict_error_checking(
 dom_exception _dom_document_get_uri(struct dom_document *doc,
 		struct dom_string **result)
 {
-	UNUSED(doc);
-	UNUSED(result);
+	dom_string_ref(doc->uri);
+	*result = doc->uri;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return DOM_NO_ERR;
 }
 
 /**
@@ -883,10 +1076,11 @@ dom_exception _dom_document_get_uri(struct dom_document *doc,
 dom_exception _dom_document_set_uri(struct dom_document *doc,
 		struct dom_string *uri)
 {
-	UNUSED(doc);
-	UNUSED(uri);
+	dom_string_unref(doc->uri);
+	dom_string_ref(uri);
+	doc->uri = uri;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return DOM_NO_ERR;
 }
 
 /**
@@ -903,15 +1097,62 @@ dom_exception _dom_document_set_uri(struct dom_document *doc,
  * The returned node will have its reference count increased. It is
  * the responsibility of the caller to unref the node once it has
  * finished with it.
+ *
+ * @note: The spec said adoptNode may be light weight than the importNode
+ *	  because the former need no Node creation. But in our implementation
+ *	  this can't be ensured. Both adoptNode and importNode create new
+ *	  nodes using the importing/adopting document's resource manager. So,
+ *	  generally, the adoptNode and importNode call the same function
+ *	  dom_document_dup_node.
  */
 dom_exception _dom_document_adopt_node(struct dom_document *doc,
 		struct dom_node *node, struct dom_node **result)
 {
-	UNUSED(doc);
-	UNUSED(node);
-	UNUSED(result);
+	dom_exception err;
+	dom_node_internal *n = (dom_node_internal *) node;
+	
+	*result = NULL;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (n->type == DOM_DOCUMENT_NODE ||
+			n->type == DOM_DOCUMENT_TYPE_NODE) {
+		return DOM_NOT_SUPPORTED_ERR;		
+	}
+
+	if (n->type == DOM_ENTITY_NODE ||
+			n->type == DOM_NOTATION_NODE ||
+			n->type == DOM_PROCESSING_INSTRUCTION_NODE ||
+			n->type == DOM_TEXT_NODE ||
+			n->type == DOM_CDATA_SECTION_NODE ||
+			n->type == DOM_COMMENT_NODE) {
+		*result = NULL;
+		return DOM_NO_ERR;
+	}
+
+	/* Support XML when necessary */
+	if (n->type == DOM_ENTITY_REFERENCE_NODE) {
+		return DOM_NOT_SUPPORTED_ERR;
+	}
+
+	err = dom_document_dup_node(doc, node, true, result, DOM_NODE_ADOPTED);
+	if (err != DOM_NO_ERR) {
+		*result = NULL;
+		return err;
+	}
+
+	dom_node_internal *parent = n->parent;
+	dom_node_internal *tmp;
+	if (parent != NULL) {
+		err = dom_node_remove_child(parent, node, (void *) &tmp);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref(*result);
+			*result = NULL;
+			return err;
+		}
+	}
+
+	dom_node_unref(tmp);
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -919,7 +1160,7 @@ dom_exception _dom_document_adopt_node(struct dom_document *doc,
  *
  * \param doc     The document to query
  * \param result  Pointer to location to receive result
- * \return DOM_NO_ERR.
+ * \return DOM_NOT_SUPPORTED_ERR, we don't support this API now.
  *
  * The returned object will have its reference count increased. It is
  * the responsibility of the caller to unref the object once it has
@@ -938,7 +1179,7 @@ dom_exception _dom_document_get_dom_config(struct dom_document *doc,
  * Normalize a document
  *
  * \param doc  The document to normalize
- * \return DOM_NO_ERR.
+ * \return DOM_NOT_SUPPORTED_ERR, we don't support this API now.
  */
 dom_exception _dom_document_normalize(struct dom_document *doc)
 {
@@ -977,6 +1218,9 @@ dom_exception _dom_document_normalize(struct dom_document *doc)
  * The returned node will have its reference count increased. It is
  * the responsibility of the caller to unref the node once it has
  * finished with it.
+ *
+ * We don't support this API now, so the return value is always 
+ * DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_rename_node(struct dom_document *doc,
 		struct dom_node *node,
@@ -992,6 +1236,51 @@ dom_exception _dom_document_rename_node(struct dom_document *doc,
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
+/*-----------------------------------------------------------------------*/
+
+/* Overload protectd virtual functions */
+
+/* The virtual destroy function of this class */
+void _dom_document_destroy(struct dom_node_internal *node)
+{
+	struct dom_document *doc = (struct dom_document *) node;
+
+	if (_dom_document_finalise(doc) == true) {
+		doc->alloc(doc, 0, doc->pw);
+	}
+}
+
+/* The memory allocation function of this class */
+dom_exception __dom_document_alloc(struct dom_document *doc,
+		struct dom_node_internal *n, struct dom_node_internal **ret)
+{
+	UNUSED(n);
+	struct dom_document *a;
+	
+	a = _dom_document_alloc(doc, NULL, sizeof(struct dom_document));
+	if (a == NULL)
+		return DOM_NO_MEM_ERR;
+	
+	*ret = (dom_node_internal *) a;
+	dom_node_set_owner(*ret, doc);
+
+	return DOM_NO_ERR;
+}
+
+/* The copy constructor function of this class */
+dom_exception _dom_document_copy(struct dom_node_internal *new, 
+		struct dom_node_internal *old)
+{
+	UNUSED(new);
+	UNUSED(old);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+
+/* ----------------------------------------------------------------------- */
+
+/* Helper functions */
 /**
  * Create a DOM string, using a document's allocation context
  *
@@ -1007,15 +1296,96 @@ dom_exception _dom_document_rename_node(struct dom_document *doc,
  * The string of characters passed in will be copied for use by the
  * returned DOM string.
  */
-dom_exception dom_document_create_string(struct dom_document *doc,
+dom_exception _dom_document_create_string(struct dom_document *doc,
 		const uint8_t *data, size_t len, struct dom_string **result)
 {
 	return dom_string_create(doc->alloc, doc->pw, data, len, result);
 }
 
-/*                                                                         */
-/* ----------------------------------------------------------------------- */
-/*                                                                         */
+/*
+ * Create a lwc_string 
+ * 
+ * \param doc     The document object
+ * \param data    The raw string data
+ * \param len     The raw string length
+ * \param result  The resturned lwc_string
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_document_create_lwcstring(struct dom_document *doc,
+		const uint8_t *data, size_t len, struct lwc_string_s **result)
+{
+	lwc_error lerr;
+
+	assert(doc->context != NULL);
+
+	lerr = lwc_context_intern(doc->context, (const char *) data, len, 
+			result);
+	
+	return _dom_exception_from_lwc_error(lerr);
+}
+
+/* Simple accessor for lwc_context of this document */
+struct lwc_context_s *_dom_document_get_intern_context(
+		struct dom_document *doc)
+{
+	return doc->context;
+}
+
+/* Get the resource manager from the document */
+void _dom_document_get_resource_mgr(
+		struct dom_document *doc, struct dom_resource_mgr *rm)
+{
+	rm->alloc = doc->alloc;
+	rm->pw = doc->pw;
+	rm->ctx = doc->context;
+}
+
+/* Simple accessor for allocator data for this document */
+void _dom_document_get_allocator(struct dom_document *doc, dom_alloc *al, 
+		void **pw)
+{
+	*al = doc->alloc;
+	*pw = doc->pw;
+}
+/*
+ * Create a dom_string from a lwc_string.
+ *
+ * \param doc     The document object
+ * \param str     The lwc_string object
+ * \param result  The retured dom_string
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_document_create_string_from_lwcstring(
+		struct dom_document *doc, struct lwc_string_s *str, 
+		struct dom_string **result)
+{
+	assert(doc->context != NULL);
+
+	return _dom_string_create_from_lwcstring(doc->alloc, doc->pw, 
+			doc->context, str, result);
+}
+
+/**
+ * Create a hash_table 
+ * 
+ * \param doc     The dom_document
+ * \param chains  The number of chains
+ * \param f       The hash function
+ * \param ht      The returned hash_table
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_document_create_hashtable(struct dom_document *doc,
+		size_t chains, dom_hash_func f, struct dom_hash_table **ht)
+{
+	struct dom_hash_table *ret;
+
+	ret = _dom_hash_create(chains, f, doc->alloc, doc->pw);
+	if (ret == NULL)
+		return DOM_NO_MEM_ERR;
+	
+	*ht = ret;
+	return DOM_NO_ERR;
+}
 
 /**
  * (De)allocate memory with a document's context
@@ -1028,7 +1398,7 @@ dom_exception dom_document_create_string(struct dom_document *doc,
  * This call (modulo ::doc) has the same semantics as realloc().
  * It is a thin veneer over the client-provided allocation function.
  */
-void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size)
+void *_dom_document_alloc(struct dom_document *doc, void *ptr, size_t size)
 {
 	return doc->alloc(ptr, size, doc->pw);
 }
@@ -1037,6 +1407,7 @@ void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size)
  * Get a nodelist, creating one if necessary
  *
  * \param doc        The document to get a nodelist for
+ * \param type	     The type of the NodeList
  * \param root       Root node of subtree that list applies to
  * \param tagname    Name of nodes in list (or NULL)
  * \param namespace  Namespace part of nodes in list (or NULL)
@@ -1048,16 +1419,16 @@ void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size)
  * the responsibility of the caller to unref the list once it has
  * finished with it.
  */
-dom_exception dom_document_get_nodelist(struct dom_document *doc,
-		struct dom_node_internal *root, struct dom_string *tagname,
-		struct dom_string *namespace, struct dom_string *localname,
-		struct dom_nodelist **list)
+dom_exception _dom_document_get_nodelist(struct dom_document *doc,
+		nodelist_type type, struct dom_node_internal *root,
+		struct lwc_string_s *tagname, struct lwc_string_s *namespace,
+		struct lwc_string_s *localname, struct dom_nodelist **list)
 {
 	struct dom_doc_nl *l;
 	dom_exception err;
 
 	for (l = doc->nodelists; l; l = l->next) {
-		if (dom_nodelist_match(l->list, root, tagname,
+		if (_dom_nodelist_match(l->list, type, root, tagname,
 				namespace, localname))
 			break;
 	}
@@ -1074,7 +1445,7 @@ dom_exception dom_document_get_nodelist(struct dom_document *doc,
 			return DOM_NO_MEM_ERR;
 
 		/* Create nodelist */
-		err = dom_nodelist_create(doc, root, tagname, namespace,
+		err = _dom_nodelist_create(doc, type, root, tagname, namespace,
 				localname, &l->list);
 		if (err != DOM_NO_ERR) {
 			doc->alloc(l, 0, doc->pw);
@@ -1093,7 +1464,7 @@ dom_exception dom_document_get_nodelist(struct dom_document *doc,
 	 * If it did, the nodelist's reference count would never reach zero,
 	 * and the list would remain indefinitely. This is not a problem as
 	 * the list notifies the document of its destruction via
-	 * dom_document_remove_nodelist. */
+	 * _dom_document_remove_nodelist. */
 
 	*list = l->list;
 
@@ -1106,7 +1477,7 @@ dom_exception dom_document_get_nodelist(struct dom_document *doc,
  * \param doc   The document to remove the list from
  * \param list  The list to remove
  */
-void dom_document_remove_nodelist(struct dom_document *doc,
+void _dom_document_remove_nodelist(struct dom_document *doc,
 		struct dom_nodelist *list)
 {
 	struct dom_doc_nl *l;
@@ -1135,97 +1506,175 @@ void dom_document_remove_nodelist(struct dom_document *doc,
 }
 
 /**
- * Get a namednodemap, creating one if necessary
+ * Find element with certain ID in the subtree rooted at root 
  *
- * \param doc   The document to get a namednodemap for
- * \param head  Start of list containing items in map
- * \param type  The type of items in map
- * \param map   Pointer to location to receive map
- * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
- *
- * The returned map will have its reference count increased. It is
- * the responsibility of the caller to unref the map once it has
- * finished with it.
+ * \param root    The root element from where we start
+ * \param id      The ID of the target element
+ * \param result  The result element
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception dom_document_get_namednodemap(struct dom_document *doc,
-		struct dom_node_internal *head, dom_node_type type,
-		struct dom_namednodemap **map)
+dom_exception _dom_find_element_by_id(dom_node_internal *root, 
+		struct lwc_string_s *id, struct dom_element **result)
 {
-	struct dom_doc_nnm *m;
-	dom_exception err;
+	*result = NULL;
+	dom_node_internal *node = root;
 
-	for (m = doc->maps; m; m = m->next) {
-		if (dom_namednodemap_match(m->map, head, type))
-			break;
-	}
-
-	if (m != NULL) {
-		/* Found an existing map, so use it */
-		dom_namednodemap_ref(m->map);
-	} else {
-		/* No existing map */
-
-		/* Create active map entry */
-		m = doc->alloc(NULL, sizeof(struct dom_doc_nnm), doc->pw);
-		if (m == NULL)
-			return DOM_NO_MEM_ERR;
-
-		/* Create namednodemap */
-		err = dom_namednodemap_create(doc, head, type, &m->map);
-		if (err != DOM_NO_ERR) {
-			doc->alloc(m, 0, doc->pw);
-			return err;
+	while (node != NULL) {
+		if (root->type == DOM_ELEMENT_NODE) {
+			lwc_string *real_id;
+			_dom_element_get_id((dom_element *) node, &real_id);
+			if (real_id == id) {
+				*result = (dom_element *) node;
+				return DOM_NO_ERR;
+			}
 		}
 
-		/* Add to document's list of active namednodemaps */
-		m->prev = NULL;
-		m->next = doc->maps;
-		if (doc->maps)
-			doc->maps->prev = m;
-		doc->maps = m;
+		if (node->first_child != NULL) {
+			/* Has children */
+			node = node->first_child;
+		} else if (node->next != NULL) {
+			/* No children, but has siblings */
+			node = node->next;
+		} else {
+			/* No children or siblings. 
+			 * Find first unvisited relation. */
+			struct dom_node_internal *parent = node->parent;
+
+			while (parent != root &&
+					node == parent->last_child) {
+				node = parent;
+				parent = parent->parent;
+			}
+
+			node = node->next;
+		}
 	}
-
-	/* Note: the document does not claim a reference on the namednodemap
-	 * If it did, the map's reference count would never reach zero,
-	 * and the list would remain indefinitely. This is not a problem as
-	 * the map notifies the document of its destruction via
-	 * dom_document_remove_namednodempa. */
-
-	*map = m->map;
 
 	return DOM_NO_ERR;
 }
 
 /**
- * Remove a namednodemap
+ * Duplicate a Node
  *
- * \param doc  The document to remove the map from
- * \param map  The map to remove
+ * \param doc     The documen
+ * \param node    The node to duplicate
+ * \param deep    Whether to make a deep copy
+ * \param result  The returned node
+ * \param opt     Whether this is adopt or import operation
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-void dom_document_remove_namednodemap(struct dom_document *doc,
-		struct dom_namednodemap *map)
+dom_exception dom_document_dup_node(dom_document *doc, struct dom_node *node,
+		bool deep, struct dom_node **result, dom_node_operation opt)
 {
-	struct dom_doc_nnm *m;
+	dom_exception err;
+	dom_node_internal *n = (dom_node_internal *) node;
 
-	for (m = doc->maps; m; m = m->next) {
-		if (m->map == map)
-			break;
+	if (opt == DOM_NODE_ADOPTED && _dom_node_readonly(n))
+		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	
+	if (n->type == DOM_DOCUMENT_NODE ||
+			n->type == DOM_DOCUMENT_TYPE_NODE)
+		return DOM_NOT_SUPPORTED_ERR;
+
+	err = dom_node_alloc(doc, node, result);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	err = dom_node_copy(*result, node);
+	if (err != DOM_NO_ERR) {
+		_dom_document_alloc(doc, *result, 0);
+		return err;
 	}
 
-	if (m == NULL) {
-		/* This should never happen; we should probably abort here */
-		return;
+	if (n->type == DOM_ATTRIBUTE_NODE) {
+		_dom_attr_set_specified((dom_attr *) node, true);
+		deep = true;
 	}
 
-	/* Remove from list */
-	if (m->prev != NULL)
-		m->prev->next = m->next;
-	else
-		doc->maps = m->next;
+	if (n->type == DOM_ENTITY_REFERENCE_NODE) {
+		deep = false;
+	}
 
-	if (m->next != NULL)
-		m->next->prev = m->prev;
+	if (n->type == DOM_ELEMENT_NODE) {
+		/* Specified attributes are copyied but not default attributes,
+		 * if the document object hold all the default attributes, we 
+		 * have nothing to do here */
+	}
 
-	/* And free item */
-	doc->alloc(m, 0, doc->pw);
+	if (opt == DOM_NODE_ADOPTED && (n->type == DOM_ENTITY_NODE ||
+			n->type == DOM_NOTATION_NODE)) {
+		/* We did not support XML now */
+		return DOM_NOT_SUPPORTED_ERR;
+	}
+
+	dom_node_internal *child, *r;
+	if (deep == true) {
+		child = ((dom_node_internal *) node)->first_child;
+		while (child != NULL) {
+			err = dom_document_import_node(doc, child, deep,
+					(void *) &r);
+			if (err != DOM_NO_ERR) {
+				_dom_document_alloc(doc, *result, 0);
+				return err;
+			}
+
+			err = dom_node_append_child(*result, r, (void *) &r);
+			if (err != DOM_NO_ERR) {
+				_dom_document_alloc(doc, *result, 0);
+				dom_node_unref(r);
+				return err;
+			}
+			dom_node_unref(r);
+
+			child = child->next;
+		}
+	}
+
+	/* Call the dom_user_data_handlers */
+	dom_user_data *ud;
+	ud = n->user_data;
+	while (ud != NULL) {
+		if (ud->handler != NULL)
+			ud->handler(opt, ud->key, ud->data, 
+					node, *result);
+		ud = ud->next;
+	}
+
+	return DOM_NO_ERR;
 }
+
+/**
+ * Try to destory the document. 
+ *
+ * \param doc  The instance of Document
+ *
+ * Delete the document if:
+ * 1. The refcnt reach zero
+ * 2. The pending list is empty
+ *
+ * else, do nothing.
+ */
+void _dom_document_try_destroy(struct dom_document *doc)
+{
+	if (doc->base.refcnt != 0 || doc->base.parent != NULL)
+		return;
+
+	_dom_document_destroy((dom_node_internal *) doc);
+}
+
+/**
+ * Set the ID attribute name of this document
+ *
+ * \param doc   The document object
+ * \param name  The ID name of the elements in this document
+ *
+ * @note: The lwc_context of the param 'name' must be the same one with
+ * document's, this should be assured by the client.
+ */
+void _dom_document_set_id_name(dom_document *doc, struct lwc_string_s *name)
+{
+	if (doc->id_name != NULL)
+		lwc_context_string_unref(doc->context, doc->id_name);
+	doc->id_name = lwc_context_string_ref(doc->context, name);
+}
+

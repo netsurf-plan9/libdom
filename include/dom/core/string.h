@@ -10,9 +10,11 @@
 
 #include <inttypes.h>
 #include <stddef.h>
+#include <libwapcaplet/libwapcaplet.h>
 
 #include <dom/functypes.h>
 #include <dom/core/exceptions.h>
+
 
 typedef struct dom_string dom_string;
 
@@ -24,6 +26,14 @@ void dom_string_unref(struct dom_string *str);
 /* Create a DOM string from a string of characters */
 dom_exception dom_string_create(dom_alloc alloc, void *pw,
 		const uint8_t *ptr, size_t len, struct dom_string **str);
+
+/* Clone a dom_string */
+dom_exception dom_string_clone(dom_alloc alloc, void *pw,
+		struct dom_string *str, struct dom_string **ret);
+
+/* Get the internal lwc_string */
+dom_exception dom_string_get_intern(struct dom_string *str, 
+		struct lwc_context_s **ctx, struct lwc_string_s **lwcstr);
 
 /* Case sensitively compare two DOM strings */
 int dom_string_cmp(struct dom_string *s1, struct dom_string *s2);
@@ -37,6 +47,12 @@ uint32_t dom_string_rindex(struct dom_string *str, uint32_t chr);
 
 /* Get the length, in characters, of a dom string */
 uint32_t dom_string_length(struct dom_string *str);
+
+/* Get the UCS-4 character at position index, the index should be in 
+ * [0, length), and length can be get by calling dom_string_length
+ */
+dom_exception dom_string_at(struct dom_string *str, uint32_t index, 
+		uint32_t *ch);
 
 /* Concatenate two dom strings */
 dom_exception dom_string_concat(struct dom_string *s1, struct dom_string *s2,

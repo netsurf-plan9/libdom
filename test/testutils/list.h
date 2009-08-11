@@ -12,18 +12,32 @@
 
 #include "comparators.h"
 
+/* The element type in the list
+ * 
+ * The high byte is used for category type
+ * The low byte is used for concrete type
+ */
+typedef enum TYPE {
+	INT = 0x0001,
+	STRING = 0x0100,
+	DOM_STRING = 0x0101,
+	NODE = 0x0200
+} TYPE;
+
+
 struct list_elt {
 	void* data;
 	struct list_elt* next;
 };
 
-struct list {
+typedef struct list {
 	unsigned int size;
+	TYPE type;
 	struct list_elt* head;
 	struct list_elt* tail;
-};
+} list;
 
-struct list* list_new(void);
+struct list* list_new(TYPE type);
 void list_destroy(struct list* list);
 
 /**
@@ -41,7 +55,6 @@ void list_add(struct list* list, void* data);
 bool list_remove(struct list* list, void* data);
 
 struct list* list_clone(struct list* list);
-
 /**
  * Tests if data is equal to any element in the list.
  */

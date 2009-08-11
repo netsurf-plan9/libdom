@@ -12,9 +12,14 @@
 #include <stddef.h>
 
 #include <dom/core/node.h>
-#include <dom/core/string.h>
 
+#include "core/string.h"
 #include "core/node.h"
+#include "core/nodelist.h"
+
+#include "utils/hashtable.h"
+#include "utils/resource_mgr.h"
+#include "utils/list.h"
 
 struct dom_document;
 struct dom_namednodemap;
@@ -32,7 +37,6 @@ struct dom_entity_reference;
 struct dom_configuration;
 
 struct dom_doc_nl;
-struct dom_doc_nnm;
 
 /**
  * DOM document
@@ -46,14 +50,40 @@ struct dom_document {
 
 	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
 
-	struct dom_doc_nnm *maps;	/**< List of active namednodemaps */
+	struct dom_string *uri;		/**< The uri of this document */
 
-	struct dom_string **nodenames;	/**< Interned nodenames */
+	struct lwc_context_s *context;	/**< The internment context */
 
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
+
+	struct list_entry pending_nodes;
+			/**< The deletion pending list */
+
+	struct lwc_string_s *id_name;	/**< The ID attribute's name */
 };
 
+/* Initialise the document */
+dom_exception _dom_document_initialise(struct dom_document *doc, 
+		struct dom_implementation *impl, dom_alloc alloc, void *pw, 
+		struct lwc_context_s *ctx);
+
+/* Finalise the document */
+bool _dom_document_finalise(struct dom_document *doc);
+
+/* Create a dom_string from C string */
+dom_exception _dom_document_create_string(struct dom_document *doc,
+		const uint8_t *data, size_t len, struct dom_string **result);
+/* Create a lwc_string from C string */
+dom_exception _dom_document_create_lwcstring(struct dom_document *doc,
+		const uint8_t *data, size_t len, struct lwc_string_s **result);
+/* Create a dom_string from a lwc_string */
+dom_exception _dom_document_create_string_from_lwcstring(
+		struct dom_document *doc, struct lwc_string_s *str,
+		struct dom_string **result);
+
+
+/* Begin the virtual functions */
 dom_exception _dom_document_get_doctype(struct dom_document *doc,
 		struct dom_document_type **result);
 dom_exception _dom_document_get_implementation(struct dom_document *doc,
@@ -156,34 +186,66 @@ dom_exception _dom_document_rename_node(struct dom_document *doc,
 	_dom_document_get_dom_config, \
 	_dom_document_normalize, \
 	_dom_document_rename_node
+/* End of vtable */
 
 
-/* Initialise the document module */
-dom_exception _dom_document_initialise(dom_alloc alloc, void *pw);
-/* Finalise the document module */
-dom_exception _dom_document_finalise(void);
+/* Following comes the protected vtable  */
+void _dom_document_destroy(struct dom_node_internal *node);
+dom_exception __dom_document_alloc(struct dom_document *doc,
+		struct dom_node_internal *n, struct dom_node_internal **ret);
+dom_exception _dom_document_copy(struct dom_node_internal *new, 
+		struct dom_node_internal *old);
 
-/* Destroy a document */
-void dom_document_destroy(struct dom_node_internal *dnode);
+#define DOM_DOCUMENT_PROTECT_VTABLE \
+	_dom_document_destroy, \
+	__dom_document_alloc, \
+	_dom_document_copy
 
+
+/*---------------------------- Helper functions ---------------------------*/
+
+/* Try to destroy the document:
+ * When the refcnt is zero and the pending list is empty, we can destroy this
+ * document. */
+void _dom_document_try_destroy(struct dom_document *doc);
 /* (De)allocate memory */
-void *dom_document_alloc(struct dom_document *doc, void *ptr, size_t size);
+void *_dom_document_alloc(struct dom_document *doc, void *ptr, size_t size);
+
+/* Get the internment context */
+inline struct lwc_context_s *_dom_document_get_intern_context(
+		struct dom_document *doc);
+
+/* Get the resource manager inside this document, a resource manager
+ * is an object which contain the memory allocator/intern string context,
+ * with which we can allocate strings or intern strings */
+void _dom_document_get_resource_mgr(
+		struct dom_document *doc, struct dom_resource_mgr *rm);
+
+/* Get the internal allocator and its pointer */
+inline void _dom_document_get_allocator(struct dom_document *doc, 
+		dom_alloc *al, void **pw);
+
+/* Create a hash_table */
+dom_exception _dom_document_create_hashtable(struct dom_document *doc,
+		size_t chains, dom_hash_func f, struct dom_hash_table **ht);
 
 /* Get a nodelist, creating one if necessary */
-dom_exception dom_document_get_nodelist(struct dom_document *doc,
-		struct dom_node_internal *root, struct dom_string *tagname,
-		struct dom_string *namespace, struct dom_string *localname,
-		struct dom_nodelist **list);
+dom_exception _dom_document_get_nodelist(struct dom_document *doc,
+		nodelist_type type, struct dom_node_internal *root,
+		struct lwc_string_s *tagname, struct lwc_string_s *namespace,
+		struct lwc_string_s *localname, struct dom_nodelist **list);
 /* Remove a nodelist */
-void dom_document_remove_nodelist(struct dom_document *doc,
+void _dom_document_remove_nodelist(struct dom_document *doc,
 		struct dom_nodelist *list);
 
-/* Get a namednodemap, creating one if necessary */
-dom_exception dom_document_get_namednodemap(struct dom_document *doc,
-		struct dom_node_internal *head, dom_node_type type,
-		struct dom_namednodemap **map);
-/* Remove a namednodemap */
-void dom_document_remove_namednodemap(struct dom_document *doc,
-		struct dom_namednodemap *map);
+/* Find element with certain ID in the subtree rooted at root */
+dom_exception _dom_find_element_by_id(dom_node_internal *root, 
+		struct lwc_string_s *id, struct dom_element **result);
+
+/* Set the ID attribute name of this document */
+void _dom_document_set_id_name(struct dom_document *doc,
+		struct lwc_string_s *name);
+
+#define _dom_document_get_id_name(d) (d->id_name)
 
 #endif

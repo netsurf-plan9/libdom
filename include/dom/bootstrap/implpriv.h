@@ -33,6 +33,7 @@
 
 struct dom_document;
 struct dom_document_type;
+struct lwc_context_s;
 
 /**
  * DOM Implementation
@@ -61,8 +62,6 @@ struct dom_implementation {
 	 * \param public_id  The external subset public identifier
 	 * \param system_id  The external subset system identifier
 	 * \param doctype    Pointer to location to receive result
-	 * \param alloc      Memory (de)allocation function
-	 * \param pw         Pointer to client-specific private data
 	 * \return DOM_NO_ERR on success,
 	 *         DOM_INVALID_CHARACTER_ERR if ::qname is invalid,
 	 *         DOM_NAMESPACE_ERR         if ::qname is malformed,
@@ -83,8 +82,8 @@ struct dom_implementation {
 			struct dom_string *qname,
 			struct dom_string *public_id,
 			struct dom_string *system_id,
-			struct dom_document_type **doctype,
-			dom_alloc alloc, void *pw);
+			dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+			struct dom_document_type **doctype);
 
 	/**
 	 * Create a document node
@@ -94,8 +93,6 @@ struct dom_implementation {
 	 * \param qname      The qualified name of the document element
 	 * \param doctype    The type of document to create
 	 * \param doc        Pointer to location to receive result
-	 * \param alloc      Memory (de)allocation function
-	 * \param pw         Pointer to client-specific private data
 	 * \return DOM_NO_ERR on success,
 	 *         DOM_INVALID_CHARACTER_ERR if ::qname is invalid,
 	 *         DOM_NAMESPACE_ERR         if ::qname is malformed, or if
@@ -128,8 +125,8 @@ struct dom_implementation {
 			struct dom_string *namespace,
 			struct dom_string *qname,
 			struct dom_document_type *doctype,
-			struct dom_document **doc,
-			dom_alloc alloc, void *pw);
+			dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+			struct dom_document **doc);
 
 	/**
 	 * Retrieve a specialized object which implements the specified
@@ -139,8 +136,6 @@ struct dom_implementation {
 	 * \param feature  The requested feature
 	 * \param version  The version number of the feature
 	 * \param object   Pointer to location to receive object
-	 * \param alloc    Memory (de)allocation function
-	 * \param pw       Pointer to client-specific private data
 	 * \return DOM_NO_ERR.
 	 *
 	 * Any memory allocated by this call should be allocated using
@@ -149,8 +144,7 @@ struct dom_implementation {
 	dom_exception (*get_feature)(struct dom_implementation *impl,
 			struct dom_string *feature,
 			struct dom_string *version,
-			void **object,
-			dom_alloc alloc, void *pw);
+			void **object);
 
 	/**
 	 * Destroy a DOM implementation instance
@@ -179,10 +173,14 @@ struct dom_implementation_list_item {
 struct dom_implementation_list {
 	struct dom_implementation_list_item *head;	/**< Head of list */
 
-	dom_alloc alloc;		/**< Memory (de)allocation function */
-	void *pw;			/**< Pointer to client data */
-
 	uint32_t refcnt;		/**< Reference count */
+
+	/**
+	 * Destroy a DOM implementation instance
+	 *
+	 * \param impl  The instance to destroy
+	 */
+	void (*destroy)(struct dom_implementation_list *impllist);
 };
 
 
@@ -213,8 +211,7 @@ struct dom_implementation_source {
 	 */
 	dom_exception (*get_dom_implementation)(
 			struct dom_string *features,
-			struct dom_implementation **impl,
-			dom_alloc alloc, void *pw);
+			struct dom_implementation **impl);
 
 	/**
 	 * Get a list of DOM implementations that support the requested
@@ -239,17 +236,16 @@ struct dom_implementation_source {
 	 */
 	dom_exception (*get_dom_implementation_list)(
 			struct dom_string *features,
-			struct dom_implementation_list **list,
-			dom_alloc alloc, void *pw);
+			struct dom_implementation_list **list);
 };
 
 /* Register a source with the DOM library */
-dom_exception dom_register_source(struct dom_implementation_source *source,
-		dom_alloc alloc, void *pw);
+dom_exception dom_register_source(struct dom_implementation_source *source);
 
 /* Create a DOM document */
 dom_exception dom_document_create(struct dom_implementation *impl,
-		dom_alloc alloc, void *pw, struct dom_document **doc);
+		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		struct dom_document **doc);
 
 /* Set a document's buffer */
 void dom_document_set_buffer(struct dom_document *doc, uint8_t *buffer, 
@@ -259,7 +255,7 @@ void dom_document_set_buffer(struct dom_document *doc, uint8_t *buffer,
 dom_exception dom_document_type_create(struct dom_string *qname,
 		struct dom_string *public_id, 
 		struct dom_string *system_id,
-		dom_alloc alloc, void *pw, 
+		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
 		struct dom_document_type **doctype);
 
 #endif

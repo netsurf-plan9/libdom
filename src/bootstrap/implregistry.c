@@ -11,6 +11,9 @@
 #include <dom/bootstrap/implregistry.h>
 
 #include <dom/core/impllist.h>
+#include <dom/core/implementation.h>
+
+void dom_implementation_list_destroy(struct dom_implementation_list *list);
 
 /**
  * Item in list of registered DOM implementation sources
@@ -23,14 +26,30 @@ struct dom_impl_src_item {
 };
 
 static struct dom_impl_src_item *sources; /**< List of registered sources */
+static dom_alloc alloc;
+static void *pw;
+
+/**
+ * Initialise the implementation registry
+ *
+ * \param allocator  The memory allocator
+ * \param ptr        Private data pointer of allocator
+ * \return DOM_NO_ERR on success
+ */
+dom_exception dom_implregistry_initialise(
+		dom_alloc allocator, void *ptr)
+{
+	alloc = allocator;
+	pw = ptr;
+
+	return DOM_NO_ERR;
+}
 
 /**
  * Retrieve a DOM implementation from the registry
  *
  * \param features  String containing required features
  * \param impl      Pointer to location to receive implementation
- * \param alloc     Function to (de)allocate memory
- * \param pw        Pointer to client-specific private data
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  *
  * Any memory allocated by this call should be allocated using
@@ -43,16 +62,14 @@ static struct dom_impl_src_item *sources; /**< List of registered sources */
  */
 dom_exception dom_implregistry_get_dom_implementation(
 		struct dom_string *features,
-		struct dom_implementation **impl,
-		dom_alloc alloc, void *pw)
+		struct dom_implementation **impl)
 {
 	struct dom_impl_src_item *item;
 	struct dom_implementation *found = NULL;
 	dom_exception err;
 
 	for (item = sources; item; item = item->next) {
-		err = item->source->get_dom_implementation(features, &found,
-				alloc, pw);
+		err = item->source->get_dom_implementation(features, &found);
 		if (err != DOM_NO_ERR)
 			return err;
 
@@ -71,14 +88,10 @@ dom_exception dom_implregistry_get_dom_implementation(
  *
  * \param features  String containing required features
  * \param list      Pointer to location to receive list
- * \param alloc     Function to (de)allocate memory
- * \param pw        Pointer to client-specific private data
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  *
  * Any memory allocated by this call should be allocated using
- * the provided memory (de)allocation function. The ::alloc/::pw
- * pair must be stored on the list object, such that the list
- * and its contents may be freed once they are no longer needed.
+ * the provided memory (de)allocation function.
  *
  * List nodes reference the implementation objects they point to.
  *
@@ -88,8 +101,7 @@ dom_exception dom_implregistry_get_dom_implementation(
  */
 dom_exception dom_implregistry_get_dom_implementation_list(
 		struct dom_string *features,
-		struct dom_implementation_list **list,
-		dom_alloc alloc, void *pw)
+		struct dom_implementation_list **list)
 {
 	struct dom_implementation_list *l;
 	struct dom_impl_src_item *item;
@@ -100,16 +112,15 @@ dom_exception dom_implregistry_get_dom_implementation_list(
 		return DOM_NO_MEM_ERR;
 
 	l->head = NULL;
-	l->alloc = alloc;
-	l->pw = pw;
 	l->refcnt = 1;
+	l->destroy = dom_implementation_list_destroy;
 
 	for (item = sources; item; item = item->next) {
 		struct dom_implementation_list *plist = NULL;
 		struct dom_implementation_list_item *plast = NULL;
 
 		err = item->source->get_dom_implementation_list(features,
-				&plist, alloc, pw);
+				&plist);
 		if (err != DOM_NO_ERR) {
 			dom_implementation_list_unref(l);
 			return err;
@@ -156,12 +167,9 @@ dom_exception dom_implregistry_get_dom_implementation_list(
  * Register a DOM implementation source with the DOM library
  *
  * \param source  The implementation source to register
- * \param alloc   Memory (de)allocation function
- * \param pw      Pointer to client-specific private data
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
  */
-dom_exception dom_register_source(struct dom_implementation_source *source,
-		dom_alloc alloc, void *pw)
+dom_exception dom_register_source(struct dom_implementation_source *source)
 {
 	struct dom_impl_src_item *item;
 
@@ -182,3 +190,26 @@ dom_exception dom_register_source(struct dom_implementation_source *source,
 	return DOM_NO_ERR;
 }
 
+/**
+ * Destroy a dom_implementation_list
+ *
+ * \param list	The list to destory
+ */
+void dom_implementation_list_destroy(struct dom_implementation_list *list)
+{
+	struct dom_implementation_list_item *i, *j;
+
+	/* Destroy all list entries */
+	for (i = list->head; i; i = j) {
+		j = i->next;
+
+		/* Unreference the implementation */
+		dom_implementation_unref(i->impl);
+
+		/* And free the entry */
+		alloc(i, 0, pw);
+	}
+
+	/* Free the list object */
+	alloc(list, 0, pw);
+}

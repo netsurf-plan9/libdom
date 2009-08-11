@@ -15,16 +15,18 @@ struct dom_implementation;
 struct dom_implementation_list;
 struct dom_string;
 
+/* Initialise the implementation registry */
+dom_exception dom_implregistry_initialise(
+		dom_alloc allocator, void *ptr);
+
 /* Retrieve a DOM implementation from the registry */
 dom_exception dom_implregistry_get_dom_implementation(
 		struct dom_string *features,
-		struct dom_implementation **impl,
-		dom_alloc alloc, void *pw);
+		struct dom_implementation **impl);
 
 /* Get a list of DOM implementations that support the requested features */
 dom_exception dom_implregistry_get_dom_implementation_list(
 		struct dom_string *features,
-		struct dom_implementation_list **list,
-		dom_alloc alloc, void *pw);
+		struct dom_implementation_list **list);
 
 #endif

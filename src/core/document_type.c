@@ -4,15 +4,20 @@
  *                http://www.opensource.org/licenses/mit-license.php
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  * Copyright 2007 James Shaw <jshaw@netsurf-browser.org>
+ * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
+#include <assert.h>
+
 #include <dom/core/document_type.h>
-#include <dom/core/string.h>
 #include <dom/bootstrap/implpriv.h>
 
+#include "core/string.h"
 #include "core/document_type.h"
 #include "core/node.h"
 #include "utils/utils.h"
+#include "utils/namespace.h"
+#include "utils/resource_mgr.h"
 
 /**
  * DOM DocumentType node
@@ -20,12 +25,12 @@
 struct dom_document_type {
 	struct dom_node_internal base;		/**< Base node */
 
-	/** \todo other members */
+	struct dom_implementation *impl;	/**< Owning implementation */
+
 	struct dom_string *public_id;	/**< Doctype public ID */
 	struct dom_string *system_id;	/**< Doctype system ID */
 
-	dom_alloc alloc;		/**< Memory (de)allocation function */
-	void *pw;			/**< Pointer to private data */
+	struct dom_resource_mgr res;	/**< resource_mgr of this node */
 };
 
 static struct dom_document_type_vtable document_type_vtable = {
@@ -34,6 +39,15 @@ static struct dom_document_type_vtable document_type_vtable = {
 	},
 	DOM_DOCUMENT_TYPE_VTABLE
 };
+
+static struct dom_node_protect_vtable dt_protect_vtable = {
+	DOM_DT_PROTECT_VTABLE
+};
+
+
+/*----------------------------------------------------------------------*/
+
+/* Constructors and destructors */
 
 /**
  * Create a document type node
@@ -52,7 +66,8 @@ static struct dom_document_type_vtable document_type_vtable = {
  */
 dom_exception dom_document_type_create(struct dom_string *qname,
 		struct dom_string *public_id, struct dom_string *system_id,
-		dom_alloc alloc, void *pw, struct dom_document_type **doctype)
+		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		struct dom_document_type **doctype)
 {
 	struct dom_document_type *result;
 	dom_exception err;
@@ -62,28 +77,12 @@ dom_exception dom_document_type_create(struct dom_string *qname,
 	if (result == NULL)
 		return DOM_NO_MEM_ERR;
 
-	/* Initialise base node */
-	err = dom_node_initialise(&result->base, NULL, DOM_DOCUMENT_TYPE_NODE,
-			qname, NULL, NULL, NULL);
-	if (err != DOM_NO_ERR) {
-		alloc(result, 0, pw);
-		return err;
-	}
-
 	/* Initialise the vtable */
 	result->base.base.vtable = &document_type_vtable;
-	result->base.destroy = &dom_document_type_destroy;
-
-	/* Get public and system IDs */
-	dom_string_ref(public_id);
-	result->public_id = public_id;
-
-	dom_string_ref(system_id);
-	result->system_id = system_id;
-
-	/* Fill in allocation information */
-	result->alloc = alloc;
-	result->pw = pw;
+	result->base.vtable = &dt_protect_vtable;
+	
+	err = _dom_document_type_initialise(result, qname, public_id, system_id,
+			alloc, pw, ctx);
 
 	*doctype = result;
 
@@ -97,21 +96,107 @@ dom_exception dom_document_type_create(struct dom_string *qname,
  *
  * The contents of ::doctype will be destroyed and ::doctype will be freed.
  */
-void dom_document_type_destroy(struct dom_node_internal *doctypenode)
+void _dom_document_type_destroy(struct dom_node_internal *doctypenode)
 {
 	struct dom_document_type *doctype = 
 			(struct dom_document_type *)doctypenode;
 
-	/* Finish with public and system IDs */
-	dom_string_unref(doctype->system_id);
-	dom_string_unref(doctype->public_id);
-
 	/* Finalise base class */
-	dom_node_finalise(doctype->base.owner, &doctype->base);
+	_dom_document_type_finalise(doctype);
 
 	/* Free doctype */
-	doctype->alloc(doctype, 0, doctype->pw);
+	doctype->res.alloc(doctype, 0, doctype->res.pw);
 }
+
+/* Initialise this document_type */
+dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
+		struct dom_string *qname, struct dom_string *public_id,
+		struct dom_string *system_id, dom_alloc alloc, void *pw,
+		struct lwc_context_s *ctx)
+{
+	dom_exception err;
+
+	dom_string *prefix, *localname;
+	err = _dom_namespace_split_qname(qname, &prefix, &localname);
+	if (err != DOM_NO_ERR) {
+		alloc(doctype, 0, pw);
+		return err;
+	}
+
+	lwc_string *lprefix = NULL, *lname = NULL;
+	if (prefix != NULL) {
+		err = _dom_string_intern(prefix, ctx, &lprefix);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(prefix);
+			dom_string_unref(localname);
+			alloc(doctype, 0, pw);
+			return err;
+		}
+	}
+
+	if (localname != NULL) {
+		err = _dom_string_intern(localname, ctx, &lname);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(prefix);
+			dom_string_unref(localname);
+			if (lprefix != NULL)
+				lwc_context_string_unref(ctx, lprefix);
+			alloc(doctype, 0, pw);
+			return err;
+		}
+	}
+
+	/* TODO: I should figure out how the namespaceURI can be got */
+
+	/* Initialise base node */
+	err = _dom_node_initialise_generic(&doctype->base, NULL, alloc, pw,
+			ctx, DOM_DOCUMENT_TYPE_NODE, lname, NULL, NULL,
+			lprefix);
+	if (err != DOM_NO_ERR) {
+		alloc(doctype, 0, pw);
+		return err;
+	}
+
+	/* Get public and system IDs */
+	if (public_id != NULL)
+		dom_string_ref(public_id);
+	doctype->public_id = public_id;
+
+	if (system_id != NULL)
+		dom_string_ref(system_id);
+	doctype->system_id = system_id;
+
+	if (prefix != NULL)
+		dom_string_unref(prefix);
+	if (localname != NULL)
+		dom_string_unref(localname);
+
+	/* Fill in allocation information */
+	doctype->res.alloc = alloc;
+	doctype->res.pw = pw;
+	doctype->res.ctx = ctx;
+
+	return DOM_NO_ERR;
+}
+
+/* The destructor function of dom_document_type */
+void _dom_document_type_finalise(struct dom_document_type *doctype)
+{
+	if (doctype->public_id != NULL)
+		dom_string_unref(doctype->public_id);
+	if (doctype->system_id != NULL)
+		dom_string_unref(doctype->system_id);
+	
+	assert(doctype->base.owner != NULL || doctype->base.user_data == NULL);
+	
+	_dom_node_finalise_generic(&doctype->base, doctype->res.alloc, 
+			doctype->res.pw, doctype->res.ctx);
+}
+
+
+/*----------------------------------------------------------------------*/
+
+/* Virtual functions */
 
 /**
  * Retrieve a document type's name
@@ -123,6 +208,9 @@ void dom_document_type_destroy(struct dom_node_internal *doctypenode)
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
  * finished with it.
+ *
+ * We don't support this API now, so this function call should always
+ * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_name(struct dom_document_type *doc_type,
 		struct dom_string **result)
@@ -143,6 +231,9 @@ dom_exception _dom_document_type_get_name(struct dom_document_type *doc_type,
  * The returned map will have its reference count increased. It is
  * the responsibility of the caller to unref the map once it has
  * finished with it.
+ *
+ * We don't support this API now, so this function call should always
+ * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_entities(
 		struct dom_document_type *doc_type,
@@ -164,6 +255,9 @@ dom_exception _dom_document_type_get_entities(
  * The returned map will have its reference count increased. It is
  * the responsibility of the caller to unref the map once it has
  * finished with it.
+ *
+ * We don't support this API now, so this function call should always
+ * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_notations(
 		struct dom_document_type *doc_type,
@@ -185,6 +279,9 @@ dom_exception _dom_document_type_get_notations(
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
  * finished with it.
+ *
+ * We don't support this API now, so this function call should always
+ * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_public_id(
 		struct dom_document_type *doc_type,
@@ -206,6 +303,9 @@ dom_exception _dom_document_type_get_public_id(
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
  * finished with it.
+ *
+ * We don't support this API now, so this function call should always
+ * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_system_id(
 		struct dom_document_type *doc_type,
@@ -227,6 +327,9 @@ dom_exception _dom_document_type_get_system_id(
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
  * finished with it.
+ *
+ * We don't support this API now, so this function call should always
+ * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_internal_subset(
 		struct dom_document_type *doc_type,
@@ -236,5 +339,62 @@ dom_exception _dom_document_type_get_internal_subset(
 	UNUSED(result);
 
 	return DOM_NOT_SUPPORTED_ERR;
+}
+
+/*-----------------------------------------------------------------------*/
+
+/* Overload protected virtual functions */
+
+/* The virtual destroy function of this class */
+void _dom_dt_destroy(struct dom_node_internal *node)
+{
+	_dom_document_type_destroy(node);
+}
+
+/* The memory allocator of this class */
+dom_exception _dom_dt_alloc(struct dom_document *doc,
+		struct dom_node_internal *n, struct dom_node_internal **ret)
+{
+	UNUSED(doc);
+	UNUSED(n);
+	UNUSED(ret);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+/* The copy constructor of this class */
+dom_exception _dom_dt_copy(struct dom_node_internal *new, 
+		struct dom_node_internal *old)
+{
+	UNUSED(new);
+	UNUSED(old);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+
+/*----------------------------------------------------------------------*/
+
+/* Helper functions */
+
+/* Get the resource manager of this object */
+void _dom_document_type_get_resource_mgr(
+		struct dom_document_type *dt, struct dom_resource_mgr *rm)
+{
+	rm->alloc = dt->res.alloc;
+	rm->pw = dt->res.pw;
+	rm->ctx = dt->res.ctx;
+}
+
+/**
+ * Get the implementation which created this dom_document_type
+ *
+ * \param dt  The document type object
+ * \return the dom_implementation instance which creates this node.
+ */
+struct dom_implementation *_dom_document_type_get_impl(
+		struct dom_document_type *dt)
+{
+	return dt->impl;
 }
 

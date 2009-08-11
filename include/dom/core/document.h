@@ -9,6 +9,8 @@
 #define dom_core_document_h_
 
 #include <stdbool.h>
+#include <inttypes.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include <dom/core/exceptions.h>
@@ -29,6 +31,7 @@ struct dom_nodelist;
 struct dom_processing_instruction;
 struct dom_string;
 struct dom_text;
+struct lwc_string_s;
 
 typedef struct dom_document dom_document;
 
@@ -113,9 +116,6 @@ typedef struct dom_document_vtable {
 			struct dom_node *node, struct dom_string *namespace, 
 			struct dom_string *qname, struct dom_node **result);
 } dom_document_vtable;
-
-dom_exception dom_document_create_string(struct dom_document *doc,
-		const uint8_t *data, size_t len, struct dom_string **result);
 
 static inline dom_exception dom_document_get_doctype(struct dom_document *doc,
 		struct dom_document_type **result)

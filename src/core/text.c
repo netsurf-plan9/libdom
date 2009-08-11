@@ -3,10 +3,15 @@
  * Licensed under the MIT License,
  *                http://www.opensource.org/licenses/mit-license.php
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
+ * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
+
+#include <assert.h>
 
 #include <dom/core/string.h>
 #include <dom/core/text.h>
+
+#include <libwapcaplet/libwapcaplet.h>
 
 #include "core/characterdata.h"
 #include "core/document.h"
@@ -14,7 +19,7 @@
 #include "utils/utils.h"
 
 /* The virtual table for dom_text */
-static struct dom_text_vtable text_vtable = {
+struct dom_text_vtable text_vtable = {
 	{
 		{
 			DOM_NODE_VTABLE
@@ -24,15 +29,30 @@ static struct dom_text_vtable text_vtable = {
 	DOM_TEXT_VTABLE
 };
 
-/* The destroy virtual function */
-void _dom_text_destroy(struct dom_node_internal *node);
-void _dom_text_destroy(struct dom_node_internal *node)
-{
-	struct dom_document *doc;
-	dom_node_get_owner_document(node, &doc);
+static struct dom_node_protect_vtable text_protect_vtable = {
+	DOM_TEXT_PROTECT_VTABLE
+};
 
-	dom_text_destroy(doc, (struct dom_text *) node);
-}
+/* Following comes helper functions */
+typedef enum walk_operation {
+	COLLECT,
+	DELETE
+} walk_operation;
+typedef enum walk_order {
+	LEFT,
+	RIGHT
+} walk_order;
+
+/* Walk the logic-adjacent text in document order */
+static dom_exception walk_logic_adjacent_text_in_order(
+		dom_node_internal *node, walk_operation opt,
+		walk_order order, dom_string **ret, bool *cont);
+/* Walk the logic-adjacent text */
+static dom_exception walk_logic_adjacent_text(dom_text *text, 
+		walk_operation opt, dom_string **ret);
+	
+/*----------------------------------------------------------------------*/
+/* Constructor and Destructor */
 
 /**
  * Create a text node
@@ -48,24 +68,28 @@ void _dom_text_destroy(struct dom_node_internal *node)
  *
  * The returned node will already be referenced.
  */
-dom_exception dom_text_create(struct dom_document *doc,
-		struct dom_string *name, struct dom_string *value,
+dom_exception _dom_text_create(struct dom_document *doc,
+		struct lwc_string_s *name, struct dom_string *value,
 		struct dom_text **result)
 {
 	struct dom_text *t;
 	dom_exception err;
 
 	/* Allocate the text node */
-	t = dom_document_alloc(doc, NULL, sizeof(struct dom_text));
+	t = _dom_document_alloc(doc, NULL, sizeof(struct dom_text));
 	if (t == NULL)
 		return DOM_NO_MEM_ERR;
 
 	/* And initialise the node */
-	err = dom_text_initialise(t, doc, DOM_TEXT_NODE, name, value);
+	err = _dom_text_initialise(t, doc, DOM_TEXT_NODE, name, value);
 	if (err != DOM_NO_ERR) {
-		dom_document_alloc(doc, t, 0);
+		_dom_document_alloc(doc, t, 0);
 		return err;
 	}
+
+	/* Compose the vtable */
+	((struct dom_node *) t)->vtable = &text_vtable;
+	((struct dom_node_internal *) t)->vtable = &text_protect_vtable;
 
 	*result = t;
 
@@ -80,13 +104,13 @@ dom_exception dom_text_create(struct dom_document *doc,
  *
  * The contents of ::text will be destroyed and ::text will be freed.
  */
-void dom_text_destroy(struct dom_document *doc, struct dom_text *text)
+void _dom_text_destroy(struct dom_document *doc, struct dom_text *text)
 {
 	/* Finalise node */
-	dom_text_finalise(doc, text);
+	_dom_text_finalise(doc, text);
 
 	/* Free node */
-	dom_document_alloc(doc, text, 0);
+	_dom_document_alloc(doc, text, 0);
 }
 
 /**
@@ -101,21 +125,17 @@ void dom_text_destroy(struct dom_document *doc, struct dom_text *text)
  *
  * ::doc, ::name and ::value will have their reference counts increased.
  */
-dom_exception dom_text_initialise(struct dom_text *text,
+dom_exception _dom_text_initialise(struct dom_text *text,
 		struct dom_document *doc, dom_node_type type,
-		struct dom_string *name, struct dom_string *value)
+		struct lwc_string_s *name, struct dom_string *value)
 {
 	dom_exception err;
 
 	/* Initialise the base class */
-	err = dom_characterdata_initialise(&text->base, doc, type,
+	err = _dom_characterdata_initialise(&text->base, doc, type,
 			name, value);
 	if (err != DOM_NO_ERR)
 		return err;
-
-	/* Compose the vtable */
-	((struct dom_node *) text)->vtable = &text_vtable;
-	text->base.base.destroy = &_dom_text_destroy;
 
 	/* Perform our type-specific initialisation */
 	text->element_content_whitespace = false;
@@ -131,10 +151,13 @@ dom_exception dom_text_initialise(struct dom_text *text,
  *
  * The contents of ::text will be cleaned up. ::text will not be freed.
  */
-void dom_text_finalise(struct dom_document *doc, struct dom_text *text)
+void _dom_text_finalise(struct dom_document *doc, struct dom_text *text)
 {
-	dom_characterdata_finalise(doc, &text->base);
+	_dom_characterdata_finalise(doc, &text->base);
 }
+
+/*----------------------------------------------------------------------*/
+/* The public virtual functions */
 
 /**
  * Split a text node at a given character offset
@@ -181,7 +204,7 @@ dom_exception _dom_text_split_text(struct dom_text *text,
 	}
 
 	/* Create new node */
-	err = dom_text_create(t->owner, t->name, value, &res);
+	err = _dom_text_create(t->owner, t->name, value, &res);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(value);
 		return err;
@@ -227,10 +250,7 @@ dom_exception _dom_text_get_is_element_content_whitespace(
 dom_exception _dom_text_get_whole_text(struct dom_text *text,
 		struct dom_string **result)
 {
-	UNUSED(text);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return walk_logic_adjacent_text(text, COLLECT, result);
 }
 
 /**
@@ -249,10 +269,240 @@ dom_exception _dom_text_get_whole_text(struct dom_text *text,
 dom_exception _dom_text_replace_whole_text(struct dom_text *text,
 		struct dom_string *content, struct dom_text **result)
 {
-	UNUSED(text);
-	UNUSED(content);
-	UNUSED(result);
+	dom_exception err;
+	dom_string *ret;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	err = walk_logic_adjacent_text(text, DELETE, &ret);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	err = dom_characterdata_set_data(text, content);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	*result = text;
+	dom_node_ref(text);
+
+	return DOM_NO_ERR;
+}
+
+/*-----------------------------------------------------------------------*/
+/* The protected virtual functions */
+
+/* The destroy function of this class */
+void __dom_text_destroy(struct dom_node_internal *node)
+{
+	struct dom_document *doc;
+	doc = dom_node_get_owner(node);
+
+	_dom_text_destroy(doc, (struct dom_text *) node);
+}
+
+/* The memory allocator for this class */
+dom_exception _dom_text_alloc(struct dom_document *doc,
+		struct dom_node_internal *n, struct dom_node_internal **ret)
+{
+	UNUSED(n);
+	dom_text *a;
+	
+	a = _dom_document_alloc(doc, NULL, sizeof(struct dom_text));
+	if (a == NULL)
+		return DOM_NO_MEM_ERR;
+	
+	*ret = (dom_node_internal *) a;
+	dom_node_set_owner(*ret, doc);
+
+	return DOM_NO_ERR;
+}
+
+/* The copy constructor of this class */
+dom_exception _dom_text_copy(struct dom_node_internal *new, 
+		struct dom_node_internal *old)
+{
+	dom_text *ot = (dom_text *) old;
+	dom_text *nt = (dom_text *) new;
+
+	nt->element_content_whitespace = ot->element_content_whitespace;
+
+	return _dom_characterdata_copy(new, old);
+}
+
+/*----------------------------------------------------------------------*/
+/* Helper functions */
+
+/**
+ * Walk the logic adjacent text in certain order
+ *
+ * \param node   The start Text node
+ * \param opt    The operation on each Text Node
+ * \param order  The order
+ * \param ret    The string of the logic adjacent text 
+ * \param cont   Whether the logic adjacent text is interrupt here
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception walk_logic_adjacent_text_in_order(
+		dom_node_internal *node, walk_operation opt,
+		walk_order order, dom_string **ret, bool *cont)
+{
+	dom_exception err;
+	dom_string *data, *tmp;
+	dom_node_internal *parent = dom_node_get_parent(node);
+
+	/* If we reach the leaf of the DOM tree, just return to continue
+	 * to next sibling of our parent */
+	if (node == NULL) {
+		*cont = true;
+		return DOM_NO_ERR;
+	}
+
+	while (node != NULL) {
+		/* If we reach the boundary of logical-adjacent text, we stop */
+		if (node->type == DOM_ELEMENT_NODE || 
+				node->type == DOM_COMMENT_NODE ||
+				node->type == 
+				DOM_PROCESSING_INSTRUCTION_NODE) {
+			*cont = false;
+			return DOM_NO_ERR;
+		}
+
+		if (node->type == DOM_TEXT_NODE) {
+			/* According the DOM spec, text node never have child */
+			assert(node->first_child == NULL);
+			assert(node->last_child == NULL);
+			if (opt == COLLECT) {
+				err = dom_characterdata_get_data(node, &data);
+				if (err == DOM_NO_ERR)
+					return err;
+
+				tmp = *ret;
+				if (order == LEFT) {
+					err = dom_string_concat(data, tmp, ret);
+					if (err == DOM_NO_ERR)
+						return err;
+				} else if (order == RIGHT) {
+					err = dom_string_concat(tmp, data, ret);
+					if (err == DOM_NO_ERR)
+						return err;
+				}
+
+				dom_string_unref(tmp);
+				dom_string_unref(data);
+
+				*cont = true;
+				return DOM_NO_ERR;
+			}
+
+			if (opt == DELETE) {
+				dom_node_internal *tn;
+				err = dom_node_remove_child(node->parent,
+						node, (void *) &tn);
+				if (err != DOM_NO_ERR)
+					return err;
+
+				*cont = true;
+				dom_node_unref(tn);
+				return DOM_NO_ERR;
+			}
+		}
+
+		dom_node_internal *p = dom_node_get_parent(node);
+		if (order == LEFT) {
+			if (node->last_child != NULL) {
+				node = node->last_child;
+			} else if (node->previous != NULL) {
+				node = node->previous;
+			} else {
+				while (p != parent && node == p->last_child) {
+					node = p;
+					p = dom_node_get_parent(p);
+				}
+
+				node = node->previous;
+			}
+		} else {
+			if (node->first_child != NULL) {
+				node = node->first_child;
+			} else if (node->next != NULL) {
+				node = node->next;
+			} else {
+				while (p != parent && node == p->first_child) {
+					node = p;
+					p = dom_node_get_parent(p);
+				}
+
+				node = node->next;
+			}
+		}
+	}
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Traverse the logic adjacent text.
+ *
+ * \param text  The Text Node from which we start traversal
+ * \param opt   The operation code
+ * \param ret   The returned string if the opt is COLLECT
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception walk_logic_adjacent_text(dom_text *text, 
+		walk_operation opt, dom_string **ret)
+{
+	dom_node_internal *node = (dom_node_internal *) text;
+	dom_node_internal *parent = node->parent;
+	dom_node_internal *left = node->previous;
+	dom_node_internal *right = node->next;
+	dom_exception err;
+	bool cont;
+	
+	if (parent->type == DOM_ENTITY_NODE) {
+		return DOM_NOT_SUPPORTED_ERR;
+	}
+
+	/* Firstly, we look our left */
+	err = walk_logic_adjacent_text_in_order(left, opt, LEFT, ret, &cont);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(*ret);
+		*ret = NULL;
+		return err;
+	}
+
+	/* Ourself */
+	if (opt == COLLECT) {
+		dom_string *data = NULL, *tmp = NULL;
+		err = dom_characterdata_get_data(text, &data);
+		if (err == DOM_NO_ERR) {
+			dom_string_unref(*ret);
+			return err;
+		}
+
+		err = dom_string_concat(*ret, data, &tmp);
+		if (err == DOM_NO_ERR) {
+			dom_string_unref(*ret);
+			return err;
+		}
+
+		dom_string_unref(*ret);
+		dom_string_unref(data);
+		*ret = tmp;
+	} else {
+			dom_node_internal *tn;
+			err = dom_node_remove_child(node->parent, node,
+					(void *) &tn);
+			if (err != DOM_NO_ERR)
+				return err;
+			dom_node_unref(tn);
+	}
+
+	/* Now, look right */
+	err = walk_logic_adjacent_text_in_order(right, opt, RIGHT, ret, &cont);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(*ret);
+		*ret = NULL;
+		return err;
+	}
+
+	return DOM_NO_ERR;
 }
 

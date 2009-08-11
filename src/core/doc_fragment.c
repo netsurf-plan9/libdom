@@ -3,13 +3,17 @@
  * Licensed under the MIT License,
  *                http://www.opensource.org/licenses/mit-license.php
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
+ * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
+
+#include <libwapcaplet/libwapcaplet.h>
 
 #include <dom/core/node.h>
 
 #include "core/document.h"
 #include "core/doc_fragment.h"
 #include "core/node.h"
+#include "utils/utils.h"
 
 /**
  * A DOM document fragment
@@ -18,7 +22,13 @@ struct dom_document_fragment {
 	struct dom_node_internal base;		/**< Base node */
 };
 
-void _dom_document_fragment_destroy(struct dom_node_internal *node);
+static struct dom_node_vtable df_vtable = {
+	DOM_NODE_VTABLE
+};
+
+static struct dom_node_protect_vtable df_protect_vtable = {
+	DOM_DF_PROTECT_VTABLE
+};
 
 /**
  * Create a document fragment
@@ -34,29 +44,30 @@ void _dom_document_fragment_destroy(struct dom_node_internal *node);
  *
  * The returned node will already be referenced.
  */
-dom_exception dom_document_fragment_create(struct dom_document *doc,
-		struct dom_string *name, struct dom_string *value,
+dom_exception _dom_document_fragment_create(struct dom_document *doc,
+		struct lwc_string_s *name, struct dom_string *value,
 		struct dom_document_fragment **result)
 {
 	struct dom_document_fragment *f;
 	dom_exception err;
 
 	/* Allocate the comment node */
-	f = dom_document_alloc(doc, NULL,
+	f = _dom_document_alloc(doc, NULL,
 			sizeof(struct dom_document_fragment));
 	if (f == NULL)
 		return DOM_NO_MEM_ERR;
 
+
+	f->base.base.vtable = &df_vtable;
+	f->base.vtable = &df_protect_vtable;
+
 	/* And initialise the node */
-	err = dom_node_initialise(&f->base, doc, DOM_DOCUMENT_FRAGMENT_NODE,
-			name, value, NULL, NULL);
+	err = _dom_document_fragment_initialise(&f->base, doc, 
+			DOM_DOCUMENT_FRAGMENT_NODE, name, value, NULL, NULL);
 	if (err != DOM_NO_ERR) {
-		dom_document_alloc(doc, f, 0);
+		_dom_document_alloc(doc, f, 0);
 		return err;
 	}
-
-	/* Set the virtual function of destroy */
-	f->base.destroy = &_dom_document_fragment_destroy;
 
 	*result = f;
 
@@ -71,45 +82,49 @@ dom_exception dom_document_fragment_create(struct dom_document *doc,
  *
  * The contents of ::frag will be destroyed and ::frag will be freed.
  */
-void dom_document_fragment_destroy(struct dom_document *doc,
+void _dom_document_fragment_destroy(struct dom_document *doc,
 		struct dom_document_fragment *frag)
 {
-	struct dom_node_internal *c, *d;
-
-	/* Destroy children of this node */
-	for (c = frag->base.first_child; c != NULL; c = d) {
-		d = c->next;
-
-		/* Detach child */
-		c->parent = NULL;
-
-		if (c->refcnt > 0) {
-			/* Something is using this child */
-
-			/** \todo add to list of nodes pending deletion */
-
-			continue;
-		}
-
-		/* Detach from sibling list */
-		c->previous = NULL;
-		c->next = NULL;
-
-		dom_node_destroy(c);
-	}
-
 	/* Finalise base class */
-	dom_node_finalise(doc, &frag->base);
+	_dom_document_fragment_finalise(doc, &frag->base);
 
 	/* Destroy fragment */
-	dom_document_alloc(doc, frag, 0);
+	_dom_document_alloc(doc, frag, 0);
 }
 
-void _dom_document_fragment_destroy(struct dom_node_internal *node)
-{
-	struct dom_document *doc;
-	dom_node_get_owner_document(node, &doc);
+/*-----------------------------------------------------------------------*/
 
-	dom_document_fragment_destroy(doc, 
+/* Overload protected functions */
+
+/* The virtual destroy function of this class */
+void _dom_df_destroy(struct dom_node_internal *node)
+{
+	_dom_document_fragment_destroy(node->owner,
 			(struct dom_document_fragment *) node);
 }
+
+/* The memory allocator of this class */
+dom_exception _dom_df_alloc(struct dom_document *doc,
+		struct dom_node_internal *n, struct dom_node_internal **ret)
+{
+	UNUSED(n);
+	struct dom_document_fragment *a;
+	
+	a = _dom_document_alloc(doc, NULL,
+			sizeof(struct dom_document_fragment));
+	if (a == NULL)
+		return DOM_NO_MEM_ERR;
+	
+	*ret = (dom_node_internal *) a;
+	dom_node_set_owner(*ret, doc);
+
+	return DOM_NO_ERR;
+}
+
+/* The copy constructor of this class */
+dom_exception _dom_df_copy(struct dom_node_internal *new, 
+		struct dom_node_internal *old)
+{
+	return _dom_node_copy(new, old);
+}
+

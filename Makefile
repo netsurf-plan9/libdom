@@ -47,7 +47,8 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/element.h;$(Is)/exceptions.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/implementation.h;$(Is)/impllist.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/namednodemap.h;$(Is)/node.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/nodelist.h;$(Is)/string.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/text.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/text.h;$(Is)/typeinfo.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/comment.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib:$(OUTPUT)

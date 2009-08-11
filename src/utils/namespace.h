@@ -14,6 +14,7 @@
 struct dom_document;
 struct dom_string;
 
+
 /* Initialise the namespace component */
 dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw);
 
@@ -27,6 +28,12 @@ dom_exception _dom_namespace_validate_qname(struct dom_string *qname,
 /* Split a QName into a namespace prefix and localname string */
 dom_exception _dom_namespace_split_qname(struct dom_string *qname,
 		struct dom_string **prefix, struct dom_string **localname);
+
+/* Get the XML prefix dom_string */
+struct dom_string *_dom_namespace_get_xml_prefix(void);
+
+/* Get the XMLNS prefix dom_string */
+struct dom_string *_dom_namespace_get_xmlns_prefix(void);
 
 #endif
 
