@@ -40,6 +40,8 @@ struct dom_string {
 static struct dom_string empty_string = { 
 	.ptr = NULL,
 	.len = 0,
+	.intern = NULL,
+	.context = NULL,
 	.alloc = NULL,
 	.pw = NULL,
 	.refcnt = 1
