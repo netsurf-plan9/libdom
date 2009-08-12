@@ -1190,6 +1190,9 @@ dom_exception _dom_element_copy(struct dom_node_internal *new,
 		return DOM_NO_MEM_ERR;
 	ne->ns_attributes = ht;
 
+	ne->id_ns = NULL;
+	ne->id_name = NULL;
+
 	/* TODO: deal with dom_type_info, it get no definition ! */
 
 	return DOM_NO_ERR;

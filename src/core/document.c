@@ -1520,7 +1520,7 @@ dom_exception _dom_find_element_by_id(dom_node_internal *root,
 	dom_node_internal *node = root;
 
 	while (node != NULL) {
-		if (root->type == DOM_ELEMENT_NODE) {
+		if (node->type == DOM_ELEMENT_NODE) {
 			lwc_string *real_id;
 			_dom_element_get_id((dom_element *) node, &real_id);
 			if (real_id == id) {

@@ -108,7 +108,7 @@ dom_document *load_html(char *file, bool willBeModified)
 	parser = dom_hubbub_parser_create("data/Aliases", NULL, true,
 			myrealloc, NULL, mymsg, NULL, ctx);
 	if (parser == NULL) {
-		fprintf(stderr, "Can't create XMLParser\n");
+		fprintf(stderr, "Can't create Hubbub Parser\n");
 		return NULL;
 	}
 

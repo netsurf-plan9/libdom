@@ -158,6 +158,13 @@ dom_exception _dom_namespace_validate_qname(struct dom_string *qname,
 				dom_string_cmp(qname, xmlns) != 0) {
 			return DOM_NAMESPACE_ERR;
 		}
+		/* If qname == "xmlns", ensure namespace URI is for xmlns */
+		if (namespace != NULL && 
+				dom_string_cmp(qname, xmlns) == 0 &&
+				dom_string_cmp(namespace, 
+				dom_namespaces[DOM_NAMESPACE_XMLNS]) != 0) {
+			return DOM_NAMESPACE_ERR;
+		}
 	} else if (colon == 0) {
 		/* Some name like ":name" */
 		if (namespace != NULL)
