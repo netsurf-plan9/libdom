@@ -1007,6 +1007,10 @@ dom_exception _dom_node_replace_child(dom_node_internal *node,
 		_dom_node_detach(new_child);
 	}
 
+	/* When a Node is attached, it should be removed from the pending 
+	 * list */
+	dom_node_remove_pending(new_child);
+
 	/* Perform the replacement */
 	_dom_node_replace(old_child, new_child);
 
@@ -2173,7 +2177,7 @@ void _dom_node_attach(dom_node_internal *node, dom_node_internal *parent,
 void _dom_node_detach(dom_node_internal *node)
 {
 	/* When a Node is not in the document tree, it must be in the 
-		   pending list */
+	 * pending list */
 	dom_node_mark_pending(node);
 
 	_dom_node_detach_range(node, node);

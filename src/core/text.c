@@ -344,16 +344,16 @@ dom_exception walk_logic_adjacent_text_in_order(
 		dom_node_internal *node, walk_operation opt,
 		walk_order order, dom_string **ret, bool *cont)
 {
-	dom_exception err;
-	dom_string *data, *tmp;
-	dom_node_internal *parent = dom_node_get_parent(node);
-
 	/* If we reach the leaf of the DOM tree, just return to continue
 	 * to next sibling of our parent */
 	if (node == NULL) {
 		*cont = true;
 		return DOM_NO_ERR;
 	}
+
+	dom_exception err;
+	dom_string *data, *tmp;
+	dom_node_internal *parent = dom_node_get_parent(node);
 
 	while (node != NULL) {
 		/* If we reach the boundary of logical-adjacent text, we stop */
