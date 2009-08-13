@@ -348,12 +348,14 @@ void xml_parser_start_document(void *ctx)
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2StartDocument(parser->xml_ctx);
 
-	/* Attempt to create a document */
+	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
+	 * we should pass the real function when we integrate libDOM with
+	 * Netsurf */
 	err = dom_implementation_create_document(parser->impl,
 			/* namespace */ NULL,
 			/* qname */ NULL,
 			/* doctype */ NULL,
-			parser->alloc, parser->pw, parser->ctx,
+			parser->alloc, parser->pw, parser->ctx, NULL,
 			&doc);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx, 

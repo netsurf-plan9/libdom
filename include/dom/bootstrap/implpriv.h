@@ -28,6 +28,7 @@
 #include <stdbool.h>
 
 #include <dom/core/exceptions.h>
+#include <dom/events/document_event.h>
 #include <dom/functypes.h>
 #include <dom/core/string.h>
 
@@ -126,6 +127,7 @@ struct dom_implementation {
 			struct dom_string *qname,
 			struct dom_document_type *doctype,
 			dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+			dom_events_default_action_fetcher daf,
 			struct dom_document **doc);
 
 	/**
@@ -245,6 +247,7 @@ dom_exception dom_register_source(struct dom_implementation_source *source);
 /* Create a DOM document */
 dom_exception dom_document_create(struct dom_implementation *impl,
 		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_events_default_action_fetcher daf,
 		struct dom_document **doc);
 
 /* Set a document's buffer */

@@ -59,6 +59,7 @@ static dom_exception impl_implementation_create_document(
 		struct dom_string *qname,
 		struct dom_document_type *doctype,
 		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_events_default_action_fetcher daf,
 		struct dom_document **doc);
 static dom_exception impl_implementation_get_feature(
 		struct dom_implementation *impl,
@@ -286,6 +287,7 @@ dom_exception impl_implementation_create_document(
 		struct dom_string *qname,
 		struct dom_document_type *doctype,
 		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_events_default_action_fetcher daf,
 		struct dom_document **doc)
 {
 	struct dom_document *d;
@@ -306,7 +308,7 @@ dom_exception impl_implementation_create_document(
 	}
 
 	/* Create document object */
-	err = dom_document_create(impl, alloc, pw, ctx, &d);
+	err = dom_document_create(impl, alloc, pw, ctx, daf, &d);
 	if (err != DOM_NO_ERR)
 		return err;
 

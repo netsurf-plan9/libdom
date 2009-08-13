@@ -16,6 +16,8 @@
 #endif
 #include "utils/hashtable.h"
 
+#include <libwapcaplet/libwapcaplet.h>
+
 /* The hash table entry */
 struct _dom_hash_entry {
 	void *key;			/**< The key pointer */
@@ -351,6 +353,15 @@ unsigned int _dom_hash_get_chains(struct dom_hash_table *ht)
 dom_hash_func _dom_hash_get_func(struct dom_hash_table *ht)
 {
 	return ht->hash;
+}
+
+/*-----------------------------------------------------------------------*/
+/* The hash function for lwc_string type */
+unsigned int _dom_hash_hash_lwcstring(void *key)
+{
+	lwc_string *lstr = (lwc_string *) key; 
+
+	return lwc_string_hash_value(lstr);
 }
 
 /* A simple test rig.  To compile, use:

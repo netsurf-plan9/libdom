@@ -39,4 +39,7 @@ unsigned int _dom_hash_get_length(struct dom_hash_table *ht);
 unsigned int _dom_hash_get_chains(struct dom_hash_table *ht);
 dom_hash_func _dom_hash_get_func(struct dom_hash_table *ht);
 
+/*-----------------------------------------------------------------------*/
+unsigned int _dom_hash_hash_lwcstring(void *key);
+
 #endif

@@ -694,7 +694,11 @@ sub generate_method {
 	if (exists $ats{'var'}) {
 		# Add the bootstrap params
 		if (exists $bootstrap_api{$method}) {
-			$params = $params.", myrealloc, NULL, ctx";
+			if ($method eq "dom_implementation_create_document") {
+				$params = $params.", myrealloc, NULL, ctx, NULL";
+			} else {
+				$params = $params.", myrealloc, NULL, ctx";
+			}
 		}
 		# Deal with the situation like
 		# 

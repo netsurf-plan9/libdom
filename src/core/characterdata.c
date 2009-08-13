@@ -10,11 +10,13 @@
 
 #include <dom/core/characterdata.h>
 #include <dom/core/string.h>
+#include <dom/events/events.h>
 
 #include "core/characterdata.h"
 #include "core/document.h"
 #include "core/node.h"
 #include "utils/utils.h"
+#include "events/mutation_event.h"
 
 /* The virtual functions for dom_characterdata, we make this vtable
  * public to each child class */
@@ -128,6 +130,15 @@ dom_exception _dom_characterdata_set_data(struct dom_characterdata *cdata,
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 	}
 
+	/* Dispatch a DOMCharacterDataModified event */
+	dom_exception err;
+	struct dom_document *doc = dom_node_get_owner(cdata);
+	bool success = true;
+	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value,
+			data, &success);
+	if (err != DOM_NO_ERR)
+		return err;
+
 	if (c->value != NULL) {
 		dom_string_unref(c->value);
 	}
@@ -135,7 +146,8 @@ dom_exception _dom_characterdata_set_data(struct dom_characterdata *cdata,
 	dom_string_ref(data);
 	c->value = data;
 
-	return DOM_NO_ERR;
+	success = true;
+	return _dom_dispatch_subtree_modified_event(doc, c->parent, &success);
 }
 
 /**
@@ -223,13 +235,22 @@ dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
 		return err;
 	}
 
+	/* Dispatch a DOMCharacterDataModified event */
+	struct dom_document *doc = dom_node_get_owner(cdata);
+	bool success = true;
+	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value,
+			temp, &success);
+	if (err != DOM_NO_ERR)
+		return err;
+
 	if (c->value != NULL) {
 		dom_string_unref(c->value);
 	}
 
 	c->value = temp;
 
-	return DOM_NO_ERR;
+	success = true;
+	return _dom_dispatch_subtree_modified_event(doc, c->parent, &success);
 }
 
 /**
@@ -270,13 +291,22 @@ dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
 		return err;
 	}
 
+	/* Dispatch a DOMCharacterDataModified event */
+	struct dom_document *doc = dom_node_get_owner(cdata);
+	bool success = true;
+	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value,
+			temp, &success);
+	if (err != DOM_NO_ERR)
+		return err;
+
 	if (c->value != NULL) {
 		dom_string_unref(c->value);
 	}
 
 	c->value = temp;
 
-	return DOM_NO_ERR;
+	success = true;
+	return _dom_dispatch_subtree_modified_event(doc, c->parent, &success);
 }
 
 /**
@@ -319,13 +349,22 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 		return err;
 	}
 
+	/* Dispatch a DOMCharacterDataModified event */
+	struct dom_document *doc = dom_node_get_owner(cdata);
+	bool success = true;
+	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value,
+			temp, &success);
+	if (err != DOM_NO_ERR)
+		return err;
+
 	if (c->value != NULL) {
 		dom_string_unref(c->value);
 	}
 
 	c->value = temp;
 
-	return DOM_NO_ERR;
+	success = true;
+	return _dom_dispatch_subtree_modified_event(doc, c->parent, &success);
 }
 
 /**
@@ -370,13 +409,22 @@ dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 		return err;
 	}
 
+	/* Dispatch a DOMCharacterDataModified event */
+	struct dom_document *doc = dom_node_get_owner(cdata);
+	bool success = true;
+	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value, temp,
+			&success);
+	if (err != DOM_NO_ERR)
+		return err;
+
 	if (c->value != NULL) {
 		dom_string_unref(c->value);
 	}
 
 	c->value = temp;
 
-	return DOM_NO_ERR;
+	success = true;
+	return _dom_dispatch_subtree_modified_event(doc, c->parent, &success);
 }
 
 

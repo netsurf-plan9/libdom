@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 #include <dom/core/exceptions.h>
+#include <dom/events/document_event.h>
 #include <dom/functypes.h>
 #include <dom/core/string.h>
 
@@ -38,6 +39,7 @@ dom_exception dom_implementation_create_document(
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_document_type *doctype,
 		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_events_default_action_fetcher daf,
 		struct dom_document **doc);
 
 dom_exception dom_implementation_get_feature(

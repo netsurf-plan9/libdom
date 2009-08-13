@@ -8,6 +8,18 @@
 #ifndef dom_core_exceptions_h_
 #define dom_core_exceptions_h_
 
+/**
+ * Class of a DOM exception.
+ *
+ * The top 16 bits of a dom_exception are a bitfield 
+ * indicating which class the exception belongs to.
+ */
+typedef enum {
+	DOM_EXCEPTION_CLASS_NORMAL = 0,
+	DOM_EXCEPTION_CLASS_EVENT = (1<<30),
+	DOM_EXCEPTION_CLASS_INTERNAL = (1<<31)
+} dom_exception_class;
+
 /* The DOM spec says that this is actually an unsigned short */
 typedef enum {
 	DOM_NO_ERR			=  0,
@@ -28,7 +40,11 @@ typedef enum {
 	DOM_INVALID_ACCESS_ERR		= 15,
 	DOM_VALIDATION_ERR		= 16,
 	DOM_TYPE_MISMATCH_ERR		= 17,
-	DOM_NO_MEM_ERR			= (1<<16)
+
+	DOM_UNSPECIFIED_EVENT_TYPE_ERR = DOM_EXCEPTION_CLASS_EVENT + 0,
+	DOM_DISPATCH_REQUEST_ERR = DOM_EXCEPTION_CLASS_EVENT + 1,
+
+	DOM_NO_MEM_ERR = DOM_EXCEPTION_CLASS_INTERNAL + 0
 			/* our own internal error */
 } dom_exception;
 

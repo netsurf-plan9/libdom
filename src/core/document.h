@@ -21,6 +21,8 @@
 #include "utils/resource_mgr.h"
 #include "utils/list.h"
 
+#include "events/document_event.h"
+
 struct dom_document;
 struct dom_namednodemap;
 struct dom_node;
@@ -61,12 +63,16 @@ struct dom_document {
 			/**< The deletion pending list */
 
 	struct lwc_string_s *id_name;	/**< The ID attribute's name */
+
+	dom_document_event_internal dei;
+			/**< The DocumentEVent interface */
 };
 
 /* Initialise the document */
 dom_exception _dom_document_initialise(struct dom_document *doc, 
 		struct dom_implementation *impl, dom_alloc alloc, void *pw, 
-		struct lwc_context_s *ctx);
+		struct lwc_context_s *ctx,
+		dom_events_default_action_fetcher daf);
 
 /* Finalise the document */
 bool _dom_document_finalise(struct dom_document *doc);
@@ -77,6 +83,9 @@ dom_exception _dom_document_create_string(struct dom_document *doc,
 /* Create a lwc_string from C string */
 dom_exception _dom_document_create_lwcstring(struct dom_document *doc,
 		const uint8_t *data, size_t len, struct lwc_string_s **result);
+/* Unref a lwc_string of this document */
+void _dom_document_unref_lwcstring(struct dom_document *doc,
+		struct lwc_string_s *str);
 /* Create a dom_string from a lwc_string */
 dom_exception _dom_document_create_string_from_lwcstring(
 		struct dom_document *doc, struct lwc_string_s *str,

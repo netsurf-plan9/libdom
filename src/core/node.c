@@ -17,6 +17,7 @@
 #include <dom/core/nodelist.h>
 #include <dom/core/implementation.h>
 #include <dom/core/document_type.h>
+#include <dom/events/events.h>
 
 #include "core/string.h"
 #include "core/namednodemap.h"
@@ -33,15 +34,16 @@
 #include "core/text.h"
 #include "utils/utils.h"
 #include "utils/resource_mgr.h"
+#include "events/mutation_event.h"
 
 static bool _dom_node_permitted_child(const dom_node_internal *parent, 
 		const dom_node_internal *child);
-static inline void _dom_node_attach(dom_node_internal *node, 
+static inline dom_exception _dom_node_attach(dom_node_internal *node, 
 		dom_node_internal *parent,
 		dom_node_internal *previous, 
 		dom_node_internal *next);
 static inline void _dom_node_detach(dom_node_internal *node);
-static inline void _dom_node_attach_range(dom_node_internal *first, 
+static inline dom_exception _dom_node_attach_range(dom_node_internal *first, 
 		dom_node_internal *last,
 		dom_node_internal *parent, 
 		dom_node_internal *previous, 
@@ -50,7 +52,6 @@ static inline void _dom_node_detach_range(dom_node_internal *first,
 		dom_node_internal *last);
 static inline void _dom_node_replace(dom_node_internal *old, 
 		dom_node_internal *replacement);
-
 
 static struct dom_node_vtable node_vtable = {
 	DOM_NODE_VTABLE
@@ -249,7 +250,7 @@ dom_exception _dom_node_initialise_generic(
 		dom_node_mark_pending(node);
 	}
 
-	return DOM_NO_ERR;
+	return _dom_event_target_internal_initialise(doc, &node->eti);
 }
 
 /**
@@ -331,7 +332,14 @@ void _dom_node_finalise_generic(dom_node_internal *node, dom_alloc alloc,
 	if (node->name != NULL)
 		lwc_context_string_unref(ctx, node->name);
 
-	/* Detach from the pending list, if we are in it */
+	/* If the node has no owner document, we need not to finalise its
+	 * dom_event_target_internal structure. 
+	 */
+	if (node->owner != NULL)
+		_dom_event_target_internal_finalise(node->owner, &node->eti);
+
+	/* Detach from the pending list, if we are in it,
+	 * this part of code should always be the end of this function. */
 	if (node->pending_list.prev != &node->pending_list) {
 		assert (node->pending_list.next != &node->pending_list); 
 		list_del(&node->pending_list);
@@ -351,7 +359,8 @@ void _dom_node_finalise_generic(dom_node_internal *node, dom_alloc alloc,
  */
 void _dom_node_ref(dom_node_internal *node)
 {
-	node->refcnt++;
+	if (node != NULL)
+		node->refcnt++;
 }
 
 
@@ -816,6 +825,8 @@ dom_exception _dom_node_insert_before(dom_node_internal *node,
 		dom_node_internal *new_child, dom_node_internal *ref_child,
 		dom_node_internal **result)
 {
+	dom_exception err;
+
 	/* Ensure that new_child and node are owned by the same document */
 	if ((new_child->type == DOM_DOCUMENT_TYPE_NODE && 
 			new_child->owner != NULL && 
@@ -874,24 +885,29 @@ dom_exception _dom_node_insert_before(dom_node_internal *node,
 				return DOM_HIERARCHY_REQUEST_ERR;
 
 		if (new_child->first_child != NULL) {
-			_dom_node_attach_range(new_child->first_child, 
+			err = _dom_node_attach_range(new_child->first_child,
 					new_child->last_child, 
 					node, 
 					ref_child == NULL ? node->last_child 
 							  : ref_child->previous,
 					ref_child == NULL ? NULL 
 							  : ref_child);
+			if (err != DOM_NO_ERR)
+				return err;
 
 			new_child->first_child = NULL;
 			new_child->last_child = NULL;
 		}
 	} else {
-		_dom_node_attach(new_child, 
+		err = _dom_node_attach(new_child, 
 				node, 
 				ref_child == NULL ? node->last_child 
 						  : ref_child->previous, 
 				ref_child == NULL ? NULL 
 						  : ref_child);
+		if (err != DOM_NO_ERR)
+			return err;
+
 	}
 
 	/* DocumentType nodes are created outside the Document so, 
@@ -1059,6 +1075,14 @@ dom_exception _dom_node_remove_child(dom_node_internal *node,
 	if (_dom_node_readonly(node))
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
+	/* Dispatch a DOMNodeRemoval event */
+	dom_exception err;
+	bool success = true;
+	err = _dom_dispatch_node_change_event(node->owner, old_child, node,
+			DOM_MUTATION_REMOVAL, &success);
+	if (err != DOM_NO_ERR)
+		return err;
+
 	/* Detach the node */
 	_dom_node_detach(old_child);
 
@@ -1069,6 +1093,12 @@ dom_exception _dom_node_remove_child(dom_node_internal *node,
 	dom_node_ref(old_child);
 	dom_node_try_destroy(old_child);
 	*result = old_child;
+
+	success = true;
+	err = _dom_dispatch_subtree_modified_event(node->owner, node,
+			&success);
+	if (err != DOM_NO_ERR)
+		return err;
 
 	return DOM_NO_ERR;
 }
@@ -2048,7 +2078,8 @@ dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
 	 * so it should be put in the pending list. */
 	dom_node_mark_pending(new);
 
-	return DOM_NO_ERR;
+	/* Intialise the EventTarget interface */
+	return _dom_event_target_internal_initialise(new->owner, &new->eti);
 }
 
 
@@ -2162,11 +2193,13 @@ bool _dom_node_readonly(const dom_node_internal *node)
  * \param parent    Node to attach ::node as child of
  * \param previous  Previous node in sibling list, or NULL if none
  * \param next      Next node in sibling list, or NULL if none
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-void _dom_node_attach(dom_node_internal *node, dom_node_internal *parent, 
-		dom_node_internal *previous, dom_node_internal *next)
+dom_exception _dom_node_attach(dom_node_internal *node,
+		dom_node_internal *parent, dom_node_internal *previous,
+		dom_node_internal *next)
 {
-	_dom_node_attach_range(node, node, parent, previous, next);
+	return _dom_node_attach_range(node, node, parent, previous, next);
 }
 
 /**
@@ -2191,10 +2224,11 @@ void _dom_node_detach(dom_node_internal *node)
  * \param parent    Node to attach range to
  * \param previous  Previous node in sibling list, or NULL if none
  * \param next      Next node in sibling list, or NULL if none
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  *
  * The range is assumed to be a linked list of sibling nodes.
  */
-void _dom_node_attach_range(dom_node_internal *first, 
+dom_exception _dom_node_attach_range(dom_node_internal *first, 
 		dom_node_internal *last,
 		dom_node_internal *parent, 
 		dom_node_internal *previous, 
@@ -2213,9 +2247,24 @@ void _dom_node_attach_range(dom_node_internal *first,
 	else
 		parent->last_child = last;
 
+	dom_exception err;
+	bool success = true;
 	for (dom_node_internal *n = first; n != last->next; n = n->next) {
 		n->parent = parent;
+		/* Dispatch a DOMNodeInserted event */
+		err = _dom_dispatch_node_change_event(parent->owner, n, parent,
+				DOM_MUTATION_ADDITION, &success);
+		if (err != DOM_NO_ERR)
+			return err;
 	}
+
+	success = true;
+	err = _dom_dispatch_subtree_modified_event(parent->owner, parent,
+			&success);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	return DOM_NO_ERR;
 }
 
 /**
@@ -2239,9 +2288,19 @@ void _dom_node_detach_range(dom_node_internal *first,
 	else
 		last->parent->last_child = first->previous;
 
+	bool success = true;
+	dom_node_internal *parent = first->parent;
 	for (dom_node_internal *n = first; n != last->next; n = n->next) {
+		/* Dispatch a DOMNodeRemoval event */
+		_dom_dispatch_node_change_event(n->owner, n, n->parent, 
+				DOM_MUTATION_REMOVAL, &success);
+
 		n->parent = NULL;
 	}
+
+	success = true;
+	_dom_dispatch_subtree_modified_event(parent->owner, parent,
+			&success);
 
 	first->previous = NULL;
 	last->next = NULL;

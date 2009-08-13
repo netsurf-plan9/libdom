@@ -16,6 +16,7 @@
 #include <dom/core/node.h>
 #include <dom/core/string.h>
 #include <dom/core/document.h>
+#include <dom/events/events.h>
 
 #include "core/attr.h"
 #include "core/document.h"
@@ -26,6 +27,7 @@
 #include "utils/namespace.h"
 #include "utils/utils.h"
 #include "utils/hashtable.h"
+#include "events/mutation_event.h"
 
 /* The three numbers are just random ones, maybe we should change it after some
  * more consideration */
@@ -66,8 +68,6 @@ static dom_exception _dom_element_has_attr(struct dom_element *element,
 		bool *result);
 static dom_exception _dom_element_set_id_attr(struct dom_element *element,
 		struct dom_hash_table *hs, struct dom_string *name, bool is_id);
-
-static unsigned int _dom_element_hash_lwcstring(void *key);
 
 
 /* The operation set for namednodemap */
@@ -113,6 +113,7 @@ static void *_value(void *value, void *value_pw, dom_alloc alloc,
 		void *pw, bool clone);
 static void *_nsattributes(void *value, void *value_pw, dom_alloc alloc,
 		void *pw, bool clone);
+
 
 /*----------------------------------------------------------------------*/
 /* Constructors and Destructors */
@@ -183,14 +184,14 @@ dom_exception _dom_element_initialise(struct dom_element *el,
 	assert(doc != NULL);
 
 	err = _dom_document_create_hashtable(doc, CHAINS_ATTRIBUTES, 
-			_dom_element_hash_lwcstring, &el->attributes);
+			_dom_hash_hash_lwcstring, &el->attributes);
 	if (err != DOM_NO_ERR) {
 		_dom_document_alloc(doc, el, 0);
 		return err;
 	}
 
 	err = _dom_document_create_hashtable(doc, CHAINS_NAMESPACE, 
-			_dom_element_hash_lwcstring, &el->ns_attributes);
+			_dom_hash_hash_lwcstring, &el->ns_attributes);
 	if (err != DOM_NO_ERR) {
 		_dom_document_alloc(doc, el, 0);
 		_dom_document_alloc(doc, el->attributes, 0);
@@ -540,7 +541,7 @@ dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 		doc = dom_node_get_owner(element);
 		assert(doc != NULL);
 		err = _dom_document_create_hashtable(doc, CHAINS_NS_ATTRIBUTES,
-				_dom_element_hash_lwcstring, &attrs);
+				_dom_hash_hash_lwcstring, &attrs);
 		if (err != DOM_NO_ERR)
 			return err;
 
@@ -686,7 +687,7 @@ dom_exception _dom_element_set_attribute_node_ns(struct dom_element *element,
 		doc = dom_node_get_owner(element);
 		assert(doc != NULL);
 		err = _dom_document_create_hashtable(doc, CHAINS_NS_ATTRIBUTES,
-				_dom_element_hash_lwcstring, &attrs);
+				_dom_hash_hash_lwcstring, &attrs);
 		if (err != DOM_NO_ERR)
 			return err;
 
@@ -1218,7 +1219,7 @@ dom_exception _dom_element_get_attr(struct dom_element *element,
 		struct dom_string **value)
 {
 	void *a;
-	dom_exception err;
+	dom_exception err = DOM_NO_ERR;
 	lwc_string *str;
 
 	/* Looking for name */
@@ -1232,10 +1233,10 @@ dom_exception _dom_element_get_attr(struct dom_element *element,
 	if (a == NULL) {
 		*value = NULL;
 	} else {
-		dom_attr_get_value(((struct dom_attr *) a), value);
+		err = dom_attr_get_value(((struct dom_attr *) a), value);
 	}
 
-	return DOM_NO_ERR;
+	return err;
 }
 
 /**
@@ -1275,6 +1276,28 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		/* Found an existing attribute, so replace its value */
 		dom_exception err;
 
+		/* Dispatch a DOMAttrModified event */
+		dom_string *old = NULL;
+		struct dom_document *doc = dom_node_get_owner(element);
+		bool success = true;
+		err = dom_attr_get_value(a, &old);
+		/* TODO: We did not support some node type such as entity
+		 * reference, in that case, we should ignore the error to
+		 * make sure the event model work as excepted. */
+		if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR)
+			return err;
+		err = _dom_dispatch_attr_modified_event(doc, e, old, value, a,
+				name, DOM_MUTATION_MODIFICATION, &success);
+		dom_string_unref(old);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		success = true;
+		err = _dom_dispatch_subtree_modified_event(doc,
+				(dom_event_target *) e, &success);
+		if (err != DOM_NO_ERR)
+			return err;
+
 		err = dom_attr_set_value((struct dom_attr *) a, value);
 		if (err != DOM_NO_ERR)
 			return err;
@@ -1294,6 +1317,26 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 			return err;
 		}
 
+		/* Dispatch a DOMAttrModified event */
+		struct dom_document *doc = dom_node_get_owner(element);
+		bool success = true;
+		err = _dom_dispatch_attr_modified_event(doc, e, NULL, value,
+				(dom_event_target *) attr, name, 
+				DOM_MUTATION_ADDITION, &success);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref(attr);
+			return err;
+		}
+
+		err = _dom_dispatch_node_change_event(doc,
+				(dom_event_target *) attr, 
+				(dom_event_target *) element, 
+				DOM_MUTATION_ADDITION, &success);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref(attr);
+			return err;
+		}
+
 		added = _dom_hash_add(hs, str, attr, false);
 		if (added == false) {
 			/* If we failed at this step, there must be no memory */
@@ -1304,6 +1347,12 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		dom_node_set_parent(attr, element);
 		dom_node_unref(attr);
 		dom_node_remove_pending(attr);
+
+		success = true;
+		err = _dom_dispatch_subtree_modified_event(doc,
+				(dom_event_target *) element, &success);
+		if (err != DOM_NO_ERR)
+			return err;
 	}
 
 	return DOM_NO_ERR;
@@ -1334,13 +1383,51 @@ dom_exception _dom_element_remove_attr(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	a = (dom_node_internal *) _dom_hash_del(hs, str);
+	a = (dom_node_internal *) _dom_hash_get(hs, str);
 
 	/* Detach attr node from list */
 	if (a != NULL) {
+		/* Disptach DOMNodeRemoval event */
+		bool success = true;
+		struct dom_document *doc = dom_node_get_owner(element);
+		err = _dom_dispatch_node_change_event(doc,
+				(dom_event_target *) a,
+				(dom_event_target *) element,
+				DOM_MUTATION_REMOVAL, &success);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		/* Delete the attribute node */
+		_dom_hash_del(hs, str);
+		/* Claim a reference for later event dispatch */
+		dom_node_ref(a);
+
 		/* And destroy attr */
 		dom_node_set_parent(a, NULL);
 		dom_node_try_destroy(a);
+
+		/* Dispatch a DOMAttrModified event */
+		success = true;
+		dom_string *old = NULL;
+		err = dom_attr_get_value(a, &old);
+		/* TODO: We did not support some node type such as entity
+		 * reference, in that case, we should ignore the error to
+		 * make sure the event model work as excepted. */
+		if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR)
+			return err;
+		err = _dom_dispatch_attr_modified_event(doc, e, old, NULL, a,
+				name, DOM_MUTATION_REMOVAL, &success);
+		dom_string_unref(old);
+		/* Release the reference */
+		dom_node_unref(a);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		success = true;
+		err = _dom_dispatch_subtree_modified_event(doc,
+				(dom_event_target *) e, &success);
+		if (err != DOM_NO_ERR)
+			return err;
 	}
 
 	/** \todo defaulted attribute handling */
@@ -1437,14 +1524,50 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	a = _dom_hash_del(hs, str);
+	a = _dom_hash_get(hs, str);
 
 	*result = NULL;
 	if (a != NULL) {
+		/* Disptach DOMNodeRemoval event */
+		bool success = true;
+		struct dom_document *doc = dom_node_get_owner(element);
+		err = _dom_dispatch_node_change_event(doc,
+				(dom_event_target *) a, 
+				(dom_event_target *) element,
+				DOM_MUTATION_REMOVAL, &success);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		_dom_hash_del(hs, str);
 		dom_node_ref(a);
 		*result = (dom_attr *) a;
 		dom_node_set_parent(a, NULL);
 		dom_node_mark_pending(a);
+
+		/* Dispatch a DOMAttrModified event */
+		dom_string *old = NULL;
+		success = true;
+		err = dom_attr_get_value(a, &old);
+		/* TODO: We did not support some node type such as entity
+		 * reference, in that case, we should ignore the error to
+		 * make sure the event model work as excepted. */
+		if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR) {
+			dom_node_unref(a);
+			return err;
+		}
+		err = _dom_dispatch_attr_modified_event(doc, e, old, NULL, 
+				(dom_event_target *) a, name, 
+				DOM_MUTATION_REMOVAL, &success);
+		dom_string_unref(old);
+		dom_node_unref(a);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		success = true;
+		err = _dom_dispatch_subtree_modified_event(doc,
+				(dom_event_target *) e, &success);
+		if (err != DOM_NO_ERR)
+			return err;
 	}	
 
 	added = _dom_hash_add(hs, str, attr, false);
@@ -1455,9 +1578,38 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	dom_node_set_parent(attr, element);
 	dom_node_remove_pending(attr);
 
+	/* Dispatch a DOMAttrModified event */
+	dom_string *new = NULL;
+	struct dom_document *doc = dom_node_get_owner(element);
+	bool success = true;
+	err = dom_attr_get_value(attr, &new);
+	/* TODO: We did not support some node type such as entity reference, in
+	 * that case, we should ignore the error to make sure the event model
+	 * work as excepted. */
+	if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR)
+		return err;
+	err = _dom_dispatch_attr_modified_event(doc, e, NULL, new,
+			(dom_event_target *) attr, name, 
+			DOM_MUTATION_ADDITION, &success);
+	dom_string_unref(new);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = _dom_dispatch_node_change_event(doc, (dom_event_target *) attr,
+			(dom_event_target *) element, DOM_MUTATION_ADDITION,
+			&success);
+	if (err != DOM_NO_ERR)
+		return err;
+
 	/* Cleanup */
 	if (name != NULL)
 		dom_string_unref(name);
+
+	success = true;
+	err = _dom_dispatch_subtree_modified_event(doc,
+			(dom_event_target *) element, &success);
+	if (err != DOM_NO_ERR)
+		return err;
 
 	return DOM_NO_ERR;
 }
@@ -1500,7 +1652,7 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	a = _dom_hash_del(hs, str);
+	a = _dom_hash_get(hs, str);
 
 	/* Now, cleaup the dom_string and lwc_string */
 	dom_string_unref(name);
@@ -1512,15 +1664,52 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 		return DOM_NOT_FOUND_ERR;
 	}
 
+	/* Dispatch a DOMNodeRemoved event */
+	bool success = true;
+	struct dom_document *doc = dom_node_get_owner(element);
+	err = _dom_dispatch_node_change_event(doc, (dom_event_target *) a, 
+			(dom_event_target *) element, DOM_MUTATION_REMOVAL, 
+			&success);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	/* Delete the attribute node */
+	_dom_hash_del(hs, str);
+	dom_node_ref(a);
+
+	/* Dispatch a DOMAttrModified event */
+	dom_string *old = NULL;
+	success = true;
+	err = dom_attr_get_value(a, &old);
+	/* TODO: We did not support some node type such as entity reference, in
+	 * that case, we should ignore the error to make sure the event model
+	 * work as excepted. */
+	if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR) {
+		dom_node_unref(a);
+		return err;
+	}
+	err = _dom_dispatch_attr_modified_event(doc, e, old, NULL, 
+			(dom_event_target *) a, name, 
+			DOM_MUTATION_REMOVAL, &success);
+	dom_string_unref(old);
+	dom_node_unref(a);
+	if (err != DOM_NO_ERR)
+		return err;
+
 	/* When a Node is removed, it should be destroy. When its refcnt is not 
 	 * zero, it will be added to the document's deletion pending list. 
 	 * When a Node is removed, its parent should be NULL, but its owner
 	 * should remain to be the document.
 	 */
-	dom_node_ref(a);
 	*result = (dom_attr *) a;
 	dom_node_set_parent(a, NULL);
 	dom_node_mark_pending(a);
+
+	success = true;
+	err = _dom_dispatch_subtree_modified_event(doc, (dom_event_target *) e,
+			&success);
+	if (err != DOM_NO_ERR)
+		return err;
 
 	return DOM_NO_ERR;
 }
@@ -1704,13 +1893,6 @@ dom_exception _dom_element_get_id(struct dom_element *ele, lwc_string **id)
 }
 
 
-/* The hash function for attributes and id tables */
-unsigned int _dom_element_hash_lwcstring(void *key)
-{
-	lwc_string *lstr = (lwc_string *) key;
-
-	return lwc_string_hash_value(lstr);
-}
 
 /*-------------- The dom_namednodemap functions -------------------------*/
 

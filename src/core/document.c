@@ -76,6 +76,7 @@ static dom_exception dom_document_dup_node(dom_document *doc,
  * \param pw     Pointer to client-specific private data
  * \param doc    Pointer to location to receive created document
  * \param ctx    The intern string context of this document
+ * \param daf    The default action fetcher
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
  *
  * ::impl will have its reference count increased.
@@ -84,6 +85,7 @@ static dom_exception dom_document_dup_node(dom_document *doc,
  */
 dom_exception dom_document_create(struct dom_implementation *impl,
 		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_events_default_action_fetcher daf,
 		struct dom_document **doc)
 {
 	struct dom_document *d;
@@ -103,7 +105,7 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	 * reaches zero. Documents own themselves (this simplifies the 
 	 * rest of the code, as it doesn't need to special case Documents)
 	 */
-	err = _dom_document_initialise(d, impl, alloc, pw, ctx);
+	err = _dom_document_initialise(d, impl, alloc, pw, ctx, daf);
 	if (err != DOM_NO_ERR) {
 		/* Clean up document */
 		alloc(d, 0, pw);
@@ -118,7 +120,8 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 /* Initialise the document */
 dom_exception _dom_document_initialise(struct dom_document *doc, 
 		struct dom_implementation *impl, dom_alloc alloc, void *pw, 
-		struct lwc_context_s *ctx)
+		struct lwc_context_s *ctx,
+		dom_events_default_action_fetcher daf)
 {
 	assert(ctx != NULL);
 	assert(alloc != NULL);
@@ -150,7 +153,8 @@ dom_exception _dom_document_initialise(struct dom_document *doc,
 
 	doc->id_name = NULL;
 
-	return err;
+	/* We should not pass a NULL when all things hook up */
+	return _dom_document_event_internal_initialise(doc, &doc->dei, daf);
 }
 
 
@@ -185,6 +189,8 @@ bool _dom_document_finalise(struct dom_document *doc)
 	if (doc->id_name != NULL)
 		lwc_context_string_unref(doc->context, doc->id_name);
 	lwc_context_unref(doc->context);
+	
+	_dom_document_event_internal_finalise(doc, &doc->dei);
 
 	return true;
 }
@@ -1302,7 +1308,7 @@ dom_exception _dom_document_create_string(struct dom_document *doc,
 	return dom_string_create(doc->alloc, doc->pw, data, len, result);
 }
 
-/*
+/**
  * Create a lwc_string 
  * 
  * \param doc     The document object
@@ -1322,6 +1328,13 @@ dom_exception _dom_document_create_lwcstring(struct dom_document *doc,
 			result);
 	
 	return _dom_exception_from_lwc_error(lerr);
+}
+
+/* Unref a lwc_string created by this document */
+void _dom_document_unref_lwcstring(struct dom_document *doc,
+		struct lwc_string_s *str)
+{
+	lwc_context_string_unref(doc->context, str);
 }
 
 /* Simple accessor for lwc_context of this document */

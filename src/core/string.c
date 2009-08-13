@@ -56,7 +56,8 @@ static struct dom_string empty_string = {
  */
 void dom_string_ref(struct dom_string *str)
 {
-	str->refcnt++;
+	if (str != NULL)
+		str->refcnt++;
 }
 
 /**
@@ -961,5 +962,28 @@ int _dom_lwc_string_compare_raw(struct lwc_string_s *s1,
 	rs2 = lwc_string_data(s2);
 
 	return memcmp(rs1, rs2, len);
+}
+
+/**
+ * Get the raw character data of the dom_string.
+ *
+ * \param str	The dom_string object
+ * \return		The C string pointer
+ *
+ * @note: This function is just provided for the convenience of accessing the 
+ * raw C string character, no change on the result string is allowed.
+ */
+char *_dom_string_data(struct dom_string *str)
+{
+	return (char *) str->ptr;
+}
+
+/* Get the string length of this dom_string 
+ *
+ * \param str	The dom_string object
+ */
+size_t _dom_string_length(struct dom_string *str)
+{
+	return str->len;
 }
 

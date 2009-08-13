@@ -190,8 +190,11 @@ dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
 	/* No longer need the feature string */
 	dom_string_unref(features);
 
+	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
+	 * we should pass the real function when we integrate libDOM with
+	 * Netsurf */
 	err = dom_implementation_create_document(parser->impl, NULL, NULL, NULL,
-			alloc, pw, ctx, &parser->doc);
+			alloc, pw, ctx, NULL, &parser->doc);
 	if (err != DOM_NO_ERR) {
 		hubbub_parser_destroy(parser->parser);
 		alloc(parser, 0, pw);

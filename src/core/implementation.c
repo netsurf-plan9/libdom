@@ -122,10 +122,11 @@ dom_exception dom_implementation_create_document(
 		struct dom_string *namespace, struct dom_string *qname,
 		struct dom_document_type *doctype,
 		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_events_default_action_fetcher daf,
 		struct dom_document **doc)
 {
 	return impl->create_document(impl, namespace, qname, doctype, alloc, 
-			pw, ctx, doc);
+			pw, ctx, daf, doc);
 }
 
 /**

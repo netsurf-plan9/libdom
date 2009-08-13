@@ -1,0 +1,354 @@
+/*
+ * This file is part of libdom.
+ * Licensed under the MIT License,
+ *                http://www.opensource.org/licenses/mit-license.php
+ * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
+ */
+
+#include <assert.h>
+#include <time.h>
+
+#include "events/event.h"
+
+#include <libwapcaplet/libwapcaplet.h>
+
+#include "core/string.h"
+#include "core/node.h"
+#include "core/document.h"
+
+static void _virtual_dom_event_destroy(struct dom_event *evt);
+
+static struct dom_event_private_vtable _event_vtable = {
+	_virtual_dom_event_destroy
+};
+
+/* Constructor */
+dom_exception _dom_event_create(struct dom_document *doc, 
+		struct dom_event **evt)
+{
+	*evt = (dom_event *) _dom_document_alloc(doc, NULL, sizeof(dom_event));
+	if (*evt == NULL) 
+		return DOM_NO_MEM_ERR;
+	
+	(*evt)->vtable = &_event_vtable;
+
+	return _dom_event_initialise(doc, *evt);
+}
+
+/* Destructor */
+void _dom_event_destroy(struct dom_document *doc, struct dom_event *evt)
+{
+	_dom_event_finalise(doc, evt);
+
+	_dom_document_alloc(doc, evt, sizeof(dom_event));
+}
+
+/* Initialise function */
+dom_exception _dom_event_initialise(struct dom_document *doc, 
+		struct dom_event *evt)
+{
+	assert(doc != NULL);
+
+	evt->doc = doc;
+	evt->stop = false;
+	evt->stop_now = false;
+	evt->prevent_default = false;
+	evt->custom = false;
+
+	evt->type = NULL;
+
+	evt->namespace = NULL;
+
+	evt->timestamp = time(NULL);
+
+	evt->refcnt = 1;
+	evt->in_dispatch = false;
+
+	return DOM_NO_ERR;
+}
+
+/* Finalise function */
+void _dom_event_finalise(struct dom_document *doc, struct dom_event *evt)
+{
+	assert(doc != NULL);
+	lwc_context *ctx = _dom_document_get_intern_context(doc);
+	assert(ctx != NULL);
+
+	if (evt->type != NULL)
+		lwc_context_string_unref(ctx, evt->type);
+	if (evt->namespace != NULL)
+		lwc_context_string_unref(ctx, evt->namespace);
+}
+
+/* The virtual destroy function */
+void _virtual_dom_event_destroy(struct dom_event *evt)
+{
+	_dom_event_destroy(evt->doc, evt);
+}
+
+/*----------------------------------------------------------------------*/
+/* The public API */
+
+/**
+ * Claim a reference on this event object
+ *
+ * \param evt  The Event object
+ */
+void _dom_event_ref(dom_event *evt)
+{
+	evt->refcnt++;
+}
+
+/**
+ * Release a reference on this event object
+ *
+ * \param evt  The Event object
+ */
+void _dom_event_unref(dom_event *evt)
+{
+	if (evt->refcnt > 0)
+		evt->refcnt--;
+
+	if (evt->refcnt == 0)
+		dom_event_destroy(evt);
+}
+
+
+/**
+ * Get the event type
+ *
+ * \param evt   The event object
+ * \parnm type  The returned event type
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_get_type(dom_event *evt, struct dom_string **type)
+{
+	struct dom_document *doc = evt->doc;
+	dom_exception err;
+
+	err = _dom_document_create_string_from_lwcstring(doc, evt->type, type);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	return DOM_NO_ERR;
+}
+
+/**
+ * Get the target node of this event
+ *
+ * \param evt     The event object
+ * \param target  The target node
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_get_target(dom_event *evt, dom_event_target **target)
+{
+	*target = evt->target;
+	dom_node_ref(*target);
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Get the current target of this event
+ *
+ * \param evt      The event object
+ * \param current  The current event target node
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_get_current_target(dom_event *evt,
+		dom_event_target **current)
+{
+	*current = evt->current;
+	dom_node_ref(*current);
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Get whether this event can bubble
+ *
+ * \param evt      The Event object
+ * \param bubbles  The returned value
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_event_get_bubbles(dom_event *evt, bool *bubbles)
+{
+	*bubbles = evt->bubble;
+	return DOM_NO_ERR;
+}
+
+/**
+ * Get whether this event can be cancelable
+ *
+ * \param evt         The Event object
+ * \param cancelable  The returned value
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_event_get_cancelable(dom_event *evt, bool *cancelable)
+{
+	*cancelable = evt->cancelable;
+	return DOM_NO_ERR;
+}
+
+/**
+ * Get the event's generation timestamp 
+ *
+ * \param evt        The Event object
+ * \param timestamp  The returned value
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_event_get_timestamp(dom_event *evt, unsigned int *timestamp)
+{
+	*timestamp = evt->timestamp;
+	return DOM_NO_ERR;
+}
+
+/**
+ * Stop propagation of the event
+ *
+ * \param evt  The Event object
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_event_stop_propagation(dom_event *evt)
+{
+	evt->stop = true;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Prevent the default action of this event
+ *
+ * \param evt  The Event object
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_event_prevent_default(dom_event *evt)
+{
+	evt->prevent_default = true;
+	return DOM_NO_ERR;
+}
+
+/**
+ * Initialise the event object 
+ *
+ * \param evt         The event object
+ * \param type        The type of this event
+ * \param bubble      Whether this event can bubble
+ * \param cancelable  Whether this event is cancelable
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_init(dom_event *evt, struct dom_string *type, 
+		bool bubble, bool cancelable)
+{
+	assert(evt->doc != NULL);
+	lwc_context *ctx = _dom_document_get_intern_context(evt->doc);
+	lwc_string *str = NULL;
+	dom_exception err;
+
+	err = _dom_string_intern(type, ctx, &str);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	evt->type = str;
+	evt->bubble = bubble;
+	evt->cancelable = cancelable;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Get the namespace of this event
+ *
+ * \param evt        The event object
+ * \param namespace  The returned namespace of this event
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_get_namespace(dom_event *evt,
+		struct dom_string **namespace)
+{
+	struct dom_document *doc = evt->doc;
+	dom_exception err;
+
+	err = _dom_document_create_string_from_lwcstring(doc, evt->namespace,
+			namespace);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	return DOM_NO_ERR;
+}
+
+/**
+ * Whether this is a custom event
+ *
+ * \param evt     The event object
+ * \param custom  The returned value
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_event_is_custom(dom_event *evt, bool *custom)
+{
+	*custom = evt->custom;
+
+	return DOM_NO_ERR;
+}
+	
+/**
+ * Stop the event propagation immediately
+ *
+ * \param evt  The event object
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_event_stop_immediate_propagation(dom_event *evt)
+{
+	evt->stop_now = true;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Whether the default action is prevented
+ *
+ * \param evt        The event object
+ * \param prevented  The returned value
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_event_is_default_prevented(dom_event *evt, bool *prevented)
+{
+	*prevented = evt->prevent_default;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Initialise the event with namespace
+ *
+ * \param evt         The event object
+ * \param namespace   The namespace of this event
+ * \param type        The event type
+ * \param bubble      Whether this event has a bubble phase
+ * \param cancelable  Whether this event is cancelable
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_init_ns(dom_event *evt, struct dom_string *namespace,
+		struct dom_string *type, bool bubble, bool cancelable)
+{
+	assert(evt->doc != NULL);
+	lwc_context *ctx = _dom_document_get_intern_context(evt->doc);
+	lwc_string *str = NULL;
+	dom_exception err;
+
+	err = _dom_string_intern(type, ctx, &str);
+	if (err != DOM_NO_ERR)
+		return err;
+	evt->type = str;
+
+	err = _dom_string_intern(namespace, ctx, &str);
+	if (err != DOM_NO_ERR)
+		return err;
+	evt->namespace = str;
+
+	evt->bubble = bubble;
+	evt->cancelable = cancelable;
+
+	return DOM_NO_ERR;
+}
+

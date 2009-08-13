@@ -15,6 +15,9 @@
 #include <dom/core/node.h>
 #include <dom/functypes.h>
 
+#include "events/event_target.h"
+#include "events/mutation_event.h"
+
 #include "utils/list.h"
 
 /**
@@ -76,6 +79,8 @@ struct dom_node_internal {
 	uint32_t refcnt;		/**< Reference count */
 
 	struct list_entry pending_list; /**< The document delete pending list */
+
+	dom_event_target_internal eti;	/**< The EventTarget interface */
 };
 
 dom_node_internal * _dom_node_create(struct dom_document *doc);
