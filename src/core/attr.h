@@ -17,10 +17,10 @@ struct lwc_string_s;
 
 dom_exception _dom_attr_create(struct dom_document *doc,
 		struct lwc_string_s *name, struct lwc_string_s *namespace,
-		struct lwc_string_s *prefix, bool specified, 
+		struct lwc_string_s *prefix, bool specified,
 		struct dom_attr **result);
 void _dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr);
-dom_exception _dom_attr_initialise(struct dom_attr *a, 
+dom_exception _dom_attr_initialise(struct dom_attr *a,
 		struct dom_document *doc,  struct lwc_string_s *name,
 		struct lwc_string_s *namespace, struct lwc_string_s *prefix,
 		bool specified, struct dom_attr **result);
@@ -104,9 +104,9 @@ dom_exception _dom_attr_lookup_namespace(dom_node_internal *node,
 
 /* The protected virtual functions */
 void __dom_attr_destroy(dom_node_internal *node);
-dom_exception _dom_attr_alloc(struct dom_document *doc, 
+dom_exception _dom_attr_alloc(struct dom_document *doc,
 		struct dom_node_internal *n, struct dom_node_internal **ret);
-dom_exception _dom_attr_copy(struct dom_node_internal *new, 
+dom_exception _dom_attr_copy(struct dom_node_internal *new,
 		struct dom_node_internal *old);
 
 #define DOM_ATTR_PROTECT_VTABLE \
@@ -115,7 +115,7 @@ dom_exception _dom_attr_copy(struct dom_node_internal *new,
 	_dom_attr_copy
 
 
-inline void _dom_attr_set_isid(struct dom_attr *attr, bool is_id);
-inline void _dom_attr_set_specified(struct dom_attr *attr, bool specified);
+void _dom_attr_set_isid(struct dom_attr *attr, bool is_id);
+void _dom_attr_set_specified(struct dom_attr *attr, bool specified);
 
 #endif
