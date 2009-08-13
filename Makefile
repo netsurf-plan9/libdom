@@ -16,14 +16,16 @@ WARNFLAGS := -Wall -Wextra -Wundef -Wpointer-arith -Wcast-align \
 CFLAGS := -std=c99 -D_BSD_SOURCE -I$(CURDIR)/include/ \
 	-I$(CURDIR)/src $(WARNFLAGS) $(CFLAGS)
 
-# Parserutils
+# Parserutils & wapcaplet
 ifneq ($(findstring clean,$(MAKECMDGOALS)),clean)
   ifneq ($(PKGCONFIG),)
     CFLAGS := $(CFLAGS) $(shell $(PKGCONFIG) libparserutils --cflags)
+    CFLAGS := $(CFLAGS) $(shell $(PKGCONFIG) libwapcaplet --cflags)
     LDFLAGS := $(LDFLAGS) $(shell $(PKGCONFIG) libparserutils --libs)
+    LDFLAGS := $(LDFLAGS) $(shell $(PKGCONFIG) libwapcaplet --libs)
   else
     CFLAGS := $(CFLAGS) -I$(PREFIX)/include
-    LDFLAGS := $(LDFLAGS) -lparserutils
+    LDFLAGS := $(LDFLAGS) -lparserutils -lwapcaplet
   endif
 endif
 
