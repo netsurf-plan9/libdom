@@ -624,7 +624,8 @@ dom_exception _dom_dispatch_node_change_event(struct dom_document *doc,
 	if (err != DOM_NO_ERR)
 		goto cleanup;
 
-	dom_event_target *target = et;
+	/* Dispatch the events for its children */
+	dom_event_target *target = et->first_child;
 	while (target != NULL) {
 		err = dom_mutation_event_init(evt, t, true, false, NULL,
 				NULL, NULL, NULL, change);
@@ -641,7 +642,7 @@ dom_exception _dom_dispatch_node_change_event(struct dom_document *doc,
 		} else if (target->next != NULL) {
 			target = target->next;
 		} else {
-			while (p != et && target == p->first_child) {
+			while (p != et && target == p->last_child) {
 				target = p;
 				p = dom_node_get_parent(p);
 			}

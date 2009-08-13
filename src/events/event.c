@@ -59,8 +59,6 @@ dom_exception _dom_event_initialise(struct dom_document *doc,
 
 	evt->namespace = NULL;
 
-	evt->timestamp = time(NULL);
-
 	evt->refcnt = 1;
 	evt->in_dispatch = false;
 
@@ -78,6 +76,17 @@ void _dom_event_finalise(struct dom_document *doc, struct dom_event *evt)
 		lwc_context_string_unref(ctx, evt->type);
 	if (evt->namespace != NULL)
 		lwc_context_string_unref(ctx, evt->namespace);
+	
+	evt->stop = false;
+	evt->stop_now = false;
+	evt->prevent_default = false;
+	evt->custom = false;
+
+	evt->type = NULL;
+
+	evt->namespace = NULL;
+
+	evt->in_dispatch = false;
 }
 
 /* The virtual destroy function */
@@ -252,6 +261,8 @@ dom_exception _dom_event_init(dom_event *evt, struct dom_string *type,
 	evt->type = str;
 	evt->bubble = bubble;
 	evt->cancelable = cancelable;
+
+	evt->timestamp = time(NULL);
 
 	return DOM_NO_ERR;
 }

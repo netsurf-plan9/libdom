@@ -236,6 +236,8 @@ dom_exception _dom_string_intern(struct dom_string *str,
 	/* If this string is interned with the same context, do nothing */
 	if (str->context != NULL && str->context == ctx) {
 		*lwcstr = str->intern;
+		lwc_context_ref(ctx);
+		lwc_context_string_ref(ctx, *lwcstr);
 		return DOM_NO_ERR;
 	}
 

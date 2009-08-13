@@ -56,6 +56,11 @@ void _dom_mutation_event_finalise(struct dom_document *doc,
 	dom_string_unref(evt->prev_value);
 	dom_string_unref(evt->new_value);
 	dom_string_unref(evt->attr_name);
+	
+	evt->related_node = NULL;
+	evt->prev_value = NULL;
+	evt->new_value = NULL;
+	evt->attr_name = NULL;
 
 	_dom_event_finalise(doc, &evt->base);
 }
