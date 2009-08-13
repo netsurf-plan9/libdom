@@ -1,10 +1,10 @@
-libdom -- an implementation of the W3C DOM
+LibDOM -- an implementation of the W3C DOM
 ==========================================
 
 Overview
 --------
 
-  libdom is an implementation of the W3C DOM API in C.
+  LibDOM is an implementation of the W3C DOM API in C.
 
 Requirements
 ------------
@@ -14,6 +14,11 @@ Requirements
     + A C99 capable C compiler
     + GNU make or compatible
     + Perl (for the testcases)
+
+  LibDOM also requires the following libraries to be installed:
+
+    +  LibParserUtils
+    +  LibWapcaplet
 
 Compilation
 -----------
