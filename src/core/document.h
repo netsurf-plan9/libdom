@@ -221,7 +221,7 @@ void _dom_document_try_destroy(struct dom_document *doc);
 void *_dom_document_alloc(struct dom_document *doc, void *ptr, size_t size);
 
 /* Get the internment context */
-inline struct lwc_context_s *_dom_document_get_intern_context(
+struct lwc_context_s *_dom_document_get_intern_context(
 		struct dom_document *doc);
 
 /* Get the resource manager inside this document, a resource manager
@@ -231,7 +231,7 @@ void _dom_document_get_resource_mgr(
 		struct dom_document *doc, struct dom_resource_mgr *rm);
 
 /* Get the internal allocator and its pointer */
-inline void _dom_document_get_allocator(struct dom_document *doc, 
+void _dom_document_get_allocator(struct dom_document *doc, 
 		dom_alloc *al, void **pw);
 
 /* Create a hash_table */
