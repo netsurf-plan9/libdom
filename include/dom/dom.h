@@ -41,6 +41,9 @@
 #include <dom/core/typeinfo.h>
 #include <dom/core/comment.h>
 
+/* DOM Events header */
+#include <dom/events/events.h>
+
 typedef enum dom_namespace {
 	DOM_NAMESPACE_NULL    = 0,
 	DOM_NAMESPACE_HTML    = 1,
