@@ -1535,8 +1535,11 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 				(dom_event_target *) a, 
 				(dom_event_target *) element,
 				DOM_MUTATION_REMOVAL, &success);
-		if (err != DOM_NO_ERR)
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(name);
+			_dom_node_unref_intern_string(&element->base, str);
 			return err;
+		}
 
 		_dom_hash_del(hs, str);
 		dom_node_ref(a);
@@ -1553,25 +1556,34 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 		 * make sure the event model work as excepted. */
 		if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR) {
 			dom_node_unref(a);
+			dom_string_unref(name);
+			_dom_node_unref_intern_string(&element->base, str);
 			return err;
 		}
 		err = _dom_dispatch_attr_modified_event(doc, e, old, NULL, 
 				(dom_event_target *) a, name, 
 				DOM_MUTATION_REMOVAL, &success);
 		dom_string_unref(old);
-		dom_node_unref(a);
-		if (err != DOM_NO_ERR)
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(name);
+			_dom_node_unref_intern_string(&element->base, str);
 			return err;
+		}
 
 		success = true;
 		err = _dom_dispatch_subtree_modified_event(doc,
 				(dom_event_target *) e, &success);
-		if (err != DOM_NO_ERR)
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(name);
+			_dom_node_unref_intern_string(&element->base, str);
 			return err;
+		}
 	}	
 
 	added = _dom_hash_add(hs, str, attr, false);
 	if (added == false) {
+		dom_string_unref(name);
+		_dom_node_unref_intern_string(&element->base, str);
 		/* If we failed at this step, there must be no memory */
 		return DOM_NO_MEM_ERR;
 	}
@@ -1591,19 +1603,19 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	err = _dom_dispatch_attr_modified_event(doc, e, NULL, new,
 			(dom_event_target *) attr, name, 
 			DOM_MUTATION_ADDITION, &success);
+	/* Cleanup */
 	dom_string_unref(new);
-	if (err != DOM_NO_ERR)
+	dom_string_unref(name);
+	_dom_node_unref_intern_string(&element->base, str);
+	if (err != DOM_NO_ERR) {
 		return err;
+	}
 
 	err = _dom_dispatch_node_change_event(doc, (dom_event_target *) attr,
 			(dom_event_target *) element, DOM_MUTATION_ADDITION,
 			&success);
 	if (err != DOM_NO_ERR)
 		return err;
-
-	/* Cleanup */
-	if (name != NULL)
-		dom_string_unref(name);
 
 	success = true;
 	err = _dom_dispatch_subtree_modified_event(doc,
@@ -1654,13 +1666,11 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 
 	a = _dom_hash_get(hs, str);
 
-	/* Now, cleaup the dom_string and lwc_string */
-	dom_string_unref(name);
-	_dom_node_unref_intern_string(&element->base, str);
-
 	/** \todo defaulted attribute handling */
 
 	if (a == NULL || a != (void *) attr) {
+		dom_string_unref(name);
+		_dom_node_unref_intern_string(&element->base, str);
 		return DOM_NOT_FOUND_ERR;
 	}
 
@@ -1670,12 +1680,19 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 	err = _dom_dispatch_node_change_event(doc, (dom_event_target *) a, 
 			(dom_event_target *) element, DOM_MUTATION_REMOVAL, 
 			&success);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(name);
+		_dom_node_unref_intern_string(&element->base, str);
 		return err;
+	}
 
 	/* Delete the attribute node */
 	_dom_hash_del(hs, str);
 	dom_node_ref(a);
+
+	/* Now, cleaup the dom_string and lwc_string */
+	dom_string_unref(name);
+	_dom_node_unref_intern_string(&element->base, str);
 
 	/* Dispatch a DOMAttrModified event */
 	dom_string *old = NULL;
@@ -1692,7 +1709,6 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 			(dom_event_target *) a, name, 
 			DOM_MUTATION_REMOVAL, &success);
 	dom_string_unref(old);
-	dom_node_unref(a);
 	if (err != DOM_NO_ERR)
 		return err;
 
