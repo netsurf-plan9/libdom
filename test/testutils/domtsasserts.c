@@ -64,6 +64,13 @@ bool is_equals_int(int excepted, int actual, bool dummy)
 	return excepted == actual;
 }
 
+bool is_equals_bool(bool excepted, bool actual, bool dummy)
+{
+	UNUSED(dummy);
+
+	return excepted == actual;
+}
+
 bool is_equals_unsigned_long(unsigned long excepted, unsigned long actual, bool dummy)
 {
 	UNUSED(dummy);

@@ -34,6 +34,7 @@ bool is_same_unsigned_long(unsigned long excepted, unsigned long actual);
 
 bool is_equals_int(int excepted, int actual, bool dummy);
 bool is_equals_unsigned_long(unsigned long excepted, unsigned long actual, bool dummy);
+bool is_equals_bool(bool excepted, bool actual, bool dummy);
 bool is_equals_string(const char *excepted, dom_string *actual, 
 		bool ignoreCase);
 bool is_equals_domstring(dom_string *excepted, dom_string *actual, bool ignoreCase);

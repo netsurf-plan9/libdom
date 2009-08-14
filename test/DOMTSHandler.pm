@@ -103,14 +103,20 @@ our %exceptions = (
 	DOM_INVALID_ACCESS_ERR		=> 15,
 	DOM_VALIDATION_ERR		=> 16,
 	DOM_TYPE_MISMATCH_ERR		=> 17,
-	DOM_NO_MEM_ERR			=> (1<<16) 
+
+	DOM_UNSPECIFIED_EVENT_TYPE_ERR  => (1<<30)+0,
+	DOM_DISPATCH_REQUEST_ERR        => (1<<30)+1,
+
+	DOM_NO_MEM_ERR			=> (1<<31)+0, 
 );
 
 our @condition = qw(same equals notEquals less lessOrEquals greater greaterOrEquals isNull notNull and or xor not instanceOf isTrue isFalse hasSize contentType hasFeature implementationAttribute);
 
-our @exception = qw(INDEX_SIZE_ERR DOMSTRING_SIZE_ERR HIERARCHY_REQUEST_ERR WRONG_DOCUMENT_ERR INVALID_CHARACTER_ERR NO_DATA_ALLOWED_ERR NO_MODIFICATION_ALLOWED_ERR NOT_FOUND_ERR NOT_SUPPORTED_ERR INUSE_ATTRIBUTE_ERR NAMESPACE_ERR);
+our @exception = qw(INDEX_SIZE_ERR DOMSTRING_SIZE_ERR HIERARCHY_REQUEST_ERR WRONG_DOCUMENT_ERR INVALID_CHARACTER_ERR NO_DATA_ALLOWED_ERR NO_MODIFICATION_ALLOWED_ERR NOT_FOUND_ERR NOT_SUPPORTED_ERR INUSE_ATTRIBUTE_ERR NAMESPACE_ERR UNSPECIFIED_EVENT_TYPE_ERR DISPATCH_REQUEST_ERR);
 
 our @assertion = qw(assertTrue assertFalse assertNull assertNotNull assertEquals assertNotEquals assertSame assertInstanceOf assertSize assertEventCount assertURIEquals);
+
+our @assertexception = qw(assertDOMException assertEventException assertImplementationException);
 
 our @control = qw(if while for-each else);
 
@@ -220,7 +226,7 @@ sub start_element {
 			$self->generate_assertion($en, $element->{Attributes});
 		}
 		
-		case "assertDOMException" {
+		case [@assertexception] {
 			# Indeed, nothing to do here!
 		}
 
@@ -1316,6 +1322,10 @@ sub type_to_ctype {
 	# The core module comes here
 	$type =~ s/[A-Z]/_$&/g;
 	$type = lc $type;
+
+	# For events module
+	$type =~ s/_u_i_/_ui_/g;
+
 	return "dom".$type." *";
 }
 
@@ -1335,6 +1345,10 @@ sub to_cmethod {
 	$ret =~ s/h_t_m_l/html/;
 	$ret =~ s/c_d_a_t_a/cdata/;
 	$ret =~ s/_n_s$/_ns/;
+	# For DOMUIEvent
+	$ret =~ s/_u_i_/_ui_/;
+	# For initEvent
+	$ret =~ s/init_event/init/;
 	return $ret;
 }
 
