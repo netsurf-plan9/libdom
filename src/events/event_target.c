@@ -225,6 +225,7 @@ dom_exception _dom_event_target_dispatch_event(dom_event_target *et,
 		struct dom_event *evt, bool *success)
 {
 	assert(et != NULL);
+	assert(evt != NULL);
 
 	dom_exception err, ret = DOM_NO_ERR;
 
