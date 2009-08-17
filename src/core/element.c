@@ -209,6 +209,37 @@ dom_exception _dom_element_initialise(struct dom_document *doc,
 }
 
 /**
+ * Finalise a dom_element
+ *
+ * \param doc  The document
+ * \param ele  The element
+ */
+void _dom_element_finalise(struct dom_document *doc, struct dom_element *ele)
+{
+	lwc_context *ctx = _dom_document_get_intern_context(doc);
+	assert (ctx != NULL);
+
+	/* Destroy attributes attached to this node */
+	if (ele->attributes != NULL) {
+		_dom_hash_destroy(ele->attributes, _key, ctx, _value, ctx);
+		ele->attributes = NULL;
+	}
+
+	if (ele->ns_attributes != NULL) {
+		_dom_hash_destroy(ele->ns_attributes, _key, ctx,
+				_nsattributes, ctx);
+		ele->ns_attributes = NULL;
+	}
+
+	if (ele->schema_type_info != NULL) {
+		/** \todo destroy schema type info */
+	}
+
+	/* Finalise base class */
+	_dom_node_finalise(doc, &ele->base);
+}
+
+/**
  * Destroy an element
  *
  * \param doc      The owning document
@@ -219,27 +250,7 @@ dom_exception _dom_element_initialise(struct dom_document *doc,
 void _dom_element_destroy(struct dom_document *doc,
 		struct dom_element *element)
 {
-	lwc_context *ctx = _dom_document_get_intern_context(doc);
-	assert (ctx != NULL);
-
-	/* Destroy attributes attached to this node */
-	if (element->attributes != NULL) {
-		_dom_hash_destroy(element->attributes, _key, ctx, _value, ctx);
-		element->attributes = NULL;
-	}
-
-	if (element->ns_attributes != NULL) {
-		_dom_hash_destroy(element->ns_attributes, _key, ctx,
-				_nsattributes, ctx);
-		element->ns_attributes = NULL;
-	}
-
-	if (element->schema_type_info != NULL) {
-		/** \todo destroy schema type info */
-	}
-
-	/* Finalise base class */
-	_dom_node_finalise(doc, &element->base);
+	_dom_element_finalise(doc, element);
 
 	/* Free the element */
 	_dom_document_alloc(doc, element, 0);

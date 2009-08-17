@@ -47,6 +47,8 @@ dom_exception _dom_element_initialise(struct dom_document *doc,
 		struct dom_element *el, struct lwc_string_s *name, 
 		struct lwc_string_s *namespace, struct lwc_string_s *prefix);
 
+void _dom_element_finalise(struct dom_document *doc, struct dom_element *ele);
+
 void _dom_element_destroy(struct dom_document *doc,
 		struct dom_element *element);
 
