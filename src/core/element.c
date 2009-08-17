@@ -139,30 +139,26 @@ dom_exception _dom_element_create(struct dom_document *doc,
 		struct lwc_string_s *name, struct lwc_string_s *namespace,
 		struct lwc_string_s *prefix, struct dom_element **result)
 {
-	struct dom_element *el;
-
 	/* Allocate the element */
-	el = _dom_document_alloc(doc, NULL, sizeof(struct dom_element));
-	if (el == NULL)
+	*result = _dom_document_alloc(doc, NULL, sizeof(struct dom_element));
+	if (*result == NULL)
 		return DOM_NO_MEM_ERR;
 
 	/* Initialise the vtables */
-	el->base.base.vtable = &element_vtable;
-	el->base.vtable = &element_protect_vtable;
+	(*result)->base.base.vtable = &element_vtable;
+	(*result)->base.vtable = &element_protect_vtable;
 
-	return _dom_element_initialise(el, doc, name, namespace, prefix,
-			result);
+	return _dom_element_initialise(doc, *result, name, namespace, prefix);
 }
 
 /**
  * Initialise an element node
  *
- * \param el	     The element
  * \param doc        The owning document
+ * \param el	     The element
  * \param name       The (local) name of the node to create
  * \param namespace  The namespace URI of the element, or NULL
  * \param prefix     The namespace prefix of the element, or NULL
- * \param result     Pointer to location to receive created element
  * \return DOM_NO_ERR                on success,
  *         DOM_INVALID_CHARACTER_ERR if ::name is invalid,
  *         DOM_NO_MEM_ERR            on memory exhaustion.
@@ -174,10 +170,9 @@ dom_exception _dom_element_create(struct dom_document *doc,
  *
  * The returned element will already be referenced.
  */
-dom_exception _dom_element_initialise(struct dom_element *el, 
-		struct dom_document *doc, struct lwc_string_s *name, 
-		struct lwc_string_s *namespace, struct lwc_string_s *prefix, 
-		struct dom_element **result)
+dom_exception _dom_element_initialise(struct dom_document *doc,
+		struct dom_element *el, struct lwc_string_s *name, 
+		struct lwc_string_s *namespace, struct lwc_string_s *prefix)
 {
 	dom_exception err;
 
@@ -209,8 +204,6 @@ dom_exception _dom_element_initialise(struct dom_element *el,
 	el->id_ns = NULL;
 	el->id_name = NULL;
 	el->schema_type_info = NULL;
-
-	*result = el;
 
 	return DOM_NO_ERR;
 }
