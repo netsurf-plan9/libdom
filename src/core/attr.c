@@ -64,8 +64,8 @@ static struct dom_node_protect_vtable attr_protect_vtable = {
  * \param prefix     The namespace prefix of the attribute, or NULL
  * \param specified  Whtether this attribute is specified
  * \param result     Pointer to location to receive created attribute
- * \return DOM_NO_ERR                on success,
- *         DOM_NO_MEM_ERR            on memory exhaustion.
+ * \return DOM_NO_ERR     on success,
+ *         DOM_NO_MEM_ERR on memory exhaustion.
  *
  * ::doc and ::name will have their reference counts increased. The 
  * caller should make sure that ::name is a valid NCName here.
@@ -105,9 +105,9 @@ dom_exception _dom_attr_create(struct dom_document *doc,
  * \param a          The dom_attr
  * \param doc        The document
  * \param name       The name of this attribute node
- * \param namespace	 The namespace of this attribute
+ * \param namespace  The namespace of this attribute
  * \param prefix     The prefix
- * \param specified	 Whether this node is a specified one
+ * \param specified  Whether this node is a specified one
  * \param result     The returned node
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
