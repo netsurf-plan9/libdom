@@ -1,7 +1,7 @@
 ifeq ($(WITH_LIBXML_BINDING),yes)
   DIR_SOURCES := xmlparser.c
 
-  DIR_INSTALL_ITEMS := /include/dom/bindings/libxml:xmlbinding.h;xmlerror.h;xmlparser.h
+  DIR_INSTALL_ITEMS := /include/dom/bindings/libxml:xmlerror.h;xmlparser.h
 
   # LibXML2
   ifneq ($(PKGCONFIG),)
