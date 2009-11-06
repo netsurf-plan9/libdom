@@ -10,7 +10,7 @@ include build/makefiles/Makefile.tools
 TESTRUNNER := $(PERL) build/testtools/testrunner.pl
 
 # Toolchain flags
-WARNFLAGS := -Wall -Wextra -Wundef -Wpointer-arith -Wcast-align \
+WARNFLAGS := -Wall -W -Wundef -Wpointer-arith -Wcast-align \
 	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes \
 	-Wmissing-declarations -Wnested-externs -Werror -pedantic
 CFLAGS := -std=c99 -D_BSD_SOURCE -I$(CURDIR)/include/ \
