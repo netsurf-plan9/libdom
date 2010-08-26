@@ -54,8 +54,6 @@ struct dom_document {
 
 	struct dom_string *uri;		/**< The uri of this document */
 
-	struct lwc_context_s *context;	/**< The internment context */
-
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
 
@@ -71,7 +69,6 @@ struct dom_document {
 /* Initialise the document */
 dom_exception _dom_document_initialise(struct dom_document *doc, 
 		struct dom_implementation *impl, dom_alloc alloc, void *pw, 
-		struct lwc_context_s *ctx,
 		dom_events_default_action_fetcher daf);
 
 /* Finalise the document */
@@ -219,10 +216,6 @@ dom_exception _dom_document_copy(struct dom_node_internal *new,
 void _dom_document_try_destroy(struct dom_document *doc);
 /* (De)allocate memory */
 void *_dom_document_alloc(struct dom_document *doc, void *ptr, size_t size);
-
-/* Get the internment context */
-struct lwc_context_s *_dom_document_get_intern_context(
-		struct dom_document *doc);
 
 /* Get the resource manager inside this document, a resource manager
  * is an object which contain the memory allocator/intern string context,

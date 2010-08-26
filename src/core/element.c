@@ -216,18 +216,15 @@ dom_exception _dom_element_initialise(struct dom_document *doc,
  */
 void _dom_element_finalise(struct dom_document *doc, struct dom_element *ele)
 {
-	lwc_context *ctx = _dom_document_get_intern_context(doc);
-	assert (ctx != NULL);
-
 	/* Destroy attributes attached to this node */
 	if (ele->attributes != NULL) {
-		_dom_hash_destroy(ele->attributes, _key, ctx, _value, ctx);
+		_dom_hash_destroy(ele->attributes, _key, NULL, _value, doc);
 		ele->attributes = NULL;
 	}
 
 	if (ele->ns_attributes != NULL) {
-		_dom_hash_destroy(ele->ns_attributes, _key, ctx,
-				_nsattributes, ctx);
+		_dom_hash_destroy(ele->ns_attributes, _key, NULL,
+				_nsattributes, doc);
 		ele->ns_attributes = NULL;
 	}
 
@@ -411,14 +408,11 @@ dom_exception _dom_element_get_elements_by_tag_name(
 {
 	dom_exception err;
 	lwc_string *n;
-	lwc_context *ctx;
 	dom_node_internal *base = (dom_node_internal *) element;
 	
 	assert(base->owner != NULL);
-	ctx = _dom_document_get_intern_context(base->owner);
-	assert(ctx != NULL);
 
-	err = _dom_string_intern(name, ctx, &n);
+	err = _dom_string_intern(name, &n);
 	if (err != DOM_NO_ERR)
 		return err;
 
@@ -426,7 +420,7 @@ dom_exception _dom_element_get_elements_by_tag_name(
 			(struct dom_node_internal *) element, n, NULL, 
 			NULL, result);
 
-	lwc_context_string_unref(ctx, n);
+	lwc_string_unref(n);
 	return err;
 }
 
@@ -738,17 +732,16 @@ dom_exception _dom_element_get_elements_by_tag_name_ns(
 	/** \todo ensure XML feature is supported */
 
 	/* Get the interned string from the dom_string */
-	assert(doc->context != NULL);
 	lwc_string *l = NULL, *n = NULL;
 	if (localname != NULL) {
-		err = _dom_string_intern(localname, doc->context, &l);
+		err = _dom_string_intern(localname, &l);
 		if (err != DOM_NO_ERR)
 			return err;
 	}
 	if (namespace != NULL) {
-		err = _dom_string_intern(namespace, doc->context, &n);
+		err = _dom_string_intern(namespace, &n);
 		if (err != DOM_NO_ERR) {
-			lwc_context_string_unref(doc->context, l);
+			lwc_string_unref(l);
 
 			return err;
 		}
@@ -760,9 +753,9 @@ dom_exception _dom_element_get_elements_by_tag_name_ns(
 			result);
 
 	if (localname != NULL)
-		lwc_context_string_unref(doc->context, l);
+		lwc_string_unref(l);
 	if (namespace != NULL)
-		lwc_context_string_unref(doc->context, n);
+		lwc_string_unref(n);
 
 	return err;
 }
@@ -1023,20 +1016,15 @@ dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
 	struct dom_element *ele = (struct dom_element *) node;
 	lwc_string *ns;
 	dom_string *value;
-	dom_document *doc = node->owner;
-	lwc_context *ctx;
 	dom_exception err;
 
-	assert(doc != NULL);
 	err = _dom_node_get_intern_string(node, namespace, &ns);
 	if (err != DOM_NO_ERR) {
 		return err;
 	}
-	ctx = _dom_document_get_intern_context(doc);
-	assert(ctx != NULL);
 	if (node->prefix == NULL) {
-		lwc_context_string_isequal(ctx, node->namespace, ns, result);
-		lwc_context_string_unref(ctx, ns);
+		lwc_string_isequal(node->namespace, ns, result);
+		lwc_string_unref(ns);
 		return DOM_NO_ERR;
 	}
 
@@ -1057,9 +1045,9 @@ dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
 	}
 	
 	if (ns2 != NULL) {
-		lwc_context_string_isequal(ctx, ns2, ns, result);
-		lwc_context_string_unref(ctx, ns);
-		lwc_context_string_unref(ctx, ns2);
+		lwc_string_isequal(ns2, ns, result);
+		lwc_string_unref(ns);
+		lwc_string_unref(ns2);
 		dom_string_unref(value);
 		return DOM_NO_ERR;
 	}
@@ -1161,7 +1149,6 @@ dom_exception _dom_element_copy(struct dom_node_internal *new,
 	dom_element *oe = (dom_element *) old;
 	dom_document *od, *nd;
 	struct dom_hash_table *ht;
-	lwc_context *oc, *nc;
 	dom_exception err;
 
 	err = _dom_node_copy(new, old);
@@ -1173,23 +1160,18 @@ dom_exception _dom_element_copy(struct dom_node_internal *new,
 	assert(od != NULL);
 	assert(nd != NULL);
 
-	oc = _dom_document_get_intern_context(od);
-	nc = _dom_document_get_intern_context(nd);
-	assert(oc != NULL);
-	assert(nc != NULL);
-
 	dom_alloc alloc;
 	void *pw;
 	_dom_document_get_allocator(nd, &alloc, &pw);
 
 	/* Copy the hash tables */
-	ht = _dom_hash_clone(oe->attributes, alloc, pw, _key, nc,
+	ht = _dom_hash_clone(oe->attributes, alloc, pw, _key, NULL,
 			_value, nd);
 	if (ht == NULL)
 		return DOM_NO_MEM_ERR;
 	ne->attributes = ht;
 
-	ht = _dom_hash_clone(oe->ns_attributes, alloc, pw, _key, nc,
+	ht = _dom_hash_clone(oe->ns_attributes, alloc, pw, _key, NULL,
 			_nsattributes, nd);
 	if (ht == NULL)
 		return DOM_NO_MEM_ERR;
@@ -2111,22 +2093,20 @@ void *_key(void *key, void *key_pw, dom_alloc alloc, void *pw,
 		bool clone)
 {
 	assert(key != NULL);
-	assert(key_pw != NULL);
 
+	UNUSED(key_pw);
 	UNUSED(alloc);
 	UNUSED(pw);
 
 	if (clone == false) {
-		lwc_context_string_unref((lwc_context *) key_pw,
-				(lwc_string *) key);
+		lwc_string_unref((lwc_string *) key);
 		return NULL;
 	} else {
 		lwc_error err;
 		lwc_string *ret;
 		const char *data = lwc_string_data((lwc_string *) key);
 		size_t len = lwc_string_length((lwc_string *) key);
-		err = lwc_context_intern((lwc_context *) key_pw, data, len,
-				&ret);
+		err = lwc_intern_string(data, len, &ret);
 		if (err != lwc_error_ok)
 			return NULL;
 
@@ -2143,7 +2123,6 @@ void *_value(void *value, void *value_pw, dom_alloc alloc,
 
 	UNUSED(alloc);
 	UNUSED(pw);
-	UNUSED(value_pw);
 
 	if (clone == false) {
 		dom_node_internal *a = (dom_node_internal *) value;
@@ -2179,15 +2158,13 @@ void *_nsattributes(void *value, void *value_pw, dom_alloc alloc,
 		return NULL;
 	} else {
 		dom_document *doc = (dom_document *) value_pw;
-		lwc_context *ctx = _dom_document_get_intern_context(doc);
-		assert(ctx != NULL);
 		dom_alloc alloc;
 		void *pw;
 		struct dom_hash_table *ret = NULL;
 		_dom_document_get_allocator(doc, &alloc, &pw);
 
 		ret = _dom_hash_clone((struct dom_hash_table *) value, alloc,
-				pw, _key, ctx, _value, doc);
+				pw, _key, NULL, _value, doc);
 
 		return ret;
 	}

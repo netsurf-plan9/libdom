@@ -66,7 +66,7 @@ static struct dom_node_protect_vtable dt_protect_vtable = {
  */
 dom_exception dom_document_type_create(struct dom_string *qname,
 		struct dom_string *public_id, struct dom_string *system_id,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype)
 {
 	struct dom_document_type *result;
@@ -82,7 +82,7 @@ dom_exception dom_document_type_create(struct dom_string *qname,
 	result->base.vtable = &dt_protect_vtable;
 	
 	err = _dom_document_type_initialise(result, qname, public_id, system_id,
-			alloc, pw, ctx);
+			alloc, pw);
 
 	*doctype = result;
 
@@ -111,8 +111,7 @@ void _dom_document_type_destroy(struct dom_node_internal *doctypenode)
 /* Initialise this document_type */
 dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
 		struct dom_string *qname, struct dom_string *public_id,
-		struct dom_string *system_id, dom_alloc alloc, void *pw,
-		struct lwc_context_s *ctx)
+		struct dom_string *system_id, dom_alloc alloc, void *pw)
 {
 	dom_exception err;
 
@@ -125,7 +124,7 @@ dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
 
 	lwc_string *lprefix = NULL, *lname = NULL;
 	if (prefix != NULL) {
-		err = _dom_string_intern(prefix, ctx, &lprefix);
+		err = _dom_string_intern(prefix, &lprefix);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(prefix);
 			dom_string_unref(localname);
@@ -135,12 +134,12 @@ dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
 	}
 
 	if (localname != NULL) {
-		err = _dom_string_intern(localname, ctx, &lname);
+		err = _dom_string_intern(localname, &lname);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(prefix);
 			dom_string_unref(localname);
 			if (lprefix != NULL)
-				lwc_context_string_unref(ctx, lprefix);
+				lwc_string_unref(lprefix);
 			alloc(doctype, 0, pw);
 			return err;
 		}
@@ -150,8 +149,7 @@ dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
 
 	/* Initialise base node */
 	err = _dom_node_initialise_generic(&doctype->base, NULL, alloc, pw,
-			ctx, DOM_DOCUMENT_TYPE_NODE, lname, NULL, NULL,
-			lprefix);
+			DOM_DOCUMENT_TYPE_NODE, lname, NULL, NULL, lprefix);
 	if (err != DOM_NO_ERR) {
 		alloc(doctype, 0, pw);
 		return err;
@@ -174,7 +172,6 @@ dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
 	/* Fill in allocation information */
 	doctype->res.alloc = alloc;
 	doctype->res.pw = pw;
-	doctype->res.ctx = ctx;
 
 	return DOM_NO_ERR;
 }
@@ -190,7 +187,7 @@ void _dom_document_type_finalise(struct dom_document_type *doctype)
 	assert(doctype->base.owner != NULL || doctype->base.user_data == NULL);
 	
 	_dom_node_finalise_generic(&doctype->base, doctype->res.alloc, 
-			doctype->res.pw, doctype->res.ctx);
+			doctype->res.pw);
 }
 
 
@@ -383,7 +380,6 @@ void _dom_document_type_get_resource_mgr(
 {
 	rm->alloc = dt->res.alloc;
 	rm->pw = dt->res.pw;
-	rm->ctx = dt->res.ctx;
 }
 
 /**

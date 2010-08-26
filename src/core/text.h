@@ -16,7 +16,6 @@
 
 struct dom_document;
 struct dom_string;
-struct lwc_context_s;
 struct lwc_string_s;
 
 /**

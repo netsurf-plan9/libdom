@@ -34,7 +34,6 @@
 
 struct dom_document;
 struct dom_document_type;
-struct lwc_context_s;
 
 /**
  * DOM Implementation
@@ -83,7 +82,7 @@ struct dom_implementation {
 			struct dom_string *qname,
 			struct dom_string *public_id,
 			struct dom_string *system_id,
-			dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+			dom_alloc alloc, void *pw,
 			struct dom_document_type **doctype);
 
 	/**
@@ -126,7 +125,7 @@ struct dom_implementation {
 			struct dom_string *namespace,
 			struct dom_string *qname,
 			struct dom_document_type *doctype,
-			dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+			dom_alloc alloc, void *pw,
 			dom_events_default_action_fetcher daf,
 			struct dom_document **doc);
 
@@ -246,7 +245,7 @@ dom_exception dom_register_source(struct dom_implementation_source *source);
 
 /* Create a DOM document */
 dom_exception dom_document_create(struct dom_implementation *impl,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc);
 
@@ -258,7 +257,7 @@ void dom_document_set_buffer(struct dom_document *doc, uint8_t *buffer,
 dom_exception dom_document_type_create(struct dom_string *qname,
 		struct dom_string *public_id, 
 		struct dom_string *system_id,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype);
 
 #endif

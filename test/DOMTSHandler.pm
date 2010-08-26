@@ -363,7 +363,6 @@ sub generate_main {
 #include <domts.h>
 
 dom_implementation *doc_impl;
-lwc_context *ctx;
 
 int main(int argc, char **argv)
 {
@@ -375,7 +374,7 @@ int main(int argc, char **argv)
 	if (exp != DOM_NO_ERR)
 		return exp;
 	
-	lerr = lwc_create_context(myrealloc, NULL, &ctx);
+	lerr = lwc_initialise(myrealloc, NULL, 0);
 	if (lerr != lwc_error_ok)
 		   return -1;
 
@@ -701,9 +700,9 @@ sub generate_method {
 		# Add the bootstrap params
 		if (exists $bootstrap_api{$method}) {
 			if ($method eq "dom_implementation_create_document") {
-				$params = $params.", myrealloc, NULL, ctx, NULL";
+				$params = $params.", myrealloc, NULL, NULL";
 			} else {
-				$params = $params.", myrealloc, NULL, ctx";
+				$params = $params.", myrealloc, NULL";
 			}
 		}
 		# Deal with the situation like

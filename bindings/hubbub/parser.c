@@ -45,8 +45,6 @@ struct dom_hubbub_parser {
 
 	dom_msg msg;		/**< Informational messaging function */
 	void *mctx;		/**< Pointer to client data */
-
-    struct lwc_context_s *ctx;  /**< The string intern context */
 };
 
 
@@ -117,8 +115,7 @@ static bool __initialised = false;
  */
 dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases, 
 		const char *enc, bool fix_enc,
-		dom_alloc alloc, void *pw, dom_msg msg, void *mctx,
-		lwc_context *ctx)
+		dom_alloc alloc, void *pw, dom_msg msg, void *mctx)
 {
 	dom_hubbub_parser *parser;
 	hubbub_parser_optparams params;
@@ -157,7 +154,6 @@ dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
 	parser->pw = pw;
 	parser->msg = msg;
 	parser->mctx = mctx;
-    parser->ctx = ctx;
 
 	error = hubbub_parser_create(enc, fix_enc, alloc, pw, &parser->parser);
 	if (error != HUBBUB_OK)	 {
@@ -194,7 +190,7 @@ dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
 	 * we should pass the real function when we integrate libDOM with
 	 * Netsurf */
 	err = dom_implementation_create_document(parser->impl, NULL, NULL, NULL,
-			alloc, pw, ctx, NULL, &parser->doc);
+			alloc, pw, NULL, &parser->doc);
 	if (err != DOM_NO_ERR) {
 		hubbub_parser_destroy(parser->parser);
 		alloc(parser, 0, pw);
@@ -280,12 +276,12 @@ dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
 
 	parser->complete = true;
 
-	lerr = lwc_context_intern(parser->ctx, "id", strlen("id"), &name);
+	lerr = lwc_intern_string("id", strlen("id"), &name);
 	if (lerr != lwc_error_ok)
 		return HUBBUB_UNKNOWN;
 	
 	_dom_document_set_id_name(parser->doc, name);
-	lwc_context_string_unref(parser->ctx, name);
+	lwc_string_unref(name);
 
 	return DOM_HUBBUB_OK;
 }
@@ -408,7 +404,7 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 
 	err = dom_implementation_create_document_type(dom_parser->impl, qname,
 			public_id, system_id, dom_parser->alloc, 
-			dom_parser->pw, dom_parser->ctx, &dtype);
+			dom_parser->pw, &dtype);
 	if (err != DOM_NO_ERR) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't create the document type");

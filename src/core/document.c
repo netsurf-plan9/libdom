@@ -75,7 +75,6 @@ static dom_exception dom_document_dup_node(dom_document *doc,
  * \param alloc  Memory (de)allocation function
  * \param pw     Pointer to client-specific private data
  * \param doc    Pointer to location to receive created document
- * \param ctx    The intern string context of this document
  * \param daf    The default action fetcher
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
  *
@@ -84,7 +83,7 @@ static dom_exception dom_document_dup_node(dom_document *doc,
  * The returned document will already be referenced.
  */
 dom_exception dom_document_create(struct dom_implementation *impl,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc)
 {
@@ -105,7 +104,7 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 	 * reaches zero. Documents own themselves (this simplifies the 
 	 * rest of the code, as it doesn't need to special case Documents)
 	 */
-	err = _dom_document_initialise(d, impl, alloc, pw, ctx, daf);
+	err = _dom_document_initialise(d, impl, alloc, pw, daf);
 	if (err != DOM_NO_ERR) {
 		/* Clean up document */
 		alloc(d, 0, pw);
@@ -120,10 +119,8 @@ dom_exception dom_document_create(struct dom_implementation *impl,
 /* Initialise the document */
 dom_exception _dom_document_initialise(struct dom_document *doc, 
 		struct dom_implementation *impl, dom_alloc alloc, void *pw, 
-		struct lwc_context_s *ctx,
 		dom_events_default_action_fetcher daf)
 {
-	assert(ctx != NULL);
 	assert(alloc != NULL);
 	assert(impl != NULL);
 
@@ -131,7 +128,7 @@ dom_exception _dom_document_initialise(struct dom_document *doc,
 	lwc_string *name;
 	lwc_error lerr;
 	
-	lerr = lwc_context_intern(ctx, "#document", SLEN("#document"), &name);
+	lerr = lwc_intern_string("#document", SLEN("#document"), &name);
 	if (lerr != lwc_error_ok)
 		return _dom_exception_from_lwc_error(lerr);
 
@@ -143,11 +140,10 @@ dom_exception _dom_document_initialise(struct dom_document *doc,
 	/* Set up document allocation context - must be first */
 	doc->alloc = alloc;
 	doc->pw = pw;
-	doc->context = lwc_context_ref(ctx);
 
 	err = _dom_node_initialise(&doc->base, doc, DOM_DOCUMENT_NODE,
 			name, NULL, NULL, NULL);
-	lwc_context_string_unref(ctx, name);
+	lwc_string_unref(name);
 
 	list_init(&doc->pending_nodes);
 
@@ -187,8 +183,7 @@ bool _dom_document_finalise(struct dom_document *doc)
 	doc->nodelists = NULL;
 
 	if (doc->id_name != NULL)
-		lwc_context_string_unref(doc->context, doc->id_name);
-	lwc_context_unref(doc->context);
+		lwc_string_unref(doc->id_name);
 	
 	_dom_document_event_internal_finalise(doc, &doc->dei);
 
@@ -306,13 +301,12 @@ dom_exception _dom_document_create_element(struct dom_document *doc,
 	if (_dom_validate_name(tag_name) == false)
 		return DOM_INVALID_CHARACTER_ERR;
 
-	assert(doc->context != NULL);
-	err = _dom_string_intern(tag_name, doc->context, &name);
+	err = _dom_string_intern(tag_name, &name);
 	if (err != DOM_NO_ERR)
 		return err;
 	
 	err = _dom_element_create(doc, name, NULL, NULL, result);
-	lwc_context_string_unref(doc->context, name);
+	lwc_string_unref(name);
 
 	return err;
 }
@@ -335,15 +329,13 @@ dom_exception _dom_document_create_document_fragment(struct dom_document *doc,
 	dom_exception err;
 	lwc_error lerr;
 
-	assert(doc->context != NULL);
-
-	lerr = lwc_context_intern(doc->context, "#document-fragment", 
+	lerr = lwc_intern_string("#document-fragment", 
 			SLEN("#document-fragment"), &name);
 	if (lerr != lwc_error_ok)
 		return _dom_exception_from_lwc_error(lerr);
 	
 	err = _dom_document_fragment_create(doc, name, NULL, result);
-	lwc_context_string_unref(doc->context, name);
+	lwc_string_unref(name);
 
 	return err;
 }
@@ -367,14 +359,12 @@ dom_exception _dom_document_create_text_node(struct dom_document *doc,
 	dom_exception err;
 	lwc_error lerr;
 
-	assert(doc->context != NULL);
-
-	lerr = lwc_context_intern(doc->context, "#text", SLEN("#text"), &name);
+	lerr = lwc_intern_string("#text", SLEN("#text"), &name);
 	if (lerr != lwc_error_ok)
 		return _dom_exception_from_lwc_error(lerr);
 	
 	err = _dom_text_create(doc, name, data, result);
-	lwc_context_string_unref(doc->context, name);
+	lwc_string_unref(name);
 
 	return err;
 }
@@ -398,15 +388,13 @@ dom_exception _dom_document_create_comment(struct dom_document *doc,
 	dom_exception err;
 	lwc_error lerr;
 
-	assert(doc->context != NULL);
-
-	lerr = lwc_context_intern(doc->context, "#comment", SLEN("#comment"),
+	lerr = lwc_intern_string("#comment", SLEN("#comment"),
 			&name);
 	if (lerr != lwc_error_ok)
 		return _dom_exception_from_lwc_error(lerr);
 	
 	err = _dom_comment_create(doc, name, data, result);
-	lwc_context_string_unref(doc->context, name);
+	lwc_string_unref(name);
 
 	return err;
 }
@@ -431,15 +419,13 @@ dom_exception _dom_document_create_cdata_section(struct dom_document *doc,
 	dom_exception err;
 	lwc_error lerr;
 
-	assert(doc->context != NULL);
-
-	lerr = lwc_context_intern(doc->context, "#cdata-section", 
+	lerr = lwc_intern_string("#cdata-section", 
 			SLEN("#cdata-section"), &name);
 	if (lerr != lwc_error_ok)
 		return _dom_exception_from_lwc_error(lerr);
 
 	err = _dom_cdata_section_create(doc, name, data, result);
-	lwc_context_string_unref(doc->context, name);
+	lwc_string_unref(name);
 
 	return err;
 }
@@ -470,13 +456,12 @@ dom_exception _dom_document_create_processing_instruction(
 	if (_dom_validate_name(target) == false)
 		return DOM_INVALID_CHARACTER_ERR;
 
-	assert(doc->context != NULL);
-	err = _dom_string_intern(target, doc->context, &name);
+	err = _dom_string_intern(target, &name);
 	if (err != DOM_NO_ERR)
 		return err;
 
 	err = _dom_processing_instruction_create(doc, name, data, result);
-	lwc_context_string_unref(doc->context, name);
+	lwc_string_unref(name);
 
 	return err;
 }
@@ -503,13 +488,12 @@ dom_exception _dom_document_create_attribute(struct dom_document *doc,
 	if (_dom_validate_name(name) == false)
 		return DOM_INVALID_CHARACTER_ERR;
 
-	assert(doc->context != NULL);
-	err = _dom_string_intern(name, doc->context, &n);
+	err = _dom_string_intern(name, &n);
 	if (err != DOM_NO_ERR)
 		return err;
 
 	err = _dom_attr_create(doc, n, NULL, NULL, true, result);
-	lwc_context_string_unref(doc->context, n);
+	lwc_string_unref(n);
 	return err;
 }
 
@@ -537,13 +521,12 @@ dom_exception _dom_document_create_entity_reference(struct dom_document *doc,
 	if (_dom_validate_name(name) == false)
 		return DOM_INVALID_CHARACTER_ERR;
 
-	assert(doc->context != NULL);
-	err = _dom_string_intern(name, doc->context, &n);
+	err = _dom_string_intern(name, &n);
 	if (err != DOM_NO_ERR)
 		return err;
 
 	err = _dom_entity_reference_create(doc, n, NULL, result);
-	lwc_context_string_unref(doc->context, n);
+	lwc_string_unref(n);
 	return err;
 }
 
@@ -565,15 +548,14 @@ dom_exception _dom_document_get_elements_by_tag_name(struct dom_document *doc,
 	lwc_string *name;
 	dom_exception err;
 
-	assert(doc->context != NULL);
-	err = _dom_string_intern(tagname, doc->context, &name);
+	err = _dom_string_intern(tagname, &name);
 	if (err != DOM_NO_ERR)
 		return err;
 
 	err = _dom_document_get_nodelist(doc, DOM_NODELIST_BY_NAME, 
 			(struct dom_node_internal *) doc,  name, NULL, NULL, 
 			result);
-	lwc_context_string_unref(doc->context, name);
+	lwc_string_unref(name);
 
 	return err;
 }
@@ -653,10 +635,9 @@ dom_exception _dom_document_create_element_ns(struct dom_document *doc,
 	}
 
 	/* Get the interned string from the dom_string */
-	assert(doc->context != NULL);
 	lwc_string *l = NULL, *n = NULL, *p = NULL;
 	if (localname != NULL) {
-		err = _dom_string_intern(localname, doc->context, &l);
+		err = _dom_string_intern(localname, &l);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(localname);
 			if (prefix != NULL)
@@ -666,9 +647,9 @@ dom_exception _dom_document_create_element_ns(struct dom_document *doc,
 		}
 	}
 	if (namespace != NULL) {
-		err = _dom_string_intern(namespace, doc->context, &n);
+		err = _dom_string_intern(namespace, &n);
 		if (err != DOM_NO_ERR) {
-			lwc_context_string_unref(doc->context, l);
+			lwc_string_unref(l);
 			dom_string_unref(localname);
 			if (prefix != NULL)
 				dom_string_unref(prefix);
@@ -677,10 +658,10 @@ dom_exception _dom_document_create_element_ns(struct dom_document *doc,
 		}
 	}
 	if (prefix != NULL) {
-		err = _dom_string_intern(prefix, doc->context, &p);
+		err = _dom_string_intern(prefix, &p);
 		if (err != DOM_NO_ERR) {
-			lwc_context_string_unref(doc->context, l);
-			lwc_context_string_unref(doc->context, n);
+			lwc_string_unref(l);
+			lwc_string_unref(n);
 			dom_string_unref(localname);
 			if (prefix != NULL)
 				dom_string_unref(prefix);
@@ -695,14 +676,14 @@ dom_exception _dom_document_create_element_ns(struct dom_document *doc,
 	/* Tidy up */
 	if (localname != NULL) {
 		dom_string_unref(localname);
-		lwc_context_string_unref(doc->context, l);
+		lwc_string_unref(l);
 	}
 	if (prefix != NULL) {
 		dom_string_unref(prefix);
-		lwc_context_string_unref(doc->context, p);
+		lwc_string_unref(p);
 	}
 	if (namespace != NULL) {
-		lwc_context_string_unref(doc->context, n);
+		lwc_string_unref(n);
 	}
 
 	return err;
@@ -759,10 +740,9 @@ dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
 	}
 
 	/* Get the interned string from the dom_string */
-	assert(doc->context != NULL);
 	lwc_string *l = NULL, *n = NULL, *p = NULL;
 	if (localname != NULL) {
-		err = _dom_string_intern(localname, doc->context, &l);
+		err = _dom_string_intern(localname, &l);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(localname);
 			if (prefix != NULL)
@@ -772,9 +752,9 @@ dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
 		}
 	}
 	if (namespace != NULL) {
-		err = _dom_string_intern(namespace, doc->context, &n);
+		err = _dom_string_intern(namespace, &n);
 		if (err != DOM_NO_ERR) {
-			lwc_context_string_unref(doc->context, l);
+			lwc_string_unref(l);
 			dom_string_unref(localname);
 			if (prefix != NULL)
 				dom_string_unref(prefix);
@@ -783,10 +763,10 @@ dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
 		}
 	}
 	if (prefix != NULL) {
-		err = _dom_string_intern(prefix, doc->context, &p);
+		err = _dom_string_intern(prefix, &p);
 		if (err != DOM_NO_ERR) {
-			lwc_context_string_unref(doc->context, l);
-			lwc_context_string_unref(doc->context, n);
+			lwc_string_unref(l);
+			lwc_string_unref(n);
 			dom_string_unref(localname);
 			if (prefix != NULL)
 				dom_string_unref(prefix);
@@ -800,14 +780,14 @@ dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
 	/* Tidy up */
 	if (localname != NULL) {
 		dom_string_unref(localname);
-		lwc_context_string_unref(doc->context, l);
+		lwc_string_unref(l);
 	}
 	if (prefix != NULL) {
 		dom_string_unref(prefix);
-		lwc_context_string_unref(doc->context, p);
+		lwc_string_unref(p);
 	}
 	if (namespace != NULL) {
-		lwc_context_string_unref(doc->context, n);
+		lwc_string_unref(n);
 	}
 
 	return err;
@@ -834,16 +814,15 @@ dom_exception _dom_document_get_elements_by_tag_name_ns(
 	lwc_string *l = NULL, *n = NULL;
 
 	/* Get the interned string from the dom_string */
-	assert(doc->context != NULL);
 	if (localname != NULL) {
-		err = _dom_string_intern(localname, doc->context, &l);
+		err = _dom_string_intern(localname, &l);
 		if (err != DOM_NO_ERR)
 			return err;
 	}
 	if (namespace != NULL) {
-		err = _dom_string_intern(namespace, doc->context, &n);
+		err = _dom_string_intern(namespace, &n);
 		if (err != DOM_NO_ERR) {
-			lwc_context_string_unref(doc->context, l);
+			lwc_string_unref(l);
 			return err;
 		}
 	}
@@ -852,9 +831,9 @@ dom_exception _dom_document_get_elements_by_tag_name_ns(
 			(struct dom_node_internal *) doc, NULL, n, l, result);
 	
 	if (l != NULL)
-		lwc_context_string_unref(doc->context, l);
+		lwc_string_unref(l);
 	if (n != NULL)
-		lwc_context_string_unref(doc->context, n);
+		lwc_string_unref(n);
 
 	return err;
 }
@@ -880,8 +859,7 @@ dom_exception _dom_document_get_element_by_id(struct dom_document *doc,
 
 	*result = NULL;
 
-	assert(doc->context != NULL);
-	err = _dom_string_intern(id, doc->context, &i);
+	err = _dom_string_intern(id, &i);
 	if (err != DOM_NO_ERR)
 		return err;
 	
@@ -1322,10 +1300,9 @@ dom_exception _dom_document_create_lwcstring(struct dom_document *doc,
 {
 	lwc_error lerr;
 
-	assert(doc->context != NULL);
+	UNUSED(doc);
 
-	lerr = lwc_context_intern(doc->context, (const char *) data, len, 
-			result);
+	lerr = lwc_intern_string((const char *) data, len, result);
 	
 	return _dom_exception_from_lwc_error(lerr);
 }
@@ -1334,14 +1311,9 @@ dom_exception _dom_document_create_lwcstring(struct dom_document *doc,
 void _dom_document_unref_lwcstring(struct dom_document *doc,
 		struct lwc_string_s *str)
 {
-	lwc_context_string_unref(doc->context, str);
-}
+	UNUSED(doc);
 
-/* Simple accessor for lwc_context of this document */
-struct lwc_context_s *_dom_document_get_intern_context(
-		struct dom_document *doc)
-{
-	return doc->context;
+	lwc_string_unref(str);
 }
 
 /* Get the resource manager from the document */
@@ -1350,7 +1322,6 @@ void _dom_document_get_resource_mgr(
 {
 	rm->alloc = doc->alloc;
 	rm->pw = doc->pw;
-	rm->ctx = doc->context;
 }
 
 /* Simple accessor for allocator data for this document */
@@ -1372,10 +1343,8 @@ dom_exception _dom_document_create_string_from_lwcstring(
 		struct dom_document *doc, struct lwc_string_s *str, 
 		struct dom_string **result)
 {
-	assert(doc->context != NULL);
-
 	return _dom_string_create_from_lwcstring(doc->alloc, doc->pw, 
-			doc->context, str, result);
+			str, result);
 }
 
 /**
@@ -1680,14 +1649,11 @@ void _dom_document_try_destroy(struct dom_document *doc)
  *
  * \param doc   The document object
  * \param name  The ID name of the elements in this document
- *
- * @note: The lwc_context of the param 'name' must be the same one with
- * document's, this should be assured by the client.
  */
 void _dom_document_set_id_name(dom_document *doc, struct lwc_string_s *name)
 {
 	if (doc->id_name != NULL)
-		lwc_context_string_unref(doc->context, doc->id_name);
-	doc->id_name = lwc_context_string_ref(doc->context, name);
+		lwc_string_unref(doc->id_name);
+	doc->id_name = lwc_string_ref(name);
 }
 

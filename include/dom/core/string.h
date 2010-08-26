@@ -33,7 +33,7 @@ dom_exception dom_string_clone(dom_alloc alloc, void *pw,
 
 /* Get the internal lwc_string */
 dom_exception dom_string_get_intern(struct dom_string *str, 
-		struct lwc_context_s **ctx, struct lwc_string_s **lwcstr);
+		struct lwc_string_s **lwcstr);
 
 /* Case sensitively compare two DOM strings */
 int dom_string_cmp(struct dom_string *s1, struct dom_string *s2);

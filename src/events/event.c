@@ -15,6 +15,7 @@
 #include "core/string.h"
 #include "core/node.h"
 #include "core/document.h"
+#include "utils/utils.h"
 
 static void _virtual_dom_event_destroy(struct dom_event *evt);
 
@@ -68,14 +69,12 @@ dom_exception _dom_event_initialise(struct dom_document *doc,
 /* Finalise function */
 void _dom_event_finalise(struct dom_document *doc, struct dom_event *evt)
 {
-	assert(doc != NULL);
-	lwc_context *ctx = _dom_document_get_intern_context(doc);
-	assert(ctx != NULL);
+	UNUSED(doc);
 
 	if (evt->type != NULL)
-		lwc_context_string_unref(ctx, evt->type);
+		lwc_string_unref(evt->type);
 	if (evt->namespace != NULL)
-		lwc_context_string_unref(ctx, evt->namespace);
+		lwc_string_unref(evt->namespace);
 	
 	evt->stop = false;
 	evt->stop_now = false;
@@ -250,11 +249,10 @@ dom_exception _dom_event_init(dom_event *evt, struct dom_string *type,
 		bool bubble, bool cancelable)
 {
 	assert(evt->doc != NULL);
-	lwc_context *ctx = _dom_document_get_intern_context(evt->doc);
 	lwc_string *str = NULL;
 	dom_exception err;
 
-	err = _dom_string_intern(type, ctx, &str);
+	err = _dom_string_intern(type, &str);
 	if (err != DOM_NO_ERR)
 		return err;
 
@@ -343,16 +341,15 @@ dom_exception _dom_event_init_ns(dom_event *evt, struct dom_string *namespace,
 		struct dom_string *type, bool bubble, bool cancelable)
 {
 	assert(evt->doc != NULL);
-	lwc_context *ctx = _dom_document_get_intern_context(evt->doc);
 	lwc_string *str = NULL;
 	dom_exception err;
 
-	err = _dom_string_intern(type, ctx, &str);
+	err = _dom_string_intern(type, &str);
 	if (err != DOM_NO_ERR)
 		return err;
 	evt->type = str;
 
-	err = _dom_string_intern(namespace, ctx, &str);
+	err = _dom_string_intern(namespace, &str);
 	if (err != DOM_NO_ERR)
 		return err;
 	evt->namespace = str;

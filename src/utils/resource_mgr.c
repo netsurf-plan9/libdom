@@ -13,6 +13,8 @@
 #include <libwapcaplet/libwapcaplet.h>
 #include "core/string.h"
 
+#include "utils/utils.h"
+
 /**
  * Allocate some memory with this allocator
  *
@@ -55,10 +57,9 @@ dom_exception _dom_resource_mgr_create_lwcstring(struct dom_resource_mgr *res,
 {
 	lwc_error lerr;
 
-	assert(res->ctx != NULL);
+	UNUSED(res);
 
-	lerr = lwc_context_intern(res->ctx, (const char *) data, len, 
-			result);
+	lerr = lwc_intern_string((const char *) data, len, result);
 	
 	return _dom_exception_from_lwc_error(lerr);
 }
@@ -75,9 +76,7 @@ dom_exception _dom_resource_mgr_create_string_from_lwcstring(
 		struct dom_resource_mgr *res, struct lwc_string_s *str, 
 		struct dom_string **result)
 {
-	assert(res->ctx != NULL);
-
-	return _dom_string_create_from_lwcstring(res->alloc, res->pw, res->ctx, 
+	return _dom_string_create_from_lwcstring(res->alloc, res->pw, 
 				str, result);
 }
 

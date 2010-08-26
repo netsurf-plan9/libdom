@@ -13,7 +13,6 @@
 struct dom_string;
 struct dom_event;
 struct dom_document;
-struct lwc_context_s;
 struct lwc_string_s;
 
 typedef struct dom_document dom_document_event;

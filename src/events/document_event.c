@@ -53,11 +53,12 @@ dom_exception _dom_document_event_internal_initialise(struct dom_document *doc,
 		dom_events_default_action_fetcher actions)
 {
 	lwc_error err;
-	lwc_context *ctx = _dom_document_get_intern_context(doc);
 	int i = 0;
 
+	UNUSED(doc);
+
 	for (; i < DOM_EVENT_COUNT; i++) {
-		err = lwc_context_intern(ctx, __event_types[i],
+		err = lwc_intern_string(__event_types[i],
 				SLEN(__event_types[i]), &dei->event_types[i]);
 		if (err != lwc_error_ok)
 			return _dom_exception_from_lwc_error(err);
@@ -92,15 +93,13 @@ void _dom_document_event_internal_finalise(struct dom_document *doc,
 dom_exception _dom_document_event_create_event(dom_document_event *de,
 		struct dom_string *type, struct dom_event **evt)
 {
-	lwc_context *ctx = NULL;
 	lwc_string *t = NULL;
 	dom_exception err;
 	struct dom_document *doc = de;
 
-	dom_string_get_intern(type, &ctx, &t);
+	dom_string_get_intern(type, &t);
 	if (t == NULL) {
-		ctx = _dom_document_get_intern_context(doc);
-		err = _dom_string_intern(type, ctx, &t);
+		err = _dom_string_intern(type, &t);
 		if (err != DOM_NO_ERR)
 			return err;
 	}
@@ -115,7 +114,7 @@ dom_exception _dom_document_event_create_event(dom_document_event *de,
 			break;
 		}
 	}
-	lwc_context_string_unref(ctx, t);
+	lwc_string_unref(t);
 
 	switch (et) {
 		case DOM_EVENT:

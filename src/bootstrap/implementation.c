@@ -51,14 +51,14 @@ static dom_exception impl_implementation_create_document_type(
 		struct dom_string *qname,
 		struct dom_string *public_id,
 		struct dom_string *system_id,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype);
 static dom_exception impl_implementation_create_document(
 		struct dom_implementation *impl,
 		struct dom_string *namespace,
 		struct dom_string *qname,
 		struct dom_document_type *doctype,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc);
 static dom_exception impl_implementation_get_feature(
@@ -210,7 +210,7 @@ dom_exception impl_implementation_create_document_type(
 		struct dom_string *qname,
 		struct dom_string *public_id,
 		struct dom_string *system_id,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype)
 {
 	struct dom_document_type *d;
@@ -232,7 +232,7 @@ dom_exception impl_implementation_create_document_type(
 
 	/* Create the doctype */
 	err = dom_document_type_create(qname, public_id, system_id,
-			alloc, pw, ctx, &d);
+			alloc, pw, &d);
 	if (err != DOM_NO_ERR)
 		return err;
 
@@ -286,7 +286,7 @@ dom_exception impl_implementation_create_document(
 		struct dom_string *namespace,
 		struct dom_string *qname,
 		struct dom_document_type *doctype,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc)
 {
@@ -308,7 +308,7 @@ dom_exception impl_implementation_create_document(
 	}
 
 	/* Create document object */
-	err = dom_document_create(impl, alloc, pw, ctx, daf, &d);
+	err = dom_document_create(impl, alloc, pw, daf, &d);
 	if (err != DOM_NO_ERR)
 		return err;
 

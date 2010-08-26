@@ -24,8 +24,6 @@
 
 #include "utils.h"
 
-extern lwc_context *ctx;
-
 /**
  * Load the file as it is a XML file
  *
@@ -44,7 +42,7 @@ dom_document *load_xml(char *file, bool willBeModified)
 	UNUSED(willBeModified);
 
 	parser = dom_xml_parser_create(NULL, NULL, 
-			myrealloc, NULL, mymsg, NULL, ctx);
+			myrealloc, NULL, mymsg, NULL);
 	if (parser == NULL) {
 		fprintf(stderr, "Can't create XMLParser\n");
 		return NULL;
@@ -105,8 +103,8 @@ dom_document *load_html(char *file, bool willBeModified)
 
 	UNUSED(willBeModified);
 
-	parser = dom_hubbub_parser_create("data/Aliases", NULL, true,
-			myrealloc, NULL, mymsg, NULL, ctx);
+	parser = dom_hubbub_parser_create("../data/Aliases", NULL, true,
+			myrealloc, NULL, mymsg, NULL);
 	if (parser == NULL) {
 		fprintf(stderr, "Can't create Hubbub Parser\n");
 		return NULL;
@@ -115,7 +113,7 @@ dom_document *load_html(char *file, bool willBeModified)
 	handle = open(file, O_RDONLY);
 	if (handle == -1) {
 		dom_hubbub_parser_destroy(parser);
-		fprintf(stderr, "Can't open test input file: %s\n", file);
+		/* fprintf(stderr, "Can't open test input file: %s\n", file); */
 		return NULL;
 	}
 

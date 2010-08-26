@@ -145,18 +145,13 @@ dom_exception _dom_node_initialise(dom_node_internal *node,
 		struct lwc_string_s *name, struct dom_string *value,
 		struct lwc_string_s *namespace, struct lwc_string_s *prefix)
 {
-	lwc_context *ctx;
 	dom_alloc alloc;
 	void *pw;
 	dom_exception err;
 
-	ctx = _dom_document_get_intern_context(doc);
-	/* The lwc_context for a document never can be NULL */
-	assert(ctx != NULL);
-
 	_dom_document_get_allocator(doc, &alloc, &pw);
 
-	err = _dom_node_initialise_generic(node, doc, alloc, pw, ctx, type,
+	err = _dom_node_initialise_generic(node, doc, alloc, pw, type,
 			name, value, namespace, prefix);
 	if (err != DOM_NO_ERR)
 		return err;
@@ -168,10 +163,9 @@ dom_exception _dom_node_initialise(dom_node_internal *node,
  * Initialise a DOM node
  *
  * \param node       The node to initialise
- * \param doc		 The document object
+ * \param doc        The document object
  * \param alloc      The memory allocator 
  * \param pw	     The allocator private pointer data
- * \param ctx	     The intern context
  * \param type       The node type required
  * \param name       The node (local) name, or NULL
  * \param value      The node value, or NULL
@@ -184,7 +178,7 @@ dom_exception _dom_node_initialise(dom_node_internal *node,
  */
 dom_exception _dom_node_initialise_generic(
 		struct dom_node_internal *node, struct dom_document *doc,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 	 	dom_node_type type, struct lwc_string_s *name, 
 		struct dom_string *value, struct lwc_string_s *namespace, 
 		struct lwc_string_s *prefix)
@@ -192,11 +186,10 @@ dom_exception _dom_node_initialise_generic(
 	UNUSED(alloc);
 	UNUSED(pw);
 
-	assert(ctx != NULL);
 	node->owner = doc;
 
 	if (name != NULL)
-		lwc_context_string_ref(ctx, name);
+		lwc_string_ref(name);
 	node->name = name;
 
 	if (value != NULL)
@@ -231,12 +224,12 @@ dom_exception _dom_node_initialise_generic(
 	 */
 
 	if (namespace != NULL) {
-		lwc_context_string_ref(ctx, namespace);
+		lwc_string_ref(namespace);
 	}
 	node->namespace = namespace;
 
 	if (prefix != NULL) {
-		lwc_context_string_ref(ctx, prefix);
+		lwc_string_ref(prefix);
 	}
 	node->prefix = prefix;
 
@@ -264,17 +257,12 @@ dom_exception _dom_node_initialise_generic(
  */
 void _dom_node_finalise(struct dom_document *doc, dom_node_internal *node)
 {
-	lwc_context *ctx;
 	dom_alloc alloc;
 	void *pw;
 
-	ctx = _dom_document_get_intern_context(doc);
-	/* The lwc_context for a document never can be NULL */
-	assert(ctx != NULL);
-
 	_dom_document_get_allocator(doc, &alloc, &pw);
 
-	_dom_node_finalise_generic(node, alloc, pw, ctx);
+	_dom_node_finalise_generic(node, alloc, pw);
 }
 
 /**
@@ -283,17 +271,14 @@ void _dom_node_finalise(struct dom_document *doc, dom_node_internal *node)
  * \param node   The node to finalise
  * \param alloc  The allocator
  * \param pw     The allocator private data
- * \param ctx    The intern string context
  */
 void _dom_node_finalise_generic(dom_node_internal *node, dom_alloc alloc, 
-		void *pw, struct lwc_context_s *ctx)
+		void *pw)
 {
 	struct dom_user_data *u, *v;
 
 	UNUSED(alloc);
 	UNUSED(pw);
-
-	assert(ctx != NULL);
 
 	/* Destroy user data */
 	for (u = node->user_data; u != NULL; u = v) {
@@ -304,10 +289,10 @@ void _dom_node_finalise_generic(dom_node_internal *node, dom_alloc alloc,
 	node->user_data = NULL;
 
 	if (node->prefix != NULL)
-		lwc_context_string_unref(ctx, node->prefix);
+		lwc_string_unref(node->prefix);
 
 	if (node->namespace != NULL)
-		lwc_context_string_unref(ctx, node->namespace);
+		lwc_string_unref(node->namespace);
 
 	/* Destroy all the child nodes of this node */
 	struct dom_node_internal *p = node->first_child;
@@ -330,7 +315,7 @@ void _dom_node_finalise_generic(dom_node_internal *node, dom_alloc alloc,
 		dom_string_unref(node->value);
 
 	if (node->name != NULL)
-		lwc_context_string_unref(ctx, node->name);
+		lwc_string_unref(node->name);
 
 	/* If the node has no owner document, we need not to finalise its
 	 * dom_event_target_internal structure. 
@@ -1339,15 +1324,11 @@ dom_exception _dom_node_is_supported(dom_node_internal *node,
 dom_exception _dom_node_get_namespace(dom_node_internal *node,
 		struct dom_string **result)
 {
-	lwc_context *ctx;
-
 	assert(node->owner != NULL);
-	ctx = _dom_document_get_intern_context(node->owner);
-	assert(ctx != NULL);
 
 	/* If there is a namespace, increase its reference count */
 	if (node->namespace != NULL)
-		lwc_context_string_ref(ctx, node->namespace);
+		lwc_string_ref(node->namespace);
 
 	return _dom_document_create_string_from_lwcstring(node->owner,
 			node->namespace, result);
@@ -1367,15 +1348,11 @@ dom_exception _dom_node_get_namespace(dom_node_internal *node,
 dom_exception _dom_node_get_prefix(dom_node_internal *node,
 		struct dom_string **result)
 {
-	lwc_context *ctx;
-
 	assert(node->owner != NULL);
-	ctx = _dom_document_get_intern_context(node->owner);
-	assert(ctx != NULL);
 	
 	/* If there is a prefix, increase its reference count */
 	if (node->prefix != NULL)
-		lwc_context_string_ref(ctx, node->prefix);
+		lwc_string_ref(node->prefix);
 
 	return _dom_document_create_string_from_lwcstring(node->owner,
 			node->prefix,
@@ -1410,10 +1387,6 @@ dom_exception _dom_node_set_prefix(dom_node_internal *node,
 {
 	dom_exception err;
 	lwc_string *str;
-	lwc_context *docctx;
-
-	docctx = _dom_document_get_intern_context(node->owner);
-	assert(docctx != NULL);
 
 	/* Only Element and Attribute nodes created using 
 	 * namespace-aware methods may have a prefix */
@@ -1432,7 +1405,7 @@ dom_exception _dom_node_set_prefix(dom_node_internal *node,
 
 	/* No longer want existing prefix */
 	if (node->prefix != NULL) {
-		lwc_context_string_unref(docctx, node->prefix);
+		lwc_string_unref(node->prefix);
 	}
 
 	/* Set the prefix */
@@ -1468,11 +1441,7 @@ dom_exception _dom_node_set_prefix(dom_node_internal *node,
 dom_exception _dom_node_get_local_name(dom_node_internal *node,
 		struct dom_string **result)
 {	
-	lwc_context *ctx;
-
 	assert(node->owner != NULL);
-	ctx = _dom_document_get_intern_context(node->owner);
-	assert(ctx != NULL);
 	
 	/* Only Element and Attribute nodes may have a local name */
 	if (node->type != DOM_ELEMENT_NODE && 
@@ -1483,7 +1452,7 @@ dom_exception _dom_node_get_local_name(dom_node_internal *node,
 
 	/* The node may have a local name, reference it if so */
 	if (node->name != NULL) {
-		lwc_context_string_ref(ctx, node->name);
+		lwc_string_ref(node->name);
 	}
 
 	return _dom_document_create_string_from_lwcstring(node->owner,
@@ -1740,7 +1709,6 @@ dom_exception _dom_node_is_equal(dom_node_internal *node,
 {
 	dom_exception err;
 	dom_string *s1, *s2;
-	lwc_context *c1, *c2;
 	dom_namednodemap *m1, *m2;
 	dom_nodelist *l1, *l2;
 
@@ -1765,36 +1733,11 @@ dom_exception _dom_node_is_equal(dom_node_internal *node,
 		return DOM_NO_ERR;
 	}
 	
-	c1 = _dom_document_get_intern_context(node->owner);
-	assert(c1 != NULL);
-
-	c2 = _dom_document_get_intern_context(other->owner);
-	assert(c2 != NULL);
-	
-	if (c1 == c2) {
-		if (node->name != other->name || 
-				node->namespace != other->namespace ||
-				node->prefix != other->prefix) {
-			*result = false;
-			return DOM_NO_ERR;
-		}
-	} else {
-		if (_dom_lwc_string_compare_raw(node->name, other->name) != 0){
-			*result = false;
-			return DOM_NO_ERR;
-		}
-
-		if (_dom_lwc_string_compare_raw(node->namespace,
-				other->namespace) != 0){
-			*result = false;
-			return DOM_NO_ERR;
-		}
-
-		if (_dom_lwc_string_compare_raw(node->prefix,
-				other->prefix) != 0){
-			*result = false;
-			return DOM_NO_ERR;
-		}
+	if (node->name != other->name || 
+			node->namespace != other->namespace ||
+			node->prefix != other->prefix) {
+		*result = false;
+		return DOM_NO_ERR;
 	}
 
 	if (dom_string_cmp(node->value, other->value) != 0) {
@@ -1987,19 +1930,13 @@ dom_exception _dom_node_alloc(struct dom_document *doc,
 /* Copy the internal attributes of a Node from old to new */
 dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
 {
-	lwc_context *nctx, *octx;
 	dom_exception err;
 
 	new->vtable = old->vtable;
 	new->base.vtable = old->base.vtable;
 
 	assert(old->owner != NULL);
-	octx = _dom_document_get_intern_context(old->owner);
-	assert(octx != NULL);
-
 	assert(new->owner != NULL);
-	nctx = _dom_document_get_intern_context(old->owner);
-	assert(nctx != NULL);
 
 	new->type = old->type;
 	new->parent = NULL;
@@ -2009,51 +1946,13 @@ dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
 	new->next = NULL;
 	new->owner = old->owner;
 
-	if (octx == nctx) {
-		lwc_context_string_ref(octx, old->name);
-		new->name = old->name;
+	new->name = lwc_string_ref(old->name);
 
-		if (old->namespace != NULL)
-			lwc_context_string_ref(octx, old->namespace);
-		new->namespace = old->namespace;
+	if (old->namespace != NULL)
+		new->namespace = lwc_string_ref(old->namespace);
 
-		if (old->prefix != NULL)
-			lwc_context_string_ref(octx, old->prefix);
-		new->prefix = old->prefix;
-	} else {
-		lwc_string *str;
-		lwc_error lerr;
-
-		lerr = lwc_context_intern(nctx, lwc_string_data(old->name),
-				lwc_string_length(old->name), &str);
-		if (lerr != lwc_error_ok)
-			return _dom_exception_from_lwc_error(lerr);
-
-		new->name = str;
-
-		if (old->namespace != NULL) {
-			lerr = lwc_context_intern(nctx, 
-					lwc_string_data(old->namespace),
-					lwc_string_length(old->namespace), 
-					&str);
-			if (lerr != lwc_error_ok)
-				return _dom_exception_from_lwc_error(lerr);
-
-			new->namespace = str;
-		} else
-			new->namespace = NULL;
-
-		if (old->prefix != NULL) {
-			lerr = lwc_context_intern(nctx, 
-					lwc_string_data(old->prefix),
-					lwc_string_length(old->prefix), &str);
-			if (lerr != lwc_error_ok)
-				return _dom_exception_from_lwc_error(lerr);
-
-			new->prefix = str;
-		} else
-			new->prefix = NULL;
-	}
+	if (old->prefix != NULL)
+		new->prefix = lwc_string_ref(old->prefix);
 
 	dom_alloc al;
 	void *pw;
@@ -2352,32 +2251,6 @@ void _dom_node_replace(dom_node_internal *old,
 }
 
 /**
- * Migrate one lwc_string from one context to another, this function 
- * may be used when we import/adopt a Node between documents.
- *
- * \param old     The source context
- * \param new     The new context
- * \param string  The lwc_string to migrate
- * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
- */
-dom_exception _redocument_lwcstring(lwc_context *old, lwc_context *new, 
-		lwc_string **string)
-{
-	lwc_string *str;
-	lwc_error lerr;
-
-	lerr = lwc_context_intern(new, lwc_string_data(*string),
-			lwc_string_length(*string), &str);
-	if (lerr != lwc_error_ok)
-		return _dom_exception_from_lwc_error(lerr);
-
-	lwc_context_string_unref(old, *string);
-	*string = str;
-
-	return DOM_NO_ERR;
-}
-
-/**
  * Migrate one dom_string from one document to another, this function 
  * may be used when we import/adopt a Node between documents.
  *
@@ -2437,7 +2310,7 @@ dom_exception _dom_merge_adjacent_text(dom_node_internal *p,
 }
 
 /**
- * Intern a dom_string using the node's owner document's lwc_context
+ * Intern a dom_string
  *
  * \param node    The node
  * \param str     The dom_string to be interned
@@ -2448,24 +2321,19 @@ dom_exception _dom_node_get_intern_string(dom_node_internal *node,
 		dom_string *str, lwc_string **intern)
 {
 	dom_exception err;
-	lwc_context *ctx, *docctx;
 	lwc_string *ret;
 
+	UNUSED(node);
+
 	assert(str != NULL);
-	assert(node->owner != NULL);
 
-	docctx = _dom_document_get_intern_context(node->owner);
-	assert(docctx != NULL);
-
-	err = dom_string_get_intern(str, &ctx, &ret);
+	err = dom_string_get_intern(str, &ret);
 	if (err != DOM_NO_ERR)
 		return err;
 
-	if (ctx != docctx) {
-		err = _dom_string_intern(str, docctx, &ret);
-		if (err != DOM_NO_ERR)
-			return err;
-	}
+	err = _dom_string_intern(str, &ret);
+	if (err != DOM_NO_ERR)
+		return err;
 	
 	*intern = ret;
 
@@ -2491,7 +2359,7 @@ void _dom_node_unref_intern_string(dom_node_internal *node,
 				(dom_document_type *) node, &rm);
 	}
 
-	lwc_context_string_unref(rm.ctx, intern);
+	lwc_string_unref(intern);
 }
 
 /**

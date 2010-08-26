@@ -51,10 +51,8 @@ dom_exception _dom_event_target_internal_initialise(struct dom_document *doc,
 void _dom_event_target_internal_finalise(struct dom_document *doc, 
 		dom_event_target_internal *eti)
 {
-	lwc_context *ctx = _dom_document_get_intern_context(doc);
-
 	if (eti->listeners != NULL)
-		_dom_hash_destroy(eti->listeners, _key, ctx, _value, doc);
+		_dom_hash_destroy(eti->listeners, _key, NULL, _value, doc);
 	/* TODO: Now, we did not support the EventListener with namespace,
 	 * when we support it, we should deal with the ns_listeners hash 
 	 * table, too.
@@ -83,7 +81,6 @@ dom_exception _dom_event_target_add_event_listener(dom_event_target *et,
 
 	struct dom_event_target_internal *eti = &et->eti;
 	lwc_string *t = NULL;
-	lwc_context *ctx = NULL;
 	dom_exception err;
 
 	/* If there is no hash table, we should create one firstly */
@@ -94,17 +91,16 @@ dom_exception _dom_event_target_add_event_listener(dom_event_target *et,
 			return err;
 	}
 
-	err = dom_string_get_intern(type, &ctx, &t);
+	err = dom_string_get_intern(type, &t);
 	if (err != DOM_NO_ERR)
 		return err;
 
-	ctx = _dom_document_get_intern_context(doc);
 	if (t == NULL) {
-		err = _dom_string_intern(type, ctx, &t);
+		err = _dom_string_intern(type, &t);
 		if (err != DOM_NO_ERR)
 			return err;
 	} else {
-		lwc_context_string_ref(ctx, t);
+		lwc_string_ref(t);
 	}
 
 	assert(t != NULL);
@@ -158,20 +154,18 @@ dom_exception _dom_event_target_remove_event_listener(dom_event_target *et,
 
 	struct dom_event_target_internal *eti = &et->eti;
 	lwc_string *t = NULL;
-	lwc_context *ctx = NULL;
 	dom_exception err;
 
-	err = dom_string_get_intern(type, &ctx, &t);
+	err = dom_string_get_intern(type, &t);
 	if (err != DOM_NO_ERR)
 		return err;
 
-	ctx = _dom_document_get_intern_context(doc);
 	if (t == NULL) {
-		err = _dom_string_intern(type, ctx, &t);
+		err = _dom_string_intern(type, &t);
 		if (err != DOM_NO_ERR)
 			return err;
 	} else {
-		lwc_context_string_ref(ctx, t);
+		lwc_string_ref(t);
 	}
 
 	assert(t != NULL);
@@ -181,7 +175,7 @@ dom_exception _dom_event_target_remove_event_listener(dom_event_target *et,
 			eti->listeners, t);
 	if (item == NULL) {
 		/* There is no such event listener */
-		lwc_context_string_unref(ctx, t);
+		lwc_string_unref(t);
 		return DOM_NO_ERR;
 	} else {
 		struct list_entry *i = item;
@@ -262,11 +256,9 @@ dom_exception _dom_event_target_dispatch_event(dom_event_target *et,
 	dom_string_unref(type);
 
 	lwc_string *t = evt->type;
-	lwc_context *ctx = NULL;
 	dom_event_target_entry list;
 	dom_event_target *target = et;
 
-	ctx = _dom_document_get_intern_context(doc);
 	assert(t != NULL);
 
 	*success = true;
@@ -349,8 +341,7 @@ dom_exception _dom_event_target_dispatch_event(dom_event_target *et,
 		goto cleanup;
 	}
 	lwc_string *lnodename = NULL;
-	lwc_context *lctx = NULL;
-	err = dom_string_get_intern(nodename, &lctx, &lnodename);
+	err = dom_string_get_intern(nodename, &lnodename);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(nodename);
 		ret = err;
@@ -363,8 +354,7 @@ dom_exception _dom_event_target_dispatch_event(dom_event_target *et,
 	}
 
 	dom_string_unref(nodename);
-	lwc_context_string_unref(lctx, lnodename);
-	lwc_context_unref(lctx);
+	lwc_string_unref(lnodename);
 
 cleanup:
 	if (evt->prevent_default == true) {
@@ -441,6 +431,7 @@ dom_exception _dom_event_target_remove_event_listener_ns(dom_event_target *et,
 static void *_key(void *key, void *key_pw, dom_alloc alloc, void *pw, 
 		bool clone)
 {
+	UNUSED(key_pw);
 	UNUSED(alloc);
 	UNUSED(pw);
 	/* There should never be the requirement of clone the event listener
@@ -448,8 +439,7 @@ static void *_key(void *key, void *key_pw, dom_alloc alloc, void *pw,
 	assert(clone == false);
 	UNUSED(clone);
 
-	lwc_context *ctx = (lwc_context *) key_pw;
-	lwc_context_string_unref(ctx, (lwc_string *) key);
+	lwc_string_unref((lwc_string *) key);
 
 	return NULL;
 }

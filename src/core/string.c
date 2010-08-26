@@ -29,8 +29,6 @@ struct dom_string {
 
 	lwc_string *intern;		/**< The lwc_string of this string */
 
-	lwc_context *context;	/**< The lwc_context for the lwc_string */
-
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Client-specific data */
 
@@ -41,7 +39,6 @@ static struct dom_string empty_string = {
 	.ptr = NULL,
 	.len = 0,
 	.intern = NULL,
-	.context = NULL,
 	.alloc = NULL,
 	.pw = NULL,
 	.refcnt = 1
@@ -75,8 +72,7 @@ void dom_string_unref(struct dom_string *str)
 	
 	if (--str->refcnt == 0) {
 		if (str->intern != NULL) {
-			lwc_context_unref(str->context);
-			lwc_context_string_unref(str->context, str->intern);
+			lwc_string_unref(str->intern);
 			str->alloc(str, 0, str->pw);
 		} else if (str->alloc != NULL) {
 			str->alloc(str->ptr, 0, str->pw);
@@ -132,7 +128,6 @@ dom_exception dom_string_create(dom_alloc alloc, void *pw,
 	ret->pw = pw;
 
 	ret->intern = NULL;
-	ret->context = NULL;
 
 	ret->refcnt = 1;
 
@@ -166,7 +161,7 @@ dom_exception dom_string_clone(dom_alloc alloc, void *pw,
 
 	if (str->intern != NULL) {
 		return _dom_string_create_from_lwcstring(alloc, pw,
-				str->context, str->intern, ret);
+				str->intern, ret);
 	} else {
 		return dom_string_create(alloc, pw, str->ptr, str->len, ret);
 	}
@@ -175,13 +170,12 @@ dom_exception dom_string_clone(dom_alloc alloc, void *pw,
 /**
  * Create a dom_string from a lwc_string
  * 
- * \param ctx  The lwc_context
  * \param str  The lwc_string
  * \param ret  The new dom_string
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  */
 dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
-		lwc_context *ctx, lwc_string *str, struct dom_string **ret)
+		lwc_string *str, struct dom_string **ret)
 {
 	dom_string *r;
 
@@ -200,7 +194,6 @@ dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
 		return DOM_NO_ERR;
 	}
 
-	r->context = ctx;
 	r->intern = str;
 	r->ptr = (uint8_t *)lwc_string_data(str);
 	r->len = lwc_string_length(str);
@@ -211,8 +204,7 @@ dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
 	r->refcnt = 1;
 
 	/* Ref the lwc_string */
-	lwc_context_ref(ctx);
-	lwc_context_string_ref(ctx, str);
+	lwc_string_ref(str);
 
 	*ret = r;
 	return DOM_NO_ERR;
@@ -220,42 +212,30 @@ dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
 }
 
 /**
- * Make the dom_string be interned in the lwc_context
+ * Make the dom_string be interned
  *
  * \param str     The dom_string to be interned
- * \param ctx     The lwc_context to intern this dom_string
  * \param lwcstr  The result lwc_string	
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_string_intern(struct dom_string *str, 
-		struct lwc_context_s *ctx, struct lwc_string_s **lwcstr)
+		struct lwc_string_s **lwcstr)
 {
 	lwc_string *ret;
 	lwc_error lerr;
 
-	/* If this string is interned with the same context, do nothing */
-	if (str->context != NULL && str->context == ctx) {
-		*lwcstr = str->intern;
-		lwc_context_ref(ctx);
-		lwc_context_string_ref(ctx, *lwcstr);
+	/* If this string is already interned, do nothing */
+	if (str->intern != NULL) {
+		*lwcstr = lwc_string_ref(str->intern);
 		return DOM_NO_ERR;
 	}
 
-	lerr = lwc_context_intern(ctx, (const char *)str->ptr, str->len, &ret);
+	lerr = lwc_intern_string((const char *)str->ptr, str->len, &ret);
 	if (lerr != lwc_error_ok) {
 		return _dom_exception_from_lwc_error(lerr);
 	}
 
-	if (str->context != NULL) {
-		lwc_context_unref(str->context);
-		lwc_context_string_unref(str->context, str->intern);
-		str->ptr = NULL;
-	}
-
-	str->context = ctx;
 	str->intern = ret;
-	lwc_context_ref(ctx);
-	lwc_context_string_ref(ctx, ret);
 
 	if (str->ptr != NULL) {
 		str->alloc(str->ptr, 0, str->pw);
@@ -263,7 +243,7 @@ dom_exception _dom_string_intern(struct dom_string *str,
 
 	str->ptr = (uint8_t *) lwc_string_data(ret);
 
-	*lwcstr = ret;
+	*lwcstr = lwc_string_ref(ret);
 	return DOM_NO_ERR;
 }
 
@@ -271,20 +251,16 @@ dom_exception _dom_string_intern(struct dom_string *str,
  * Get the internal lwc_string 
  *
  * \param str     The dom_string object
- * \param ctx     The lwc_context which intern this dom_string
  * \param lwcstr  The lwc_string of this dom-string
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_string_get_intern(struct dom_string *str, 
-		struct lwc_context_s **ctx, struct lwc_string_s **lwcstr)
+		struct lwc_string_s **lwcstr)
 {
-	*ctx = str->context;
 	*lwcstr = str->intern;
 
-	if (*ctx != NULL)
-		lwc_context_ref(*ctx);
 	if (*lwcstr != NULL)
-		lwc_context_string_ref(*ctx, *lwcstr);
+		lwc_string_ref(*lwcstr);
 
 	return DOM_NO_ERR;
 }
@@ -308,11 +284,8 @@ int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
 	if (s2 == NULL)
 		s2 = &empty_string;
 
-	if (s1->context == s2->context && s1->context != NULL) {
-		assert(s1->intern != NULL);
-		assert(s2->intern != NULL);
-		lwc_context_string_isequal(s1->context, s1->intern, 
-				s2->intern, &ret);
+	if (s1->intern != NULL && s2->intern != NULL) {
+		lwc_string_isequal(s1->intern, s2->intern, &ret);
 		if (ret == true) {
 			return 0;
 		} else {
@@ -347,11 +320,8 @@ int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
 		s2 = &empty_string;
 
 	bool ret;
-	if (s1->context == s2->context && s1->context != NULL) {
-		assert(s1->intern != NULL);
-		assert(s2->intern != NULL);
-		lwc_context_string_caseless_isequal(s1->context, s1->intern, 
-				s2->intern, &ret);
+	if (s1->intern != NULL && s2->intern != NULL) {
+		lwc_string_caseless_isequal(s1->intern, s2->intern, &ret);
 		if (ret == true) {
 			return 0;
 		} else {
@@ -606,7 +576,6 @@ dom_exception dom_string_concat(struct dom_string *s1, struct dom_string *s2,
 
 	concat->alloc = alloc;
 	concat->pw = pw;
-	concat->context = NULL;
 	concat->intern = NULL;
 
 	concat->refcnt = 1;
@@ -757,7 +726,6 @@ dom_exception dom_string_insert(struct dom_string *target,
 	res->alloc = target->alloc;
 	res->pw = target->pw;
 	res->intern = NULL;
-	res->context = NULL;
 	
 	res->refcnt = 1;
 
@@ -864,7 +832,6 @@ dom_exception dom_string_replace(struct dom_string *target,
 	res->alloc = target->alloc;
 	res->pw = target->pw;
 	res->intern = NULL;
-	res->context = NULL;
 
 	res->refcnt = 1;
 
@@ -891,7 +858,7 @@ dom_exception dom_string_dup(struct dom_string *str,
 {
 	if (str->intern != NULL) {
 		return _dom_string_create_from_lwcstring(str->alloc, str->pw,
-				str->context, str->intern, result);
+				str->intern, result);
 	} else {
 		return dom_string_create(str->alloc, str->pw, str->ptr,
 				str->len, result);
@@ -936,34 +903,12 @@ dom_exception _dom_exception_from_lwc_error(lwc_error err)
 			return DOM_NO_MEM_ERR;
 		case lwc_error_range:
 			return DOM_INDEX_SIZE_ERR;
+		case lwc_error_initialised:
+			return DOM_NO_ERR;
 	}
 	assert ("Unknow lwc_error, can't convert to dom_exception");
 	/* Suppress compile errors */
 	return DOM_NO_ERR;
-}
-
-/**
- * Compare the raw data of two lwc_strings for equality when the two strings
- * belong to different lwc_context 
- * 
- * \param s1  The first lwc_string
- * \param s2  The second lwc_string
- * \return 0 for equal, non-zero otherwise
- */
-int _dom_lwc_string_compare_raw(struct lwc_string_s *s1,
-		struct lwc_string_s *s2)
-{
-	const char *rs1, *rs2;
-	size_t len;
-
-	if (lwc_string_length(s1) != lwc_string_length(s2))
-		return -1;
-	
-	len = lwc_string_length(s1);
-	rs1 = lwc_string_data(s1);
-	rs2 = lwc_string_data(s2);
-
-	return memcmp(rs1, rs2, len);
 }
 
 /**

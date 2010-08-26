@@ -15,10 +15,6 @@
 #include <utils.h>
 #include <comparators.h>
 
-struct lwc_context_s;
-
-extern struct lwc_context_s *ctx;
-
 dom_document *load_xml(char *file, bool willBeModified);
 dom_document *load_html(char *file, bool willBeModified);
 

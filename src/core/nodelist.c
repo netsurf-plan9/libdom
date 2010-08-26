@@ -71,10 +71,6 @@ dom_exception _dom_nodelist_create(struct dom_document *doc, nodelist_type type,
 		struct dom_nodelist **list)
 {
 	struct dom_nodelist *l;
-	lwc_context *ctx;
-
-	ctx = _dom_document_get_intern_context(doc);
-	assert(ctx != NULL);
 
 	l = _dom_document_alloc(doc, NULL, sizeof(struct dom_nodelist));
 	if (l == NULL)
@@ -98,7 +94,7 @@ dom_exception _dom_nodelist_create(struct dom_document *doc, nodelist_type type,
 			}
 		}
 	
-		lwc_context_string_ref(ctx, tagname);
+		lwc_string_ref(tagname);
 		l->data.n.name = tagname;
 	} else if (type == DOM_NODELIST_BY_NAMESPACE) {
 		l->data.ns.any_localname = false;
@@ -110,7 +106,7 @@ dom_exception _dom_nodelist_create(struct dom_document *doc, nodelist_type type,
 				   l->data.ns.any_localname = true;
 				}
 			}
-			lwc_context_string_ref(ctx, localname);
+			lwc_string_ref(localname);
 		}
 		if (namespace != NULL) {
 			if (lwc_string_length(namespace) == 1) {
@@ -119,7 +115,7 @@ dom_exception _dom_nodelist_create(struct dom_document *doc, nodelist_type type,
 					l->data.ns.any_namespace = true;
 				}
 			}
-			lwc_context_string_ref(ctx, namespace);
+			lwc_string_ref(namespace);
 		}
 
 		l->data.ns.namespace = namespace;
@@ -160,25 +156,19 @@ void dom_nodelist_unref(struct dom_nodelist *list)
 	if (--list->refcnt == 0) {
 		struct dom_node_internal *owner = 
 				(struct dom_node_internal *) list->owner;
-		lwc_context *ctx;
-		ctx = _dom_document_get_intern_context((dom_document *) owner);
-		assert(ctx != NULL);
-
 		switch (list->type) {
 		case DOM_NODELIST_CHILDREN:
 			/* Nothing to do */
 			break;
 		case DOM_NODELIST_BY_NAMESPACE:
 			if (list->data.ns.namespace != NULL)
-				lwc_context_string_unref(ctx,
-						list->data.ns.namespace);
+				lwc_string_unref(list->data.ns.namespace);
 			if (list->data.ns.localname != NULL)
-				lwc_context_string_unref(ctx,
-						list->data.ns.localname);
+				lwc_string_unref(list->data.ns.localname);
 			break;
 		case DOM_NODELIST_BY_NAME:
 			assert(list->data.n.name != NULL);
-			lwc_context_string_unref(ctx, list->data.n.name);
+			lwc_string_unref(list->data.n.name);
 			break;
 		}
 

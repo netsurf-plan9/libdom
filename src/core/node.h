@@ -92,14 +92,14 @@ dom_exception _dom_node_initialise(struct dom_node_internal *node,
 
 dom_exception _dom_node_initialise_generic(
 		struct dom_node_internal *node, struct dom_document *doc,
-		dom_alloc alloc, void *pw, struct lwc_context_s *ctx,
+		dom_alloc alloc, void *pw,
 	 	dom_node_type type, struct lwc_string_s *name, 
 		struct dom_string *value, struct lwc_string_s *namespace, 
 		struct lwc_string_s *prefix);
 
 void _dom_node_finalise(struct dom_document *doc, dom_node_internal *node);
 void _dom_node_finalise_generic(dom_node_internal *node, dom_alloc alloc, 
-		void *pw, struct lwc_context_s *ctx);
+		void *pw);
 
 bool _dom_node_readonly(const dom_node_internal *node);
 
@@ -275,8 +275,6 @@ static inline dom_exception dom_node_copy(struct dom_node_internal *new,
 
 #define dom_node_get_refcount(n) ((dom_node_internal *) (n))->refcnt
 
-dom_exception _redocument_lwcstring(lwc_context *old, lwc_context *new, 
-		lwc_string **string);
 dom_exception _redocument_domstring(struct dom_document *old, 
 		struct dom_document* new, struct dom_string **string);
 dom_exception _dom_merge_adjacent_text(dom_node_internal *p,

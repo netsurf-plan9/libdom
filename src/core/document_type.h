@@ -16,8 +16,7 @@ struct dom_implementation;
 void _dom_document_type_destroy(struct dom_node_internal *doctypenode);
 dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
 		struct dom_string *qname, struct dom_string *public_id,
-		struct dom_string *system_id, dom_alloc alloc, void *pw,
-		struct lwc_context_s *ctx);
+		struct dom_string *system_id, dom_alloc alloc, void *pw);
 void _dom_document_type_finalise(struct dom_document_type *doctype);
 
 /* The virtual functions of DocumentType */

@@ -13,17 +13,11 @@
 /* Create a DOM string from a lwc_string
  * This function call mainly used for create a string from lwc_string */
 dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
-		struct lwc_context_s *ctx, struct lwc_string_s *str, 
-		struct dom_string **ret);
+		struct lwc_string_s *str, struct dom_string **ret);
 
-/* Make the dom_string be interned in the lwc_context */
+/* Make the dom_string be interned */
 dom_exception _dom_string_intern(struct dom_string *str, 
-		struct lwc_context_s *ctx, struct lwc_string_s **lwcstr);
-
-/* Compare the raw data of two lwc_strings for equality when the two strings
- * belong to different lwc_context */
-int _dom_lwc_string_compare_raw(struct lwc_string_s *s1,
-		struct lwc_string_s *s2);
+		struct lwc_string_s **lwcstr);
 
 /* Map the lwc_error to dom_exception */
 dom_exception _dom_exception_from_lwc_error(lwc_error err);

@@ -104,8 +104,6 @@ struct dom_xml_parser {
 
 	dom_msg msg;		/**< Informational message function */
 	void *mctx;		/**< Pointer to client data */
-
-	struct lwc_context_s *ctx;	/**< The lwc_context of the parser */
 };
 
 /**
@@ -162,8 +160,7 @@ static xmlSAXHandler sax_handler = {
  * parser encoding is not yet implemented
  */
 dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
-		dom_alloc alloc, void *pw, dom_msg msg, void *mctx,
-		lwc_context *ctx)
+		dom_alloc alloc, void *pw, dom_msg msg, void *mctx)
 {
 	dom_xml_parser *parser;
 	struct dom_string *features;
@@ -239,8 +236,6 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 	parser->msg = msg;
 	parser->mctx = mctx;
 
-	parser->ctx = ctx;
-
 	return parser;
 }
 
@@ -311,12 +306,12 @@ dom_xml_error dom_xml_parser_completed(dom_xml_parser *parser)
 	/* TODO: In future, this string "id" should be extracted from the 
 	 * document schema file instead of just setting it as "id".
 	 */
-	lerr = lwc_context_intern(parser->ctx, "id", SLEN("id"), &name);
+	lerr = lwc_intern_string("id", SLEN("id"), &name);
 	if (lerr != lwc_error_ok)
 		return  _dom_exception_from_lwc_error(lerr);
 	
 	_dom_document_set_id_name(parser->doc, name);
-	lwc_context_string_unref(parser->ctx, name);
+	lwc_string_unref(name);
 
 	return DOM_XML_OK;
 }
@@ -355,7 +350,7 @@ void xml_parser_start_document(void *ctx)
 			/* namespace */ NULL,
 			/* qname */ NULL,
 			/* doctype */ NULL,
-			parser->alloc, parser->pw, parser->ctx, NULL,
+			parser->alloc, parser->pw, NULL,
 			&doc);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx, 
@@ -1242,7 +1237,7 @@ void xml_parser_add_document_type(dom_xml_parser *parser,
 	/* Create doctype */
 	err = dom_implementation_create_document_type(parser->impl,
 			qname, public_id, system_id, 
-			parser->alloc, parser->pw, parser->ctx, &doctype);
+			parser->alloc, parser->pw, &doctype);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(system_id);
 		dom_string_unref(public_id);

@@ -13,7 +13,6 @@
 
 #include "hashtable.h"
 
-struct lwc_context_s;
 struct lwc_string_s;
 struct dom_string;
 
@@ -23,7 +22,6 @@ struct dom_string;
 typedef struct dom_resource_mgr {
 	dom_alloc alloc;
 	void *pw;
-	struct lwc_context_s *ctx;
 } dom_resource_mgr;
 
 void *_dom_resource_mgr_alloc(struct dom_resource_mgr *res, void *ptr, 

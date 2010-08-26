@@ -16,7 +16,6 @@
 #include "errors.h"
 
 struct dom_document;
-struct lwc_context_s;
 
 typedef struct dom_hubbub_parser dom_hubbub_parser;
 
@@ -51,8 +50,7 @@ typedef enum dom_hubub_encoding_source {
 /* Create a Hubbub parser instance */
 dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
 		const char *enc, bool fix_enc, 
-		dom_alloc alloc, void *pw, dom_msg msg, void *mctx, 
-        struct lwc_context_s *ctx);
+		dom_alloc alloc, void *pw, dom_msg msg, void *mctx);
 
 /* Destroy a Hubbub parser instance */
 void dom_hubbub_parser_destroy(dom_hubbub_parser *parser);
