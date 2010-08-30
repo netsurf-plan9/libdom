@@ -76,13 +76,14 @@ static dom_exception dom_document_dup_node(dom_document *doc,
  * \param pw     Pointer to client-specific private data
  * \param doc    Pointer to location to receive created document
  * \param daf    The default action fetcher
+ * \param daf    The default action fetcher
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
  *
  * ::impl will have its reference count increased.
  *
  * The returned document will already be referenced.
  */
-dom_exception dom_document_create(struct dom_implementation *impl,
+dom_exception _dom_document_create(struct dom_implementation *impl,
 		dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc)
@@ -184,6 +185,8 @@ bool _dom_document_finalise(struct dom_document *doc)
 
 	if (doc->id_name != NULL)
 		lwc_string_unref(doc->id_name);
+	
+	_dom_document_event_internal_finalise(doc, &doc->dei);
 	
 	_dom_document_event_internal_finalise(doc, &doc->dei);
 

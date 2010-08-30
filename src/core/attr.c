@@ -19,12 +19,13 @@
 #include "core/document.h"
 #include "core/entity_ref.h"
 #include "core/node.h"
+#include "core/element.h"
 #include "utils/utils.h"
 
 struct dom_element;
 
 /**
- * DOM node attribute
+ * DOM attribute node
  */
 struct dom_attr {
 	struct dom_node_internal base;	/**< Base node */
@@ -35,6 +36,16 @@ struct dom_attr {
 	struct dom_type_info *schema_type_info;	/**< Type information */
 
 	bool is_id;	/**< Whether this attribute is a ID attribute */
+
+	dom_attr_type type;	/**< The type of this attribute */
+	
+	union {
+		unsigned long lvalue;
+		unsigned short svalue;
+		bool bvalue;
+	} value;	/**< The special type value of this attribute */
+
+	bool read_only;	/**< Whether this attribute is readonly */
 };
 
 /* The vtable for dom_attr node */
@@ -62,7 +73,7 @@ static struct dom_node_protect_vtable attr_protect_vtable = {
  * \param name       The (local) name of the node to create
  * \param namespace  The namespace URI of the attribute, or NULL
  * \param prefix     The namespace prefix of the attribute, or NULL
- * \param specified  Whtether this attribute is specified
+ * \param specified  Whether this attribute is specified
  * \param result     Pointer to location to receive created attribute
  * \return DOM_NO_ERR     on success,
  *         DOM_NO_MEM_ERR on memory exhaustion.
@@ -127,6 +138,9 @@ dom_exception _dom_attr_initialise(dom_attr *a,
 	a->specified = specified;
 	a->schema_type_info = NULL;
 	a->is_id = false;
+	/* The attribute type is unset when it is created */
+	a->type = DOM_ATTR_UNSET;
+	a->read_only = false;
 
 	*result = a;
 
@@ -165,6 +179,206 @@ void _dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr)
 	_dom_document_alloc(doc, attr, 0);
 }
 
+/*-----------------------------------------------------------------------*/
+/* Following are our implementation specific APIs */
+
+/**
+ * Get the Attr Node type
+ *
+ * \param a  The attribute node
+ * \return the type
+ */
+dom_attr_type dom_attr_get_type(dom_attr *a)
+{
+	return a->type;
+}
+
+/**
+ * Get the integer value of this attribute
+ *
+ * \param a      The attribute object
+ * \param value  The returned value
+ * \return DOM_NO_ERR on success,
+ *         DOM_ATTR_WRONG_TYPE_ERR if the attribute node is not a integer
+ *                                 attribute
+ */
+dom_exception dom_attr_get_integer(dom_attr *a, unsigned long *value)
+{
+	if (a->type != DOM_ATTR_INTEGER)
+		return DOM_ATTR_WRONG_TYPE_ERR;
+	
+	*value = a->value.lvalue;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Set the integer value of this attribute
+ *
+ * \param a      The attribute object
+ * \param value  The new value
+ * \return DOM_NO_ERR on success,
+ *         DOM_ATTR_WRONG_TYPE_ERR if the attribute node is not a integer
+ *                                 attribute
+ */
+dom_exception dom_attr_set_integer(dom_attr *a, unsigned long value)
+{
+	/* If this is the first set method, we should fix this attribute
+	 * type */
+	if (a->type == DOM_ATTR_UNSET)
+		a->type = DOM_ATTR_INTEGER;
+
+	if (a->type != DOM_ATTR_INTEGER)
+		return DOM_ATTR_WRONG_TYPE_ERR;
+	
+	if (a->value.lvalue == value)
+		return DOM_NO_ERR;
+	
+	a->value.lvalue = value;
+
+	struct dom_document *doc = dom_node_get_owner(a);
+	struct dom_node_internal *ele = dom_node_get_parent(a);
+	bool success = true;
+	dom_exception err;
+	err = _dom_dispatch_attr_modified_event(doc, ele, NULL, NULL,
+			(dom_event_target *) a, NULL,
+			DOM_MUTATION_MODIFICATION, &success);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	success = true;
+	err = _dom_dispatch_subtree_modified_event(doc,
+			(dom_event_target *) a, &success);
+	return err;
+}
+
+/**
+ * Get the short value of this attribute
+ *
+ * \param a      The attribute object
+ * \param value  The returned value
+ * \return DOM_NO_ERR on success,
+ *         DOM_ATTR_WRONG_TYPE_ERR if the attribute node is not a short
+ *                                 attribute
+ */
+dom_exception dom_attr_get_short(dom_attr *a, unsigned short *value)
+{
+	if (a->type != DOM_ATTR_SHORT)
+		return DOM_ATTR_WRONG_TYPE_ERR;
+	
+	*value = a->value.svalue;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Set the short value of this attribute
+ *
+ * \param a      The attribute object
+ * \param value  The new value
+ * \return DOM_NO_ERR on success,
+ *         DOM_ATTR_WRONG_TYPE_ERR if the attribute node is not a short
+ *                                 attribute
+ */
+dom_exception dom_attr_set_short(dom_attr *a, unsigned short value)
+{
+	/* If this is the first set method, we should fix this attribute
+	 * type */
+	if (a->type == DOM_ATTR_UNSET)
+		a->type = DOM_ATTR_SHORT;
+
+	if (a->type != DOM_ATTR_SHORT)
+		return DOM_ATTR_WRONG_TYPE_ERR;
+	
+	if (a->value.svalue == value)
+		return DOM_NO_ERR;
+	
+	a->value.svalue = value;
+
+	struct dom_document *doc = dom_node_get_owner(a);
+	struct dom_node_internal *ele = dom_node_get_parent(a);
+	bool success = true;
+	dom_exception err;
+	err = _dom_dispatch_attr_modified_event(doc, ele, NULL, NULL,
+			(dom_event_target *) a, NULL,
+			DOM_MUTATION_MODIFICATION, &success);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	success = true;
+	err = _dom_dispatch_subtree_modified_event(doc,
+			(dom_event_target *) a, &success);
+	return err;
+}
+
+/**
+ * Get the bool value of this attribute
+ *
+ * \param a      The attribute object
+ * \param value  The returned value
+ * \return DOM_NO_ERR on success,
+ *         DOM_ATTR_WRONG_TYPE_ERR if the attribute node is not a bool
+ *                                 attribute
+ */
+dom_exception dom_attr_get_bool(dom_attr *a, bool *value)
+{
+	if (a->type != DOM_ATTR_BOOL)
+		return DOM_ATTR_WRONG_TYPE_ERR;
+	
+	*value = a->value.bvalue;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Set the bool value of this attribute
+ *
+ * \param a      The attribute object
+ * \param value  The new value
+ * \return DOM_NO_ERR on success,
+ *         DOM_ATTR_WRONG_TYPE_ERR if the attribute node is not a bool
+ *                                 attribute
+ */
+dom_exception dom_attr_set_bool(dom_attr *a, bool value)
+{
+	/* If this is the first set method, we should fix this attribute
+	 * type */
+	if (a->type == DOM_ATTR_UNSET)
+		a->type = DOM_ATTR_BOOL;
+
+	if (a->type != DOM_ATTR_BOOL)
+		return DOM_ATTR_WRONG_TYPE_ERR;
+	
+	if (a->value.bvalue == value)
+		return DOM_NO_ERR;
+	
+	a->value.bvalue = value;
+
+	struct dom_document *doc = dom_node_get_owner(a);
+	struct dom_node_internal *ele = dom_node_get_parent(a);
+	bool success = true;
+	dom_exception err;
+	err = _dom_dispatch_attr_modified_event(doc, ele, NULL, NULL,
+			(dom_event_target *) a, NULL,
+			DOM_MUTATION_MODIFICATION, &success);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	success = true;
+	err = _dom_dispatch_subtree_modified_event(doc,
+			(dom_event_target *) a, &success);
+	return err;
+}
+
+/**
+ * Set the node as a readonly attribute
+ *
+ * \param a  The attribute
+ */
+void dom_attr_mark_readonly(dom_attr *a)
+{
+	a->read_only = true;
+}
 
 /* -------------------------------------------------------------------- */
 
@@ -225,6 +439,18 @@ dom_exception _dom_attr_get_value(struct dom_attr *attr,
 			NULL, 0, &value);
 	if (err != DOM_NO_ERR) {
 		return err;
+	}
+
+	/* Force unknown types to strings, if necessary */
+	if (attr->type == DOM_ATTR_UNSET && a->first_child != NULL) {
+		attr->type = DOM_ATTR_STRING;
+	}
+
+	/* If this attribute node is not a string one, we just return an empty
+	 * string */
+	if (attr->type != DOM_ATTR_STRING) {
+		*result = value;
+		return DOM_NO_ERR;
 	}
 
 	/* Traverse children, building a string representation as we go */
@@ -298,10 +524,33 @@ dom_exception _dom_attr_set_value(struct dom_attr *attr,
 	if (_dom_node_readonly(a))
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
-	/* Create text node containing new value */
-	err = dom_document_create_text_node(a->owner, value, &text);
+	/* If this is the first set method, we should fix this attribute
+	 * type */
+	if (attr->type == DOM_ATTR_UNSET)
+		attr->type = DOM_ATTR_STRING;
+	
+	if (attr->type != DOM_ATTR_STRING)
+		return DOM_ATTR_WRONG_TYPE_ERR;
+	
+	dom_string *name = NULL;
+
+	err = _dom_attr_get_name(attr, &name);
 	if (err != DOM_NO_ERR)
 		return err;
+	
+	dom_string *parsed = NULL;
+	err = dom_element_parse_attribute(a->parent, name, value, &parsed);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(name);
+		return err;
+	}
+
+	/* Create text node containing new value */
+	err = dom_document_create_text_node(a->owner, parsed, &text);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	dom_string_unref(parsed);
 
 	/* Destroy children of this node */
 	for (c = a->first_child; c != NULL; c = d) {
@@ -559,5 +808,16 @@ void _dom_attr_set_isid(struct dom_attr *attr, bool is_id)
 void _dom_attr_set_specified(struct dom_attr *attr, bool specified)
 {
 	attr->specified = specified;
+}
+
+/**
+ * Whether this attribute node is readonly
+ *
+ * \param a  The node
+ * \return true if this Attr is readonly, false otherwise
+ */
+bool _dom_attr_readonly(const dom_attr *a)
+{
+	return a->read_only;
 }
 

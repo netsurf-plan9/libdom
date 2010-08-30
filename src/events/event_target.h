@@ -85,4 +85,8 @@ dom_exception _dom_dispatch_attr_modified_event(struct dom_document *doc,
 dom_exception _dom_dispatch_subtree_modified_event(struct dom_document *doc,
 		dom_event_target *et, bool *success);
 
+/* Dispatch a generic event */
+dom_exception _dom_dispatch_generic_event(struct dom_document *doc,
+		dom_event_target *et, const uint8_t *name, size_t len,
+		bool bubble, bool cancelable, bool *success);
 #endif

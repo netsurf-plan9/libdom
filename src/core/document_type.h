@@ -12,6 +12,12 @@ struct dom_document_type;
 struct dom_resource_mgr;
 struct dom_implementation;
 
+/* Create a DOM document type */
+dom_exception _dom_document_type_create(struct dom_string *qname,
+		struct dom_string *public_id, 
+		struct dom_string *system_id,
+		dom_alloc alloc, void *pw,
+		struct dom_document_type **doctype);
 /* Destroy a document type */
 void _dom_document_type_destroy(struct dom_node_internal *doctypenode);
 dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,

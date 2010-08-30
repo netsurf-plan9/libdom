@@ -23,6 +23,7 @@
 #include <libwapcaplet/libwapcaplet.h>
 
 #include "core/node.h"
+#include "core/document.h"
 #include "core/document_type.h"
 
 #include "utils/utils.h"
@@ -231,7 +232,7 @@ dom_exception impl_implementation_create_document_type(
 		return DOM_NAMESPACE_ERR;
 
 	/* Create the doctype */
-	err = dom_document_type_create(qname, public_id, system_id,
+	err = _dom_document_type_create(qname, public_id, system_id,
 			alloc, pw, &d);
 	if (err != DOM_NO_ERR)
 		return err;
@@ -308,7 +309,7 @@ dom_exception impl_implementation_create_document(
 	}
 
 	/* Create document object */
-	err = dom_document_create(impl, alloc, pw, daf, &d);
+	err = _dom_document_create(impl, alloc, pw, daf, &d);
 	if (err != DOM_NO_ERR)
 		return err;
 

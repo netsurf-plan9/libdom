@@ -64,7 +64,7 @@ static struct dom_node_protect_vtable dt_protect_vtable = {
  * explicitly. The client must unref the doctype once it has
  * finished with it.
  */
-dom_exception dom_document_type_create(struct dom_string *qname,
+dom_exception _dom_document_type_create(struct dom_string *qname,
 		struct dom_string *public_id, struct dom_string *system_id,
 		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype)

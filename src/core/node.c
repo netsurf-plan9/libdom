@@ -1491,10 +1491,10 @@ dom_exception _dom_node_has_attributes(dom_node_internal *node, bool *result)
 dom_exception _dom_node_get_base(dom_node_internal *node,
 		struct dom_string **result)
 {
-	UNUSED(node);
-	UNUSED(result);
+	struct dom_document *doc = node->owner;
+	assert(doc != NULL);
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_document_get_base(doc, result);
 }
 
 /**
@@ -2072,6 +2072,10 @@ bool _dom_node_readonly(const dom_node_internal *node)
 	if (n->type == DOM_DOCUMENT_TYPE_NODE ||
 			n->type == DOM_NOTATION_NODE)
 		return true;
+	
+	/* Some Attr node are readonly */
+	if (n->type == DOM_ATTRIBUTE_NODE)
+		return _dom_attr_readonly((const dom_attr *) n);
 
 	/* Entity ns and their descendants are read only 
 	 * EntityReference ns and their descendants are read only */
@@ -2360,6 +2364,25 @@ void _dom_node_unref_intern_string(dom_node_internal *node,
 	}
 
 	lwc_string_unref(intern);
+}
+
+/**
+ * Create a lwc_string using the node's owner's lwc_context 
+ *
+ * \param node  The node object
+ * \param data  The string data
+ * \param len   The length of the string data
+ * \param str   The returned lwc_string
+ * \return DOM_NO_ERR on success, appropirate dom_exception on failure.
+ */
+dom_exception _dom_node_create_lwcstring(dom_node_internal *node,
+		const uint8_t *data, size_t len, struct lwc_string_s **str)
+{
+	dom_document *doc = dom_node_get_owner(node);
+
+	assert(doc != NULL);
+
+	return _dom_document_create_lwcstring(doc, data, len, str);
 }
 
 /**

@@ -14,7 +14,7 @@ WARNFLAGS := -Wall -W -Wundef -Wpointer-arith -Wcast-align \
 	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes \
 	-Wmissing-declarations -Wnested-externs -Werror -pedantic
 CFLAGS := -std=c99 -D_BSD_SOURCE -I$(CURDIR)/include/ \
-	-I$(CURDIR)/src $(WARNFLAGS) $(CFLAGS)
+	-I$(CURDIR)/src -I$(CURDIR)/binding $(WARNFLAGS) $(CFLAGS)
 
 # Parserutils & wapcaplet
 ifneq ($(findstring clean,$(MAKECMDGOALS)),clean)

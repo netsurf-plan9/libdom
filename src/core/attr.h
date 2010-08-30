@@ -8,7 +8,7 @@
 #ifndef dom_internal_core_attr_h_
 #define dom_internal_core_attr_h_
 
-#include <dom/core/exceptions.h>
+#include <dom/core/attr.h>
 
 struct dom_document;
 struct dom_string;
@@ -24,7 +24,7 @@ dom_exception _dom_attr_initialise(struct dom_attr *a,
 		struct dom_document *doc,  struct lwc_string_s *name,
 		struct lwc_string_s *namespace, struct lwc_string_s *prefix,
 		bool specified, struct dom_attr **result);
-void _dom_attr_finalise(dom_document *doc, struct dom_attr *attr);
+void _dom_attr_finalise(struct dom_document *doc, struct dom_attr *attr);
 
 /* Virtual functions for dom_attr */
 dom_exception _dom_attr_get_name(struct dom_attr *attr,
@@ -117,5 +117,6 @@ dom_exception _dom_attr_copy(struct dom_node_internal *new,
 
 void _dom_attr_set_isid(struct dom_attr *attr, bool is_id);
 void _dom_attr_set_specified(struct dom_attr *attr, bool specified);
+bool _dom_attr_readonly(const dom_attr *a);
 
 #endif

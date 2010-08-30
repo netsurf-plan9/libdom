@@ -10,7 +10,9 @@
 
 #include <stdbool.h>
 
-#include <dom/core/exceptions.h>
+#include <dom/core/element.h>
+
+#include "core/node.h"
 
 struct dom_document;
 struct dom_element;
@@ -175,8 +177,41 @@ dom_exception _dom_element_lookup_namespace(dom_node_internal *node,
 	_dom_node_set_user_data, \
 	_dom_node_get_user_data
 
+/**
+ * The internal used vtable for element
+ */
+struct dom_element_protected_vtable {
+	struct dom_node_protect_vtable base;
+
+	dom_exception (*dom_element_parse_attribute)(dom_element *ele,
+			struct dom_string *name, struct dom_string *value,
+			struct dom_string **parsed);
+			/**< Called by dom_attr_set_value, and used to check
+			 *   whether the new attribute value is valid and 
+			 *   return a valid on if it is not
+			 */
+};
+
+typedef struct dom_element_protected_vtable dom_element_protected_vtable;
+
+/* Parse the attribute's value */
+static inline dom_exception dom_element_parse_attribute(dom_element *ele,
+		struct dom_string *name, struct dom_string *value,
+		struct dom_string **parsed)
+{
+	struct dom_node_internal *node = (struct dom_node_internal *) ele;
+	return ((dom_element_protected_vtable *) node->vtable)->
+			dom_element_parse_attribute(ele, name, value, parsed);
+}
+#define dom_element_parse_attribute(e, n, v, p) dom_element_parse_attribute( \
+		(dom_element *) (e), (struct dom_string *) (n), \
+		(struct dom_string *) (v), (struct dom_string **) (p))
+
 
 /* The protected virtual function */
+dom_exception _dom_element_parse_attribute(dom_element *ele,
+		struct dom_string *name, struct dom_string *value,
+		struct dom_string **parsed);
 void __dom_element_destroy(dom_node_internal *node);
 dom_exception _dom_element_alloc(struct dom_document *doc, 
 		struct dom_node_internal *n, struct dom_node_internal **ret);
@@ -184,6 +219,9 @@ dom_exception _dom_element_copy(struct dom_node_internal *new,
 		struct dom_node_internal *old);
 
 #define DOM_ELEMENT_PROTECT_VTABLE \
+	_dom_element_parse_attribute
+
+#define DOM_NODE_PROTECT_VTABLE_ELEMENT \
 	__dom_element_destroy, \
 	_dom_element_alloc, \
 	_dom_element_copy
@@ -191,5 +229,7 @@ dom_exception _dom_element_copy(struct dom_node_internal *new,
 /* Helper functions*/
 dom_exception _dom_element_get_id(struct dom_element *ele, 
 		struct lwc_string_s **id);
+
+extern struct dom_element_vtable _dom_element_vtable;
 
 #endif

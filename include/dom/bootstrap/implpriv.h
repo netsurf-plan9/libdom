@@ -243,21 +243,4 @@ struct dom_implementation_source {
 /* Register a source with the DOM library */
 dom_exception dom_register_source(struct dom_implementation_source *source);
 
-/* Create a DOM document */
-dom_exception dom_document_create(struct dom_implementation *impl,
-		dom_alloc alloc, void *pw,
-		dom_events_default_action_fetcher daf,
-		struct dom_document **doc);
-
-/* Set a document's buffer */
-void dom_document_set_buffer(struct dom_document *doc, uint8_t *buffer, 
-		size_t buffer_len);
-
-/* Create a DOM document type */
-dom_exception dom_document_type_create(struct dom_string *qname,
-		struct dom_string *public_id, 
-		struct dom_string *system_id,
-		dom_alloc alloc, void *pw,
-		struct dom_document_type **doctype);
-
 #endif

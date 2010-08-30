@@ -286,6 +286,8 @@ dom_exception _dom_node_get_intern_string(dom_node_internal *node,
 		struct dom_string *str, struct lwc_string_s **intern);
 void _dom_node_unref_intern_string(dom_node_internal *node, 
 		struct lwc_string_s *inter);
+dom_exception _dom_node_create_lwcstring(dom_node_internal *node,
+		const uint8_t *data, size_t len, struct lwc_string_s **str);
 
 /* Try to destroy the node, if its refcnt is not zero, then append it to the
  * owner document's pending list */

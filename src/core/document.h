@@ -12,6 +12,7 @@
 #include <stddef.h>
 
 #include <dom/core/node.h>
+#include <dom/core/document.h>
 
 #include "core/string.h"
 #include "core/node.h"
@@ -65,6 +66,12 @@ struct dom_document {
 	dom_document_event_internal dei;
 			/**< The DocumentEVent interface */
 };
+
+/* Create a DOM document */
+dom_exception _dom_document_create(struct dom_implementation *impl,
+		dom_alloc alloc, void *pw,
+		dom_events_default_action_fetcher daf,
+		struct dom_document **doc);
 
 /* Initialise the document */
 dom_exception _dom_document_initialise(struct dom_document *doc, 
@@ -194,6 +201,28 @@ dom_exception _dom_document_rename_node(struct dom_document *doc,
 	_dom_document_rename_node
 /* End of vtable */
 
+/**
+ * The internal used vtable for document
+ */
+struct dom_document_protected_vtable {
+	struct dom_node_protect_vtable base;
+	dom_exception (*dom_document_get_base)(dom_document *doc,
+			struct dom_string **base_uri);
+			/* Get the document's base uri */
+};
+
+typedef struct dom_document_protected_vtable dom_document_protected_vtable;
+
+/* Get the document's base URI */
+static inline dom_exception dom_document_get_base(dom_document *doc,
+		struct dom_string **base_uri)
+{
+	struct dom_node_internal *node = (struct dom_node_internal *) doc;
+	return ((dom_document_protected_vtable *) node->vtable)->
+			dom_document_get_base(doc, base_uri);
+}
+#define dom_document_get_base(d, b) dom_document_get_base( \
+		(dom_document *) (d), (struct dom_string **) (b))
 
 /* Following comes the protected vtable  */
 void _dom_document_destroy(struct dom_node_internal *node);

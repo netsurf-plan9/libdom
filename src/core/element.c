@@ -35,14 +35,17 @@
 #define CHAINS_NAMESPACE  7
 #define CHAINS_NS_ATTRIBUTES 31
 
-static struct dom_element_vtable element_vtable = {
+struct dom_element_vtable _dom_element_vtable = {
 	{
 		DOM_NODE_VTABLE_ELEMENT
 	},
 	DOM_ELEMENT_VTABLE
 };
 
-static struct dom_node_protect_vtable element_protect_vtable = {
+static struct dom_element_protected_vtable element_protect_vtable = {
+	{
+		DOM_NODE_PROTECT_VTABLE_ELEMENT
+	},
 	DOM_ELEMENT_PROTECT_VTABLE
 };
 
@@ -145,7 +148,7 @@ dom_exception _dom_element_create(struct dom_document *doc,
 		return DOM_NO_MEM_ERR;
 
 	/* Initialise the vtables */
-	(*result)->base.base.vtable = &element_vtable;
+	(*result)->base.base.vtable = &_dom_element_vtable;
 	(*result)->base.vtable = &element_protect_vtable;
 
 	return _dom_element_initialise(doc, *result, name, namespace, prefix);
@@ -1109,6 +1112,44 @@ dom_exception _dom_element_lookup_namespace(dom_node_internal *node,
 /*----------------------------------------------------------------------*/
 /* The protected virtual functions */
 
+/**
+ * The virtual function to parse some dom attribute
+ *
+ * \param ele     The element object
+ * \param name    The name of the attribute
+ * \param value   The new value of the attribute
+ * \param parsed  The parsed value of the attribute
+ * \return DOM_NO_ERR on success.
+ *
+ * @note: This virtual method is provided to serve as a template method. 
+ * When any attribute is set or added, the attribute's value should be
+ * checked to make sure that it is a valid one. And the child class of 
+ * dom_element may to do some special stuff on the attribute is set. Take
+ * some integer attribute as example:
+ *
+ * 1. The client call dom_element_set_attribute("size", "10.1"), but the
+ *    size attribute may only accept an integer, and only the specific
+ *    dom_element know this. And the dom_attr_set_value method, which is
+ *    called by dom_element_set_attribute should call the this virtual
+ *    template method.
+ * 2. The overload virtual function of following one will truncate the
+ *    "10.1" to "10" to make sure it is a integer. And of course, the 
+ *    overload method may also save the integer as a 'int' C type for 
+ *    later easy accessing by any client.
+ */
+dom_exception _dom_element_parse_attribute(dom_element *ele,
+		struct dom_string *name, struct dom_string *value,
+		struct dom_string **parsed)
+{
+	UNUSED(ele);
+	UNUSED(name);
+
+	dom_string_ref(value);
+	*parsed = value;
+
+	return DOM_NO_ERR;
+}
+
 /* The destroy virtual function of dom_element */
 void __dom_element_destroy(struct dom_node_internal *node)
 {
@@ -1296,9 +1337,13 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		if (err != DOM_NO_ERR)
 			return err;
 
+		/* Set its parent, so that value parsing works */
+		dom_node_set_parent(attr, element);
+
 		/* Set its value */
 		err = dom_attr_set_value(attr, value);
 		if (err != DOM_NO_ERR) {
+			dom_node_set_parent(attr, NULL);
 			dom_node_unref(attr);
 			return err;
 		}
@@ -1310,6 +1355,7 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 				(dom_event_target *) attr, name, 
 				DOM_MUTATION_ADDITION, &success);
 		if (err != DOM_NO_ERR) {
+			dom_node_set_parent(attr, NULL);
 			dom_node_unref(attr);
 			return err;
 		}
@@ -1319,6 +1365,7 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 				(dom_event_target *) element, 
 				DOM_MUTATION_ADDITION, &success);
 		if (err != DOM_NO_ERR) {
+			dom_node_set_parent(attr, NULL);
 			dom_node_unref(attr);
 			return err;
 		}
@@ -1326,11 +1373,11 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		added = _dom_hash_add(hs, str, attr, false);
 		if (added == false) {
 			/* If we failed at this step, there must be no memory */
+			dom_node_set_parent(attr, NULL);
 			dom_node_unref(attr);
 			return DOM_NO_MEM_ERR;
 		}
 
-		dom_node_set_parent(attr, element);
 		dom_node_unref(attr);
 		dom_node_remove_pending(attr);
 

@@ -255,11 +255,8 @@ dom_exception _dom_event_target_dispatch_event(dom_event_target *et,
 	}
 	dom_string_unref(type);
 
-	lwc_string *t = evt->type;
 	dom_event_target_entry list;
 	dom_event_target *target = et;
-
-	assert(t != NULL);
 
 	*success = true;
 
@@ -286,6 +283,17 @@ dom_exception _dom_event_target_dispatch_event(dom_event_target *et,
 	/* Fill the target of the event */
 	evt->target = et;
 	evt->phase = DOM_CAPTURING_PHASE;
+
+	/* The started callback of default action */
+	struct dom_document_event_internal *dei = &doc->dei;
+	void *pw = NULL; 
+	if (dei->actions != NULL) {
+		dom_default_action_callback cb = dei->actions(evt->type,
+				DOM_DEFAULT_ACTION_STARTED, &pw);
+		if (cb != NULL) {
+			cb(evt, pw);
+		}
+	}
 
 	/* The capture phase */
 	struct list_entry *e = list.entry.prev;
@@ -329,32 +337,26 @@ dom_exception _dom_event_target_dispatch_event(dom_event_target *et,
 			goto cleanup;
 	}
 
-	struct dom_document_event_internal *dei = &doc->dei;
-	if (dei->actions == NULL || evt->prevent_default == true)
+	if (dei->actions == NULL)
 		goto cleanup;
 
-	/* The default action */
-	struct dom_string *nodename;
-	err = dom_node_get_node_name(et, &nodename);
-	if (err != DOM_NO_ERR) {
-		ret = err;
-		goto cleanup;
-	}
-	lwc_string *lnodename = NULL;
-	err = dom_string_get_intern(nodename, &lnodename);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(nodename);
-		ret = err;
-		goto cleanup;
+	/* The end callback of default action */
+	if (evt->prevent_default != true) {
+		dom_default_action_callback cb = dei->actions(evt->type,
+				DOM_DEFAULT_ACTION_END, &pw);
+		if (cb != NULL) {
+			cb(evt, pw);
+		}
 	}
 
-	dom_event_listener *da = dei->actions(lnodename, t);
-	if (da != NULL) {
-		da->handler(evt, da->pw);
+	/* The prevented callback of default action */
+	if (evt->prevent_default != true) {
+		dom_default_action_callback cb = dei->actions(evt->type,
+				DOM_DEFAULT_ACTION_PREVENTED, &pw);
+		if (cb != NULL) {
+			cb(evt, pw);
+		}
 	}
-
-	dom_string_unref(nodename);
-	lwc_string_unref(lnodename);
 
 cleanup:
 	if (evt->prevent_default == true) {
@@ -707,9 +709,10 @@ cleanup:
 /**
  * Dispatch a DOMCharacterDataModified event
  *
- * \param et    The EventTarget object
- * \param prev  The preValue of the DOMCharacterData
- * \param new   The newValue of the DOMCharacterData
+ * \param et       The EventTarget object
+ * \param prev     The preValue of the DOMCharacterData
+ * \param new      The newValue of the DOMCharacterData
+ * \param success  Whether this event's default handler get called
  * \return DOM_NO_ERR on success, appropirate dom_exception on failure.
  *
  * TODO:
@@ -761,7 +764,7 @@ cleanup:
  *
  * \param doc      The Document
  * \param et       The EventTarget object
- * \param success  The newValue of the DOMCharacterData
+ * \param success  Whether this event's default handler get called
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_dispatch_subtree_modified_event(struct dom_document *doc,
@@ -798,6 +801,54 @@ dom_exception _dom_dispatch_subtree_modified_event(struct dom_document *doc,
 
 cleanup:
 	_dom_mutation_event_destroy(doc, evt);
+
+	return err;
+}
+
+/**
+ * Dispatch a generic event
+ *
+ * \param doc         The Document
+ * \param et          The EventTarget object
+ * \param name        The name of the event
+ * \param len         The length of the name string
+ * \param bubble      Whether this event bubbles
+ * \param cancelable  Whether this event can be cancelable
+ * \param success     Whether this event's default handler get called
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_dispatch_generic_event(struct dom_document *doc,
+		dom_event_target *et, const uint8_t *name, size_t len,
+		bool bubble, bool cancelable, bool *success)
+{
+	struct dom_event *evt;
+	dom_exception err;
+
+	err = _dom_event_create(doc, &evt);
+	if (err != DOM_NO_ERR)
+		return err;
+	
+	lwc_string *type = NULL;
+	err = _dom_document_create_lwcstring(doc, name, len, &type);
+	if (err != DOM_NO_ERR)
+		goto cleanup;
+
+	dom_string *t = NULL;
+	err = _dom_document_create_string_from_lwcstring(doc, type, &t);
+	_dom_document_unref_lwcstring(doc, type);
+	if (err != DOM_NO_ERR)
+		goto cleanup;
+
+	err = dom_event_init(evt, t, bubble, cancelable);
+	dom_string_unref(t);
+	if (err != DOM_NO_ERR) {
+		goto cleanup;
+	}
+
+	err = dom_event_target_dispatch_event(et, evt, success);
+
+cleanup:
+	_dom_event_destroy(doc, evt);
 
 	return err;
 }

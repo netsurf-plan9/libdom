@@ -21,6 +21,17 @@ struct dom_string;
 
 typedef struct dom_attr dom_attr;
 
+/**
+ * The attribute type
+ */
+typedef enum {
+	DOM_ATTR_UNSET = 0,
+	DOM_ATTR_STRING,
+	DOM_ATTR_BOOL,
+	DOM_ATTR_SHORT,
+	DOM_ATTR_INTEGER
+} dom_attr_type;
+
 /* DOM Attr vtable */
 typedef struct dom_attr_vtable {
 	struct dom_node_vtable base;
@@ -101,5 +112,40 @@ static inline dom_exception dom_attr_is_id(struct dom_attr *attr, bool *result)
 }
 #define dom_attr_is_id(a, r) dom_attr_is_id((struct dom_attr *) (a), \
 		(bool *) (r))
+
+/*-----------------------------------------------------------------------*/
+/**
+ * Following are our implementation specific APIs.
+ *
+ * These APIs are defined for the purpose that there are some attributes in
+ * HTML and other DOM module whose type is not DOMString, but unsigned long or
+ * boolean, for those types of attributes, clients should call one of the
+ * following APIs to set it. 
+ *
+ * When an Attr node is created, its type is unset and it can be turned into
+ * any of the four types. Once the type is fixed by calling any of the four
+ * APIs:
+ * dom_attr_set_value
+ * dom_attr_set_integer
+ * dom_attr_set_short
+ * dom_attr_set_bool
+ * it can't be modified in future. 
+ *
+ * For integer/short/bool type of attributes, we provide no string
+ * repensentation of them, so when you call dom_attr_get_value on these
+ * three type of attribute nodes, you will always get a empty dom_string.
+ * If you want to do something with Attr node, you must know its type
+ * firstly by calling dom_attr_get_type before you decide to call other
+ * dom_attr_get_* functions.
+ */
+dom_attr_type dom_attr_get_type(dom_attr *a);
+dom_exception dom_attr_get_integer(dom_attr *a, unsigned long *value);
+dom_exception dom_attr_set_integer(dom_attr *a, unsigned long value);
+dom_exception dom_attr_get_short(dom_attr *a, unsigned short *value);
+dom_exception dom_attr_set_short(dom_attr *a, unsigned short value);
+dom_exception dom_attr_get_bool(dom_attr *a, bool *value);
+dom_exception dom_attr_set_bool(dom_attr *a, bool value);
+/* Make a attribute node readonly */
+void dom_attr_mark_readonly(dom_attr *a);
 
 #endif
