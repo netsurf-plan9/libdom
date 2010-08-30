@@ -212,10 +212,7 @@ void _dom_document_type_finalise(struct dom_document_type *doctype)
 dom_exception _dom_document_type_get_name(struct dom_document_type *doc_type,
 		struct dom_string **result)
 {
-	UNUSED(doc_type);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	return dom_node_get_node_name(doc_type, result);
 }
 
 /**
