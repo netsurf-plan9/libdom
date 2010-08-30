@@ -179,8 +179,9 @@ dom_exception _dom_characterdata_get_length(struct dom_characterdata *cdata,
  * \param count   The number of characters to extract
  * \param data    Pointer to location to receive substring
  * \return DOM_NO_ERR         on success,
- *         DOM_INDEX_SIZE_ERR if ::offset is greater than the number of
- *                            characters in ::cdata.
+ *         DOM_INDEX_SIZE_ERR if ::offset is negative or greater than the 
+ *                            number of characters in ::cdata or 
+ *                            ::count is negative.
  *
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
@@ -195,6 +196,10 @@ dom_exception _dom_characterdata_substring_data(
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	uint32_t len, end;
+
+	if ((signed long) offset < 0 || (signed long) count < 0) {
+		return DOM_INDEX_SIZE_ERR;
+	}
 
 	if (c->value != NULL) {
 		len = dom_string_length(c->value);
@@ -260,8 +265,9 @@ dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
  * \param offset  The character offset to insert at
  * \param data    The data to insert
  * \return DOM_NO_ERR                      on success,
- *         DOM_INDEX_SIZE_ERR              if ::offset is greater than the
- *                                         number of characters in ::cdata,
+ *         DOM_INDEX_SIZE_ERR              if ::offset is negative or greater 
+ *                                         than the number of characters in 
+ *                                         ::cdata,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
 dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
@@ -274,6 +280,10 @@ dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	if ((signed long) offset < 0) {
+		return DOM_INDEX_SIZE_ERR;
 	}
 
 	if (c->value != NULL) {
@@ -316,8 +326,9 @@ dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
  * \param offset  The character offset to start deletion from
  * \param count   The number of characters to delete
  * \return DOM_NO_ERR                      on success,
- *         DOM_INDEX_SIZE_ERR              if ::offset is greater than the
- *                                         number of characters in ::cdata,
+ *         DOM_INDEX_SIZE_ERR              if ::offset is negative or greater 
+ *                                         than the number of characters in 
+ *                                         ::cdata or ::count is negative,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
 dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
@@ -330,6 +341,10 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	if ((signed long) offset < 0 || (signed long) count < 0) {
+		return DOM_INDEX_SIZE_ERR;
 	}
 
 	if (c->value != NULL) {
@@ -375,8 +390,9 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
  * \param count   The number of characters to replace
  * \param data    The replacement data
  * \return DOM_NO_ERR                      on success,
- *         DOM_INDEX_SIZE_ERR              if ::offset is greater than the
- *                                         number of characters in ::cdata,
+ *         DOM_INDEX_SIZE_ERR              if ::offset is negative or greater 
+ *                                         than the number of characters in 
+ *                                         ::cdata or ::count is negative,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
 dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
@@ -390,6 +406,10 @@ dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
+	}
+
+	if ((signed long) offset < 0 || (signed long) count < 0) {
+		return DOM_INDEX_SIZE_ERR;
 	}
 
 	if (c->value != NULL) {
