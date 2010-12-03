@@ -1,4 +1,4 @@
-#!/bin/perl
+#!/usr/bin/perl
 # This file is part of libdom.
 # It is used to generate libdom test files from the W3C DOMTS.
 #
