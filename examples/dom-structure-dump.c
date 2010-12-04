@@ -73,10 +73,10 @@ void test_msg(uint32_t severity, void *ctx, const char *msg, ...)
 
 int main(int argc, char **argv)
 {
-	dom_exception exc;
-	lwc_error err;
-	dom_document *doc = NULL;
-	dom_element *root = NULL;
+	dom_exception exc; /* returned by libdom functions */
+	lwc_error err; /* returned by libwapacplet functions */
+	dom_document *doc = NULL; /* document, loaded into libdom */
+	dom_element *root = NULL; /* root element of document */
 
 	/* Initialise the DOM library */
 	exc = dom_initialise(test_realloc, NULL);
@@ -99,10 +99,6 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	/*
-	 * Dump DOM structure
-	 */
-
 	/* Get root element */
 	exc = dom_document_get_document_element(doc, &root);
 	if (exc != DOM_NO_ERR) {
@@ -112,6 +108,8 @@ int main(int argc, char **argv)
 		printf("Broken: root == NULL\n");
  		return EXIT_FAILURE;
 	}
+
+	/* Dump DOM structure */
 	dump_dom_structure(root, 0);
 
 	/* Finalise the DOM library */
@@ -181,7 +179,8 @@ dump_dom_element(dom_node_internal *node, int depth)
 	dom_node_type type;
 	int i;
 	size_t length;
-	
+
+	/* Only interested in element nodes */
 	exc = dom_node_get_node_type(node, &type);
 	if (exc != DOM_NO_ERR) {
 		printf("Exception raised for node_get_node_type\n");
