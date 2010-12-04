@@ -7,34 +7,22 @@
  */
 
 /*
- * Load an html file into libdom with hubbub and print out the dom structure
+ * Load an HTML file into LibDOM with Hubbub and print out the DOM structure.
  *
- * e.g. <html><body><h1 class="woo">NetSurf</h1>
+ * This example demonstrates the following:
+ *
+ * 1. Using LibDOM's Hubbub binding to read an HTML file into LibDOM.
+ * 2. Walking around the DOM tree.
+ * 3. Accessing DOM node attributes.
+ * 4. Using LibWapcaplet to intern and compare strings with strings in the DOM.
+ *
+ * Example input:
+ *      <html><body><h1 class="woo">NetSurf</h1>
  *      <p>NetSurf is <em>awesome</em>!</p>
  *      <div><h2>Hubbub</h2><p>Hubbub is too.</p>
  *      <p>Big time.</p></div></body></html>
  *
- * gives:
- *
- * HTML
- * +-BODY
- * | +-H1 class="woo"
- * | | +-"NetSurf"
- * | +-P
- * | | +-"NetSurf is "
- * | | +-EM
- * | | | +-"awesome"
- * | | +-"!"
- * | +-DIV
- * | | +-H2
- * | | | +-"Hubbub"
- * | | +-P
- * | | | +-"Hubbub is too."
- * | | +-P
- * | | | +-"Big time."
- *
- *
- * or maybe just:
+ * Example output:
  *
  * HTML
  * +-BODY
@@ -90,13 +78,10 @@ void test_msg(uint32_t severity, void *ctx, const char *msg, ...)
 int main(int argc, char **argv)
 {
 	struct test_data test_data;
-	lwc_error err;
 	dom_exception exc;
+	lwc_error err;
 	dom_document *doc = NULL;
 	dom_element *root = NULL;
-	dom_string *root_name = NULL;
-	lwc_string *lwcstr = NULL;
-	const char *string;
 
 	/* Initialise the DOM library */
 	exc = dom_initialise(test_realloc, &test_data);
@@ -119,8 +104,9 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	/* Dump DOM structure */
-	/* TODO: Actually just root element for now! */
+	/*
+	 * Dump DOM structure
+	 */
 
 	/* Get root element */
 	exc = dom_document_get_document_element(doc, &root);
@@ -131,27 +117,7 @@ int main(int argc, char **argv)
 		printf("Broken: root == NULL\n");
  		return EXIT_FAILURE;
 	}
-
-	/* Get root element name */
-	exc = dom_node_get_node_name(root, &root_name);
-	if (exc != DOM_NO_ERR) {
-		printf("Exception raised for get_node_name\n");
-		return EXIT_FAILURE;
-	} else if (root_name == NULL) {
-		printf("Broken: root_name == NULL\n");
- 		return EXIT_FAILURE;
-	}
-
-	/* Get root element name's lwc_string */
-	exc = dom_string_get_intern(root_name, &lwcstr);
-	if (exc != DOM_NO_ERR) {
-		printf("Exception raised for string_get_intern\n");
-		return EXIT_FAILURE;
-	}
-
-	/* Get string data and print */
-	string = lwc_string_data(lwcstr);
-	printf("%4s\n", string);
+	dump_dom_structure(root, 0);
 
 	/* Finalise the DOM library */
 	exc = dom_finalise();
@@ -163,6 +129,102 @@ int main(int argc, char **argv)
 	return EXIT_SUCCESS;
 }
 
+
+/**
+ * Walk though a DOM (sub)tree, in depth first order, printing DOM structure.
+ *
+ * \param node   The root node to start from
+ * \param depth  The depth of 'node' in the (sub)tree
+ */
+dump_dom_structure(dom_node_internal *node, int depth)
+{
+	dom_exception exc;
+	dom_node_internal *child;
+
+	/* Print this node's entry */
+	dump_dom_element(node, depth);
+
+	/* Get the node's first child */
+	exc = dom_node_get_first_child(node, &child);
+	if (exc != DOM_NO_ERR) {
+		printf("Exception raised for node_get_first_child\n");
+		return EXIT_FAILURE;
+	} else if (child != NULL) {
+		/* node has children;  decend to children's depth */
+		depth++;
+
+		/* Loop though all node's children */
+		do {
+			/* Visit node's descendents */
+			dump_dom_structure(child, depth);
+
+			/* Go to next sibling */
+			exc = dom_node_get_next_sibling(child, &child);
+			if (exc != DOM_NO_ERR) {
+				printf("Exception raised for "
+						"node_get_next_sibling\n");
+				return EXIT_FAILURE;
+			}
+		} while (child != NULL); /* No more children */
+	}
+}
+
+
+/**
+ * Print a line in a DOM structure dump for an element
+ *
+ * \param node   The node to dump
+ * \param depth  The node's depth
+ */
+dump_dom_element(dom_node_internal *node, int depth)
+{
+	dom_exception exc;
+	lwc_error err;
+	dom_string *node_name = NULL;
+	lwc_string *lwcstr = NULL;
+	const char *string;
+	dom_node_type type;
+	int i;
+	size_t length;
+	
+	exc = dom_node_get_node_type(node, &type);
+	if (exc != DOM_NO_ERR) {
+		printf("Exception raised for node_get_node_type\n");
+		return EXIT_FAILURE;
+	} else if (type != DOM_ELEMENT_NODE) {
+ 		return;
+	}
+
+	/* Get root element name */
+	exc = dom_node_get_node_name(node, &node_name);
+	if (exc != DOM_NO_ERR) {
+		printf("Exception raised for get_node_name\n");
+		return EXIT_FAILURE;
+	} else if (node_name == NULL) {
+		printf("Broken: root_name == NULL\n");
+ 		return EXIT_FAILURE;
+	}
+
+	/* Get element name's lwc_string */
+	exc = dom_string_get_intern(node_name, &lwcstr);
+	if (exc != DOM_NO_ERR) {
+		printf("Exception raised for string_get_intern\n");
+		return EXIT_FAILURE;
+	}
+
+	/* Print ASCII tree structure for current node */
+	if (depth > 0) {
+		for (i = 0; i < depth; i++) {
+			printf("| ");
+		}
+		printf("+-");
+	}
+
+	/* Get string data and print element name */
+	string = lwc_string_data(lwcstr);
+	length = lwc_string_length(lwcstr);
+	printf("%*s\n", length, string);
+}
 
 
 /**
