@@ -49,10 +49,6 @@
 
 #define UNUSED(x) ((x)=(x))
 
-struct test_data {
-	int wah;
-};
-
 dom_document *create_doc_dom_from_file(char *file);
 
 void *test_realloc(void *ptr, size_t len, void *pw)
@@ -77,14 +73,13 @@ void test_msg(uint32_t severity, void *ctx, const char *msg, ...)
 
 int main(int argc, char **argv)
 {
-	struct test_data test_data;
 	dom_exception exc;
 	lwc_error err;
 	dom_document *doc = NULL;
 	dom_element *root = NULL;
 
 	/* Initialise the DOM library */
-	exc = dom_initialise(test_realloc, &test_data);
+	exc = dom_initialise(test_realloc, NULL);
 	if (exc != DOM_NO_ERR) {
 		printf("Failed to initialise DOM library.\n");
 		return EXIT_FAILURE;
