@@ -23,6 +23,7 @@
 #include <errors.h>
 
 #include "utils.h"
+#include "domts.h"
 
 /**
  * Load the file as it is a XML file
@@ -30,14 +31,14 @@
  * \param file		The file path 
  * \param willBeModified	Whether this file will be modified, not used
  */
-dom_document *load_xml(char *file, bool willBeModified)
+dom_document *load_xml(const char *file, bool willBeModified)
 {
 	dom_xml_parser *parser = NULL;
 	int handle;
 	int readed;
 	dom_xml_error error;
 	dom_document *ret;
-	char buffer[1024];
+	uint8_t buffer[1024];
 
 	UNUSED(willBeModified);
 
@@ -92,18 +93,18 @@ dom_document *load_xml(char *file, bool willBeModified)
  * \param file		The file path 
  * \param willBeModified	Whether this file will be modified, not used
  */
-dom_document *load_html(char *file, bool willBeModified)
+dom_document *load_html(const char *file, bool willBeModified)
 {
 	dom_hubbub_parser *parser = NULL;
 	int handle;
 	int readed;
 	dom_hubbub_error error;
 	dom_document *ret;
-	char buffer[1024];
+	uint8_t buffer[1024];
 
 	UNUSED(willBeModified);
 
-	parser = dom_hubbub_parser_create("../data/Aliases", NULL, true,
+	parser = dom_hubbub_parser_create(NULL, true,
 			myrealloc, NULL, mymsg, NULL);
 	if (parser == NULL) {
 		fprintf(stderr, "Can't create Hubbub Parser\n");

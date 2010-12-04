@@ -99,12 +99,9 @@ static hubbub_tree_handler tree_handler = {
 	NULL
 };
 
-static bool __initialised = false;
-
 /**
  * Create a Hubbub parser instance
  *
- * \param aliases  Path to encoding alias mapping file
  * \param enc      Source charset, or NULL
  * \param fix_enc  Whether fix the encoding
  * \param alloc    Memory (de)allocation function
@@ -113,7 +110,7 @@ static bool __initialised = false;
  * \param mctx     Pointer to client-specific private data
  * \return Pointer to instance, or NULL on memory exhaustion
  */
-dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases, 
+dom_hubbub_parser *dom_hubbub_parser_create(
 		const char *enc, bool fix_enc,
 		dom_alloc alloc, void *pw, dom_msg msg, void *mctx)
 {
@@ -122,19 +119,6 @@ dom_hubbub_parser *dom_hubbub_parser_create(const char *aliases,
 	hubbub_error error;
 	dom_exception err;
 	struct dom_string *features;
-
-	if (__initialised == false) {
-		error = hubbub_initialise(aliases,
-				(hubbub_allocator_fn) alloc, pw);
-		if (error != HUBBUB_OK) {
-			msg(DOM_MSG_ERROR, mctx,
-					"Failed initialising hubbub");
-			return NULL;
-		}
-
-		__initialised = true;
-	}
-
 
 	parser = alloc(NULL, sizeof(dom_hubbub_parser), pw);
 	if (parser == NULL) {

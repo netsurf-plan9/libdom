@@ -15,7 +15,7 @@
 #include <utils.h>
 #include <comparators.h>
 
-dom_document *load_xml(char *file, bool willBeModified);
-dom_document *load_html(char *file, bool willBeModified);
+dom_document *load_xml(const char *file, bool willBeModified);
+dom_document *load_html(const char *file, bool willBeModified);
 
 #endif

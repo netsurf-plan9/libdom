@@ -125,6 +125,7 @@ our @framework_statement = qw(assign increment decrement append plus subtract mu
 sub new {
 	my $type = shift;
 	my $dtd = shift;
+        my $chdir = shift;
 	my $dd = XML::XPath->new(filename => $dtd);
 	my $self = {
 			# The DTD file of the xml files
@@ -159,7 +160,8 @@ sub new {
 			list_type => "",
 			# Whether we are in exception assertion
 			exception => 0,
-
+                        # Where to chdir
+                        chdir => $chdir
 			};
 
 	return bless $self, $type;
@@ -330,7 +332,7 @@ sub characters {
 		if ($self->{"list_type"} eq "") {
 			if ($data->{Data} =~ /^\"/) {
 				$self->{"list_type"} = "char *";
-				print "char *".$self->{"list_name"}."Array[] = \{ $data->{Data}";
+				print "const char *".$self->{"list_name"}."Array[] = \{ $data->{Data}";
 			} else { 
 				if ($data->{Data} =~ /^[0-9]+/) {
 					$self->{"list_type"} = "int *";
@@ -356,9 +358,11 @@ sub generate_main {
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <dom/dom.h>
 #include <dom/functypes.h>
+#include <dom/bootstrap/init_fini.h>
 
 #include <domts.h>
 
@@ -367,17 +371,19 @@ dom_implementation *doc_impl;
 int main(int argc, char **argv)
 {
 	dom_exception exp;
-	lwc_error lerr;
+
+	(void)argc;
+	(void)argv;
 
 	/* Firstly, initialise dom and dom implementations */
 	exp = dom_initialise(myrealloc, NULL);
 	if (exp != DOM_NO_ERR)
 		return exp;
-	
-	lerr = lwc_initialise(myrealloc, NULL, 0);
-	if (lerr != lwc_error_ok)
-		   return -1;
 
+	if (chdir("$self->{chdir}") < 0) {
+		perror("chdir (\\"$self->{chdir})\\"");
+		return 1;
+	}
 __EOF__
 }
 
@@ -473,11 +479,11 @@ sub generate_load {
 	$test_index ++;
 	# define the test file path, use HTML if there is, otherwise using XML
 	# Attention: I intend to copy the test files to the program excuting dir
-	print "\tchar *test$test_index = \"$ats{'href'}.html\";\n\n";
+	print "\tconst char *test$test_index = \"$ats{'href'}.html\";\n\n";
 	print "$doc = load_html(test$test_index, $ats{'willBeModified'});";
 	print "if ($doc == NULL) {";
 	$test_index ++;
-	print "	 char *test$test_index = \"$ats{'href'}.xml\";\n\n";
+	print "	 const char *test$test_index = \"$ats{'href'}.xml\";\n\n";
 	print "	 $doc = load_xml(test$test_index, $ats{'willBeModified'});";
 	print "	 if ($doc == NULL)";
 	print "			return 1;";
@@ -1465,6 +1471,7 @@ sub cleanup {
 	print "\n\n";
 	$self->cleanup_domstring("\t");
 	$self->cleanup_domvar("\t");
+        print "\n\tprintf(\"PASS\");\n";
 	print "\n\treturn 0;\n";
 	print "\n\}\n";
 }

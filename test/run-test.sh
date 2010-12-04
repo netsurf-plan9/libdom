@@ -25,15 +25,10 @@ dtd=${dtd:?"The DTD file must be given"};
 testdir="$domts"/tests/"$level"/"$module"
 log="$output"/"$level"/"$module"/test.log;
 
-sysdir="/home/netsurf2morebits/sys";
-libdir="$sysdir/lib";
-incdir="$sysdir/include";
-
 src="testutils/comparators.c testutils/domtsasserts.c testutils/foreach.c testutils/list.c testutils/load.c testutils/utils.c testutils/domtscondition.c"
 domdir="../build-Linux-Linux-debug-lib-static"
-ldflags="-L$domdir -ldom -L$libdir  -lwapcaplet -L$libdir -lhubbub -lparserutils -L/usr/lib -lxml2"
-#ldflags="-L/usr/lib -lm -lz -L$domdir -ldom -L/usr/local/lib  -lwapcaplet -lxml2 -lhubbub -lparserutils"
-cflags="-Itestutils/ -I../bindings/xml  -I../include -I../bindings/hubbub -I$incdir"
+ldflags="-L$libdir  -L$libdir -lxml2 $(pkg-config --libs libdom libwapcaplet libparserutils libhubbub)"
+cflags="-Itestutils/ -I../bindings/xml  -I../include -I../bindings/hubbub $(pkg-config --cflags libwapcaplet libparserutils libhubbub)"
 
 total=0;
 fail=0;

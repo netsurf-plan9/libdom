@@ -1,26 +1,61 @@
-testutils_files := testutils/comparators.c;testutils/list.c;testutils/domasserts.c
+testutils_files := testutils/comparators.c;testutils/list.c;testutils/domtsasserts.c
 testutils_files := $(testutils_files);testutils/utils.c;testutils/foreach.c;testutils/load.c
 
-TESTCFLAGS := $(TESTCFLAGS) -I$(CURDIR) -I$(CURDIR)/testutils
+TESTCFLAGS := $(TESTCFLAGS) -I$(DIR) -I$(DIR)testutils -Ibindings/xml -Ibindings/hubbub -Wno-unused
 
-DIR_TEST_ITEMS := $(testutils_files)
+ALL_XML_TESTS :=
 
-define add_xml_test
-  ifeq ($$(WANT_TEST),yes)
-	$(DIR)xml/c/$1.c: $(DIR)xml/tests/$1.xml
-	$$(Q)$$(XSLTPROC) $$(XSLTPROCFLAGS) -o $$@ \
-		$(DIR)transform/test-to-c.xsl $$<
+# 1: Path to XML file
+# 2: Fragment C file name
+# 3: DTD file
+# 4: Test name
+define do_xml_test
 
-	DIR_TEST_ITEMS := $$(DIR_TEST_ITEMS) $1:xml/c/$1.c;$$(testlib_files)
-  endif
 
-  DISTCLEAN_ITEMS := $$(DISTCLEAN_ITEMS) $(DIR)xml/c/$1.c
+ifeq ($$(WANT_TEST),yes)
+
+$(DIR)$2: $(DIR)testcases/tests/$1 $(DIR)transform.pl  $(DIR)DOMTSHandler.pm
+	$(VQ)$(ECHO) "   XFORM: $1"
+	$(Q)$(PERL) $(DIR)transform.pl $(DIR)$3 $(DIR)testcases/tests/$(dir $1)/files $(DIR)testcases/tests/$1 > $(DIR)$2
+
+DIR_TEST_ITEMS := $$(DIR_TEST_ITEMS) $4:$2;$(testutils_files)
+
+endif
+
+DISTCLEAN_ITEMS := $$(DISTCLEAN_ITEMS) $(DIR)$2
+
+ALL_XML_TESTS := $$(ALL_XML_TESTS) $4
+
+
 
 endef
 
-# Add DOMTS tests to the list of items to build
-$(eval $(foreach XML,$(wildcard $(DIR)xml/tests/*.xml), \
-	$(call add_xml_test,$(basename $(notdir $(XML))))))
+# 1: suite base
+# 2: dtd for suite
+define do_xml_suite
+
+$(foreach XML,$(filter-out $1/metadata.xml,$(filter-out $1/alltests.xml,$(subst $(DIR)testcases/tests/,,$(wildcard $(DIR)testcases/tests/$1/*.xml)))),$(call do_xml_test,$(XML),$(subst /,_,$(XML:.xml=.c)),$2,$(subst /,_,$(XML:.xml=))))
+
+endef
+
+# 1: test name
+define write_index
+
+	$(Q)$(ECHO) "$1	$1" >> $@
+
+endef
+
+$(DIR)INDEX: test/Makefile
+	$(VQ)$(ECHO) "   INDEX: Making test index"
+	$(Q)$(ECHO) "#test	desc	dir" > $@
+	$(foreach XMLTEST,$(ALL_XML_TESTS),$(call write_index,$(XMLTEST)))
+
+TEST_PREREQS := $(TEST_PREREQS) $(DIR)INDEX
+
+# Include the level 1 core tests
+$(eval $(call do_xml_suite,level1/core,dom1-interfaces.xml))
+
+DISTCLEAN_ITEMS := $(DISTCLEAN_ITEMS) $(DIR)INDEX
 
 include build/makefiles/Makefile.subdir
 

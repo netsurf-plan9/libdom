@@ -10,9 +10,28 @@
 
 #include <stdbool.h>
 
-inline bool less(int excepted, int actual);
-inline bool less_or_equals(int excepted, int actual);
-inline bool greater(int excepted, int actual);
-inline bool greater_or_equals(int excepted, int actual);
+/**
+ * Just simple functions which meet the needs of DOMTS conditions
+ */
+
+static inline bool less(int excepted, int actual)
+{
+	return actual < excepted;
+}
+
+static inline bool less_or_equals(int excepted, int actual)
+{
+	return actual <= excepted;
+}
+
+static inline bool greater(int excepted, int actual)
+{
+	return actual > excepted;
+}
+
+static inline bool greater_or_equals(int excepted, int actual)
+{
+	return actual >= excepted;
+}
 
 #endif

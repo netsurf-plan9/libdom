@@ -42,57 +42,57 @@ bool is_null(void *arg)
 	return arg == NULL;
 }
 
-bool is_same(void *excepted, void *actual)
+bool is_same(void *expected, void *actual)
 {
-	return excepted == actual;
+	return expected == actual;
 }
 
-bool is_same_int(int excepted, int actual)
+bool is_same_int(int expected, int actual)
 {
-	return excepted == actual;
+	return expected == actual;
 }
 
-bool is_same_unsigned_long(unsigned long excepted, unsigned long actual)
+bool is_same_unsigned_long(unsigned long expected, unsigned long actual)
 {
-	return excepted == actual;
+	return expected == actual;
 }
 
-bool is_equals_int(int excepted, int actual, bool dummy)
+bool is_equals_int(int expected, int actual, bool dummy)
 {
 	UNUSED(dummy);
 	
-	return excepted == actual;
+	return expected == actual;
 }
 
-bool is_equals_bool(bool excepted, bool actual, bool dummy)
+bool is_equals_bool(bool expected, bool actual, bool dummy)
 {
 	UNUSED(dummy);
 
-	return excepted == actual;
+	return expected == actual;
 }
 
-bool is_equals_unsigned_long(unsigned long excepted, unsigned long actual, bool dummy)
+bool is_equals_unsigned_long(unsigned long expected, unsigned long actual, bool dummy)
 {
 	UNUSED(dummy);
 
-	return excepted == actual;
+	return expected == actual;
 }
 
 /**
  * Test whether two string are equal
  * 
- * \param excepted	The excepted string
+ * \param expected	The expected string
  * \param actual	The actual string
  * \param ignoreCase	Whether to ignore letter case
  */
-bool is_equals_string(const char *excepted, dom_string *actual, 
+bool is_equals_string(const char *expected, dom_string *actual, 
 		bool ignoreCase)
 {
 	dom_string *exp;
 	dom_exception err;
 	bool ret;
 
-	err = dom_string_create(myrealloc, NULL, excepted, strlen(excepted),
+	err = dom_string_create(myrealloc, NULL, (const uint8_t *)expected, strlen(expected),
 			&exp);
 	if (err != DOM_NO_ERR)
 		return false;
@@ -107,13 +107,13 @@ bool is_equals_string(const char *excepted, dom_string *actual,
 }
 
 /* Compare whether two dom_string are equal */
-bool is_equals_domstring(dom_string *excepted, dom_string *actual, 
+bool is_equals_domstring(dom_string *expected, dom_string *actual, 
 		bool ignoreCase)
 {
 	if (ignoreCase == true)
-		return dom_string_icmp(excepted, actual) == 0;
+		return dom_string_icmp(expected, actual) == 0;
 	else
-		return dom_string_cmp(excepted, actual) == 0;
+		return dom_string_cmp(expected, actual) == 0;
 }
 
 /* The param actual should always contain dom_sting and expectd should
@@ -142,9 +142,7 @@ bool is_equals_list(list *expected, list *actual, bool ignoreCase)
 
 	assert(cmp != NULL);
 
-	bool ret = list_contains_all(expected, actual, cmp);
-	if (ret)
-		return list_contains_all(actual, expected, rcmp);
+	return list_contains_all(expected, actual, cmp) && list_contains_all(actual, expected, rcmp);
 }
 
 
@@ -152,12 +150,15 @@ bool is_equals_list(list *expected, list *actual, bool ignoreCase)
 bool is_instanceof(const char *type, dom_node *node)
 {
 	assert("There is no instanceOf in the test-suite" == NULL);
-
+        
+        (void)type;
+        (void)node;
+        
 	return false;
 }
 
 
-bool is_size_domnamednodemap(int size, dom_namednodemap *map)
+bool is_size_domnamednodemap(unsigned long size, dom_namednodemap *map)
 {
 	unsigned long len;
 	dom_exception err;
@@ -171,7 +172,7 @@ bool is_size_domnamednodemap(int size, dom_namednodemap *map)
 	return size == len;
 }
 
-bool is_size_domnodelist(int size, dom_nodelist *list)
+bool is_size_domnodelist(unsigned long size, dom_nodelist *list)
 {
 	unsigned long len;
 	dom_exception err;
@@ -185,7 +186,7 @@ bool is_size_domnodelist(int size, dom_nodelist *list)
 	return size == len;
 }
 
-bool is_size_list(int size, list *list)
+bool is_size_list(unsigned long size, list *list)
 {
 	return size == list->size;
 }
@@ -224,12 +225,12 @@ bool has_feature(char *feature, char *version)
 	bool ret;
 	dom_string *df, *dv;
 
-	err = dom_string_create(myrealloc, NULL, feature, 
+	err = dom_string_create(myrealloc, NULL, (const uint8_t *)feature, 
 			feature == NULL ? 0 : strlen(feature), &df);
 	if (err != DOM_NO_ERR)
 		return false;
 	
-	err = dom_string_create(myrealloc, NULL, version, 
+	err = dom_string_create(myrealloc, NULL, (const uint8_t *)version, 
 			version == NULL ? 0 : strlen(version), &dv);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(df);

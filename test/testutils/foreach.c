@@ -18,16 +18,19 @@
 
 void foreach_initialise_domnodelist(dom_nodelist *list, unsigned int *iterator)
 {
+        (void)list;
 	*iterator = 0;
 }
 
 void foreach_initialise_list(list *list, unsigned int *iterator)
 {
+        (void)list;
 	*iterator = 0;
 }
 
 void foreach_initialise_domnamednodemap(dom_namednodemap *map, unsigned int *iterator)
 {
+        (void)map;
 	*iterator = 0;
 }
 

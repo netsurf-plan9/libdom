@@ -45,9 +45,9 @@ bool is_equals_list(list *expected, list *actual, bool ignoreCase);
 
 bool is_instanceof(const char *type, dom_node *node);
 
-bool is_size_domnamednodemap(int size, dom_namednodemap *map);
-bool is_size_domnodelist(int size, dom_nodelist *list);
-bool is_size_list(int size, list *list);
+bool is_size_domnamednodemap(unsigned long size, dom_namednodemap *map);
+bool is_size_domnodelist(unsigned long size, dom_nodelist *list);
+bool is_size_list(unsigned long size, list *list);
 
 bool is_uri_equals(char *scheme, char *path, char *host, 
 		char *file, char *query, char *fragment, 

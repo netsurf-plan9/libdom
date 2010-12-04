@@ -9,13 +9,15 @@
 use warnings;
 use strict;
 
+use lib qw(test);
+
 use XML::Parser::PerlSAX;
 use DOMTSHandler;
 
-if ($#ARGV ne 1) {
-	die "Usage: perl transform.pl dtd-file testcase-file";
+if ($#ARGV ne 2) {
+	die "Usage: perl transform.pl dtd-file testcase basedir testcase-file";
 }
 
-my $handler = DOMTSHandler->new($ARGV[0]);
+my $handler = DOMTSHandler->new($ARGV[0], $ARGV[1]);
 my $parser = XML::Parser::PerlSAX->new(Handler => $handler);
-$parser->parse(Source => {SystemId => "$ARGV[1]"});
+$parser->parse(Source => {SystemId => "$ARGV[2]"});

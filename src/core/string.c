@@ -903,8 +903,6 @@ dom_exception _dom_exception_from_lwc_error(lwc_error err)
 			return DOM_NO_MEM_ERR;
 		case lwc_error_range:
 			return DOM_INDEX_SIZE_ERR;
-		case lwc_error_initialised:
-			return DOM_NO_ERR;
 	}
 	assert ("Unknow lwc_error, can't convert to dom_exception");
 	/* Suppress compile errors */

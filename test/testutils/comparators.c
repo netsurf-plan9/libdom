@@ -21,13 +21,13 @@ int int_comparator(const void* a, const void* b) {
  * one is a dom_string, return zero if equal */
 int str_cmp(const void *a, const void *b)
 {
-	const char *excepted = (const char *) a;
+	const uint8_t *expected = (const uint8_t *) a;
 	dom_string *actual = (dom_string *) b;
 	dom_string *exp;
 	dom_exception err;
 	bool ret;
 
-	err = dom_string_create(myrealloc, NULL, excepted, strlen(excepted),
+	err = dom_string_create(myrealloc, NULL, expected, strlen((const char *)expected),
 			&exp);
 	if (err != DOM_NO_ERR)
 		return false;
@@ -52,13 +52,13 @@ int str_cmp_r(const void *a, const void *b)
 /* Similar with str_cmp but ignore the case of letters */
 int str_icmp(const void *a, const void *b)
 {
-	const char *excepted = (const char *) a;
+	const uint8_t *expected = (const uint8_t *) a;
 	dom_string *actual = (dom_string *) b;
 	dom_string *exp;
 	dom_exception err;
 	bool ret;
 
-	err = dom_string_create(myrealloc, NULL, excepted, strlen(excepted),
+	err = dom_string_create(myrealloc, NULL, expected, strlen((const char *)expected),
 			&exp);
 	if (err != DOM_NO_ERR)
 		return false;
