@@ -1,7 +1,7 @@
 testutils_files := testutils/comparators.c;testutils/list.c;testutils/domtsasserts.c
 testutils_files := $(testutils_files);testutils/utils.c;testutils/foreach.c;testutils/load.c
 
-TESTCFLAGS := $(TESTCFLAGS) -I$(DIR) -I$(DIR)testutils -Ibindings/xml -Ibindings/hubbub -Wno-unused
+TESTCFLAGS := $(TESTCFLAGS) -I$(DIR) -I$(DIR)testutils -Ibindings/xml -Ibindings/hubbub -Wno-unused -fno-strict-aliasing
 
 ALL_XML_TESTS :=
 
