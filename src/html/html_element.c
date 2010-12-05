@@ -81,7 +81,8 @@ dom_exception _dom_html_element_get_id(dom_html_element *element,
         if (ret != DOM_NO_ERR)
                 return ret;
         
-        ret = dom_document_create_string(doc, "id", SLEN("id"), &idstr);
+        ret = _dom_document_create_string(doc, (const uint8_t *) "id", 
+			SLEN("id"), &idstr);
         if (ret != DOM_NO_ERR)
                 return ret;
         
@@ -103,7 +104,8 @@ dom_exception _dom_html_element_set_id(dom_html_element *element,
         if (ret != DOM_NO_ERR)
                 return ret;
         
-        ret = dom_document_create_string(doc, "id", SLEN("id"), &idstr);
+        ret = _dom_document_create_string(doc, (const uint8_t *) "id",
+			SLEN("id"), &idstr);
         if (ret != DOM_NO_ERR)
                 return ret;
         

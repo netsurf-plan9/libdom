@@ -19,7 +19,7 @@ typedef struct dom_html_element_vtable {
                                                  struct dom_string **id);
         dom_exception (*dom_html_element_set_id)(struct dom_html_element *element,
                                                  struct dom_string *id);
-};
+} dom_html_element_vtable;
 
 static inline dom_exception dom_html_element_get_id(struct dom_html_element *element,
                                                     struct dom_string **id)
