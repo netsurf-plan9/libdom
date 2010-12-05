@@ -68,6 +68,53 @@ dom_exception _dom_html_element_copy(struct dom_node_internal *new,
 }
 
 /*-----------------------------------------------------------------------*/
+/* API functions */
+
+dom_exception _dom_html_element_get_id(dom_html_element *element,
+                                       struct dom_string **id)
+{
+        dom_exception ret;
+        dom_document *doc;
+        dom_string *idstr;
+        
+        ret = dom_node_get_owner_document(element, &doc);
+        if (ret != DOM_NO_ERR)
+                return ret;
+        
+        ret = dom_document_create_string(doc, "id", SLEN("id"), &idstr);
+        if (ret != DOM_NO_ERR)
+                return ret;
+        
+        ret = dom_element_get_attribute(element, idstr, id);
+        
+        dom_string_unref(idstr);
+        
+        return ret;
+}
+
+dom_exception _dom_html_element_set_id(dom_html_element *element,
+                                       struct dom_string *id)
+{
+        dom_exception ret;
+        dom_document *doc;
+        dom_string *idstr;
+        
+        ret = dom_node_get_owner_document(element, &doc);
+        if (ret != DOM_NO_ERR)
+                return ret;
+        
+        ret = dom_document_create_string(doc, "id", SLEN("id"), &idstr);
+        if (ret != DOM_NO_ERR)
+                return ret;
+        
+        ret = dom_element_set_attribute(element, idstr, id);
+        
+        dom_string_unref(idstr);
+        
+        return ret;
+}
+
+/*-----------------------------------------------------------------------*/
 /* Common functions */
 
 /**

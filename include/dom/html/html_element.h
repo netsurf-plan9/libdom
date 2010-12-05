@@ -8,19 +8,36 @@
 #ifndef dom_html_element_h_
 #define dom_html_element_h_
 
+#include <dom/core/element.h>
+
 typedef struct dom_html_element dom_html_element;
 
-/**
- * Note: DOM HTML spec is used to provide a more convenient way to
- * access Element's attribute through property. But, for implementation like
- * C, such propery provide no more convenience than Element.get(set)Attribute
- * function, so we ignore all the propety whose type is DOMString in this 
- * implementation, clients can always access these property through 
- * get(set)Attribute methods. 
- *
- * For the readonly property, an readonly Attr node should be created, so once
- * these Attr nodes are created, they can not be changed any more.
- */
+typedef struct dom_html_element_vtable {
+        struct dom_element_vtable base;
+        
+        dom_exception (*dom_html_element_get_id)(struct dom_html_element *element,
+                                                 struct dom_string **id);
+        dom_exception (*dom_html_element_set_id)(struct dom_html_element *element,
+                                                 struct dom_string *id);
+};
+
+static inline dom_exception dom_html_element_get_id(struct dom_html_element *element,
+                                                    struct dom_string **id)
+{
+        return ((dom_html_element_vtable *) ((dom_node *) element)->vtable)->
+                dom_html_element_get_id(element, id);
+}
+#define dom_html_element_get_id(e, id) dom_html_element_get_id( \
+		(dom_html_element *) (e), (struct dom_string **) (id))
+
+static inline dom_exception dom_html_element_set_id(struct dom_html_element *element,
+                                                    struct dom_string *id)
+{
+        return ((dom_html_element_vtable *) ((dom_node *) element)->vtable)->
+                dom_html_element_set_id(element, id);
+}
+#define dom_html_element_set_id(e, id) dom_html_element_set_id( \
+		(dom_html_element *) (e), (struct dom_string *) (id))
 
 #endif
 

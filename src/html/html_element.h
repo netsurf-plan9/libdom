@@ -17,9 +17,6 @@ struct dom_html_form_element;
 /**
  * The dom_html_element class
  *
- * Note: For now, there is no new members and methods in this class,
- * but in future, we may add common abstracted functions from child class
- * to here.
  */
 struct dom_html_element {
 	struct dom_element base;
@@ -44,6 +41,12 @@ dom_exception _dom_html_element_alloc(struct dom_document *doc,
 dom_exception _dom_html_element_copy(struct dom_node_internal *new,
 		struct dom_node_internal *old);
 
+/* The API functions */
+dom_exception _dom_html_element_get_id(dom_html_element *element,
+                                       struct dom_string **id);
+dom_exception _dom_html_element_set_id(dom_html_element *element,
+                                       struct dom_string *id);
+
 /* Some common functions used by all child classes */
 dom_exception dom_html_element_get_bool_property(dom_html_element *ele,
 		const char *name, unsigned long len, bool *has);
@@ -53,6 +56,8 @@ void _dom_html_element_get_form(dom_html_element *ele,
 		struct dom_html_form_element **form);
 void _dom_html_element_associate_form(dom_html_element *ele,
 		struct dom_html_form_element *form);
+
+
 
 #endif
 
