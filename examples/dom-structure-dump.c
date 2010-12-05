@@ -139,6 +139,67 @@ dom_document *create_doc_dom_from_file(char *file)
 
 
 /**
+ * Dump class attribute/value for an element node
+ *
+ * \param node  The element node to dump class for
+ * \return  true on success, or false on error
+ */
+bool dump_dom_element_class(dom_node_internal *node)
+{
+	dom_exception exc;
+	lwc_error err;
+	dom_string *class = NULL;
+	dom_string *classvalue = NULL;
+	lwc_string *lwcstr = NULL;
+	dom_node_type type;
+	int i;
+	const char *string;
+	size_t length;
+
+	/* Should only have element nodes here */
+	exc = dom_node_get_node_type(node, &type);
+	if (exc != DOM_NO_ERR) {
+		printf("Exception raised for node_get_node_type\n");
+		return false;
+	}
+	assert(type == DOM_ELEMENT_NODE);
+
+	/* Create a dom_string constaining "class". */
+	exc = dom_string_create(test_realloc, NULL, "class", 5, &class);
+	if (exc != DOM_NO_ERR) {
+		printf("Exception raised for dom_string_create\n");
+		return false;
+	}
+
+	/* Get class attribute's value */
+	exc = dom_element_get_attribute(node, class, &classvalue);
+	if (exc != DOM_NO_ERR) {
+		printf("Exception raised for element_get_attribute\n");
+		return false;
+	} else if (classvalue == NULL) {
+		/* Element has no class attribute */
+		return true;
+	}
+
+	/* Get attributes's lwc_string */
+	exc = dom_string_get_intern(classvalue, &lwcstr);
+	if (exc != DOM_NO_ERR) {
+		printf("Exception raised for string_get_intern\n");
+		return false;
+	}
+
+	/* Get string data and print class info */
+	string = lwc_string_data(lwcstr);
+	length = lwc_string_length(lwcstr);
+	printf(" class=\"%*s\"", length, string);
+
+	/* Print the element's class, if it has one */
+	dump_dom_element_class(node);
+	return true;
+}
+
+
+/**
  * Print a line in a DOM structure dump for an element
  *
  * \param node   The node to dump
@@ -196,7 +257,10 @@ bool dump_dom_element(dom_node_internal *node, int depth)
 	length = lwc_string_length(lwcstr);
 	printf("%*s", length, string);
 
-	/* TODO: Print the element's class, if it has one */
+	/* PENDING FIX: Print the element's class, if it has one */
+//	if (dump_dom_element_class(node) == false) {
+//		return false;
+//	}
 
 	printf("\n");
 	return true;
