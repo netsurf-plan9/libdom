@@ -17,9 +17,6 @@
 /* Base library headers */
 #include <dom/functypes.h>
 
-/* DOM bootstrap headers */
-#include <dom/bootstrap/implregistry.h>
-
 /* DOM core headers */
 #include <dom/core/attr.h>
 #include <dom/core/characterdata.h>
@@ -28,7 +25,6 @@
 #include <dom/core/element.h>
 #include <dom/core/exceptions.h>
 #include <dom/core/implementation.h>
-#include <dom/core/impllist.h>
 #include <dom/core/namednodemap.h>
 #include <dom/core/node.h>
 #include <dom/core/cdatasection.h>
@@ -57,5 +53,8 @@ typedef enum dom_namespace {
 } dom_namespace;
 
 extern struct dom_string *dom_namespaces[DOM_NAMESPACE_COUNT];
+
+dom_exception dom_initialise(dom_alloc alloc, void *pw);
+dom_exception dom_finalise(void);
 
 #endif

@@ -7,11 +7,9 @@
 
 #include <stdbool.h>
 
-#include <dom/bootstrap/init_fini.h>
-#include <dom/bootstrap/implregistry.h>
+#include <dom/dom.h>
 
 #include "utils/namespace.h"
-#include "bootstrap/implementation.h"
 
 static bool __initialised;
 
@@ -38,16 +36,6 @@ dom_exception dom_initialise(dom_alloc alloc, void *pw)
 		return err;
 	}
 
-	err = dom_implregistry_initialise(alloc, pw);
-	if (err != DOM_NO_ERR) {
-		return err;
-	}
-
-	err = _dom_implementation_initialise(alloc, pw);
-	if (err != DOM_NO_ERR) {
-		return err;
-	}
-	
 	__initialised = true;
 
 	return DOM_NO_ERR;
@@ -68,8 +56,6 @@ dom_exception dom_finalise(void)
 	if (__initialised == false) {
 		return DOM_NO_ERR;
 	}
-
-	_dom_implementation_finalise();
 
 	err = _dom_namespace_finalise();
 	if (err != DOM_NO_ERR) {

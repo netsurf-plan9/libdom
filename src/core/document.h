@@ -13,6 +13,7 @@
 
 #include <dom/core/node.h>
 #include <dom/core/document.h>
+#include <dom/core/implementation.h>
 
 #include "core/string.h"
 #include "core/node.h"
@@ -49,8 +50,6 @@ struct dom_doc_nl;
 struct dom_document {
 	struct dom_node_internal base;		/**< Base node */
 
-	struct dom_implementation *impl;	/**< Owning implementation */
-
 	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
 
 	struct dom_string *uri;		/**< The uri of this document */
@@ -68,14 +67,13 @@ struct dom_document {
 };
 
 /* Create a DOM document */
-dom_exception _dom_document_create(struct dom_implementation *impl,
-		dom_alloc alloc, void *pw,
+dom_exception _dom_document_create(dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc);
 
 /* Initialise the document */
 dom_exception _dom_document_initialise(struct dom_document *doc, 
-		struct dom_implementation *impl, dom_alloc alloc, void *pw, 
+		dom_alloc alloc, void *pw, 
 		dom_events_default_action_fetcher daf);
 
 /* Finalise the document */
@@ -100,7 +98,7 @@ dom_exception _dom_document_create_string_from_lwcstring(
 dom_exception _dom_document_get_doctype(struct dom_document *doc,
 		struct dom_document_type **result);
 dom_exception _dom_document_get_implementation(struct dom_document *doc,
-		struct dom_implementation **result);
+		dom_implementation **result);
 dom_exception _dom_document_get_document_element(struct dom_document *doc,
 		struct dom_element **result);
 dom_exception _dom_document_create_element(struct dom_document *doc,

@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 #include <dom/core/exceptions.h>
+#include <dom/core/implementation.h>
 #include <dom/core/node.h>
 
 struct dom_attr;
@@ -25,7 +26,6 @@ struct dom_document_fragment;
 struct dom_document_type;
 struct dom_element;
 struct dom_entity_reference;
-struct dom_implementation;
 struct dom_node;
 struct dom_nodelist;
 struct dom_processing_instruction;
@@ -43,7 +43,7 @@ typedef struct dom_document_vtable {
 			struct dom_document_type **result);
 	dom_exception (*dom_document_get_implementation)(
 			struct dom_document *doc, 
-			struct dom_implementation **result);
+			dom_implementation **result);
 	dom_exception (*dom_document_get_document_element)(
 			struct dom_document *doc, struct dom_element **result);
 	dom_exception (*dom_document_create_element)(struct dom_document *doc,
@@ -127,13 +127,13 @@ static inline dom_exception dom_document_get_doctype(struct dom_document *doc,
 		(dom_document *) (d), (struct dom_document_type **) (r))
 
 static inline dom_exception dom_document_get_implementation(
-		struct dom_document *doc, struct dom_implementation **result)
+		struct dom_document *doc, dom_implementation **result)
 {
 	return ((dom_document_vtable *) ((dom_node *) doc)->vtable)->
 			dom_document_get_implementation(doc, result);
 }
 #define dom_document_get_implementation(d, r) dom_document_get_implementation(\
-		(dom_document *) (d), (struct dom_implementation **) (r))
+		(dom_document *) (d), (dom_implementation **) (r))
 
 static inline dom_exception dom_document_get_document_element(
 		struct dom_document *doc, struct dom_element **result)

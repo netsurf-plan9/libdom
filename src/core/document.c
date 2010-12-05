@@ -11,7 +11,6 @@
 #include <libwapcaplet/libwapcaplet.h>
 
 #include <dom/functypes.h>
-#include <dom/bootstrap/implpriv.h>
 #include <dom/core/attr.h>
 #include <dom/core/element.h>
 #include <dom/core/document.h>
@@ -71,7 +70,6 @@ static dom_exception dom_document_dup_node(dom_document *doc,
 /**
  * Create a Document
  *
- * \param impl   The DOM implementation owning the document
  * \param alloc  Memory (de)allocation function
  * \param pw     Pointer to client-specific private data
  * \param doc    Pointer to location to receive created document
@@ -83,8 +81,7 @@ static dom_exception dom_document_dup_node(dom_document *doc,
  *
  * The returned document will already be referenced.
  */
-dom_exception _dom_document_create(struct dom_implementation *impl,
-		dom_alloc alloc, void *pw,
+dom_exception _dom_document_create(dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc)
 {
@@ -105,7 +102,7 @@ dom_exception _dom_document_create(struct dom_implementation *impl,
 	 * reaches zero. Documents own themselves (this simplifies the 
 	 * rest of the code, as it doesn't need to special case Documents)
 	 */
-	err = _dom_document_initialise(d, impl, alloc, pw, daf);
+	err = _dom_document_initialise(d, alloc, pw, daf);
 	if (err != DOM_NO_ERR) {
 		/* Clean up document */
 		alloc(d, 0, pw);
@@ -119,22 +116,18 @@ dom_exception _dom_document_create(struct dom_implementation *impl,
 
 /* Initialise the document */
 dom_exception _dom_document_initialise(struct dom_document *doc, 
-		struct dom_implementation *impl, dom_alloc alloc, void *pw, 
+		dom_alloc alloc, void *pw, 
 		dom_events_default_action_fetcher daf)
 {
-	assert(alloc != NULL);
-	assert(impl != NULL);
-
 	dom_exception err;
 	lwc_string *name;
 	lwc_error lerr;
-	
+
+	assert(alloc != NULL);
+
 	lerr = lwc_intern_string("#document", SLEN("#document"), &name);
 	if (lerr != lwc_error_ok)
 		return _dom_exception_from_lwc_error(lerr);
-
-	dom_implementation_ref(impl);
-	doc->impl = impl;
 
 	doc->nodelists = NULL;
 
@@ -173,9 +166,6 @@ bool _dom_document_finalise(struct dom_document *doc)
 
 	/* Ok, the document tree is empty, as is the list of nodes pending
 	 * deletion. Therefore, it is safe to destroy the document. */
-	if (doc->impl != NULL)
-		dom_implementation_unref(doc->impl);
-	doc->impl = NULL;
 
 	/* This is paranoia -- if there are any remaining nodelists,
 	 * then the document's reference count will be
@@ -240,12 +230,11 @@ dom_exception _dom_document_get_doctype(struct dom_document *doc,
  * it has finished with it.
  */
 dom_exception _dom_document_get_implementation(struct dom_document *doc,
-		struct dom_implementation **result)
+		dom_implementation **result)
 {
-	if (doc->impl != NULL)
-		dom_implementation_ref(doc->impl);
+	UNUSED(doc);
 
-	*result = doc->impl;
+	*result = (dom_implementation *) "libdom";
 
 	return DOM_NO_ERR;
 }

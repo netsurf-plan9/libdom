@@ -38,8 +38,6 @@ struct dom_hubbub_parser {
 
 	bool complete;			/**< Indicate stream completion */
 
-	struct dom_implementation *impl;/**< DOM implementation */
-
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
 
@@ -118,7 +116,6 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 	hubbub_parser_optparams params;
 	hubbub_error error;
 	dom_exception err;
-	struct dom_string *features;
 
 	parser = alloc(NULL, sizeof(dom_hubbub_parser), pw);
 	if (parser == NULL) {
@@ -132,7 +129,6 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 	parser->encoding_source = enc != NULL ? ENCODING_SOURCE_HEADER
 					      : ENCODING_SOURCE_DETECTED;
 	parser->complete = false;
-	parser->impl = NULL;
 
 	parser->alloc = alloc;
 	parser->pw = pw;
@@ -146,34 +142,10 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 		return NULL;
 	}
 
-	/* Create string representation of the features we want */
-	err = dom_string_create(alloc, pw,
-			(const uint8_t *) "HTML", SLEN("HTML"), &features);
-	if (err != DOM_NO_ERR) {
-		hubbub_parser_destroy(parser->parser);
-		alloc(parser, 0, pw);
-		msg(DOM_MSG_CRITICAL, mctx, "No memory for feature string");
-		return NULL;
-	}
-
- 	/* Now, try to get an appropriate implementation from the registry */
-	err = dom_implregistry_get_dom_implementation(features,
-			&parser->impl);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(features);
-		hubbub_parser_destroy(parser->parser);
-		alloc(parser, 0, pw);
-		msg(DOM_MSG_ERROR, mctx, "No suitable DOMImplementation");
-		return NULL;
-	}
-
-	/* No longer need the feature string */
-	dom_string_unref(features);
-
 	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
 	 * we should pass the real function when we integrate libDOM with
 	 * Netsurf */
-	err = dom_implementation_create_document(parser->impl, NULL, NULL, NULL,
+	err = dom_implementation_create_document(NULL, NULL, NULL,
 			alloc, pw, NULL, &parser->doc);
 	if (err != DOM_NO_ERR) {
 		hubbub_parser_destroy(parser->parser);
@@ -204,7 +176,6 @@ dom_hubbub_parser *dom_hubbub_parser_create(
  */
 void dom_hubbub_parser_destroy(dom_hubbub_parser *parser)
 {
-	dom_implementation_unref(parser->impl);
 	hubbub_parser_destroy(parser->parser);
 	parser->parser = NULL;
 
@@ -386,7 +357,7 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 		goto clean2;
 	}
 
-	err = dom_implementation_create_document_type(dom_parser->impl, qname,
+	err = dom_implementation_create_document_type(qname,
 			public_id, system_id, dom_parser->alloc, 
 			dom_parser->pw, &dtype);
 	if (err != DOM_NO_ERR) {

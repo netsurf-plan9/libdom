@@ -1295,15 +1295,11 @@ dom_exception _dom_node_is_supported(dom_node_internal *node,
 		struct dom_string *feature, struct dom_string *version,
 		bool *result)
 {
-	dom_document *doc;
-	dom_implementation *impl; 
 	bool has;
 
-	doc = node->owner;
-	assert(doc != NULL);
-	dom_document_get_implementation(doc, &impl);
-	assert(impl != NULL);
-	dom_implementation_has_feature(impl, feature, version, &has);
+	UNUSED(node);
+
+	dom_implementation_has_feature(feature, version, &has);
 
 	*result = has;
 
@@ -1792,15 +1788,11 @@ dom_exception _dom_node_get_feature(dom_node_internal *node,
 		struct dom_string *feature, struct dom_string *version,
 		void **result)
 {
-	dom_document *doc;
-	dom_implementation *impl; 
 	bool has;
 
-	doc = node->owner;
-	assert(doc != NULL);
-	dom_document_get_implementation(doc, &impl);
-	assert(impl != NULL);
-	dom_implementation_has_feature(impl, feature, version, &has);
+	UNUSED(node);
+
+	dom_implementation_has_feature(feature, version, &has);
 
 	if (has) {
 		*result = node;

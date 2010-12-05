@@ -362,7 +362,6 @@ sub generate_main {
 
 #include <dom/dom.h>
 #include <dom/functypes.h>
-#include <dom/bootstrap/init_fini.h>
 
 #include <domts.h>
 

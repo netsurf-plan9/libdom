@@ -10,7 +10,6 @@
 
 struct dom_document_type;
 struct dom_resource_mgr;
-struct dom_implementation;
 
 /* Create a DOM document type */
 dom_exception _dom_document_type_create(struct dom_string *qname,
@@ -67,7 +66,5 @@ dom_exception _dom_dt_copy(struct dom_node_internal *new,
 /* Helper functions */
 void _dom_document_type_get_resource_mgr(
 		struct dom_document_type *dt, struct dom_resource_mgr *rm);
-struct dom_implementation *_dom_document_type_get_impl(
-		struct dom_document_type *dt);
 
 #endif

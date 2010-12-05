@@ -10,7 +10,6 @@
 #include <assert.h>
 
 #include <dom/core/document_type.h>
-#include <dom/bootstrap/implpriv.h>
 
 #include "core/string.h"
 #include "core/document_type.h"
@@ -24,8 +23,6 @@
  */
 struct dom_document_type {
 	struct dom_node_internal base;		/**< Base node */
-
-	struct dom_implementation *impl;	/**< Owning implementation */
 
 	struct dom_string *public_id;	/**< Doctype public ID */
 	struct dom_string *system_id;	/**< Doctype system ID */
@@ -377,17 +374,5 @@ void _dom_document_type_get_resource_mgr(
 {
 	rm->alloc = dt->res.alloc;
 	rm->pw = dt->res.pw;
-}
-
-/**
- * Get the implementation which created this dom_document_type
- *
- * \param dt  The document type object
- * \return the dom_implementation instance which creates this node.
- */
-struct dom_implementation *_dom_document_type_get_impl(
-		struct dom_document_type *dt)
-{
-	return dt->impl;
 }
 

@@ -13,7 +13,6 @@
 #include <libxml/SAX2.h>
 #include <libxml/xmlerror.h>
 
-#include <dom/bootstrap/implpriv.h>
 #include <dom/dom.h>
 
 #include <libwapcaplet/libwapcaplet.h>
@@ -97,8 +96,6 @@ struct dom_xml_parser {
 
 	struct dom_string *udkey;	/**< Key for DOM node user data */
 
-	struct dom_implementation *impl;/**< DOM implementation */
-
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
 
@@ -163,7 +160,6 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 		dom_alloc alloc, void *pw, dom_msg msg, void *mctx)
 {
 	dom_xml_parser *parser;
-	struct dom_string *features;
 	dom_exception err;
 	int ret;
 
@@ -204,32 +200,6 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 		return NULL;
 	}
 
-	/* Create a string representation of the features we want */
-	err = dom_string_create((dom_alloc) alloc, pw,
-			(const uint8_t *) "XML", SLEN("XML"), &features);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(parser->udkey);
-		xmlFreeParserCtxt(parser->xml_ctx);
-		alloc(parser, 0, pw);
-		msg(DOM_MSG_CRITICAL, mctx, "No memory for feature string");
-		return NULL;
-	}
-
-	/* Now, try to get an appropriate implementation from the registry */
-	err = dom_implregistry_get_dom_implementation(features,
-			&parser->impl);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(features);
-		dom_string_unref(parser->udkey);
-		xmlFreeParserCtxt(parser->xml_ctx);
-		alloc(parser, 0, pw);
-		msg(DOM_MSG_ERROR, mctx, "No suitable DOMImplementation");
-		return NULL;
-	}
-
-	/* No longer need the feature string */
-	dom_string_unref(features);
-
 	parser->alloc = alloc;
 	parser->pw = pw;
 
@@ -246,8 +216,6 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
  */
 void dom_xml_parser_destroy(dom_xml_parser *parser)
 {
-	dom_implementation_unref(parser->impl);
-
 	dom_string_unref(parser->udkey);
 
 	xmlFreeParserCtxt(parser->xml_ctx);
@@ -346,7 +314,7 @@ void xml_parser_start_document(void *ctx)
 	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
 	 * we should pass the real function when we integrate libDOM with
 	 * Netsurf */
-	err = dom_implementation_create_document(parser->impl,
+	err = dom_implementation_create_document(
 			/* namespace */ NULL,
 			/* qname */ NULL,
 			/* doctype */ NULL,
@@ -1235,7 +1203,7 @@ void xml_parser_add_document_type(dom_xml_parser *parser,
 	}
 
 	/* Create doctype */
-	err = dom_implementation_create_document_type(parser->impl,
+	err = dom_implementation_create_document_type(
 			qname, public_id, system_id, 
 			parser->alloc, parser->pw, &doctype);
 	if (err != DOM_NO_ERR) {

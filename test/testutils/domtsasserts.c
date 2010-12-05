@@ -14,8 +14,6 @@
 
 #include "domts.h"
 
-extern dom_implementation *doc_impl;
-
 void __assert2(const char *expr, const char *function,
 		const char *file, int line)
 {
@@ -237,7 +235,7 @@ bool has_feature(char *feature, char *version)
 		return false;
 	}
 
-	err = dom_implementation_has_feature(doc_impl, df, dv, &ret);
+	err = dom_implementation_has_feature(df, dv, &ret);
 	/* Here, when we come with exception, we should return false,
 	 * TODO: this need to be improved, but I can't figure out how */
 	if (err != DOM_NO_ERR) {
