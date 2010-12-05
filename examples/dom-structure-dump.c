@@ -188,6 +188,9 @@ bool dump_dom_element_class(dom_node_internal *node)
 		return false;
 	}
 
+	/* Finished with the classvalue dom_string */
+	dom_string_unref(classvalue);
+
 	/* Get string data and print class info */
 	string = lwc_string_data(lwcstr);
 	length = lwc_string_length(lwcstr);
@@ -243,6 +246,9 @@ bool dump_dom_element(dom_node_internal *node, int depth)
 		printf("Exception raised for string_get_intern\n");
 		return false;
 	}
+
+	/* Finished with the node_name dom_string */
+	dom_string_unref(node_name);
 
 	/* Print ASCII tree structure for current node */
 	if (depth > 0) {
