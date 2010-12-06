@@ -315,6 +315,7 @@ void xml_parser_start_document(void *ctx)
 	 * we should pass the real function when we integrate libDOM with
 	 * Netsurf */
 	err = dom_implementation_create_document(
+			DOM_IMPLEMENTATION_XML,
 			/* namespace */ NULL,
 			/* qname */ NULL,
 			/* doctype */ NULL,

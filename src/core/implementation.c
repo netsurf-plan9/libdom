@@ -12,6 +12,8 @@
 #include "core/document.h"
 #include "core/document_type.h"
 
+#include "html/html_document.h"
+
 #include "utils/namespace.h"
 #include "utils/utils.h"
 #include "utils/validate.h"
@@ -138,6 +140,7 @@ dom_exception dom_implementation_create_document_type(
 /**
  * Create a document node
  *
+ * \param impl_type  The type of document object to create
  * \param namespace  The namespace URI of the document element
  * \param qname      The qualified name of the document element
  * \param doctype    The type of document to create
@@ -168,6 +171,7 @@ dom_exception dom_implementation_create_document_type(
  * finished with it.
  */
 dom_exception dom_implementation_create_document(
+		uint32_t impl_type,
 		const char *namespace, const char *qname,
 		struct dom_document_type *doctype,
 		dom_alloc alloc, void *pw,
@@ -213,8 +217,27 @@ dom_exception dom_implementation_create_document(
 		return DOM_WRONG_DOCUMENT_ERR;
 	}
 
-	/* Create document object */
-	err = _dom_document_create(alloc, pw, daf, &d);
+	/* Create document object that reflects the required APIs */
+	/** \todo Why do these have different APIs?
+	 *        Why is the html document constructor public? */
+	/** \todo Of course, none of the HTML stuff actually works, 
+	 * so enabling it results in total breakage of the testsuite */
+#ifdef WITH_NON_BROKEN_HTML_IMPLEMENTATION
+ 	if (impl_type == DOM_IMPLEMENTATION_HTML) {
+		dom_html_document *html_doc;
+
+		err = dom_html_document_create(alloc, pw, NULL, NULL, 
+				daf, NULL, DOM_HTML_PARSER, &html_doc);
+
+		d = (dom_document *) html_doc;
+	} else 
+#else
+	UNUSED(impl_type);
+#endif
+	{
+		err = _dom_document_create(alloc, pw, daf, &d);
+	}
+
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(qname_s);
 		dom_string_unref(namespace_s);

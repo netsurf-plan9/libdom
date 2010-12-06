@@ -43,7 +43,7 @@ typedef struct dom_ui_handler dom_ui_handler;
 /* Create a HTMLDocument */
 dom_exception dom_html_document_create(dom_alloc alloc, void *pw, dom_msg msg,
 		void *msg_pw,
-		dom_events_default_action_fetcher daf, dom_ui_handler ui,
+		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
 		dom_parser_type pt, dom_html_document **doc);
 
 /* Parse a data chunk into the HTMLDocument */

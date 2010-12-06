@@ -145,7 +145,8 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
 	 * we should pass the real function when we integrate libDOM with
 	 * Netsurf */
-	err = dom_implementation_create_document(NULL, NULL, NULL,
+	err = dom_implementation_create_document(DOM_IMPLEMENTATION_HTML,
+			NULL, NULL, NULL,
 			alloc, pw, NULL, &parser->doc);
 	if (err != DOM_NO_ERR) {
 		hubbub_parser_destroy(parser->parser);
