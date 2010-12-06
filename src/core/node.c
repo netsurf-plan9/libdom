@@ -1924,11 +1924,12 @@ dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
 {
 	dom_exception err;
 
-	new->vtable = old->vtable;
 	new->base.vtable = old->base.vtable;
+	new->vtable = old->vtable;
 
-	assert(old->owner != NULL);
-	assert(new->owner != NULL);
+	new->name = lwc_string_ref(old->name);
+
+	/* Value - see below */
 
 	new->type = old->type;
 	new->parent = NULL;
@@ -1936,20 +1937,31 @@ dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
 	new->last_child = NULL;
 	new->previous = NULL;
 	new->next = NULL;
-	new->owner = old->owner;
 
-	new->name = lwc_string_ref(old->name);
+	assert(old->owner != NULL);
+	assert(new->owner != NULL);
+	new->owner = old->owner;
 
 	if (old->namespace != NULL)
 		new->namespace = lwc_string_ref(old->namespace);
+	else
+		new->namespace = NULL;
 
 	if (old->prefix != NULL)
 		new->prefix = lwc_string_ref(old->prefix);
+	else
+		new->prefix = NULL;
 
-	dom_alloc al;
-	void *pw;
-	
+	new->user_data = NULL;
+	new->refcnt = 1;
+
+	list_init(&new->pending_list);
+
+	/* Value */	
 	if (old->value != NULL) {
+		dom_alloc al;
+		void *pw;
+
 		_dom_document_get_allocator(new->owner, &al, &pw);
 		dom_string *value;
 		err = dom_string_clone(al, pw, old->value, &value);
@@ -1961,10 +1973,6 @@ dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
 		new->value = NULL;
 	}
 	
-	new->user_data = NULL;
-	new->refcnt = 1;
-
-	list_init(&new->pending_list);
 	/* The new copyed node has no parent, 
 	 * so it should be put in the pending list. */
 	dom_node_mark_pending(new);

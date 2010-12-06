@@ -780,9 +780,18 @@ dom_exception _dom_attr_copy(struct dom_node_internal *new,
 	dom_attr *oa = (dom_attr *) old;
 
 	na->specified = oa->specified;
-	na->is_id = oa->is_id;
 
 	/* TODO: deal with dom_type_info, it get no definition ! */
+	na->schema_type_info = NULL;
+
+	na->is_id = oa->is_id;
+
+	na->type = oa->type;
+
+	na->value = oa->value;
+
+	/* TODO: is this correct? */
+	na->read_only = false;
 
 	return _dom_node_copy(new, old);
 }
