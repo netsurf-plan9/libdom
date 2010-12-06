@@ -36,11 +36,6 @@ Is := include/dom
 I := /include/dom
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/dom.h;$(Is)/functypes.h
 
-Is := include/dom/bootstrap
-I := /include/dom/bootstrap
-INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/implpriv.h;$(Is)/implregistry.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/init_fini.h
-
 Is := include/dom/core
 I := /include/dom/core
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/attr.h;$(Is)/characterdata.h
@@ -50,7 +45,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/doc_fragment.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/document.h;$(Is)/document_type.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/entity_ref.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/element.h;$(Is)/exceptions.h
-INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/implementation.h;$(Is)/impllist.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/implementation.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/namednodemap.h;$(Is)/node.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/nodelist.h;$(Is)/string.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/pi.h
