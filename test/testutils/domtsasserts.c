@@ -217,35 +217,24 @@ bool is_contenttype(const char *type)
 		return false;
 }
 
-bool has_feature(char *feature, char *version)
+bool has_feature(const char *feature, const char *version)
 {
 	dom_exception err;
 	bool ret;
-	dom_string *df, *dv;
 
-	err = dom_string_create(myrealloc, NULL, (const uint8_t *)feature, 
-			feature == NULL ? 0 : strlen(feature), &df);
-	if (err != DOM_NO_ERR)
-		return false;
-	
-	err = dom_string_create(myrealloc, NULL, (const uint8_t *)version, 
-			version == NULL ? 0 : strlen(version), &dv);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(df);
-		return false;
-	}
+	if (feature == NULL)
+		feature = "";
 
-	err = dom_implementation_has_feature(df, dv, &ret);
+	if (version == NULL)
+		version = "";
+
+	err = dom_implementation_has_feature(feature, version, &ret);
 	/* Here, when we come with exception, we should return false,
 	 * TODO: this need to be improved, but I can't figure out how */
 	if (err != DOM_NO_ERR) {
-		dom_string_unref(df);
-		dom_string_unref(dv);
 		return false;
 	}
 
-	dom_string_unref(df);
-	dom_string_unref(dv);
 	return ret;
 }
 

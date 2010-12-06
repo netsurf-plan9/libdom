@@ -1299,7 +1299,8 @@ dom_exception _dom_node_is_supported(dom_node_internal *node,
 
 	UNUSED(node);
 
-	dom_implementation_has_feature(feature, version, &has);
+	dom_implementation_has_feature(_dom_string_data(feature),
+			_dom_string_data(version), &has);
 
 	*result = has;
 
@@ -1792,7 +1793,8 @@ dom_exception _dom_node_get_feature(dom_node_internal *node,
 
 	UNUSED(node);
 
-	dom_implementation_has_feature(feature, version, &has);
+	dom_implementation_has_feature(_dom_string_data(feature), 
+			_dom_string_data(version), &has);
 
 	if (has) {
 		*result = node;

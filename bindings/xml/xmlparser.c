@@ -1163,62 +1163,29 @@ void xml_parser_add_document_type(dom_xml_parser *parser,
 {
 	xmlDtdPtr dtd = (xmlDtdPtr) child;
 	struct dom_document_type *doctype, *ins_doctype = NULL;
-	struct dom_string *qname, *public_id, *system_id;
+	const char *qname, *public_id, *system_id;
 	dom_exception err;
 
 	/* Create qname for doctype */
-	err = _dom_document_create_string(parser->doc, dtd->name,
-			strlen((const char *) dtd->name), &qname);
-	if (err != DOM_NO_ERR) {
-		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
-				"No memory for doctype name");
-		return;
-	}
+	qname = (const char *) dtd->name;
 
 	/* Create public ID for doctype */
-	err = _dom_document_create_string(parser->doc,
-			dtd->ExternalID,
-			(dtd->ExternalID == NULL) ? 0
-				: strlen((const char *) dtd->ExternalID),
-			&public_id);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(qname);
-		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
-				"No memory for doctype public id");
-		return;
-	}
+	public_id = dtd->ExternalID != NULL ? 
+			(const char *) dtd->ExternalID : "";
 
 	/* Create system ID for doctype */
-	err = _dom_document_create_string(parser->doc,
-			dtd->SystemID,
-			(dtd->SystemID == NULL) ? 0
-				: strlen((const char *) dtd->SystemID),
-			&system_id);
-	if (err != DOM_NO_ERR) {
-		dom_string_unref(public_id);
-		dom_string_unref(qname);
-		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
-				"No memory for doctype system id");
-		return;
-	}
+	system_id = dtd->SystemID != NULL ? 
+			(const char *) dtd->SystemID : "";
 
 	/* Create doctype */
 	err = dom_implementation_create_document_type(
 			qname, public_id, system_id, 
 			parser->alloc, parser->pw, &doctype);
 	if (err != DOM_NO_ERR) {
-		dom_string_unref(system_id);
-		dom_string_unref(public_id);
-		dom_string_unref(qname);
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 				"Failed to create document type");
 		return;
 	}
-
-	/* No longer need qname, public_id, system_id */
-	dom_string_unref(system_id);
-	dom_string_unref(public_id);
-	dom_string_unref(qname);
 
 	/* Add doctype to document */
 	err = dom_node_append_child(parent, (struct dom_node *) doctype,

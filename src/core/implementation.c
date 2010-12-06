@@ -5,6 +5,8 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  */
 
+#include <string.h>
+
 #include <dom/core/implementation.h>
 
 #include "core/document.h"
@@ -24,7 +26,7 @@
  * \return DOM_NO_ERR.
  */
 dom_exception dom_implementation_has_feature(
-		struct dom_string *feature, struct dom_string *version,
+		const char *feature, const char *version,
 		bool *result)
 {
 	UNUSED(feature);
@@ -57,39 +59,80 @@ dom_exception dom_implementation_has_feature(
  * finished with it.
  */
 dom_exception dom_implementation_create_document_type(
-		struct dom_string *qname, struct dom_string *public_id, 
-		struct dom_string *system_id,
+		const char *qname, const char *public_id, 
+		const char *system_id,
 		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype)
 {
 	struct dom_document_type *d;
-	struct dom_string *prefix = NULL, *lname = NULL;
+	dom_string *qname_s = NULL, *prefix = NULL, *lname = NULL;
+	dom_string *public_id_s = NULL, *system_id_s = NULL;
 	dom_exception err;
 
-	if (qname != NULL && _dom_validate_name(qname) == false)
-		return DOM_INVALID_CHARACTER_ERR;
+	if (qname != NULL) {
+		err = dom_string_create(alloc, pw, (const uint8_t *) qname,
+				strlen(qname), &qname_s);
+		if (err != DOM_NO_ERR)
+			return err;
+	}
 
-	err = _dom_namespace_split_qname(qname, &prefix, &lname);
-	if (err != DOM_NO_ERR)
+	if (qname_s != NULL && _dom_validate_name(qname_s) == false) {
+		dom_string_unref(qname_s);
+		return DOM_INVALID_CHARACTER_ERR;
+	}
+
+	err = _dom_namespace_split_qname(qname_s, &prefix, &lname);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(qname_s);
 		return err;
+	}
 
 	if ((prefix != NULL && _dom_validate_ncname(prefix) == false) ||
-			(lname != NULL && _dom_validate_ncname(lname) == false))
+			(lname != NULL && 
+				_dom_validate_ncname(lname) == false)) {
+		dom_string_unref(lname);
+		dom_string_unref(prefix);
+		dom_string_unref(qname_s);
 		return DOM_NAMESPACE_ERR;
+	}
+
+	if (public_id != NULL) {
+		err = dom_string_create(alloc, pw, (const uint8_t *) public_id,
+				strlen(public_id), &public_id_s);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(lname);
+			dom_string_unref(prefix);
+			dom_string_unref(qname_s);
+			return err;
+		}
+	}
+
+	if (system_id != NULL) {
+		err = dom_string_create(alloc, pw, (const uint8_t *) system_id,
+				strlen(system_id), &system_id_s);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(public_id_s);
+			dom_string_unref(lname);
+			dom_string_unref(prefix);
+			dom_string_unref(qname_s);
+			return err;
+		}
+	}
 
 	/* Create the doctype */
-	err = _dom_document_type_create(qname, public_id, system_id,
+	err = _dom_document_type_create(qname_s, public_id_s, system_id_s,
 			alloc, pw, &d);
-	if (err != DOM_NO_ERR)
-		return err;
 
-	*doctype = d;
-	if (prefix != NULL)
-		dom_string_unref(prefix);
-	if (lname != NULL)
-		dom_string_unref(lname);
+	if (err == DOM_NO_ERR)
+		*doctype = d;
 
-	return DOM_NO_ERR;
+	dom_string_unref(system_id_s);
+	dom_string_unref(public_id_s);
+	dom_string_unref(prefix);
+	dom_string_unref(lname);
+	dom_string_unref(qname_s);
+
+	return err;
 }
 
 /**
@@ -125,29 +168,58 @@ dom_exception dom_implementation_create_document_type(
  * finished with it.
  */
 dom_exception dom_implementation_create_document(
-		struct dom_string *namespace, struct dom_string *qname,
+		const char *namespace, const char *qname,
 		struct dom_document_type *doctype,
 		dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc)
 {
 	struct dom_document *d;
+	dom_string *namespace_s = NULL, *qname_s = NULL;
 	dom_exception err;
 
-	if (qname != NULL && _dom_validate_name(qname) == false)
-		return  DOM_INVALID_CHARACTER_ERR;
-  
-	err = _dom_namespace_validate_qname(qname, namespace);
-	if (err != DOM_NO_ERR)
-		return DOM_NAMESPACE_ERR;
+	if (namespace != NULL) {
+		err = dom_string_create(alloc, pw, (const uint8_t *) namespace,
+				strlen(namespace), &namespace_s);
+		if (err != DOM_NO_ERR)
+			return err;
+	}
 
-	if (doctype != NULL && dom_node_get_parent(doctype) != NULL)
+	if (qname != NULL) {
+		err = dom_string_create(alloc, pw, (const uint8_t *) qname, 
+				strlen(qname), &qname_s);
+		if (err != DOM_NO_ERR) {
+			dom_string_unref(namespace_s);
+			return err;
+		}
+	}
+
+	if (qname_s != NULL && _dom_validate_name(qname_s) == false) {
+		dom_string_unref(qname_s);
+		dom_string_unref(namespace_s);
+		return DOM_INVALID_CHARACTER_ERR;
+	}
+  
+	err = _dom_namespace_validate_qname(qname_s, namespace_s);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(qname_s);
+		dom_string_unref(namespace_s);
+		return DOM_NAMESPACE_ERR;
+	}
+
+	if (doctype != NULL && dom_node_get_parent(doctype) != NULL) {
+		dom_string_unref(qname_s);
+		dom_string_unref(namespace_s);
 		return DOM_WRONG_DOCUMENT_ERR;
+	}
 
 	/* Create document object */
 	err = _dom_document_create(alloc, pw, daf, &d);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(qname_s);
+		dom_string_unref(namespace_s);
 		return err;
+	}
 
 	/* Set its doctype, if necessary */
 	if (doctype != NULL) {
@@ -157,6 +229,8 @@ dom_exception dom_implementation_create_document(
 				(struct dom_node *) doctype, &ins_doctype);
 		if (err != DOM_NO_ERR) {
 			dom_node_unref((struct dom_node *) d);
+			dom_string_unref(qname_s);
+			dom_string_unref(namespace_s);
 			return err;
 		}
 
@@ -166,13 +240,15 @@ dom_exception dom_implementation_create_document(
 	}
 
 	/* Create root element and attach it to document */
-	if (qname != NULL) {
+	if (qname_s != NULL) {
 		struct dom_element *e;
 		struct dom_node *inserted;
 
 		err = dom_document_create_element_ns(d, namespace, qname, &e);
 		if (err != DOM_NO_ERR) {
 			dom_node_unref((struct dom_node *) d);
+			dom_string_unref(qname_s);
+			dom_string_unref(namespace_s);
 			return err;
 		}
 
@@ -181,6 +257,8 @@ dom_exception dom_implementation_create_document(
 		if (err != DOM_NO_ERR) {
 			dom_node_unref((struct dom_node *) e);
 			dom_node_unref((struct dom_node *) d);
+			dom_string_unref(qname_s);
+			dom_string_unref(namespace_s);
 			return err;
 		}
 
@@ -190,6 +268,10 @@ dom_exception dom_implementation_create_document(
 		/* Done with element */
 		dom_node_unref((struct dom_node *) e);
 	}
+
+	/* Clean up strings we created */
+	dom_string_unref(qname_s);
+	dom_string_unref(namespace_s);
 
 	*doc = d;
 
@@ -209,7 +291,7 @@ dom_exception dom_implementation_create_document(
  * the provided memory (de)allocation function.
  */
 dom_exception dom_implementation_get_feature(
-		struct dom_string *feature, struct dom_string *version,
+		const char *feature, const char *version,
 		void **object)
 {
 	UNUSED(feature);

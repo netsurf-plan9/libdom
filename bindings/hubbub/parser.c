@@ -316,42 +316,38 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 {
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
 	dom_exception err;
-	struct dom_string *qname, *public_id = NULL, *system_id = NULL;
+	char *qname, *public_id = NULL, *system_id = NULL;
 	struct dom_document_type *dtype;
 
 	*result = NULL;
 
-	err = dom_string_create(dom_parser->alloc, dom_parser->pw,
-			doctype->name.ptr, doctype->name.len, &qname);
-	if (err != DOM_NO_ERR) {
+	qname = strndup((const char *) doctype->name.ptr, 
+			(size_t) doctype->name.len);
+	if (qname == NULL) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't create doctype name");
 		goto fail;
 	}
 
 	if (doctype->public_missing == false) {
-		err = dom_string_create(dom_parser->alloc, dom_parser->pw,
-				doctype->public_id.ptr, 
-				doctype->public_id.len, &public_id);
+		public_id = strndup((const char *) doctype->public_id.ptr, 
+				(size_t) doctype->public_id.len);
 	} else {
-		err = dom_string_create(dom_parser->alloc, dom_parser->pw,
-				NULL, 0, &public_id);
+		public_id = strdup("");
 	}
-	if (err != DOM_NO_ERR) {
+	if (public_id == NULL) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't create doctype public id");
 		goto clean1;
 	}
 
 	if (doctype->system_missing == false) {
-		err = dom_string_create(dom_parser->alloc, dom_parser->pw,
-				doctype->system_id.ptr,
-				doctype->system_id.len, &system_id);
+		system_id = strndup((const char *) doctype->system_id.ptr,
+				(size_t) doctype->system_id.len);
 	} else {
-		err = dom_string_create(dom_parser->alloc, dom_parser->pw,
-				NULL, 0, &system_id);
+		system_id = strdup("");
 	}
-	if (err != DOM_NO_ERR) {
+	if (system_id == NULL) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't create doctype system id");
 		goto clean2;
@@ -369,13 +365,13 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 	*result = dtype;
 
 clean3:
-	dom_string_unref(system_id);
+	free(system_id);
 
 clean2:
-	dom_string_unref(public_id);
+	free(public_id);
 
 clean1:
-	dom_string_unref(qname);
+	free(qname);
 
 fail:
 	if (*result == NULL)

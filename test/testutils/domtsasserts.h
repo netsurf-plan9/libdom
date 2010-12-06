@@ -55,7 +55,7 @@ bool is_uri_equals(char *scheme, char *path, char *host,
 
 bool is_contenttype(const char *type);
 
-bool has_feature(char *feature, char *version);
+bool has_feature(const char *feature, const char *version);
 
 bool implementation_attribute(char *name, bool value);
 
