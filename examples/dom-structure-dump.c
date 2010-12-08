@@ -159,7 +159,7 @@ bool dump_dom_element_class(dom_node_internal *node)
 	/* Should only have element nodes here */
 	exc = dom_node_get_node_type(node, &type);
 	if (exc != DOM_NO_ERR) {
-		printf("Exception raised for node_get_node_type\n");
+		printf(" Exception raised for node_get_node_type\n");
 		return false;
 	}
 	assert(type == DOM_ELEMENT_NODE);
@@ -167,14 +167,14 @@ bool dump_dom_element_class(dom_node_internal *node)
 	/* Create a dom_string constaining "class". */
 	exc = dom_string_create(test_realloc, NULL, "class", 5, &class);
 	if (exc != DOM_NO_ERR) {
-		printf("Exception raised for dom_string_create\n");
+		printf(" Exception raised for dom_string_create\n");
 		return false;
 	}
 
 	/* Get class attribute's value */
 	exc = dom_element_get_attribute(node, class, &classvalue);
 	if (exc != DOM_NO_ERR) {
-		printf("Exception raised for element_get_attribute\n");
+		printf(" Exception raised for element_get_attribute\n");
 		return false;
 	} else if (classvalue == NULL) {
 		/* Element has no class attribute */
@@ -184,7 +184,10 @@ bool dump_dom_element_class(dom_node_internal *node)
 	/* Get attributes's lwc_string */
 	exc = dom_string_get_intern(classvalue, &lwcstr);
 	if (exc != DOM_NO_ERR) {
-		printf("Exception raised for string_get_intern\n");
+		printf(" Exception raised for string_get_intern\n");
+		return false;
+	} else if (lwcstr == NULL) {
+		printf(" Broken: lwcstr == NULL\n");
 		return false;
 	}
 
@@ -264,9 +267,9 @@ bool dump_dom_element(dom_node_internal *node, int depth)
 	printf("%*s", length, string);
 
 	/* PENDING FIX: Print the element's class, if it has one */
-//	if (dump_dom_element_class(node) == false) {
-//		return false;
-//	}
+	if (dump_dom_element_class(node) == false) {
+		return false;
+	}
 
 	printf("\n");
 	return true;
@@ -302,7 +305,10 @@ bool dump_dom_structure(dom_node_internal *node, int depth)
 		/* Loop though all node's children */
 		do {
 			/* Visit node's descendents */
-			dump_dom_structure(child, depth);
+			if (dump_dom_structure(child, depth) == false) {
+				/* There was an error; return */
+				return false;
+			}
 
 			/* Go to next sibling */
 			exc = dom_node_get_next_sibling(child, &child);
@@ -353,6 +359,7 @@ int main(int argc, char **argv)
 
 	/* Dump DOM structure */
 	if (dump_dom_structure(root, 0) == false) {
+		printf("Failed to complete DOM structure dump.\n");
 		return EXIT_FAILURE;
 	}
 
@@ -362,6 +369,9 @@ int main(int argc, char **argv)
 		printf("Failed to finalise DOM library.\n");
 		return EXIT_FAILURE;
 	}
+
+	/* Finished with the dom_document */
+	dom_node_unref(doc);
 
 	return EXIT_SUCCESS;
 }
