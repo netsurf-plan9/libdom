@@ -224,7 +224,7 @@ dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
 	lwc_error lerr;
 
 	err = hubbub_parser_completed(parser->parser);
-	if (err != DOM_HUBBUB_OK) {
+	if (err != HUBBUB_OK) {
 		parser->msg(DOM_MSG_ERROR, parser->mctx,
 				"hubbub_parser_completed failed: %d", err);
 		return DOM_HUBBUB_HUBBUB_ERR | err;
