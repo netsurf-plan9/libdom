@@ -142,7 +142,7 @@ void _dom_node_destroy(struct dom_node_internal *node)
  */
 dom_exception _dom_node_initialise(dom_node_internal *node,
 		struct dom_document *doc, dom_node_type type,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct lwc_string_s *namespace, struct lwc_string_s *prefix)
 {
 	dom_alloc alloc;
@@ -180,7 +180,7 @@ dom_exception _dom_node_initialise_generic(
 		struct dom_node_internal *node, struct dom_document *doc,
 		dom_alloc alloc, void *pw,
 	 	dom_node_type type, struct lwc_string_s *name, 
-		struct dom_string *value, struct lwc_string_s *namespace, 
+		dom_string *value, struct lwc_string_s *namespace, 
 		struct lwc_string_s *prefix)
 {
 	UNUSED(alloc);
@@ -388,9 +388,9 @@ void _dom_node_unref(dom_node_internal *node)
  * finished with it.
  */
 dom_exception _dom_node_get_node_name(dom_node_internal *node,
-		struct dom_string **result)
+		dom_string **result)
 {
-	struct dom_string *node_name, *temp;
+	dom_string *node_name, *temp;
 	dom_document *doc;
 	dom_exception err;
 	struct dom_resource_mgr rm;
@@ -414,7 +414,7 @@ dom_exception _dom_node_get_node_name(dom_node_internal *node,
 	 * has a defined prefix, then nodeName is a QName comprised
 	 * of prefix:name. */
 	if(node->prefix != NULL) {
-		struct dom_string *colon;
+		dom_string *colon;
 
 		err = _dom_resource_mgr_create_string(&rm, 
 				(const uint8_t *) ":", SLEN(":"), &colon);
@@ -491,7 +491,7 @@ dom_exception _dom_node_get_node_name(dom_node_internal *node,
  * this implementation; dom_strings are unbounded.
  */
 dom_exception _dom_node_get_node_value(dom_node_internal *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	if (node->value != NULL)
 		dom_string_ref(node->value);
@@ -515,7 +515,7 @@ dom_exception _dom_node_get_node_value(dom_node_internal *node,
  * a reference on the string). The node's existing value will be unrefed.
  */
 dom_exception _dom_node_set_node_value(dom_node_internal *node,
-		struct dom_string *value)
+		dom_string *value)
 {
 	/* TODO
 	 * Whether we should change this to a virtual function? 
@@ -1292,7 +1292,7 @@ dom_exception _dom_node_normalize(dom_node_internal *node)
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_node_is_supported(dom_node_internal *node,
-		struct dom_string *feature, struct dom_string *version,
+		dom_string *feature, dom_string *version,
 		bool *result)
 {
 	bool has;
@@ -1319,7 +1319,7 @@ dom_exception _dom_node_is_supported(dom_node_internal *node,
  * finished with it.
  */
 dom_exception _dom_node_get_namespace(dom_node_internal *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	assert(node->owner != NULL);
 
@@ -1343,7 +1343,7 @@ dom_exception _dom_node_get_namespace(dom_node_internal *node,
  * finished with it.
  */
 dom_exception _dom_node_get_prefix(dom_node_internal *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	assert(node->owner != NULL);
 	
@@ -1380,7 +1380,7 @@ dom_exception _dom_node_get_prefix(dom_node_internal *node,
  *                                         is "xmlns".
  */
 dom_exception _dom_node_set_prefix(dom_node_internal *node,
-		struct dom_string *prefix)
+		dom_string *prefix)
 {
 	dom_exception err;
 	lwc_string *str;
@@ -1436,7 +1436,7 @@ dom_exception _dom_node_set_prefix(dom_node_internal *node,
  * finished with it.
  */
 dom_exception _dom_node_get_local_name(dom_node_internal *node,
-		struct dom_string **result)
+		dom_string **result)
 {	
 	assert(node->owner != NULL);
 	
@@ -1486,7 +1486,7 @@ dom_exception _dom_node_has_attributes(dom_node_internal *node, bool *result)
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_node_get_base(dom_node_internal *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	struct dom_document *doc = node->owner;
 	assert(doc != NULL);
@@ -1534,7 +1534,7 @@ dom_exception _dom_node_compare_document_position(dom_node_internal *node,
  * this implementation; dom_strings are unbounded.
  */
 dom_exception _dom_node_get_text_content(dom_node_internal *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	dom_node_internal *n;
 	dom_string *str;
@@ -1565,7 +1565,7 @@ dom_exception _dom_node_get_text_content(dom_node_internal *node,
  * Text node containing the new content.
  */
 dom_exception _dom_node_set_text_content(dom_node_internal *node,
-		struct dom_string *content)
+		dom_string *content)
 {
 	dom_node_internal *n, *p, *r;
 	dom_document *doc;
@@ -1630,7 +1630,7 @@ dom_exception _dom_node_is_same(dom_node_internal *node,
  * finished with it.
  */
 dom_exception _dom_node_lookup_prefix(dom_node_internal *node,
-		struct dom_string *namespace, struct dom_string **result)
+		dom_string *namespace, dom_string **result)
 {
 	if (node->parent != NULL)
 		return dom_node_lookup_prefix(node, namespace, result);
@@ -1649,7 +1649,7 @@ dom_exception _dom_node_lookup_prefix(dom_node_internal *node,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_node_is_default_namespace(dom_node_internal *node,
-		struct dom_string *namespace, bool *result)
+		dom_string *namespace, bool *result)
 {
 	if (node->parent != NULL)
 		return dom_node_is_default_namespace(node, namespace, result);
@@ -1671,7 +1671,7 @@ dom_exception _dom_node_is_default_namespace(dom_node_internal *node,
  * finished with it.
  */
 dom_exception _dom_node_lookup_namespace(dom_node_internal *node,
-		struct dom_string *prefix, struct dom_string **result)
+		dom_string *prefix, dom_string **result)
 {
 	if (node->parent != NULL)
 		return dom_node_lookup_namespace(node->parent, prefix, result);
@@ -1786,7 +1786,7 @@ dom_exception _dom_node_is_equal(dom_node_internal *node,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_node_get_feature(dom_node_internal *node,
-		struct dom_string *feature, struct dom_string *version,
+		dom_string *feature, dom_string *version,
 		void **result)
 {
 	bool has;
@@ -1816,7 +1816,7 @@ dom_exception _dom_node_get_feature(dom_node_internal *node,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_node_set_user_data(dom_node_internal *node,
-		struct dom_string *key, void *data,
+		dom_string *key, void *data,
 		dom_user_data_handler handler, void **result)
 {
 	struct dom_user_data *ud = NULL;
@@ -1886,7 +1886,7 @@ dom_exception _dom_node_set_user_data(dom_node_internal *node,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_node_get_user_data(dom_node_internal *node,
-		struct dom_string *key, void **result)
+		dom_string *key, void **result)
 {
 	struct dom_user_data *ud = NULL;
 

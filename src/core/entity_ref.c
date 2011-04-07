@@ -43,7 +43,7 @@ static struct dom_node_protect_vtable er_protect_vtable = {
  * The returned node will already be referenced.
  */
 dom_exception _dom_entity_reference_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct dom_entity_reference **result)
 {
 	struct dom_entity_reference *e;
@@ -101,7 +101,7 @@ void _dom_entity_reference_destroy(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_entity_reference_get_textual_representation(
-		struct dom_entity_reference *entity, struct dom_string **result)
+		struct dom_entity_reference *entity, dom_string **result)
 {
 	UNUSED(entity);
 	UNUSED(result);

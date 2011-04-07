@@ -140,7 +140,7 @@ dom_exception dom_html_options_collection_item(dom_html_options_collection *col,
  * \return DOM_NO_ERR on success.
  */
 dom_exception dom_html_options_collection_named_item(dom_html_options_collection *col,
-		struct dom_string *name, struct dom_node **node)
+		dom_string *name, struct dom_node **node)
 {
 	return dom_html_collection_named_item(&col->base, name, node);
 }

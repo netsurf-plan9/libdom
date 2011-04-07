@@ -71,7 +71,7 @@ dom_exception _dom_html_element_copy(struct dom_node_internal *new,
 /* API functions */
 
 dom_exception _dom_html_element_get_id(dom_html_element *element,
-                                       struct dom_string **id)
+                                       dom_string **id)
 {
         dom_exception ret;
         dom_document *doc;
@@ -94,7 +94,7 @@ dom_exception _dom_html_element_get_id(dom_html_element *element,
 }
 
 dom_exception _dom_html_element_set_id(dom_html_element *element,
-                                       struct dom_string *id)
+                                       dom_string *id)
 {
         dom_exception ret;
         dom_document *doc;

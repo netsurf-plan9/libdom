@@ -50,15 +50,15 @@ static struct dom_element_protected_vtable element_protect_vtable = {
 };
 
 static dom_exception _dom_element_get_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name, 
-		struct dom_string **value);
+		struct dom_hash_table *hs, dom_string *name, 
+		dom_string **value);
 static dom_exception _dom_element_set_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name, 
-		struct dom_string *value);
+		struct dom_hash_table *hs, dom_string *name, 
+		dom_string *value);
 static dom_exception _dom_element_remove_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name);
+		struct dom_hash_table *hs, dom_string *name);
 static dom_exception _dom_element_get_attr_node(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name, 
+		struct dom_hash_table *hs, dom_string *name, 
 		struct dom_attr **result);
 static dom_exception _dom_element_set_attr_node(struct dom_element *element,
 		struct dom_hash_table *hs, struct dom_attr *attr, 
@@ -67,33 +67,33 @@ static dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 		struct dom_hash_table *hs, struct dom_attr *attr, 
 		struct dom_attr **result);
 static dom_exception _dom_element_has_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name,
+		struct dom_hash_table *hs, dom_string *name,
 		bool *result);
 static dom_exception _dom_element_set_id_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name, bool is_id);
+		struct dom_hash_table *hs, dom_string *name, bool is_id);
 
 
 /* The operation set for namednodemap */
 static dom_exception attributes_get_length(void *priv,
 		unsigned long *length);
 static dom_exception attributes_get_named_item(void *priv,
-		struct dom_string *name, struct dom_node **node);
+		dom_string *name, struct dom_node **node);
 static dom_exception attributes_set_named_item(void *priv,
 		struct dom_node *arg, struct dom_node **node);
 static dom_exception attributes_remove_named_item(
-		void *priv, struct dom_string *name,
+		void *priv, dom_string *name,
 		struct dom_node **node);
 static dom_exception attributes_item(void *priv,
 		unsigned long index, struct dom_node **node);
 static dom_exception attributes_get_named_item_ns(
-		void *priv, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_node **node);
+		void *priv, dom_string *namespace,
+		dom_string *localname, struct dom_node **node);
 static dom_exception attributes_set_named_item_ns(
 		void *priv, struct dom_node *arg,
 		struct dom_node **node);
 static dom_exception attributes_remove_named_item_ns(
-		void *priv, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_node **node);
+		void *priv, dom_string *namespace,
+		dom_string *localname, struct dom_node **node);
 static void attributes_destroy(void *priv);
 static bool attributes_equal(void *p1, void *p2);
 
@@ -273,7 +273,7 @@ void _dom_element_destroy(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_element_get_tag_name(struct dom_element *element,
-		struct dom_string **name)
+		dom_string **name)
 {
 	/* This is the same as nodeName */
 	return dom_node_get_node_name((struct dom_node *) element, name);
@@ -292,7 +292,7 @@ dom_exception _dom_element_get_tag_name(struct dom_element *element,
  * finished with it.
  */
 dom_exception _dom_element_get_attribute(struct dom_element *element,
-		struct dom_string *name, struct dom_string **value)
+		dom_string *name, dom_string **value)
 {
 	return _dom_element_get_attr(element, element->attributes, name, value);
 }
@@ -308,7 +308,7 @@ dom_exception _dom_element_get_attribute(struct dom_element *element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly.
  */
 dom_exception _dom_element_set_attribute(struct dom_element *element,
-		struct dom_string *name, struct dom_string *value)
+		dom_string *name, dom_string *value)
 {
 	return _dom_element_set_attr(element, element->attributes, name, value);
 }
@@ -322,7 +322,7 @@ dom_exception _dom_element_set_attribute(struct dom_element *element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly.
  */
 dom_exception _dom_element_remove_attribute(struct dom_element *element,
-		struct dom_string *name)
+		dom_string *name)
 {
 	return _dom_element_remove_attr(element, element->attributes, name);
 }
@@ -340,7 +340,7 @@ dom_exception _dom_element_remove_attribute(struct dom_element *element,
  * finished with it.
  */
 dom_exception _dom_element_get_attribute_node(struct dom_element *element, 
-		struct dom_string *name, struct dom_attr **result)
+		dom_string *name, struct dom_attr **result)
 {
 	return _dom_element_get_attr_node(element, element->attributes, name, 
 			result);
@@ -406,7 +406,7 @@ dom_exception _dom_element_remove_attribute_node(struct dom_element *element,
  * finished with it.
  */
 dom_exception _dom_element_get_elements_by_tag_name(
-		struct dom_element *element, struct dom_string *name,
+		struct dom_element *element, dom_string *name,
 		struct dom_nodelist **result)
 {
 	dom_exception err;
@@ -445,8 +445,8 @@ dom_exception _dom_element_get_elements_by_tag_name(
  * finished with it.
  */
 dom_exception _dom_element_get_attribute_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *localname,
-		struct dom_string **value)
+		dom_string *namespace, dom_string *localname,
+		dom_string **value)
 {
 	lwc_string *str;
 	dom_exception err;
@@ -500,8 +500,8 @@ dom_exception _dom_element_get_attribute_ns(struct dom_element *element,
  *                                         Namespaces.
  */
 dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *qname,
-		struct dom_string *value)
+		dom_string *namespace, dom_string *qname,
+		dom_string *value)
 {
 	lwc_string *str;
 	dom_exception err;
@@ -570,7 +570,7 @@ dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
  *                                         Namespaces.
  */
 dom_exception _dom_element_remove_attribute_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *localname)
+		dom_string *namespace, dom_string *localname)
 {
 	lwc_string *str;
 	dom_exception err;
@@ -611,7 +611,7 @@ dom_exception _dom_element_remove_attribute_ns(struct dom_element *element,
  * finished with it.
  */
 dom_exception _dom_element_get_attribute_node_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *localname,
+		dom_string *namespace, dom_string *localname,
 		struct dom_attr **result)
 {
 	lwc_string *str;
@@ -725,8 +725,8 @@ dom_exception _dom_element_set_attribute_node_ns(struct dom_element *element,
  * finished with it.
  */
 dom_exception _dom_element_get_elements_by_tag_name_ns(
-		struct dom_element *element, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_nodelist **result)
+		struct dom_element *element, dom_string *namespace,
+		dom_string *localname, struct dom_nodelist **result)
 {
 	dom_document *doc;
 	dom_exception err;
@@ -772,7 +772,7 @@ dom_exception _dom_element_get_elements_by_tag_name_ns(
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_element_has_attribute(struct dom_element *element,
-		struct dom_string *name, bool *result)
+		dom_string *name, bool *result)
 {
 	return _dom_element_has_attr(element, element->attributes, name,
 			result);
@@ -793,7 +793,7 @@ dom_exception _dom_element_has_attribute(struct dom_element *element,
  *                               Namespaces.
  */
 dom_exception _dom_element_has_attribute_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *localname,
+		dom_string *namespace, dom_string *localname,
 		bool *result)
 {
 	lwc_string *str;
@@ -854,7 +854,7 @@ dom_exception _dom_element_get_schema_type_info(struct dom_element *element,
  * one such attribute node.
  */
 dom_exception _dom_element_set_id_attribute(struct dom_element *element,
-		struct dom_string *name, bool is_id)
+		dom_string *name, bool is_id)
 {
 	return _dom_element_set_id_attr(element, element->attributes, name, 
 			is_id);
@@ -873,7 +873,7 @@ dom_exception _dom_element_set_id_attribute(struct dom_element *element,
  *                                         attribute of ::element.
  */
 dom_exception _dom_element_set_id_attribute_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *localname,
+		dom_string *namespace, dom_string *localname,
 		bool is_id)
 {
 	struct dom_hash_table *hs;
@@ -988,7 +988,7 @@ dom_exception _dom_element_has_attributes(dom_node_internal *node, bool *result)
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_lookup_prefix(dom_node_internal *node,
-		struct dom_string *namespace, struct dom_string **result)
+		dom_string *namespace, dom_string **result)
 {
 	struct dom_element *owner;
 	dom_exception err;
@@ -1014,7 +1014,7 @@ dom_exception _dom_element_lookup_prefix(dom_node_internal *node,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
-		struct dom_string *namespace, bool *result)
+		dom_string *namespace, bool *result)
 {
 	struct dom_element *ele = (struct dom_element *) node;
 	lwc_string *ns;
@@ -1068,7 +1068,7 @@ dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_lookup_namespace(dom_node_internal *node,
-		struct dom_string *prefix, struct dom_string **result)
+		dom_string *prefix, dom_string **result)
 {
 	lwc_string *pf;
 	dom_exception err;
@@ -1138,8 +1138,8 @@ dom_exception _dom_element_lookup_namespace(dom_node_internal *node,
  *    later easy accessing by any client.
  */
 dom_exception _dom_element_parse_attribute(dom_element *ele,
-		struct dom_string *name, struct dom_string *value,
-		struct dom_string **parsed)
+		dom_string *name, dom_string *value,
+		dom_string **parsed)
 {
 	UNUSED(ele);
 	UNUSED(name);
@@ -1242,8 +1242,8 @@ dom_exception _dom_element_copy(struct dom_node_internal *new,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_get_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name, 
-		struct dom_string **value)
+		struct dom_hash_table *hs, dom_string *name, 
+		dom_string **value)
 {
 	void *a;
 	dom_exception err = DOM_NO_ERR;
@@ -1276,8 +1276,8 @@ dom_exception _dom_element_get_attr(struct dom_element *element,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_set_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name, 
-		struct dom_string *value)
+		struct dom_hash_table *hs, dom_string *name, 
+		dom_string *value)
 {
 	void *a;
 	dom_exception err;
@@ -1400,7 +1400,7 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly.
  */
 dom_exception _dom_element_remove_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name)
+		struct dom_hash_table *hs, dom_string *name)
 {
 	void *a;
 	dom_exception err;
@@ -1481,7 +1481,7 @@ dom_exception _dom_element_remove_attr(struct dom_element *element,
  * finished with it.
  */
 dom_exception _dom_element_get_attr_node(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name, 
+		struct dom_hash_table *hs, dom_string *name, 
 		struct dom_attr **result)
 {
 	void *a;
@@ -1773,7 +1773,7 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_has_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name,
+		struct dom_hash_table *hs, dom_string *name,
 		bool *result)
 {
 	void *a;
@@ -1807,7 +1807,7 @@ dom_exception _dom_element_has_attr(struct dom_element *element,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_set_id_attr(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_string *name, bool is_id)
+		struct dom_hash_table *hs, dom_string *name, bool is_id)
 {
 	dom_attr *attr;
 	lwc_string *str;
@@ -1971,7 +1971,7 @@ dom_exception attributes_get_length(void *priv,
 /* Implementation function for NamedNodeMap, see core/namednodemap.h for 
  * details */
 dom_exception attributes_get_named_item(void *priv,
-		struct dom_string *name, struct dom_node **node)
+		dom_string *name, struct dom_node **node)
 {
 	dom_element *e = (dom_element *) priv;
 
@@ -1996,7 +1996,7 @@ dom_exception attributes_set_named_item(void *priv,
 /* Implementation function for NamedNodeMap, see core/namednodemap.h for 
  * details */
 dom_exception attributes_remove_named_item(
-		void *priv, struct dom_string *name,
+		void *priv, dom_string *name,
 		struct dom_node **node)
 {
 	dom_element *e = (dom_element *) priv;
@@ -2068,8 +2068,8 @@ dom_exception attributes_item(void *priv,
 /* Implementation function for NamedNodeMap, see core/namednodemap.h for 
  * details */
 dom_exception attributes_get_named_item_ns(
-		void *priv, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_node **node)
+		void *priv, dom_string *namespace,
+		dom_string *localname, struct dom_node **node)
 {
 	dom_element *e = (dom_element *) priv;
 
@@ -2096,8 +2096,8 @@ dom_exception attributes_set_named_item_ns(
 /* Implementation function for NamedNodeMap, see core/namednodemap.h for 
  * details */
 dom_exception attributes_remove_named_item_ns(
-		void *priv, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_node **node)
+		void *priv, dom_string *namespace,
+		dom_string *localname, struct dom_node **node)
 {
 	dom_element *e = (dom_element *) priv;
 	dom_exception err;

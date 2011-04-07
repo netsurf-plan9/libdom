@@ -10,8 +10,8 @@
 
 #include <stdbool.h>
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
-struct dom_string;
 struct dom_abstract_view;
 
 typedef struct dom_ui_event dom_ui_event;
@@ -26,20 +26,20 @@ dom_exception _dom_ui_event_get_detail(dom_ui_event *evt,
 #define dom_ui_event_get_detail(e, d) _dom_ui_event_get_detail(\
 		(dom_ui_event *) (e), (long *) (d))
 
-dom_exception _dom_ui_event_init(dom_ui_event *evt, struct dom_string *type, 
+dom_exception _dom_ui_event_init(dom_ui_event *evt, dom_string *type, 
 		bool bubble, bool cancelable, struct dom_abstract_view *view,
 		long detail);
 #define dom_ui_event_init(e, t, b, c, v, d) _dom_ui_event_init( \
-		(dom_ui_event *) (e), (struct dom_string *) (t), (bool) (b), \
+		(dom_ui_event *) (e), (dom_string *) (t), (bool) (b), \
 		(bool) (c), (struct dom_abstract_view *) (v), (long) (d))
 
 dom_exception _dom_ui_event_init_ns(dom_ui_event *evt,
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view,
 		long detail);
 #define dom_ui_event_init_ns(e, n, t, b, c, v, d) _dom_ui_event_init_ns( \
-		(dom_ui_event *) (e), (struct dom_string *) (n), \
-		(struct dom_string *) (t), (bool) (b), (bool) (c), \
+		(dom_ui_event *) (e), (dom_string *) (n), \
+		(dom_string *) (t), (bool) (b), (bool) (c), \
 		(struct dom_abstract_view *) (v), (long) (d))
 
 #endif

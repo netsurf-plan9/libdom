@@ -101,8 +101,8 @@ void _dom_html_title_element_destroy(struct dom_document *doc,
 /* The virtual function used to parse attribute value, see src/core/element.c
  * for detail */
 dom_exception _dom_html_title_element_parse_attribute(dom_element *ele,
-		struct dom_string *name, struct dom_string *value,
-		struct dom_string **parsed)
+		dom_string *name, dom_string *value,
+		dom_string **parsed)
 {
 	UNUSED(ele);
 	UNUSED(name);
@@ -151,7 +151,7 @@ dom_exception _dom_html_title_element_copy(struct dom_node_internal *new,
  * \return DOM_NO_ERR on success, appropriated dom_exception on failure.
  */
 dom_exception dom_html_title_element_get_text(dom_html_title_element *ele,
-		struct dom_string **text)
+		dom_string **text)
 {
 	dom_node_internal *node = (dom_node_internal *) ele;
 	dom_node_internal *n = node->first_child;
@@ -172,7 +172,7 @@ dom_exception dom_html_title_element_get_text(dom_html_title_element *ele,
  * \return DOM_NO_ERR on success, appropriated dom_exception on failure.
  */
 dom_exception dom_html_title_element_set_text(dom_html_title_element *ele,
-		struct dom_string *text)
+		dom_string *text)
 {
 	dom_node_internal *node = (dom_node_internal *) ele;
 	dom_node_internal *n = node->first_child;

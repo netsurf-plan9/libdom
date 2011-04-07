@@ -283,7 +283,7 @@ static hubbub_error create_comment(void *parser, const hubbub_string *data,
 {
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
 	dom_exception err;
-	struct dom_string *str;
+	dom_string *str;
 	struct dom_comment *comment;
 
 	*result = NULL;
@@ -386,7 +386,7 @@ static hubbub_error create_element(void *parser, const hubbub_tag *tag,
 {
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
 	dom_exception err;
-	struct dom_string *name;
+	dom_string *name;
 	struct dom_element *element = NULL;
 	hubbub_error herr;
 
@@ -443,7 +443,7 @@ static hubbub_error create_text(void *parser, const hubbub_string *data,
 {
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
 	dom_exception err;
-	struct dom_string *str;
+	dom_string *str;
 	struct dom_text *text = NULL;
 
 	*result = NULL;
@@ -690,7 +690,7 @@ static hubbub_error add_attributes(void *parser, void *node,
 	uint32_t i;
 
 	for (i = 0; i < n_attributes; i++) {
-		struct dom_string *name, *value;
+		dom_string *name, *value;
 		err = dom_string_create(dom_parser->alloc, dom_parser->pw,
 				attributes[i].name.ptr,
 				attributes[i].name.len, &name);

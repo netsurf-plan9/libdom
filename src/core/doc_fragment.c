@@ -45,7 +45,7 @@ static struct dom_node_protect_vtable df_protect_vtable = {
  * The returned node will already be referenced.
  */
 dom_exception _dom_document_fragment_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct dom_document_fragment **result)
 {
 	struct dom_document_fragment *f;

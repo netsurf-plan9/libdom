@@ -9,9 +9,9 @@
 
 #include <stdbool.h>
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 #include <dom/events/event_target.h>
 
-struct dom_string;
 struct dom_abstract_view;
 
 typedef struct dom_mouse_wheel_event dom_mouse_wheel_event;
@@ -23,20 +23,20 @@ dom_exception _dom_mouse_wheel_event_get_wheel_delta(
 		(dom_mouse_wheel_event *) (e), (long *) (d))
 
 dom_exception _dom_mouse_wheel_event_init_ns(
-		dom_mouse_wheel_event *evt, struct dom_string *namespace,
-		struct dom_string *type,  bool bubble, bool cancelable,
+		dom_mouse_wheel_event *evt, dom_string *namespace,
+		dom_string *type,  bool bubble, bool cancelable,
 		struct dom_abstract_view *view, long detail, long screen_x,
 		long screen_y, long client_x, long client_y,
 		unsigned short button, dom_event_target *et,
-		struct dom_string *modifier_list, long wheel_delta);
+		dom_string *modifier_list, long wheel_delta);
 #define dom_mouse_wheel_event_init_ns(e, n, t, b, c, v, \
 		d, sx, sy, cx, cy, button, et, ml, dt) \
 		_dom_mouse_wheel_event_init_ns((dom_mouse_wheel_event *) (e), \
-		(struct dom_string *) (n), (struct dom_string *) (t), \
+		(dom_string *) (n), (dom_string *) (t), \
 		(bool) (b), (bool) (c), (struct dom_abstract_view *) (v),\
 		(long) (d), (long) (sx), (long) (sy), (long) (cx), (long) (cy),\
 		(unsigned short) (button), (dom_event_target *) (et),\
-		(struct dom_string *) (ml), (long) (dt))
+		(dom_string *) (ml), (long) (dt))
 
 #endif
 

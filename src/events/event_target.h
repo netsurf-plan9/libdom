@@ -17,7 +17,6 @@
 #include "utils/hashtable.h"
 
 struct dom_document;
-struct dom_string;
 
 /**
  * Listener Entry
@@ -72,13 +71,13 @@ dom_exception _dom_dispatch_node_change_event(struct dom_document *doc,
 /* Dispatch a DOMCharacterDataModified event */
 dom_exception _dom_dispatch_characterdata_modified_event(
 		struct dom_document *doc, dom_event_target *et,
-		struct dom_string *prev, struct dom_string *new, bool *success);
+		dom_string *prev, dom_string *new, bool *success);
 
 /* Dispatch a DOMAttrModified event */
 dom_exception _dom_dispatch_attr_modified_event(struct dom_document *doc,
-		dom_event_target *et, struct dom_string *prev,
-		struct dom_string *new, dom_event_target *related,
-		struct dom_string *attr_name, dom_mutation_type change,
+		dom_event_target *et, dom_string *prev,
+		dom_string *new, dom_event_target *related,
+		dom_string *attr_name, dom_mutation_type change,
 		bool *success);
 
 /* Dispatch a DOMSubtreeModified event */

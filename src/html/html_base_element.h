@@ -35,8 +35,8 @@ void _dom_html_base_element_destroy(struct dom_document *doc,
 
 /* The protected virtual functions */
 dom_exception _dom_html_base_element_parse_attribute(dom_element *ele,
-		struct dom_string *name, struct dom_string *value,
-		struct dom_string **parsed);
+		dom_string *name, dom_string *value,
+		dom_string **parsed);
 void _dom_virtual_html_base_element_destroy(dom_node_internal *node);
 dom_exception _dom_html_base_element_alloc(struct dom_document *doc,
 		struct dom_node_internal *n, struct dom_node_internal **ret);

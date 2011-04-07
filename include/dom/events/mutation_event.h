@@ -10,8 +10,8 @@
 
 #include <stdbool.h>
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
-struct dom_string;
 struct dom_node;
 
 typedef enum {
@@ -29,22 +29,22 @@ dom_exception _dom_mutation_event_get_related_node(dom_mutation_event *evt,
 		(dom_mutation_event *) (e), (struct dom_node **) (n))
 
 dom_exception _dom_mutation_event_get_prev_value(dom_mutation_event *evt,
-		struct dom_string **ret);
+		dom_string **ret);
 #define dom_mutation_event_get_prev_value(e, r) \
 		_dom_mutation_event_get_prev_value((dom_mutation_event *) (e), \
-		(struct dom_string **) (r))
+		(dom_string **) (r))
 
 dom_exception _dom_mutation_event_get_new_value(dom_mutation_event *evt,
-		struct dom_string **ret);
+		dom_string **ret);
 #define dom_mutation_event_get_new_value(e, r) \
 		_dom_mutation_event_get_new_value((dom_mutation_event *) (e), \
-		(struct dom_string **) (r))
+		(dom_string **) (r))
 
 dom_exception _dom_mutation_event_get_attr_name(dom_mutation_event *evt,
-		struct dom_string **ret);
+		dom_string **ret);
 #define dom_mutation_event_get_attr_name(e, r) \
 		_dom_mutation_event_get_attr_name((dom_mutation_event *) (e), \
-		(struct dom_string **) (r))
+		(dom_string **) (r))
 
 dom_exception _dom_mutation_event_get_attr_change(dom_mutation_event *evt,
 		dom_mutation_type *type);
@@ -53,28 +53,28 @@ dom_exception _dom_mutation_event_get_attr_change(dom_mutation_event *evt,
 		(dom_mutation_type *) (t))
 
 dom_exception _dom_mutation_event_init(dom_mutation_event *evt, 
-		struct dom_string *type, bool bubble, bool cancelable,
-		struct dom_node *node, struct dom_string *prev_value,
-		struct dom_string *new_value, struct dom_string *attr_name,
+		dom_string *type, bool bubble, bool cancelable,
+		struct dom_node *node, dom_string *prev_value,
+		dom_string *new_value, dom_string *attr_name,
 		dom_mutation_type change);
 #define dom_mutation_event_init(e, t, b, c, n, p, nv, a, ch) \
 		_dom_mutation_event_init((dom_mutation_event *) (e), \
-		(struct dom_string *) (t), (bool) (b), (bool) (c), \
-		(struct dom_node *) (n), (struct dom_string *) (p), \
-		(struct dom_string *) (nv), (struct dom_string *) (a), \
+		(dom_string *) (t), (bool) (b), (bool) (c), \
+		(struct dom_node *) (n), (dom_string *) (p), \
+		(dom_string *) (nv), (dom_string *) (a), \
 		(dom_mutation_type) (ch))
 
 dom_exception _dom_mutation_event_init_ns(dom_mutation_event *evt,
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_node *node,
-		struct dom_string *prev_value, struct dom_string *new_value,
-		struct dom_string *attr_name, dom_mutation_type change);
+		dom_string *prev_value, dom_string *new_value,
+		dom_string *attr_name, dom_mutation_type change);
 #define dom_mutation_event_init_ns(e, n, t, b, c, nd, p, nv, a, ch) \
 		_dom_mutation_event_init_ns((dom_mutation_event *) (e), \
-		(struct dom_string *) (n), (struct dom_string *) (t),\
+		(dom_string *) (n), (dom_string *) (t),\
 		(bool) (b), (bool) (c), (struct dom_node *) (nd), \
-		(struct dom_string *) (p), (struct dom_string *) (nv),\
-		(struct dom_string *) (a), (dom_mutation_type) (ch))
+		(dom_string *) (p), (dom_string *) (nv),\
+		(dom_string *) (a), (dom_mutation_type) (ch))
 
 #endif
 

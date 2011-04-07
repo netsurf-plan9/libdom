@@ -11,7 +11,6 @@
 #include <dom/core/attr.h>
 
 struct dom_document;
-struct dom_string;
 struct dom_type_info;
 struct lwc_string_s;
 
@@ -28,12 +27,12 @@ void _dom_attr_finalise(struct dom_document *doc, struct dom_attr *attr);
 
 /* Virtual functions for dom_attr */
 dom_exception _dom_attr_get_name(struct dom_attr *attr,
-				struct dom_string **result);
+				dom_string **result);
 dom_exception _dom_attr_get_specified(struct dom_attr *attr, bool *result);
 dom_exception _dom_attr_get_value(struct dom_attr *attr,
-				struct dom_string **result);
+				dom_string **result);
 dom_exception _dom_attr_set_value(struct dom_attr *attr,
-				struct dom_string *value);
+				dom_string *value);
 dom_exception _dom_attr_get_owner(struct dom_attr *attr,
 				struct dom_element **result);
 dom_exception _dom_attr_get_schema_type_info(struct dom_attr *attr,
@@ -51,18 +50,18 @@ dom_exception _dom_attr_is_id(struct dom_attr *attr, bool *result);
 
 /* Overloading dom_node functions */
 dom_exception _dom_attr_get_node_value(dom_node_internal *node,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_attr_clone_node(dom_node_internal *node, bool deep,
 		dom_node_internal **result);
 dom_exception _dom_attr_set_prefix(dom_node_internal *node,
-		struct dom_string *prefix);
+		dom_string *prefix);
 dom_exception _dom_attr_normalize(dom_node_internal *node);
 dom_exception _dom_attr_lookup_prefix(dom_node_internal *node,
-		struct dom_string *namespace, struct dom_string **result);
+		dom_string *namespace, dom_string **result);
 dom_exception _dom_attr_is_default_namespace(dom_node_internal *node,
-		struct dom_string *namespace, bool *result);
+		dom_string *namespace, bool *result);
 dom_exception _dom_attr_lookup_namespace(dom_node_internal *node,
-		struct dom_string *prefix, struct dom_string **result);
+		dom_string *prefix, dom_string **result);
 #define DOM_NODE_VTABLE_ATTR \
 	_dom_node_get_node_name, \
 	_dom_attr_get_node_value, /*overload*/\

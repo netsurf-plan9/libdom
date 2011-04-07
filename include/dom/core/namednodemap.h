@@ -9,9 +9,9 @@
 #define dom_core_namednodemap_h_
 
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
 struct dom_node;
-struct dom_string;
 
 typedef struct dom_namednodemap dom_namednodemap;
 
@@ -22,7 +22,7 @@ dom_exception dom_namednodemap_get_length(struct dom_namednodemap *map,
 		unsigned long *length);
 
 dom_exception _dom_namednodemap_get_named_item(struct dom_namednodemap *map,
-		struct dom_string *name, struct dom_node **node);
+		dom_string *name, struct dom_node **node);
 
 #define dom_namednodemap_get_named_item(m, n, r)  \
 		_dom_namednodemap_get_named_item((dom_namednodemap *) (m), \
@@ -38,7 +38,7 @@ dom_exception _dom_namednodemap_set_named_item(struct dom_namednodemap *map,
 
 
 dom_exception _dom_namednodemap_remove_named_item(
-		struct dom_namednodemap *map, struct dom_string *name,
+		struct dom_namednodemap *map, dom_string *name,
 		struct dom_node **node);
 
 #define dom_namednodemap_remove_named_item(m, n, r) \
@@ -55,8 +55,8 @@ dom_exception _dom_namednodemap_item(struct dom_namednodemap *map,
 
 
 dom_exception _dom_namednodemap_get_named_item_ns(
-		struct dom_namednodemap *map, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_node **node);
+		struct dom_namednodemap *map, dom_string *namespace,
+		dom_string *localname, struct dom_node **node);
 
 #define dom_namednodemap_get_named_item_ns(m, n, l, r) \
 		_dom_namednodemap_get_named_item_ns((dom_namednodemap *) (m), \
@@ -73,8 +73,8 @@ dom_exception _dom_namednodemap_set_named_item_ns(
 
 
 dom_exception _dom_namednodemap_remove_named_item_ns(
-		struct dom_namednodemap *map, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_node **node);
+		struct dom_namednodemap *map, dom_string *namespace,
+		dom_string *localname, struct dom_node **node);
 
 #define dom_namednodemap_remove_named_item_ns(m, n, l, r) \
 		_dom_namednodemap_remove_named_item_ns(\

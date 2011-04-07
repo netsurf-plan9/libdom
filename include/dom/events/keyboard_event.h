@@ -10,8 +10,8 @@
 
 #include <stdbool.h>
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
-struct dom_string;
 struct dom_abstract_view;
 
 typedef struct dom_keyboard_event dom_keyboard_event;
@@ -24,10 +24,10 @@ typedef enum {
 } dom_key_location;
 
 dom_exception _dom_keyboard_event_get_key_identifier(dom_keyboard_event *evt,
-		struct dom_string **ident);
+		dom_string **ident);
 #define dom_keyboard_event_get_key_identifier(e, i) \
 		_dom_keyboard_event_get_key_identifier( \
-		(dom_keyboard_event *) (e), (struct dom_string **) (i))
+		(dom_keyboard_event *) (e), (dom_string **) (i))
 
 dom_exception _dom_keyboard_event_get_key_location(dom_keyboard_event *evt,
 		dom_key_location *loc);
@@ -57,33 +57,33 @@ dom_exception _dom_keyboard_event_get_meta_key(dom_keyboard_event *evt,
 		(dom_keyboard_event *) (e), (bool *) (k))
 
 dom_exception _dom_keyboard_event_get_modifier_state(dom_keyboard_event *evt,
-		struct dom_string *m, bool *state);
+		dom_string *m, bool *state);
 #define dom_keyboard_event_get_modifier_state(e, m, s) \
 		_dom_keyboard_event_get_modifier_state( \
-		(dom_keyboard_event *) (e), (struct dom_string *) (m),\
+		(dom_keyboard_event *) (e), (dom_string *) (m),\
 		(bool *) (s))
 
 dom_exception _dom_keyboard_event_init(dom_keyboard_event *evt, 
-		struct dom_string *type, bool bubble, bool cancelable, 
-		struct dom_abstract_view *view, struct dom_string *key_ident,
-		dom_key_location key_loc, struct dom_string *modifier_list);
+		dom_string *type, bool bubble, bool cancelable, 
+		struct dom_abstract_view *view, dom_string *key_ident,
+		dom_key_location key_loc, dom_string *modifier_list);
 #define dom_keyboard_event_init(e, t, b, c, v, ki, kl, m) \
 		_dom_keyboard_event_init((dom_keyboard_event *) (e), \
-		(struct dom_string *) (t), (bool) (b), (bool) (c), \
-		(struct dom_abstract_view *) (v), (struct dom_string *) (ki), \
-		(dom_key_location) (kl), (struct dom_string *) (m))
+		(dom_string *) (t), (bool) (b), (bool) (c), \
+		(struct dom_abstract_view *) (v), (dom_string *) (ki), \
+		(dom_key_location) (kl), (dom_string *) (m))
 
 dom_exception _dom_keyboard_event_init_ns(dom_keyboard_event *evt, 
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view,
-		struct dom_string *key_ident, dom_key_location key_loc,
-		struct dom_string *modifier_list);
+		dom_string *key_ident, dom_key_location key_loc,
+		dom_string *modifier_list);
 #define dom_keyboard_event_init_ns(e, n, t, b, c, v, ki, kl, m) \
 		_dom_keyboard_event_init_ns((dom_keyboard_event *) (e), \
-		(struct dom_string *) (n), (struct dom_string *) (t), \
+		(dom_string *) (n), (dom_string *) (t), \
 		(bool) (b), (bool) (c), (struct dom_abstract_view *) (v), \
-		(struct dom_string *) (ki), (dom_key_location) (kl), \
-		(struct dom_string *) (m)) 
+		(dom_string *) (ki), (dom_key_location) (kl), \
+		(dom_string *) (m)) 
 
 #endif
 

@@ -37,7 +37,7 @@ static struct dom_node_protect_vtable cdata_section_protect_vtable = {
  * The returned node will already be referenced.
  */
 dom_exception _dom_cdata_section_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct dom_cdata_section **result)
 {
 	struct dom_cdata_section *c;

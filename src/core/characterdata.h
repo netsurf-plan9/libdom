@@ -24,30 +24,30 @@ struct dom_characterdata {
 dom_characterdata *_dom_characterdata_create(struct dom_document *doc);
 dom_exception _dom_characterdata_initialise(struct dom_characterdata *cdata,
 		struct dom_document *doc, dom_node_type type,
-		struct lwc_string_s *name, struct dom_string *value);
+		struct lwc_string_s *name, dom_string *value);
 
 void _dom_characterdata_finalise(struct dom_document *doc,
 		struct dom_characterdata *cdata);
 
 /* The virtual functions for dom_characterdata */
 dom_exception _dom_characterdata_get_data(struct dom_characterdata *cdata,
-		struct dom_string **data);
+		dom_string **data);
 dom_exception _dom_characterdata_set_data(struct dom_characterdata *cdata,
-		struct dom_string *data);
+		dom_string *data);
 dom_exception _dom_characterdata_get_length(struct dom_characterdata *cdata,
 		unsigned long *length);
 dom_exception _dom_characterdata_substring_data(
 		struct dom_characterdata *cdata, unsigned long offset,
-		unsigned long count, struct dom_string **data);
+		unsigned long count, dom_string **data);
 dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
-		struct dom_string *data);
+		dom_string *data);
 dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
-		unsigned long offset, struct dom_string *data);
+		unsigned long offset, dom_string *data);
 dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 		unsigned long offset, unsigned long count);
 dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 		unsigned long offset, unsigned long count,
-		struct dom_string *data);
+		dom_string *data);
 
 #define DOM_CHARACTERDATA_VTABLE \
 	_dom_characterdata_get_data, \

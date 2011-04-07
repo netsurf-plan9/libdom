@@ -72,7 +72,7 @@ void _dom_event_target_internal_finalise(struct dom_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_event_target_add_event_listener(dom_event_target *et,
-		struct dom_string *type, struct dom_event_listener *listener, 
+		dom_string *type, struct dom_event_listener *listener, 
 		bool capture)
 {
 	struct listener_entry *le = NULL;
@@ -141,7 +141,7 @@ dom_exception _dom_event_target_add_event_listener(dom_event_target *et,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_event_target_remove_event_listener(dom_event_target *et,
-		struct dom_string *type, struct dom_event_listener *listener, 
+		dom_string *type, struct dom_event_listener *listener, 
 		bool capture)
 {
 	struct listener_entry *le = NULL;
@@ -244,7 +244,7 @@ dom_exception _dom_event_target_dispatch_event(dom_event_target *et,
 		return DOM_NO_ERR;
 	}
 
-	struct dom_string *type = NULL;
+	dom_string *type = NULL;
 	err = _dom_document_create_string_from_lwcstring(doc, evt->type, &type);
 	if (err != DOM_NO_ERR)
 		return err;
@@ -389,7 +389,7 @@ cleanup:
  * We don't support this API now, so it always return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_event_target_add_event_listener_ns(dom_event_target *et,
-		struct dom_string *namespace, struct dom_string *type, 
+		dom_string *namespace, dom_string *type, 
 		struct dom_event_listener *listener, bool capture)
 {
 	UNUSED(et);
@@ -414,7 +414,7 @@ dom_exception _dom_event_target_add_event_listener_ns(dom_event_target *et,
  * We don't support this API now, so it always return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_event_target_remove_event_listener_ns(dom_event_target *et,
-		struct dom_string *namespace, struct dom_string *type, 
+		dom_string *namespace, dom_string *type, 
 		struct dom_event_listener *listener, bool capture)
 {
 	UNUSED(et);

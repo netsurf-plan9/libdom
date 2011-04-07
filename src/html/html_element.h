@@ -43,9 +43,9 @@ dom_exception _dom_html_element_copy(struct dom_node_internal *new,
 
 /* The API functions */
 dom_exception _dom_html_element_get_id(dom_html_element *element,
-                                       struct dom_string **id);
+                                       dom_string **id);
 dom_exception _dom_html_element_set_id(dom_html_element *element,
-                                       struct dom_string *id);
+                                       dom_string *id);
 
 /* Some common functions used by all child classes */
 dom_exception dom_html_element_get_bool_property(dom_html_element *ele,

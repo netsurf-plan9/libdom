@@ -13,10 +13,10 @@
 /* Create a DOM string from a lwc_string
  * This function call mainly used for create a string from lwc_string */
 dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
-		struct lwc_string_s *str, struct dom_string **ret);
+		struct lwc_string_s *str, dom_string **ret);
 
 /* Make the dom_string be interned */
-dom_exception _dom_string_intern(struct dom_string *str, 
+dom_exception _dom_string_intern(dom_string *str, 
 		struct lwc_string_s **lwcstr);
 
 /* Map the lwc_error to dom_exception */
@@ -27,10 +27,10 @@ dom_exception _dom_exception_from_lwc_error(lwc_error err);
  * @note: This function is just provided for the convenience of accessing the 
  * raw C string character, no change on the result string is allowed.
  */
-char *_dom_string_data(struct dom_string *str);
+char *_dom_string_data(dom_string *str);
 
 /* Get the string length of this dom_string */
-size_t _dom_string_length(struct dom_string *str);
+size_t _dom_string_length(dom_string *str);
 
 #endif
 

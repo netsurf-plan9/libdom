@@ -38,7 +38,7 @@ static struct dom_node_protect_vtable comment_protect_vtable = {
  * The returned node will already be referenced.
  */
 dom_exception _dom_comment_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct dom_comment **result)
 {
 	struct dom_comment *c;

@@ -19,9 +19,9 @@ struct dom_mutation_event {
 	struct dom_event base;
 
 	struct dom_node *related_node;
-	struct dom_string *prev_value;
-	struct dom_string *new_value;
-	struct dom_string *attr_name;
+	dom_string *prev_value;
+	dom_string *new_value;
+	dom_string *attr_name;
 	dom_mutation_type change;
 };
 

@@ -130,8 +130,8 @@ dom_exception dom_html_link_element_set_disabled(dom_html_link_element *ele,
 /* The virtual function used to parse attribute value, see src/core/element.c
  * for detail */
 dom_exception _dom_html_link_element_parse_attribute(dom_element *ele,
-		struct dom_string *name, struct dom_string *value,
-		struct dom_string **parsed)
+		dom_string *name, dom_string *value,
+		dom_string **parsed)
 {
 	UNUSED(ele);
 	UNUSED(name);

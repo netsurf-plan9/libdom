@@ -18,7 +18,6 @@ struct dom_document;
 struct dom_element;
 struct dom_namednodemap;
 struct dom_node;
-struct dom_string;
 struct dom_attr;
 struct dom_type_info;
 struct dom_hash_table;
@@ -57,49 +56,49 @@ void _dom_element_destroy(struct dom_document *doc,
 
 /* The virtual functions of dom_element */
 dom_exception _dom_element_get_tag_name(struct dom_element *element,
-		struct dom_string **name);
+		dom_string **name);
 dom_exception _dom_element_get_attribute(struct dom_element *element,
-		struct dom_string *name, struct dom_string **value);
+		dom_string *name, dom_string **value);
 dom_exception _dom_element_set_attribute(struct dom_element *element,
-		struct dom_string *name, struct dom_string *value);
+		dom_string *name, dom_string *value);
 dom_exception _dom_element_remove_attribute(struct dom_element *element, 
-		struct dom_string *name);
+		dom_string *name);
 dom_exception _dom_element_get_attribute_node(struct dom_element *element, 
-		struct dom_string *name, struct dom_attr **result);
+		dom_string *name, struct dom_attr **result);
 dom_exception _dom_element_set_attribute_node(struct dom_element *element, 
 		struct dom_attr *attr, struct dom_attr **result);
 dom_exception _dom_element_remove_attribute_node(struct dom_element *element, 
 		struct dom_attr *attr, struct dom_attr **result);
 dom_exception _dom_element_get_elements_by_tag_name(
-		struct dom_element *element, struct dom_string *name,
+		struct dom_element *element, dom_string *name,
 		struct dom_nodelist **result);
 dom_exception _dom_element_get_attribute_ns(struct dom_element *element, 
-		struct dom_string *namespace,  struct dom_string *localname, 
-		struct dom_string **value);
+		dom_string *namespace,  dom_string *localname, 
+		dom_string **value);
 dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *qname,
-		struct dom_string *value);
+		dom_string *namespace, dom_string *qname,
+		dom_string *value);
 dom_exception _dom_element_remove_attribute_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *localname);
+		dom_string *namespace, dom_string *localname);
 dom_exception _dom_element_get_attribute_node_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *localname, 
+		dom_string *namespace, dom_string *localname, 
 		struct dom_attr **result);
 dom_exception _dom_element_set_attribute_node_ns(struct dom_element *element, 
 		struct dom_attr *attr, struct dom_attr **result);
 dom_exception _dom_element_get_elements_by_tag_name_ns(
-		struct dom_element *element, struct dom_string *namespace, 
-		struct dom_string *localname, struct dom_nodelist **result);
+		struct dom_element *element, dom_string *namespace, 
+		dom_string *localname, struct dom_nodelist **result);
 dom_exception _dom_element_has_attribute(struct dom_element *element,
-		struct dom_string *name, bool *result);
+		dom_string *name, bool *result);
 dom_exception _dom_element_has_attribute_ns(struct dom_element *element,
-		struct dom_string *namespace, struct dom_string *localname, 
+		dom_string *namespace, dom_string *localname, 
 		bool *result);
 dom_exception _dom_element_get_schema_type_info(struct dom_element *element, 
 		struct dom_type_info **result);
 dom_exception _dom_element_set_id_attribute(struct dom_element *element, 
-		struct dom_string *name, bool is_id);
+		dom_string *name, bool is_id);
 dom_exception _dom_element_set_id_attribute_ns(struct dom_element *element, 
-		struct dom_string *namespace, struct dom_string *localname, 
+		dom_string *namespace, dom_string *localname, 
 		bool is_id);
 dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 		struct dom_attr *id_attr, bool is_id);
@@ -133,11 +132,11 @@ dom_exception _dom_element_has_attributes(dom_node_internal *node,
 		bool *result);
 dom_exception _dom_element_normalize(dom_node_internal *node);
 dom_exception _dom_element_lookup_prefix(dom_node_internal *node,
-		struct dom_string *namespace, struct dom_string **result);
+		dom_string *namespace, dom_string **result);
 dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
-		struct dom_string *namespace, bool *result);
+		dom_string *namespace, bool *result);
 dom_exception _dom_element_lookup_namespace(dom_node_internal *node,
-		struct dom_string *prefix, struct dom_string **result);
+		dom_string *prefix, dom_string **result);
 #define DOM_NODE_VTABLE_ELEMENT \
 	_dom_node_get_node_name, \
 	_dom_node_get_node_value, \
@@ -184,8 +183,8 @@ struct dom_element_protected_vtable {
 	struct dom_node_protect_vtable base;
 
 	dom_exception (*dom_element_parse_attribute)(dom_element *ele,
-			struct dom_string *name, struct dom_string *value,
-			struct dom_string **parsed);
+			dom_string *name, dom_string *value,
+			dom_string **parsed);
 			/**< Called by dom_attr_set_value, and used to check
 			 *   whether the new attribute value is valid and 
 			 *   return a valid on if it is not
@@ -196,22 +195,22 @@ typedef struct dom_element_protected_vtable dom_element_protected_vtable;
 
 /* Parse the attribute's value */
 static inline dom_exception dom_element_parse_attribute(dom_element *ele,
-		struct dom_string *name, struct dom_string *value,
-		struct dom_string **parsed)
+		dom_string *name, dom_string *value,
+		dom_string **parsed)
 {
 	struct dom_node_internal *node = (struct dom_node_internal *) ele;
 	return ((dom_element_protected_vtable *) node->vtable)->
 			dom_element_parse_attribute(ele, name, value, parsed);
 }
 #define dom_element_parse_attribute(e, n, v, p) dom_element_parse_attribute( \
-		(dom_element *) (e), (struct dom_string *) (n), \
-		(struct dom_string *) (v), (struct dom_string **) (p))
+		(dom_element *) (e), (dom_string *) (n), \
+		(dom_string *) (v), (dom_string **) (p))
 
 
 /* The protected virtual function */
 dom_exception _dom_element_parse_attribute(dom_element *ele,
-		struct dom_string *name, struct dom_string *value,
-		struct dom_string **parsed);
+		dom_string *name, dom_string *value,
+		dom_string **parsed);
 void __dom_element_destroy(dom_node_internal *node);
 dom_exception _dom_element_alloc(struct dom_document *doc, 
 		struct dom_node_internal *n, struct dom_node_internal **ret);

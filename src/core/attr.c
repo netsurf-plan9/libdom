@@ -396,7 +396,7 @@ void dom_attr_mark_readonly(dom_attr *a)
  * finished with it.
  */
 dom_exception _dom_attr_get_name(struct dom_attr *attr,
-		struct dom_string **result)
+		dom_string **result)
 {
 	/* This is the same as nodeName */
 	return dom_node_get_node_name(attr, result);
@@ -428,11 +428,11 @@ dom_exception _dom_attr_get_specified(struct dom_attr *attr, bool *result)
  * finished with it.
  */
 dom_exception _dom_attr_get_value(struct dom_attr *attr,
-		struct dom_string **result)
+		dom_string **result)
 {
 	struct dom_node_internal *a = (struct dom_node_internal *) attr;
 	struct dom_node_internal *c;
-	struct dom_string *value, *temp;
+	dom_string *value, *temp;
 	dom_exception err;
 
 	err = _dom_document_create_string(a->owner, 
@@ -469,7 +469,7 @@ dom_exception _dom_attr_get_value(struct dom_attr *attr,
 			/* Claim new value */
 			value = temp;
 		} else if (c->type == DOM_ENTITY_REFERENCE_NODE) {
-			struct dom_string *tr;
+			dom_string *tr;
 
 			/* Get textual representation of entity */
 			err = _dom_entity_reference_get_textual_representation(
@@ -513,7 +513,7 @@ dom_exception _dom_attr_get_value(struct dom_attr *attr,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if attribute is readonly.
  */
 dom_exception _dom_attr_set_value(struct dom_attr *attr,
-		struct dom_string *value)
+		dom_string *value)
 {
 	struct dom_node_internal *a = (struct dom_node_internal *) attr;
 	struct dom_node_internal *c, *d;
@@ -640,7 +640,7 @@ dom_exception _dom_attr_is_id(struct dom_attr *attr, bool *result)
 /* Overload function of Node, please refer node.c for the detail of this 
  * function. */
 dom_exception _dom_attr_get_node_value(dom_node_internal *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	dom_attr *attr = (dom_attr *) node;
 
@@ -674,7 +674,7 @@ dom_exception _dom_attr_clone_node(dom_node_internal *node, bool deep,
 /* Overload function of Node, please refer node.c for the detail of this 
  * function. */
 dom_exception _dom_attr_set_prefix(dom_node_internal *node,
-		struct dom_string *prefix)
+		dom_string *prefix)
 {
 	/* Really I don't know whether there should something
 	 * special to do here */
@@ -684,7 +684,7 @@ dom_exception _dom_attr_set_prefix(dom_node_internal *node,
 /* Overload function of Node, please refer node.c for the detail of this 
  * function. */
 dom_exception _dom_attr_lookup_prefix(dom_node_internal *node,
-		struct dom_string *namespace, struct dom_string **result)
+		dom_string *namespace, dom_string **result)
 {
 	struct dom_element *owner;
 	dom_exception err;
@@ -704,7 +704,7 @@ dom_exception _dom_attr_lookup_prefix(dom_node_internal *node,
 /* Overload function of Node, please refer node.c for the detail of this 
  * function. */
 dom_exception _dom_attr_is_default_namespace(dom_node_internal *node,
-		struct dom_string *namespace, bool *result)
+		dom_string *namespace, bool *result)
 {
 	struct dom_element *owner;
 	dom_exception err;
@@ -724,7 +724,7 @@ dom_exception _dom_attr_is_default_namespace(dom_node_internal *node,
 /* Overload function of Node, please refer node.c for the detail of this 
  * function. */
 dom_exception _dom_attr_lookup_namespace(dom_node_internal *node,
-		struct dom_string *prefix, struct dom_string **result)
+		dom_string *prefix, dom_string **result)
 {
 	struct dom_element *owner;
 	dom_exception err;

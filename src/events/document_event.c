@@ -91,7 +91,7 @@ void _dom_document_event_internal_finalise(struct dom_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_document_event_create_event(dom_document_event *de,
-		struct dom_string *type, struct dom_event **evt)
+		dom_string *type, struct dom_event **evt)
 {
 	lwc_string *t = NULL;
 	dom_exception err;
@@ -175,7 +175,7 @@ dom_exception _dom_document_event_create_event(dom_document_event *de,
  * DOM_NO_SUPPORTED_ERR.
  */
 dom_exception _dom_document_event_can_dispatch(dom_document_event *de,
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool *can)
 {
 	UNUSED(de);

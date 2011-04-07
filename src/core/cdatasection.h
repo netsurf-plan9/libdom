@@ -10,15 +10,15 @@
 
 #include <dom/core/exceptions.h>
 #include <dom/core/cdatasection.h>
+#include <dom/core/string.h>
 
 struct dom_node_internal;
 struct dom_cdata_section;
 struct dom_document;
-struct dom_string;
 struct lwc_string_s;
 
 dom_exception _dom_cdata_section_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct dom_cdata_section **result);
 
 void _dom_cdata_section_destroy(struct dom_document *doc,

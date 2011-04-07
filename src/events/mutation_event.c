@@ -98,7 +98,7 @@ dom_exception _dom_mutation_event_get_related_node(dom_mutation_event *evt,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mutation_event_get_prev_value(dom_mutation_event *evt,
-		struct dom_string **ret)
+		dom_string **ret)
 {
 	*ret = evt->prev_value;
 	dom_string_ref(*ret);
@@ -114,7 +114,7 @@ dom_exception _dom_mutation_event_get_prev_value(dom_mutation_event *evt,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mutation_event_get_new_value(dom_mutation_event *evt,
-		struct dom_string **ret)
+		dom_string **ret)
 {
 	*ret = evt->new_value;
 	dom_string_ref(*ret);
@@ -130,7 +130,7 @@ dom_exception _dom_mutation_event_get_new_value(dom_mutation_event *evt,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mutation_event_get_attr_name(dom_mutation_event *evt,
-		struct dom_string **ret)
+		dom_string **ret)
 {
 	*ret = evt->attr_name;
 	dom_string_ref(*ret);
@@ -168,9 +168,9 @@ dom_exception _dom_mutation_event_get_attr_change(dom_mutation_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_mutation_event_init(dom_mutation_event *evt, 
-		struct dom_string *type, bool bubble, bool cancelable, 
-		struct dom_node *node, struct dom_string *prev_value, 
-		struct dom_string *new_value, struct dom_string *attr_name,
+		dom_string *type, bool bubble, bool cancelable, 
+		struct dom_node *node, dom_string *prev_value, 
+		dom_string *new_value, dom_string *attr_name,
 		dom_mutation_type change)
 {
 	evt->related_node = node;
@@ -206,10 +206,10 @@ dom_exception _dom_mutation_event_init(dom_mutation_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_mutation_event_init_ns(dom_mutation_event *evt,
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_node *node,
-		struct dom_string *prev_value, struct dom_string *new_value,
-		struct dom_string *attr_name, dom_mutation_type change)
+		dom_string *prev_value, dom_string *new_value,
+		dom_string *attr_name, dom_mutation_type change)
 {
 	evt->related_node = node;
 	dom_node_ref(node);

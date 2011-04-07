@@ -24,8 +24,8 @@
 struct dom_document_type {
 	struct dom_node_internal base;		/**< Base node */
 
-	struct dom_string *public_id;	/**< Doctype public ID */
-	struct dom_string *system_id;	/**< Doctype system ID */
+	dom_string *public_id;	/**< Doctype public ID */
+	dom_string *system_id;	/**< Doctype system ID */
 
 	struct dom_resource_mgr res;	/**< resource_mgr of this node */
 };
@@ -61,8 +61,8 @@ static struct dom_node_protect_vtable dt_protect_vtable = {
  * explicitly. The client must unref the doctype once it has
  * finished with it.
  */
-dom_exception _dom_document_type_create(struct dom_string *qname,
-		struct dom_string *public_id, struct dom_string *system_id,
+dom_exception _dom_document_type_create(dom_string *qname,
+		dom_string *public_id, dom_string *system_id,
 		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype)
 {
@@ -107,8 +107,8 @@ void _dom_document_type_destroy(struct dom_node_internal *doctypenode)
 
 /* Initialise this document_type */
 dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
-		struct dom_string *qname, struct dom_string *public_id,
-		struct dom_string *system_id, dom_alloc alloc, void *pw)
+		dom_string *qname, dom_string *public_id,
+		dom_string *system_id, dom_alloc alloc, void *pw)
 {
 	dom_exception err;
 
@@ -207,7 +207,7 @@ void _dom_document_type_finalise(struct dom_document_type *doctype)
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_name(struct dom_document_type *doc_type,
-		struct dom_string **result)
+		dom_string **result)
 {
 	return dom_node_get_node_name(doc_type, result);
 }
@@ -276,7 +276,7 @@ dom_exception _dom_document_type_get_notations(
  */
 dom_exception _dom_document_type_get_public_id(
 		struct dom_document_type *doc_type,
-		struct dom_string **result)
+		dom_string **result)
 {
 	UNUSED(doc_type);
 	UNUSED(result);
@@ -300,7 +300,7 @@ dom_exception _dom_document_type_get_public_id(
  */
 dom_exception _dom_document_type_get_system_id(
 		struct dom_document_type *doc_type,
-		struct dom_string **result)
+		dom_string **result)
 {
 	UNUSED(doc_type);
 	UNUSED(result);
@@ -324,7 +324,7 @@ dom_exception _dom_document_type_get_system_id(
  */
 dom_exception _dom_document_type_get_internal_subset(
 		struct dom_document_type *doc_type,
-		struct dom_string **result)
+		dom_string **result)
 {
 	UNUSED(doc_type);
 	UNUSED(result);

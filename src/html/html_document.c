@@ -72,7 +72,7 @@ dom_exception dom_html_document_complete(void);
  *    as the returned title.
  */
 dom_exception dom_html_document_get_title(dom_html_document *doc,
-		struct dom_string **title)
+		dom_string **title)
 {
 	UNUSED(doc);
 	UNUSED(title);
@@ -81,13 +81,13 @@ dom_exception dom_html_document_get_title(dom_html_document *doc,
 }
 
 dom_exception dom_html_document_set_title(dom_html_document *doc,
-		struct dom_string *title);
+		dom_string *title);
 dom_exception dom_html_document_get_referer(dom_html_document *doc,
-		struct dom_string **referer);
+		dom_string **referer);
 dom_exception dom_html_document_get_domain(dom_html_document *doc,
-		struct dom_string **domain);
+		dom_string **domain);
 dom_exception dom_html_document_get_url(dom_html_document *doc,
-		struct dom_string **url);
+		dom_string **url);
 dom_exception dom_html_document_get_body(dom_html_document *doc,
 		struct dom_html_element **body);
 dom_exception dom_html_document_set_body(dom_html_document *doc,
@@ -103,16 +103,16 @@ dom_exception dom_html_document_get_forms(dom_html_document *doc,
 dom_exception dom_html_document_get_anchors(dom_html_document *doc,
 		struct dom_html_collection **col);
 dom_exception dom_html_document_get_cookie(dom_html_document *doc,
-		struct dom_string **cookie);
+		dom_string **cookie);
 dom_exception dom_html_document_set_cookie(dom_html_document *doc,
-		struct dom_string *cookie);
+		dom_string *cookie);
 
 dom_exception dom_html_document_open(dom_html_document *doc);
 dom_exception dom_html_document_close(dom_html_document *doc);
 dom_exception dom_html_document_write(dom_html_document *doc,
-		struct dom_string *text);
+		dom_string *text);
 dom_exception dom_html_document_writeln(dom_html_document *doc,
-		struct dom_string *text);
+		dom_string *text);
 dom_exception dom_html_document_get_elements_by_name(dom_html_document *doc,
-		struct dom_string *name, struct dom_nodelist **list);
+		dom_string *name, struct dom_nodelist **list);
 

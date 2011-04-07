@@ -12,11 +12,10 @@
 
 struct dom_document;
 struct dom_processing_instruction;
-struct dom_string;
 struct lwc_string_s;
 
 dom_exception _dom_processing_instruction_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct dom_processing_instruction **result);
 
 void _dom_processing_instruction_destroy(struct dom_document *doc,

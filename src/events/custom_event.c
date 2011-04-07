@@ -89,7 +89,7 @@ dom_exception _dom_custom_event_get_detail(dom_custom_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_custom_event_init_ns(dom_custom_event *evt, 
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, void *detail)
 {
 	evt->detail = detail;

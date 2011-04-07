@@ -10,10 +10,9 @@
 
 #include <dom/functypes.h>
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
 struct dom_document;
-struct dom_string;
-
 
 /* Initialise the namespace component */
 dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw);
@@ -22,18 +21,18 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw);
 dom_exception _dom_namespace_finalise(void);
 
 /* Ensure a QName is valid */
-dom_exception _dom_namespace_validate_qname(struct dom_string *qname,
-		struct dom_string *namespace);
+dom_exception _dom_namespace_validate_qname(dom_string *qname,
+		dom_string *namespace);
 
 /* Split a QName into a namespace prefix and localname string */
-dom_exception _dom_namespace_split_qname(struct dom_string *qname,
-		struct dom_string **prefix, struct dom_string **localname);
+dom_exception _dom_namespace_split_qname(dom_string *qname,
+		dom_string **prefix, dom_string **localname);
 
 /* Get the XML prefix dom_string */
-struct dom_string *_dom_namespace_get_xml_prefix(void);
+dom_string *_dom_namespace_get_xml_prefix(void);
 
 /* Get the XMLNS prefix dom_string */
-struct dom_string *_dom_namespace_get_xmlns_prefix(void);
+dom_string *_dom_namespace_get_xmlns_prefix(void);
 
 #endif
 

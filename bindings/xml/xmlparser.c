@@ -94,7 +94,7 @@ struct dom_xml_parser {
 
 	bool complete;			/**< Indicate stream completion */
 
-	struct dom_string *udkey;	/**< Key for DOM node user data */
+	dom_string *udkey;	/**< Key for DOM node user data */
 
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
@@ -639,7 +639,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 	/* Create the element node */
 	if (child->ns == NULL) {
 		/* No namespace */
-		struct dom_string *tag_name;
+		dom_string *tag_name;
 
 		/* Create tag name DOM string */
 		err = _dom_document_create_string(parser->doc,
@@ -666,8 +666,8 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 		dom_string_unref(tag_name);
 	} else {
 		/* Namespace */
-		struct dom_string *namespace;
-		struct dom_string *qname;
+		dom_string *namespace;
+		dom_string *qname;
 		size_t qnamelen = (child->ns->prefix != NULL ?
 			strlen((const char *) child->ns->prefix) : 0) +
 			(child->ns->prefix != NULL ? 1 : 0) /* ':' */ +
@@ -730,7 +730,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 		/* Create attribute node */
 		if (a->ns == NULL) {
 			/* Attribute has no namespace */
-			struct dom_string *name;
+			dom_string *name;
 
 			/* Create attribute name DOM string */
 			err = _dom_document_create_string(parser->doc,
@@ -758,8 +758,8 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 			dom_string_unref(name);
 		} else {
 			/* Attribute has namespace */
-			struct dom_string *namespace;
-			struct dom_string *qname;
+			dom_string *namespace;
+			dom_string *qname;
 			size_t qnamelen = (a->ns->prefix != NULL ?
 				strlen((const char *) a->ns->prefix) : 0) +
 				(a->ns->prefix != NULL ? 1 : 0) /* ':' */ +
@@ -904,7 +904,7 @@ void xml_parser_add_text_node(dom_xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child)
 {
 	struct dom_text *text, *ins_text = NULL;
-	struct dom_string *data;
+	dom_string *data;
 	dom_exception err;
 
 	/* Create DOM string data for text node */
@@ -965,7 +965,7 @@ void xml_parser_add_cdata_section(dom_xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child)
 {
 	struct dom_cdata_section *cdata, *ins_cdata = NULL;
-	struct dom_string *data;
+	dom_string *data;
 	dom_exception err;
 
 	/* Create DOM string data for cdata section */
@@ -1026,7 +1026,7 @@ void xml_parser_add_entity_reference(dom_xml_parser *parser,
 		struct dom_node *parent, xmlNodePtr child)
 {
 	struct dom_entity_reference *entity, *ins_entity = NULL;
-	struct dom_string *name;
+	dom_string *name;
 	xmlNodePtr c;
 	dom_exception err;
 
@@ -1102,7 +1102,7 @@ void xml_parser_add_comment(dom_xml_parser *parser, struct dom_node *parent,
 		xmlNodePtr child)
 {
 	struct dom_comment *comment, *ins_comment = NULL;
-	struct dom_string *data;
+	dom_string *data;
 	dom_exception err;
 
 	/* Create DOM string data for comment */

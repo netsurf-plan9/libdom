@@ -16,36 +16,35 @@
 struct dom_document;
 struct dom_node;
 struct dom_namednodemap;
-struct dom_string;
 
 struct nnm_operation {
 	dom_exception (*namednodemap_get_length)(void *priv,
 			unsigned long *length);
 
 	dom_exception (*namednodemap_get_named_item)(void *priv,
-			struct dom_string *name, struct dom_node **node);
+			dom_string *name, struct dom_node **node);
 
 	dom_exception (*namednodemap_set_named_item)(void *priv,
 			struct dom_node *arg, struct dom_node **node);
 
 	dom_exception (*namednodemap_remove_named_item)(
-			void *priv, struct dom_string *name,
+			void *priv, dom_string *name,
 			struct dom_node **node);
 
 	dom_exception (*namednodemap_item)(void *priv,
 			unsigned long index, struct dom_node **node);
 
 	dom_exception (*namednodemap_get_named_item_ns)(
-			void *priv, struct dom_string *namespace,
-			struct dom_string *localname, struct dom_node **node);
+			void *priv, dom_string *namespace,
+			dom_string *localname, struct dom_node **node);
 
 	dom_exception (*namednodemap_set_named_item_ns)(
 			void *priv, struct dom_node *arg,
 			struct dom_node **node);
 
 	dom_exception (*namednodemap_remove_named_item_ns)(
-			void *priv, struct dom_string *namespace,
-			struct dom_string *localname, struct dom_node **node);
+			void *priv, dom_string *namespace,
+			dom_string *localname, struct dom_node **node);
 
 	void (*namednodemap_destroy)(void *priv);
 

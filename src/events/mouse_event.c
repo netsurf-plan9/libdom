@@ -222,7 +222,7 @@ dom_exception _dom_mouse_event_get_related_target(dom_mouse_event *evt,
  * KeyboardEvent.keyLocation.
  */
 dom_exception _dom_mouse_event_get_modifier_state(dom_mouse_event *evt,
-		struct dom_string *m, bool *state)
+		dom_string *m, bool *state)
 {
 	if (m == NULL) {
 		*state = false;
@@ -278,7 +278,7 @@ dom_exception _dom_mouse_event_get_modifier_state(dom_mouse_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_mouse_event_init(dom_mouse_event *evt, 
-		struct dom_string *type, bool bubble, bool cancelable, 
+		dom_string *type, bool bubble, bool cancelable, 
 		struct dom_abstract_view *view, long detail, long screen_x,
 		long screen_y, long client_x, long client_y, bool ctrl,
 		bool alt, bool shift, bool meta, unsigned short button,
@@ -332,7 +332,7 @@ dom_exception _dom_mouse_event_init(dom_mouse_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_mouse_event_init_ns(dom_mouse_event *evt,
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view,
 		long detail, long screen_x, long screen_y, long client_x,
 		long client_y, bool ctrl, bool alt, bool shift, bool meta, 

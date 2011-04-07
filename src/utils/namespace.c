@@ -16,9 +16,9 @@
 
 
 /** XML prefix */
-static struct dom_string *xml;
+static dom_string *xml;
 /** XMLNS prefix */
-static struct dom_string *xmlns;
+static dom_string *xmlns;
 
 /* The namespace strings */
 static const char *namespaces[DOM_NAMESPACE_COUNT] = {
@@ -31,7 +31,7 @@ static const char *namespaces[DOM_NAMESPACE_COUNT] = {
 	"http://www.w3.org/2000/xmlns/"
 };
 
-struct dom_string *dom_namespaces[DOM_NAMESPACE_COUNT] = {
+dom_string *dom_namespaces[DOM_NAMESPACE_COUNT] = {
 	NULL,
 };
 
@@ -129,8 +129,8 @@ dom_exception _dom_namespace_finalise(void)
  *                                   ::qname is not (or is not prefixed by)
  *                                   "xmlns".
  */
-dom_exception _dom_namespace_validate_qname(struct dom_string *qname,
-		struct dom_string *namespace)
+dom_exception _dom_namespace_validate_qname(dom_string *qname,
+		dom_string *namespace)
 {
 	uint32_t colon, len;
 
@@ -171,8 +171,8 @@ dom_exception _dom_namespace_validate_qname(struct dom_string *qname,
 			return DOM_NAMESPACE_ERR;
 	} else {
 		/* Prefix */
-		struct dom_string *prefix;
-		struct dom_string *lname;
+		dom_string *prefix;
+		dom_string *lname;
 		dom_exception err;
 
 		/* Ensure there is a namespace URI */
@@ -238,8 +238,8 @@ dom_exception _dom_namespace_validate_qname(struct dom_string *qname,
  * ::prefix and ::localname will be referenced. The caller should unreference
  * them once finished.
  */
-dom_exception _dom_namespace_split_qname(struct dom_string *qname,
-		struct dom_string **prefix, struct dom_string **localname)
+dom_exception _dom_namespace_split_qname(dom_string *qname,
+		dom_string **prefix, dom_string **localname)
 {
 	uint32_t colon;
 	dom_exception err;

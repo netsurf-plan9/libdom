@@ -10,11 +10,11 @@
 
 #include <dom/functypes.h>
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
 #include "hashtable.h"
 
 struct lwc_string_s;
-struct dom_string;
 
 /**
  * Resource manager
@@ -28,14 +28,14 @@ void *_dom_resource_mgr_alloc(struct dom_resource_mgr *res, void *ptr,
 		size_t size);
 
 dom_exception _dom_resource_mgr_create_string(struct dom_resource_mgr *res,
-		const uint8_t *data, size_t len, struct dom_string **result);
+		const uint8_t *data, size_t len, dom_string **result);
 
 dom_exception _dom_resource_mgr_create_lwcstring(struct dom_resource_mgr *res,
 		const uint8_t *data, size_t len, struct lwc_string_s **result);
 
 dom_exception _dom_resource_mgr_create_string_from_lwcstring(
 		struct dom_resource_mgr *res, struct lwc_string_s *str, 
-		struct dom_string **result);
+		dom_string **result);
 
 dom_exception _dom_resource_mgr_create_hashtable(struct dom_resource_mgr *res,
 		size_t chains, dom_hash_func f, struct dom_hash_table **ht);

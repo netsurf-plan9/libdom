@@ -134,7 +134,7 @@ dom_exception dom_namednodemap_get_length(struct dom_namednodemap *map,
  * should unref the node once it has finished with it.
  */
 dom_exception _dom_namednodemap_get_named_item(struct dom_namednodemap *map,
-		struct dom_string *name, struct dom_node **node)
+		dom_string *name, struct dom_node **node)
 {
 	assert(map->opt != NULL);
 	return map->opt->namednodemap_get_named_item(map->priv, name, node);
@@ -186,7 +186,7 @@ dom_exception _dom_namednodemap_set_named_item(struct dom_namednodemap *map,
  * should unref the node once it has finished with it.
  */
 dom_exception _dom_namednodemap_remove_named_item(
-		struct dom_namednodemap *map, struct dom_string *name,
+		struct dom_namednodemap *map, dom_string *name,
 		struct dom_node **node)
 {
 	assert(map->opt != NULL);
@@ -231,8 +231,8 @@ dom_exception _dom_namednodemap_item(struct dom_namednodemap *map,
  * should unref the node once it has finished with it.
  */
 dom_exception _dom_namednodemap_get_named_item_ns(
-		struct dom_namednodemap *map, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_node **node)
+		struct dom_namednodemap *map, dom_string *namespace,
+		dom_string *localname, struct dom_node **node)
 {
 	assert(map->opt != NULL);
 	return map->opt->namednodemap_get_named_item_ns(map->priv, namespace,
@@ -296,8 +296,8 @@ dom_exception _dom_namednodemap_set_named_item_ns(
  * should unref the node once it has finished with it.
  */
 dom_exception _dom_namednodemap_remove_named_item_ns(
-		struct dom_namednodemap *map, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_node **node)
+		struct dom_namednodemap *map, dom_string *namespace,
+		dom_string *localname, struct dom_node **node)
 {
 	assert(map->opt != NULL);
 	return map->opt->namednodemap_remove_named_item_ns(map->priv, namespace,

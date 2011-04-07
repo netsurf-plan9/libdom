@@ -10,8 +10,7 @@
 
 #include <stdbool.h>
 #include <dom/core/exceptions.h>
-
-struct dom_string;
+#include <dom/core/string.h>
 
 typedef struct dom_custom_event dom_custom_event;
 
@@ -22,11 +21,11 @@ dom_exception _dom_custom_event_get_detail(dom_custom_event *evt,
 		(void **) (d))
 
 dom_exception _dom_custom_event_init_ns(dom_custom_event *evt, 
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, void *detail);
 #define dom_custom_event_init_ns(e, n, t, b, c, d) \
 		_dom_custom_event_init_ns((dom_custom_event *) (e), \
-		(struct dom_string *) (n), (struct dom_string *) (t), \
+		(dom_string *) (n), (dom_string *) (t), \
 		(bool) (b), (bool) (c), (void *) (d))
 
 #endif

@@ -129,7 +129,7 @@ void _dom_event_unref(dom_event *evt)
  * \parnm type  The returned event type
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_event_get_type(dom_event *evt, struct dom_string **type)
+dom_exception _dom_event_get_type(dom_event *evt, dom_string **type)
 {
 	struct dom_document *doc = evt->doc;
 	dom_exception err;
@@ -245,7 +245,7 @@ dom_exception _dom_event_prevent_default(dom_event *evt)
  * \param cancelable  Whether this event is cancelable
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_event_init(dom_event *evt, struct dom_string *type, 
+dom_exception _dom_event_init(dom_event *evt, dom_string *type, 
 		bool bubble, bool cancelable)
 {
 	assert(evt->doc != NULL);
@@ -273,7 +273,7 @@ dom_exception _dom_event_init(dom_event *evt, struct dom_string *type,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_event_get_namespace(dom_event *evt,
-		struct dom_string **namespace)
+		dom_string **namespace)
 {
 	struct dom_document *doc = evt->doc;
 	dom_exception err;
@@ -337,8 +337,8 @@ dom_exception _dom_event_is_default_prevented(dom_event *evt, bool *prevented)
  * \param cancelable  Whether this event is cancelable
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_event_init_ns(dom_event *evt, struct dom_string *namespace,
-		struct dom_string *type, bool bubble, bool cancelable)
+dom_exception _dom_event_init_ns(dom_event *evt, dom_string *namespace,
+		dom_string *type, bool bubble, bool cancelable)
 {
 	assert(evt->doc != NULL);
 	lwc_string *str = NULL;

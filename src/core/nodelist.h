@@ -15,7 +15,6 @@
 struct dom_document;
 struct dom_node;
 struct dom_nodelist;
-struct dom_string;
 struct lwc_string_s;
 
 /**

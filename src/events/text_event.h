@@ -17,7 +17,7 @@
  */
 struct dom_text_event {
 	struct dom_ui_event base;
-	struct dom_string *data;
+	dom_string *data;
 };
 
 /* Constructor */

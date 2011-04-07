@@ -57,7 +57,7 @@ dom_characterdata *_dom_characterdata_create(struct dom_document *doc)
  */
 dom_exception _dom_characterdata_initialise(struct dom_characterdata *cdata,
 		struct dom_document *doc, dom_node_type type,
-		lwc_string *name, struct dom_string *value)
+		lwc_string *name, dom_string *value)
 {
 	return _dom_node_initialise(&cdata->base, doc, type, 
 			name, value, NULL, NULL);
@@ -97,7 +97,7 @@ void _dom_characterdata_finalise(struct dom_document *doc,
  * this implementation; dom_strings are unbounded.
  */
 dom_exception _dom_characterdata_get_data(struct dom_characterdata *cdata,
-		struct dom_string **data)
+		dom_string **data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 
@@ -122,7 +122,7 @@ dom_exception _dom_characterdata_get_data(struct dom_characterdata *cdata,
  * a reference on the string). The node's existing content will be unrefed.
  */
 dom_exception _dom_characterdata_set_data(struct dom_characterdata *cdata,
-		struct dom_string *data)
+		dom_string *data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 
@@ -192,7 +192,7 @@ dom_exception _dom_characterdata_get_length(struct dom_characterdata *cdata,
  */
 dom_exception _dom_characterdata_substring_data(
 		struct dom_characterdata *cdata, unsigned long offset,
-		unsigned long count, struct dom_string **data)
+		unsigned long count, dom_string **data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	uint32_t len, end;
@@ -225,10 +225,10 @@ dom_exception _dom_characterdata_substring_data(
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
 dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
-		struct dom_string *data)
+		dom_string *data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
-	struct dom_string *temp;
+	dom_string *temp;
 	dom_exception err;
 
 	if (_dom_node_readonly(c)) {
@@ -271,10 +271,10 @@ dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
 dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
-		unsigned long offset, struct dom_string *data)
+		unsigned long offset, dom_string *data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
-	struct dom_string *temp;
+	dom_string *temp;
 	uint32_t len;
 	dom_exception err;
 
@@ -335,7 +335,7 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 		unsigned long offset, unsigned long count)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
-	struct dom_string *temp;
+	dom_string *temp;
 	uint32_t len, end;
 	dom_exception err;
 
@@ -397,10 +397,10 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
  */
 dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 		unsigned long offset, unsigned long count,
-		struct dom_string *data)
+		dom_string *data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
-	struct dom_string *temp;
+	dom_string *temp;
 	uint32_t len, end;
 	dom_exception err;
 

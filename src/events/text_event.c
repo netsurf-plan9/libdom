@@ -69,7 +69,7 @@ void _virtual_dom_text_event_destroy(struct dom_event *evt)
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_text_event_get_data(dom_text_event *evt, 
-		struct dom_string **data)
+		dom_string **data)
 {
 	*data = evt->data;
 	dom_string_ref(*data);
@@ -89,8 +89,8 @@ dom_exception _dom_text_event_get_data(dom_text_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_text_event_init(dom_text_event *evt,
-		struct dom_string *type, bool bubble, bool cancelable, 
-		struct dom_abstract_view *view, struct dom_string *data)
+		dom_string *type, bool bubble, bool cancelable, 
+		struct dom_abstract_view *view, dom_string *data)
 {
 	evt->data = data;
 	dom_string_ref(data);
@@ -112,9 +112,9 @@ dom_exception _dom_text_event_init(dom_text_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_text_event_init_ns(dom_text_event *evt, 
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view, 
-		struct dom_string *data)
+		dom_string *data)
 {
 	evt->data = data;
 	dom_string_ref(data);

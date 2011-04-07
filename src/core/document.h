@@ -52,7 +52,7 @@ struct dom_document {
 
 	struct dom_doc_nl *nodelists;	/**< List of active nodelists */
 
-	struct dom_string *uri;		/**< The uri of this document */
+	dom_string *uri;		/**< The uri of this document */
 
 	dom_alloc alloc;		/**< Memory (de)allocation function */
 	void *pw;			/**< Pointer to client data */
@@ -81,7 +81,7 @@ bool _dom_document_finalise(struct dom_document *doc);
 
 /* Create a dom_string from C string */
 dom_exception _dom_document_create_string(struct dom_document *doc,
-		const uint8_t *data, size_t len, struct dom_string **result);
+		const uint8_t *data, size_t len, dom_string **result);
 /* Create a lwc_string from C string */
 dom_exception _dom_document_create_lwcstring(struct dom_document *doc,
 		const uint8_t *data, size_t len, struct lwc_string_s **result);
@@ -91,7 +91,7 @@ void _dom_document_unref_lwcstring(struct dom_document *doc,
 /* Create a dom_string from a lwc_string */
 dom_exception _dom_document_create_string_from_lwcstring(
 		struct dom_document *doc, struct lwc_string_s *str,
-		struct dom_string **result);
+		dom_string **result);
 
 
 /* Begin the virtual functions */
@@ -102,59 +102,59 @@ dom_exception _dom_document_get_implementation(struct dom_document *doc,
 dom_exception _dom_document_get_document_element(struct dom_document *doc,
 		struct dom_element **result);
 dom_exception _dom_document_create_element(struct dom_document *doc,
-		struct dom_string *tag_name, struct dom_element **result);
+		dom_string *tag_name, struct dom_element **result);
 dom_exception _dom_document_create_document_fragment(struct dom_document *doc,
 		struct dom_document_fragment **result);
 dom_exception _dom_document_create_text_node(struct dom_document *doc,
-		struct dom_string *data, struct dom_text **result);
+		dom_string *data, struct dom_text **result);
 dom_exception _dom_document_create_comment(struct dom_document *doc,
-		struct dom_string *data, struct dom_comment **result);
+		dom_string *data, struct dom_comment **result);
 dom_exception _dom_document_create_cdata_section(struct dom_document *doc,
-		struct dom_string *data, struct dom_cdata_section **result);
+		dom_string *data, struct dom_cdata_section **result);
 dom_exception _dom_document_create_processing_instruction(
-		struct dom_document *doc, struct dom_string *target,
-		struct dom_string *data,
+		struct dom_document *doc, dom_string *target,
+		dom_string *data,
 		struct dom_processing_instruction **result);
 dom_exception _dom_document_create_attribute(struct dom_document *doc,
-		struct dom_string *name, struct dom_attr **result);
+		dom_string *name, struct dom_attr **result);
 dom_exception _dom_document_create_entity_reference(struct dom_document *doc,
-		struct dom_string *name,
+		dom_string *name,
 		struct dom_entity_reference **result);
 dom_exception _dom_document_get_elements_by_tag_name(struct dom_document *doc,
-		struct dom_string *tagname, struct dom_nodelist **result);
+		dom_string *tagname, struct dom_nodelist **result);
 dom_exception _dom_document_import_node(struct dom_document *doc,
 		struct dom_node *node, bool deep, struct dom_node **result);
 dom_exception _dom_document_create_element_ns(struct dom_document *doc,
-		struct dom_string *namespace, struct dom_string *qname,
+		dom_string *namespace, dom_string *qname,
 		struct dom_element **result);
 dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
-		struct dom_string *namespace, struct dom_string *qname,
+		dom_string *namespace, dom_string *qname,
 		struct dom_attr **result);
 dom_exception _dom_document_get_elements_by_tag_name_ns(
-		struct dom_document *doc, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_nodelist **result);
+		struct dom_document *doc, dom_string *namespace,
+		dom_string *localname, struct dom_nodelist **result);
 dom_exception _dom_document_get_element_by_id(struct dom_document *doc,
-		struct dom_string *id, struct dom_element **result);
+		dom_string *id, struct dom_element **result);
 dom_exception _dom_document_get_input_encoding(struct dom_document *doc,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_document_get_xml_encoding(struct dom_document *doc,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_document_get_xml_standalone(struct dom_document *doc,
 		bool *result);
 dom_exception _dom_document_set_xml_standalone(struct dom_document *doc,
 		bool standalone);
 dom_exception _dom_document_get_xml_version(struct dom_document *doc,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_document_set_xml_version(struct dom_document *doc,
-		struct dom_string *version);
+		dom_string *version);
 dom_exception _dom_document_get_strict_error_checking(
 		struct dom_document *doc, bool *result);
 dom_exception _dom_document_set_strict_error_checking(
 		struct dom_document *doc, bool strict);
 dom_exception _dom_document_get_uri(struct dom_document *doc,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_document_set_uri(struct dom_document *doc,
-		struct dom_string *uri);
+		dom_string *uri);
 dom_exception _dom_document_adopt_node(struct dom_document *doc,
 		struct dom_node *node, struct dom_node **result);
 dom_exception _dom_document_get_dom_config(struct dom_document *doc,
@@ -162,7 +162,7 @@ dom_exception _dom_document_get_dom_config(struct dom_document *doc,
 dom_exception _dom_document_normalize(struct dom_document *doc);
 dom_exception _dom_document_rename_node(struct dom_document *doc,
 		struct dom_node *node,
-		struct dom_string *namespace, struct dom_string *qname,
+		dom_string *namespace, dom_string *qname,
 		struct dom_node **result);
 
 #define DOM_DOCUMENT_VTABLE \
@@ -205,7 +205,7 @@ dom_exception _dom_document_rename_node(struct dom_document *doc,
 struct dom_document_protected_vtable {
 	struct dom_node_protect_vtable base;
 	dom_exception (*dom_document_get_base)(dom_document *doc,
-			struct dom_string **base_uri);
+			dom_string **base_uri);
 			/* Get the document's base uri */
 };
 
@@ -213,14 +213,14 @@ typedef struct dom_document_protected_vtable dom_document_protected_vtable;
 
 /* Get the document's base URI */
 static inline dom_exception dom_document_get_base(dom_document *doc,
-		struct dom_string **base_uri)
+		dom_string **base_uri)
 {
 	struct dom_node_internal *node = (struct dom_node_internal *) doc;
 	return ((dom_document_protected_vtable *) node->vtable)->
 			dom_document_get_base(doc, base_uri);
 }
 #define dom_document_get_base(d, b) dom_document_get_base( \
-		(dom_document *) (d), (struct dom_string **) (b))
+		(dom_document *) (d), (dom_string **) (b))
 
 /* Following comes the protected vtable  */
 void _dom_document_destroy(struct dom_node_internal *node);

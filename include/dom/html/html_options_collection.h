@@ -9,9 +9,9 @@
 #define dom_html_options_collection_h_
 
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
 struct dom_node;
-struct dom_string;
 
 typedef struct dom_html_options_collection dom_html_options_collection;
 
@@ -23,7 +23,7 @@ dom_exception dom_html_options_collection_item(
 		dom_html_options_collection *col, unsigned long index,
 		struct dom_node **node);
 dom_exception dom_html_options_collection_named_item(
-		dom_html_options_collection *col, struct dom_string *name,
+		dom_html_options_collection *col, dom_string *name,
 		struct dom_node **node);
 
 void dom_html_options_collection_ref(dom_html_options_collection *col);

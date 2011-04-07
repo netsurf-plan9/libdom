@@ -13,11 +13,10 @@
 
 struct dom_document;
 struct dom_entity_reference;
-struct dom_string;
 struct lwc_string_s;
 
 dom_exception _dom_entity_reference_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct dom_entity_reference **result);
 
 void _dom_entity_reference_destroy(struct dom_document *doc,
@@ -41,6 +40,6 @@ dom_exception _dom_er_copy(struct dom_node_internal *new,
 /* Helper functions */
 dom_exception _dom_entity_reference_get_textual_representation(
 		struct dom_entity_reference *entity,
-		struct dom_string **result);
+		dom_string **result);
 
 #endif

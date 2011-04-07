@@ -76,7 +76,7 @@ void _virtual_dom_mutation_name_event_destroy(struct dom_event *evt)
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mutation_name_event_get_prev_namespace(
-		dom_mutation_name_event *evt, struct dom_string **namespace)
+		dom_mutation_name_event *evt, dom_string **namespace)
 {
 	*namespace = evt->prev_namespace;
 	dom_string_ref(*namespace);
@@ -92,7 +92,7 @@ dom_exception _dom_mutation_name_event_get_prev_namespace(
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mutation_name_event_get_prev_node_name(
-		dom_mutation_name_event *evt, struct dom_string **name)
+		dom_mutation_name_event *evt, dom_string **name)
 {
 	*name = evt->prev_nodename;
 	dom_string_ref(*name);
@@ -113,9 +113,9 @@ dom_exception _dom_mutation_name_event_get_prev_node_name(
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_mutation_name_event_init(dom_mutation_name_event *evt, 
-		struct dom_string *type, bool bubble, bool cancelable, 
-		struct dom_node *node, struct dom_string *prev_ns, 
-		struct dom_string *prev_name)
+		dom_string *type, bool bubble, bool cancelable, 
+		struct dom_node *node, dom_string *prev_ns, 
+		dom_string *prev_name)
 {
 	evt->prev_namespace = prev_ns;
 	dom_string_ref(prev_ns);
@@ -142,9 +142,9 @@ dom_exception _dom_mutation_name_event_init(dom_mutation_name_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_mutation_name_event_init_ns(dom_mutation_name_event *evt, 
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_node *node,
-		struct dom_string *prev_ns, struct dom_string *prev_name)
+		dom_string *prev_ns, dom_string *prev_name)
 {
 	evt->prev_namespace = prev_ns;
 	dom_string_ref(prev_ns);

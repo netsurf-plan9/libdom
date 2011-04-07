@@ -10,9 +10,8 @@
 
 #include <stdbool.h>
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 #include <dom/events/event_target.h>
-
-struct dom_string;
 
 typedef enum {
 	DOM_CAPTURING_PHASE = 1,
@@ -28,9 +27,9 @@ void _dom_event_ref(dom_event *evt);
 void _dom_event_unref(dom_event *evt);
 #define dom_event_unref(n) _dom_event_unref((dom_event *) (n))
 
-dom_exception _dom_event_get_type(dom_event *evt, struct dom_string **type);
+dom_exception _dom_event_get_type(dom_event *evt, dom_string **type);
 #define dom_event_get_type(e, t) _dom_event_get_type((dom_event *) (e), \
-		(struct dom_string **) (t))
+		(dom_string **) (t))
 
 dom_exception _dom_event_get_target(dom_event *evt, dom_event_target **target);
 #define dom_event_get_target(e, t) _dom_event_get_target((dom_event *) (e), \
@@ -62,15 +61,15 @@ dom_exception _dom_event_prevent_default(dom_event *evt);
 #define dom_event_prevent_default(e) _dom_event_prevent_default(\
 		(dom_event *) (e))
 
-dom_exception _dom_event_init(dom_event *evt, struct dom_string *type, 
+dom_exception _dom_event_init(dom_event *evt, dom_string *type, 
 		bool bubble, bool cancelable);
 #define dom_event_init(e, t, b, c) _dom_event_init((dom_event *) (e), \
-		(struct dom_string *) (t), (bool) (b), (bool) (c))
+		(dom_string *) (t), (bool) (b), (bool) (c))
 
 dom_exception _dom_event_get_namespace(dom_event *evt,
-		struct dom_string **namespace);
+		dom_string **namespace);
 #define dom_event_get_namespace(e, n) _dom_event_get_namespace(\
-		(dom_event *) (e), (struct dom_string **) (n))
+		(dom_event *) (e), (dom_string **) (n))
 
 dom_exception _dom_event_is_custom(dom_event *evt, bool *custom);
 #define dom_event_is_custom(e, c) _dom_event_is_custom((dom_event *) (e), \
@@ -84,10 +83,10 @@ dom_exception _dom_event_is_default_prevented(dom_event *evt, bool *prevented);
 #define dom_event_is_default_prevented(e, p) \
 		_dom_event_is_default_prevented((dom_event *) (e), (bool *) (p))
 
-dom_exception _dom_event_init_ns(dom_event *evt, struct dom_string *namespace,
-		struct dom_string *type, bool bubble, bool cancelable);
+dom_exception _dom_event_init_ns(dom_event *evt, dom_string *namespace,
+		dom_string *type, bool bubble, bool cancelable);
 #define dom_event_init_ns(e, n, t, b, c) _dom_event_init_ns( \
-		(dom_event *) (e), (struct dom_string *) (n), \
-		(struct dom_string *) (t), (bool) (b), (bool) (c))
+		(dom_event *) (e), (dom_string *) (n), \
+		(dom_string *) (t), (bool) (b), (bool) (c))
 
 #endif

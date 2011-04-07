@@ -96,8 +96,8 @@ void _dom_html_head_element_destroy(struct dom_document *doc,
 /* The virtual function used to parse attribute value, see src/core/element.c
  * for detail */
 dom_exception _dom_html_head_element_parse_attribute(dom_element *ele,
-		struct dom_string *name, struct dom_string *value,
-		struct dom_string **parsed)
+		dom_string *name, dom_string *value,
+		dom_string **parsed)
 {
 	UNUSED(ele);
 	UNUSED(name);

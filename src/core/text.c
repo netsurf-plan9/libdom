@@ -69,7 +69,7 @@ static dom_exception walk_logic_adjacent_text(dom_text *text,
  * The returned node will already be referenced.
  */
 dom_exception _dom_text_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct dom_text **result)
 {
 	struct dom_text *t;
@@ -127,7 +127,7 @@ void _dom_text_destroy(struct dom_document *doc, struct dom_text *text)
  */
 dom_exception _dom_text_initialise(struct dom_text *text,
 		struct dom_document *doc, dom_node_type type,
-		struct lwc_string_s *name, struct dom_string *value)
+		struct lwc_string_s *name, dom_string *value)
 {
 	dom_exception err;
 
@@ -177,7 +177,7 @@ dom_exception _dom_text_split_text(struct dom_text *text,
 		unsigned long offset, struct dom_text **result)
 {
 	struct dom_node_internal *t = (struct dom_node_internal *) text;
-	struct dom_string *value;
+	dom_string *value;
 	struct dom_text *res;
 	unsigned long len;
 	dom_exception err;
@@ -248,7 +248,7 @@ dom_exception _dom_text_get_is_element_content_whitespace(
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_text_get_whole_text(struct dom_text *text,
-		struct dom_string **result)
+		dom_string **result)
 {
 	return walk_logic_adjacent_text(text, COLLECT, result);
 }
@@ -267,7 +267,7 @@ dom_exception _dom_text_get_whole_text(struct dom_text *text,
  * once it has finished with it.
  */
 dom_exception _dom_text_replace_whole_text(struct dom_text *text,
-		struct dom_string *content, struct dom_text **result)
+		dom_string *content, struct dom_text **result)
 {
 	dom_exception err;
 	dom_string *ret;

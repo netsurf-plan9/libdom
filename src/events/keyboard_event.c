@@ -74,7 +74,7 @@ void _virtual_dom_keyboard_event_destroy(struct dom_event *evt)
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_keyboard_event_get_key_identifier(dom_keyboard_event *evt,
-		struct dom_string **ident)
+		dom_string **ident)
 {
 	*ident = evt->key_ident;
 	dom_string_ref(*ident);
@@ -171,7 +171,7 @@ dom_exception _dom_keyboard_event_get_meta_key(dom_keyboard_event *evt,
  * KeyboardEvent.keyLocation.
  */
 dom_exception _dom_keyboard_event_get_modifier_state(dom_keyboard_event *evt,
-		struct dom_string *m, bool *state)
+		dom_string *m, bool *state)
 {
 	if (m == NULL) {
 		*state = false;
@@ -221,9 +221,9 @@ dom_exception _dom_keyboard_event_get_modifier_state(dom_keyboard_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_keyboard_event_init(dom_keyboard_event *evt, 
-		struct dom_string *type, bool bubble, bool cancelable, 
-		struct dom_abstract_view *view, struct dom_string *key_ident,
-		dom_key_location key_loc, struct dom_string *modifier_list)
+		dom_string *type, bool bubble, bool cancelable, 
+		struct dom_abstract_view *view, dom_string *key_ident,
+		dom_key_location key_loc, dom_string *modifier_list)
 {
 	dom_exception err;
 
@@ -255,10 +255,10 @@ dom_exception _dom_keyboard_event_init(dom_keyboard_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_keyboard_event_init_ns(dom_keyboard_event *evt, 
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view, 
-		struct dom_string *key_ident, dom_key_location key_loc, 
-		struct dom_string *modifier_list)
+		dom_string *key_ident, dom_key_location key_loc, 
+		dom_string *modifier_list)
 {
 	dom_exception err;
 
@@ -284,7 +284,7 @@ dom_exception _dom_keyboard_event_init_ns(dom_keyboard_event *evt,
  * \param modifier_state  The returned state
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_parse_modifier_list(struct dom_string *modifier_list,
+dom_exception _dom_parse_modifier_list(dom_string *modifier_list,
 		uint32_t *modifier_state)
 {
 	*modifier_state = 0;

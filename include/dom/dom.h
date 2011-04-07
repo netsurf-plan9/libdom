@@ -52,7 +52,7 @@ typedef enum dom_namespace {
 	DOM_NAMESPACE_COUNT   = 7
 } dom_namespace;
 
-extern struct dom_string *dom_namespaces[DOM_NAMESPACE_COUNT];
+extern dom_string *dom_namespaces[DOM_NAMESPACE_COUNT];
 
 dom_exception dom_initialise(dom_alloc alloc, void *pw);
 dom_exception dom_finalise(void);

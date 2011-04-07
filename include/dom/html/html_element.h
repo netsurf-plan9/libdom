@@ -16,28 +16,28 @@ typedef struct dom_html_element_vtable {
         struct dom_element_vtable base;
         
         dom_exception (*dom_html_element_get_id)(struct dom_html_element *element,
-                                                 struct dom_string **id);
+                                                 dom_string **id);
         dom_exception (*dom_html_element_set_id)(struct dom_html_element *element,
-                                                 struct dom_string *id);
+                                                 dom_string *id);
 } dom_html_element_vtable;
 
 static inline dom_exception dom_html_element_get_id(struct dom_html_element *element,
-                                                    struct dom_string **id)
+                                                    dom_string **id)
 {
         return ((dom_html_element_vtable *) ((dom_node *) element)->vtable)->
                 dom_html_element_get_id(element, id);
 }
 #define dom_html_element_get_id(e, id) dom_html_element_get_id( \
-		(dom_html_element *) (e), (struct dom_string **) (id))
+		(dom_html_element *) (e), (dom_string **) (id))
 
 static inline dom_exception dom_html_element_set_id(struct dom_html_element *element,
-                                                    struct dom_string *id)
+                                                    dom_string *id)
 {
         return ((dom_html_element_vtable *) ((dom_node *) element)->vtable)->
                 dom_html_element_set_id(element, id);
 }
 #define dom_html_element_set_id(e, id) dom_html_element_set_id( \
-		(dom_html_element *) (e), (struct dom_string *) (id))
+		(dom_html_element *) (e), (dom_string *) (id))
 
 #endif
 

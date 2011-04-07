@@ -12,21 +12,21 @@ struct dom_document_type;
 struct dom_resource_mgr;
 
 /* Create a DOM document type */
-dom_exception _dom_document_type_create(struct dom_string *qname,
-		struct dom_string *public_id, 
-		struct dom_string *system_id,
+dom_exception _dom_document_type_create(dom_string *qname,
+		dom_string *public_id, 
+		dom_string *system_id,
 		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype);
 /* Destroy a document type */
 void _dom_document_type_destroy(struct dom_node_internal *doctypenode);
 dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
-		struct dom_string *qname, struct dom_string *public_id,
-		struct dom_string *system_id, dom_alloc alloc, void *pw);
+		dom_string *qname, dom_string *public_id,
+		dom_string *system_id, dom_alloc alloc, void *pw);
 void _dom_document_type_finalise(struct dom_document_type *doctype);
 
 /* The virtual functions of DocumentType */
 dom_exception _dom_document_type_get_name(struct dom_document_type *doc_type,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_document_type_get_entities(
 		struct dom_document_type *doc_type,
 		struct dom_namednodemap **result);
@@ -35,13 +35,13 @@ dom_exception _dom_document_type_get_notations(
 		struct dom_namednodemap **result);
 dom_exception _dom_document_type_get_public_id(
 		struct dom_document_type *doc_type,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_document_type_get_system_id(
 		struct dom_document_type *doc_type,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_document_type_get_internal_subset(
 		struct dom_document_type *doc_type,
-		struct dom_string **result);
+		dom_string **result);
 
 #define DOM_DOCUMENT_TYPE_VTABLE \
 	_dom_document_type_get_name, \

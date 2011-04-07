@@ -12,11 +12,11 @@
 #include <stdbool.h>
 
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
 struct dom_document;
 struct dom_nodelist;
 struct dom_namednodemap;
-struct dom_string;
 struct dom_node;
 
 /**
@@ -46,7 +46,7 @@ typedef enum {
  * Type of handler function for user data registered on a DOM node
  */
 typedef void (*dom_user_data_handler)(dom_node_operation operation,
-		struct dom_string *key, void *data, struct dom_node *src,
+		dom_string *key, void *data, struct dom_node *src,
 		struct dom_node *dst);
 
 /**
@@ -84,11 +84,11 @@ typedef struct dom_node_vtable {
 
 	/* The DOM level 3 node's oprations */
 	dom_exception (*dom_node_get_node_name)(dom_node_internal *node,
-			struct dom_string **result);
+			dom_string **result);
 	dom_exception (*dom_node_get_node_value)(dom_node_internal *node,
-			struct dom_string **result);
+			dom_string **result);
 	dom_exception (*dom_node_set_node_value)(dom_node_internal *node,
-			struct dom_string *value);
+			dom_string *value);
 	dom_exception (*dom_node_get_node_type)(dom_node_internal *node,
 			dom_node_type *result);
 	dom_exception (*dom_node_get_parent_node)(dom_node_internal *node,
@@ -127,46 +127,46 @@ typedef struct dom_node_vtable {
 			dom_node_internal **result);
 	dom_exception (*dom_node_normalize)(dom_node_internal *node);
 	dom_exception (*dom_node_is_supported)(dom_node_internal *node,
-			struct dom_string *feature, struct dom_string *version,
+			dom_string *feature, dom_string *version,
 			bool *result);
 	dom_exception (*dom_node_get_namespace)(dom_node_internal *node,
-			struct dom_string **result);
+			dom_string **result);
 	dom_exception (*dom_node_get_prefix)(dom_node_internal *node,
-			struct dom_string **result);
+			dom_string **result);
 	dom_exception (*dom_node_set_prefix)(dom_node_internal *node,
-			struct dom_string *prefix);
+			dom_string *prefix);
 	dom_exception (*dom_node_get_local_name)(dom_node_internal *node,
-			struct dom_string **result);
+			dom_string **result);
 	dom_exception (*dom_node_has_attributes)(dom_node_internal *node, 
 			bool *result);
 	dom_exception (*dom_node_get_base)(dom_node_internal *node,
-			struct dom_string **result);
+			dom_string **result);
 	dom_exception (*dom_node_compare_document_position)(
 			dom_node_internal *node, dom_node_internal *other,
 			uint16_t *result);
 	dom_exception (*dom_node_get_text_content)(dom_node_internal *node,
-			struct dom_string **result);
+			dom_string **result);
 	dom_exception (*dom_node_set_text_content)(dom_node_internal *node,
-			struct dom_string *content);
+			dom_string *content);
 	dom_exception (*dom_node_is_same)(dom_node_internal *node, 
 			dom_node_internal *other, bool *result);
 	dom_exception (*dom_node_lookup_prefix)(dom_node_internal *node,
-			struct dom_string *namespace, 
-			struct dom_string **result);
+			dom_string *namespace, 
+			dom_string **result);
 	dom_exception (*dom_node_is_default_namespace)(dom_node_internal *node,
-			struct dom_string *namespace, bool *result);
+			dom_string *namespace, bool *result);
 	dom_exception (*dom_node_lookup_namespace)(dom_node_internal *node,
-			struct dom_string *prefix, struct dom_string **result);
+			dom_string *prefix, dom_string **result);
 	dom_exception (*dom_node_is_equal)(dom_node_internal *node,
 			dom_node_internal *other, bool *result);
 	dom_exception (*dom_node_get_feature)(dom_node_internal *node,
-			struct dom_string *feature, struct dom_string *version,
+			dom_string *feature, dom_string *version,
 			void **result);
 	dom_exception (*dom_node_set_user_data)(dom_node_internal *node,
-			struct dom_string *key, void *data,
+			dom_string *key, void *data,
 			dom_user_data_handler handler, void **result);
 	dom_exception (*dom_node_get_user_data)(dom_node_internal *node,
-			struct dom_string *key, void **result);
+			dom_string *key, void **result);
 } dom_node_vtable;
 
 /* The ref/unref methods define */
@@ -176,31 +176,31 @@ void _dom_node_unref(dom_node_internal *node);
 #define dom_node_unref(n) _dom_node_unref((dom_node_internal *) (n))
 
 static inline dom_exception dom_node_get_node_name(struct dom_node *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_get_node_name(
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_node_name(n, r) dom_node_get_node_name((dom_node *) (n), \
-		(struct dom_string **) (r))
+		(dom_string **) (r))
 
 static inline dom_exception dom_node_get_node_value(struct dom_node *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_get_node_value(
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_node_value(n, r) dom_node_get_node_value( \
-		(dom_node *) (n), (struct dom_string **) (r))
+		(dom_node *) (n), (dom_string **) (r))
 
 static inline dom_exception dom_node_set_node_value(struct dom_node *node,
-		struct dom_string *value)
+		dom_string *value)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_set_node_value(
 			(dom_node_internal *) node, value);
 }
 #define dom_node_set_node_value(n, v) dom_node_set_node_value( \
-		(dom_node *) (n), (struct dom_string *) (v))
+		(dom_node *) (n), (dom_string *) (v))
 
 static inline dom_exception dom_node_get_node_type(struct dom_node *node,
 		dom_node_type *result)
@@ -368,7 +368,7 @@ static inline dom_exception dom_node_normalize(struct dom_node *node)
 #define dom_node_normalize(n) dom_node_normalize((dom_node *) (n))
 
 static inline dom_exception dom_node_is_supported(struct dom_node *node,
-		struct dom_string *feature, struct dom_string *version,
+		dom_string *feature, dom_string *version,
 		bool *result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_is_supported(
@@ -376,44 +376,44 @@ static inline dom_exception dom_node_is_supported(struct dom_node *node,
 			version, result);
 }
 #define dom_node_is_supported(n, f, v, r) dom_node_is_supported( \
-		(dom_node *) (n), (struct dom_string *) (f), \
-		(struct dom_string *) (v), (bool *) (r))
+		(dom_node *) (n), (dom_string *) (f), \
+		(dom_string *) (v), (bool *) (r))
 
 static inline dom_exception dom_node_get_namespace(struct dom_node *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_get_namespace(
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_namespace(n, r) dom_node_get_namespace((dom_node *) (n), \
-		(struct dom_string **) (r))
+		(dom_string **) (r))
 
 static inline dom_exception dom_node_get_prefix(struct dom_node *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_get_prefix(
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_prefix(n, r) dom_node_get_prefix((dom_node *) (n), \
-		(struct dom_string **) (r))
+		(dom_string **) (r))
 
 static inline dom_exception dom_node_set_prefix(struct dom_node *node,
-		struct dom_string *prefix)
+		dom_string *prefix)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_set_prefix(
 			(dom_node_internal *) node, prefix);
 }
 #define dom_node_set_prefix(n, p) dom_node_set_prefix((dom_node *) (n), \
-		(struct dom_string *) (p))
+		(dom_string *) (p))
 
 static inline dom_exception dom_node_get_local_name(struct dom_node *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_get_local_name(
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_local_name(n, r) dom_node_get_local_name((dom_node *) (n),\
-		(struct dom_string **) (r))
+		(dom_string **) (r))
 
 static inline dom_exception dom_node_has_attributes(struct dom_node *node, 
 		bool *result)
@@ -425,13 +425,13 @@ static inline dom_exception dom_node_has_attributes(struct dom_node *node,
 		(dom_node *) (n), (bool *) (r))
 
 static inline dom_exception dom_node_get_base(struct dom_node *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_get_base(
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_base(n, r) dom_node_get_base((dom_node *) (n), \
-		(struct dom_string **) (r))
+		(dom_string **) (r))
 
 static inline dom_exception dom_node_compare_document_position(
 		struct dom_node *node, struct dom_node *other,
@@ -447,22 +447,22 @@ static inline dom_exception dom_node_compare_document_position(
 		(dom_node *) (o), (uint16_t *) (r))
 
 static inline dom_exception dom_node_get_text_content(struct dom_node *node,
-		struct dom_string **result)
+		dom_string **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_get_text_content(
 			(dom_node_internal *) node, result);
 }
 #define dom_node_get_text_content(n, r) dom_node_get_text_content( \
-		(dom_node *) (n), (struct dom_string **) (r))
+		(dom_node *) (n), (dom_string **) (r))
 
 static inline dom_exception dom_node_set_text_content(struct dom_node *node,
-		struct dom_string *content)
+		dom_string *content)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_set_text_content(
 			(dom_node_internal *) node, content);
 }
 #define dom_node_set_text_content(n, c) dom_node_get_text_content( \
-		(dom_node *) (n), (struct dom_string *) (c))
+		(dom_node *) (n), (dom_string *) (c))
 
 static inline dom_exception dom_node_is_same(struct dom_node *node, 
 		struct dom_node *other, bool *result)
@@ -476,17 +476,17 @@ static inline dom_exception dom_node_is_same(struct dom_node *node,
 		(dom_node *) (o), (bool *) (r))
 
 static inline dom_exception dom_node_lookup_prefix(struct dom_node *node,
-		struct dom_string *namespace, struct dom_string **result)
+		dom_string *namespace, dom_string **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_lookup_prefix(
 			(dom_node_internal *) node, namespace, result);
 }
 #define dom_node_lookup_prefix(n, ns, r) dom_node_lookup_prefix( \
-		(dom_node *) (n), (struct dom_string *) (ns), \
-		(struct dom_string **) (r))
+		(dom_node *) (n), (dom_string *) (ns), \
+		(dom_string **) (r))
 
 static inline dom_exception dom_node_is_default_namespace(
-		struct dom_node *node, struct dom_string *namespace,
+		struct dom_node *node, dom_string *namespace,
 		bool *result)
 {
 	return ((dom_node_vtable *) node->vtable)->
@@ -494,17 +494,17 @@ static inline dom_exception dom_node_is_default_namespace(
 			(dom_node_internal *) node, namespace, result);
 }
 #define dom_node_is_default_namespace(n, ns, r) dom_node_is_default_namespace(\
-		(dom_node *) (n), (struct dom_string *) (ns), (bool *) (r))
+		(dom_node *) (n), (dom_string *) (ns), (bool *) (r))
 
 static inline dom_exception dom_node_lookup_namespace(struct dom_node *node,
-		struct dom_string *prefix, struct dom_string **result)
+		dom_string *prefix, dom_string **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_lookup_namespace(
 			(dom_node_internal *) node, prefix, result);
 }
 #define dom_node_lookup_namespace(n, p, r) dom_node_lookup_namespace( \
-		(dom_node *) (n), (struct dom_string *) (p), \
-		(struct dom_string **) (r))
+		(dom_node *) (n), (dom_string *) (p), \
+		(dom_string **) (r))
 
 static inline dom_exception dom_node_is_equal(struct dom_node *node,
 		struct dom_node *other, bool *result)
@@ -518,18 +518,18 @@ static inline dom_exception dom_node_is_equal(struct dom_node *node,
 		(dom_node *) (o), (bool *) (r))
 
 static inline dom_exception dom_node_get_feature(struct dom_node *node,
-		struct dom_string *feature, struct dom_string *version,
+		dom_string *feature, dom_string *version,
 		void **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_get_feature(
 			(dom_node_internal *) node, feature, version, result);
 }
 #define dom_node_get_feature(n, f, v, r) dom_node_get_feature( \
-		(dom_node *) (n), (struct dom_string *) (f), \
-		(struct dom_string *) (v), (void **) (r))
+		(dom_node *) (n), (dom_string *) (f), \
+		(dom_string *) (v), (void **) (r))
 
 static inline dom_exception dom_node_set_user_data(struct dom_node *node,
-		struct dom_string *key, void *data,
+		dom_string *key, void *data,
 		dom_user_data_handler handler, void **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_set_user_data(
@@ -537,16 +537,16 @@ static inline dom_exception dom_node_set_user_data(struct dom_node *node,
 			result);
 }
 #define dom_node_set_user_data(n, k, d, h, r) dom_node_set_user_data( \
-		(dom_node *) (n), (struct dom_string *) (k), (void *) (d), \
+		(dom_node *) (n), (dom_string *) (k), (void *) (d), \
 		(dom_user_data_handler) h, (void **) (r))
 
 static inline dom_exception dom_node_get_user_data(struct dom_node *node,
-		struct dom_string *key, void **result)
+		dom_string *key, void **result)
 {
 	return ((dom_node_vtable *) node->vtable)->dom_node_get_user_data(
 			(dom_node_internal *) node, key, result);
 }
 #define dom_node_get_user_data(n, k, r) dom_node_get_user_data( \
-		(dom_node *) (n), (struct dom_string *) (k), (void **) (r))
+		(dom_node *) (n), (dom_string *) (k), (void **) (r))
 
 #endif

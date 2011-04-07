@@ -27,7 +27,7 @@ struct dom_type_info {
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_type_info_get_type_name(dom_type_info *ti, 
-		struct dom_string **ret)
+		dom_string **ret)
 {
 	UNUSED(ti);
 	UNUSED(ret);
@@ -46,7 +46,7 @@ dom_exception _dom_type_info_get_type_name(dom_type_info *ti,
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_type_info_get_type_namespace(dom_type_info *ti,
-		struct dom_string **ret)
+		dom_string **ret)
 {
 	UNUSED(ti);
 	UNUSED(ret);
@@ -67,7 +67,7 @@ dom_exception _dom_type_info_get_type_namespace(dom_type_info *ti,
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_type_info_is_derived(dom_type_info *ti,
-		struct dom_string *namespace, struct dom_string *name, 
+		dom_string *namespace, dom_string *name, 
 		dom_type_info_derivation_method method, bool *ret)
 {
 	UNUSED(ti);

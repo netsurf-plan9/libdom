@@ -38,7 +38,7 @@ void *_dom_resource_mgr_alloc(struct dom_resource_mgr *res, void *ptr,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_resource_mgr_create_string(struct dom_resource_mgr *res,
-		const uint8_t *data, size_t len, struct dom_string **result)
+		const uint8_t *data, size_t len, dom_string **result)
 {
 	return dom_string_create(res->alloc, res->pw, data, len, result);
 }
@@ -74,7 +74,7 @@ dom_exception _dom_resource_mgr_create_lwcstring(struct dom_resource_mgr *res,
  */
 dom_exception _dom_resource_mgr_create_string_from_lwcstring(
 		struct dom_resource_mgr *res, struct lwc_string_s *str, 
-		struct dom_string **result)
+		dom_string **result)
 {
 	return _dom_string_create_from_lwcstring(res->alloc, res->pw, 
 				str, result);

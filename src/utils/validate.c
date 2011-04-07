@@ -99,7 +99,7 @@ static bool is_name_char(uint32_t ch)
  * \param name  The name need to be tested
  * \return true if ::name is valid, false otherwise.
  */
-bool _dom_validate_name(struct dom_string *name)
+bool _dom_validate_name(dom_string *name)
 {
 	uint32_t ch, len, i;
 	dom_exception err;
@@ -139,7 +139,7 @@ bool _dom_validate_name(struct dom_string *name)
  * \param str  The name to validate
  * \return true if ::name is valid, false otherwise.
  */
-bool _dom_validate_ncname(struct dom_string *name)
+bool _dom_validate_ncname(dom_string *name)
 {
 	uint32_t ch, len, i;
 	dom_exception err;

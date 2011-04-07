@@ -18,7 +18,7 @@
 struct dom_keyboard_event {
 	struct dom_ui_event base;	/**< The base class */
 
-	struct dom_string *key_ident;	/**< The identifier of the key in this 
+	dom_string *key_ident;	/**< The identifier of the key in this 
 					 * event, please refer:
 					 * http://www.w3.org/TR/DOM-Level-3-Events/keyset.html#KeySet-Set
 					 * for detail
@@ -49,7 +49,7 @@ void _dom_keyboard_event_finalise(struct dom_document *doc,
 
 
 /* Parse the modifier list string to corresponding bool variable state */
-dom_exception _dom_parse_modifier_list(struct dom_string *modifier_list,
+dom_exception _dom_parse_modifier_list(dom_string *modifier_list,
 		uint32_t *modifier_state);
 
 #endif

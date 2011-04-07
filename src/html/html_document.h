@@ -26,11 +26,11 @@ struct dom_html_document {
 	} parser;
 		/**< The underlaying parser of this document */
 	
-	struct dom_string *title;	/**< HTML document title */
-	struct dom_string *referer;	/**< HTML document referer */
-	struct dom_string *domain;	/**< HTML document domain */
-	struct dom_string *url;		/**< HTML document URL */
-	struct dom_string *cookie;	/**< HTML document cookie */
+	dom_string *title;	/**< HTML document title */
+	dom_string *referer;	/**< HTML document referer */
+	dom_string *domain;	/**< HTML document domain */
+	dom_string *url;		/**< HTML document URL */
+	dom_string *cookie;	/**< HTML document cookie */
 };
 
 /* Initialise a HTMLDocument */

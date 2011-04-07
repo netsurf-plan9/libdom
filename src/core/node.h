@@ -24,7 +24,7 @@
  * User data context attached to a DOM node
  */
 struct dom_user_data {
-	struct dom_string *key;		/**< Key for data */
+	dom_string *key;		/**< Key for data */
 	void *data;			/**< Client-specific data */
 	dom_user_data_handler handler;	/**< Callback function */
 
@@ -61,7 +61,7 @@ struct dom_node_internal {
 	struct lwc_string_s *name;	/**< Node name (this is the local part
 		 			 * of a QName in the cases where a
 		 			 * namespace exists) */
-	struct dom_string *value;	/**< Node value */
+	dom_string *value;	/**< Node value */
 	dom_node_type type;		/**< Node type */
 	dom_node_internal *parent;	/**< Parent node */
 	dom_node_internal *first_child;	/**< First child node */
@@ -87,14 +87,14 @@ dom_node_internal * _dom_node_create(struct dom_document *doc);
 
 dom_exception _dom_node_initialise(struct dom_node_internal *node,
 		struct dom_document *doc, dom_node_type type,
-		struct lwc_string_s *name, struct dom_string *value,
+		struct lwc_string_s *name, dom_string *value,
 		struct lwc_string_s *namespace, struct lwc_string_s *prefix);
 
 dom_exception _dom_node_initialise_generic(
 		struct dom_node_internal *node, struct dom_document *doc,
 		dom_alloc alloc, void *pw,
 	 	dom_node_type type, struct lwc_string_s *name, 
-		struct dom_string *value, struct lwc_string_s *namespace, 
+		dom_string *value, struct lwc_string_s *namespace, 
 		struct lwc_string_s *prefix);
 
 void _dom_node_finalise(struct dom_document *doc, dom_node_internal *node);
@@ -105,11 +105,11 @@ bool _dom_node_readonly(const dom_node_internal *node);
 
 /* The DOM Node's vtable methods */
 dom_exception _dom_node_get_node_name(dom_node_internal *node,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_node_get_node_value(dom_node_internal *node,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_node_set_node_value(dom_node_internal *node,
-		struct dom_string *value);
+		dom_string *value);
 dom_exception _dom_node_get_node_type(dom_node_internal *node,
 		dom_node_type *result);
 dom_exception _dom_node_get_parent_node(dom_node_internal *node,
@@ -145,43 +145,43 @@ dom_exception _dom_node_clone_node(dom_node_internal *node, bool deep,
 		dom_node_internal **result);
 dom_exception _dom_node_normalize(dom_node_internal *node);
 dom_exception _dom_node_is_supported(dom_node_internal *node,
-		struct dom_string *feature, struct dom_string *version,
+		dom_string *feature, dom_string *version,
 		bool *result);
 dom_exception _dom_node_get_namespace(dom_node_internal *node,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_node_get_prefix(dom_node_internal *node,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_node_set_prefix(dom_node_internal *node,
-		struct dom_string *prefix);
+		dom_string *prefix);
 dom_exception _dom_node_get_local_name(dom_node_internal *node,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_node_has_attributes(dom_node_internal *node, bool *result);
 dom_exception _dom_node_get_base(dom_node_internal *node,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_node_compare_document_position(dom_node_internal *node,
 		dom_node_internal *other, uint16_t *result);
 dom_exception _dom_node_get_text_content(dom_node_internal *node,
-		struct dom_string **result);
+		dom_string **result);
 dom_exception _dom_node_set_text_content(dom_node_internal *node,
-		struct dom_string *content);
+		dom_string *content);
 dom_exception _dom_node_is_same(dom_node_internal *node,
 		dom_node_internal *other, bool *result);
 dom_exception _dom_node_lookup_prefix(dom_node_internal *node,
-		struct dom_string *namespace, struct dom_string **result);
+		dom_string *namespace, dom_string **result);
 dom_exception _dom_node_is_default_namespace(dom_node_internal *node,
-		struct dom_string *namespace, bool *result);
+		dom_string *namespace, bool *result);
 dom_exception _dom_node_lookup_namespace(dom_node_internal *node,
-		struct dom_string *prefix, struct dom_string **result);
+		dom_string *prefix, dom_string **result);
 dom_exception _dom_node_is_equal(dom_node_internal *node,
 		dom_node_internal *other, bool *result);
 dom_exception _dom_node_get_feature(dom_node_internal *node,
-		struct dom_string *feature, struct dom_string *version,
+		dom_string *feature, dom_string *version,
 		void **result);
 dom_exception _dom_node_set_user_data(dom_node_internal *node,
-		struct dom_string *key, void *data,
+		dom_string *key, void *data,
 		dom_user_data_handler handler, void **result);
 dom_exception _dom_node_get_user_data(dom_node_internal *node,
-		struct dom_string *key, void **result);
+		dom_string *key, void **result);
 
 #define DOM_NODE_VTABLE \
 	_dom_node_get_node_name, \
@@ -276,14 +276,14 @@ static inline dom_exception dom_node_copy(struct dom_node_internal *new,
 #define dom_node_get_refcount(n) ((dom_node_internal *) (n))->refcnt
 
 dom_exception _redocument_domstring(struct dom_document *old, 
-		struct dom_document* new, struct dom_string **string);
+		struct dom_document* new, dom_string **string);
 dom_exception _dom_merge_adjacent_text(dom_node_internal *p,
 		dom_node_internal *n);
 /* Used to extract the lwc_string from dom_string.
  * If there is no lwc_string inside the param, create one use the node->owner
  * as document */
 dom_exception _dom_node_get_intern_string(dom_node_internal *node, 
-		struct dom_string *str, struct lwc_string_s **intern);
+		dom_string *str, struct lwc_string_s **intern);
 void _dom_node_unref_intern_string(dom_node_internal *node, 
 		struct lwc_string_s *inter);
 dom_exception _dom_node_create_lwcstring(dom_node_internal *node,

@@ -92,12 +92,12 @@ dom_exception _dom_mouse_wheel_event_get_wheel_delta(
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_mouse_wheel_event_init_ns(
-		dom_mouse_wheel_event *evt, struct dom_string *namespace,
-		struct dom_string *type,  bool bubble, bool cancelable,
+		dom_mouse_wheel_event *evt, dom_string *namespace,
+		dom_string *type,  bool bubble, bool cancelable,
 		struct dom_abstract_view *view, long detail, long screen_x,
 		long screen_y, long client_x, long client_y,
 		unsigned short button, dom_event_target *et,
-		struct dom_string *modifier_list, long wheel_delta)
+		dom_string *modifier_list, long wheel_delta)
 {
 	dom_exception err;
 	evt->delta = wheel_delta;

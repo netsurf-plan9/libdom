@@ -18,8 +18,8 @@
 struct dom_mutation_name_event {
 	struct dom_mutation_event base;
 
-	struct dom_string *prev_namespace;
-	struct dom_string *prev_nodename;
+	dom_string *prev_namespace;
+	dom_string *prev_nodename;
 };
 
 /* Constructor */

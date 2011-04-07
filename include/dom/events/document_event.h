@@ -11,8 +11,8 @@
 #include <stdbool.h>
 
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
-struct dom_string;
 struct dom_event;
 struct dom_document;
 struct lwc_string_s;
@@ -84,17 +84,17 @@ typedef dom_default_action_callback (*dom_events_default_action_fetcher)
 		void **pw);
 
 dom_exception _dom_document_event_create_event(dom_document_event *de,
-		struct dom_string *type, struct dom_event **evt);
+		dom_string *type, struct dom_event **evt);
 #define dom_document_event_create_event(d, t, e) \
 		_dom_document_event_create_event((dom_document_event *) (d), \
-		(struct dom_string *) (t), (struct dom_event **) (e))
+		(dom_string *) (t), (struct dom_event **) (e))
 
 dom_exception _dom_document_event_can_dispatch(dom_document_event *de,
-		struct dom_string *namespace, struct dom_string *type,
+		dom_string *namespace, dom_string *type,
 		bool* can);
 #define dom_document_event_can_dispatch(d, n, t, c) \
 		_dom_document_event_can_dispatch((dom_document_event *) (d), \
-		(struct dom_string *) (n), (struct dom_string *) (t),\
+		(dom_string *) (n), (dom_string *) (t),\
 		(bool *) (c))
 
 #endif

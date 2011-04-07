@@ -35,7 +35,7 @@ struct dom_string {
 	uint32_t refcnt;		/**< Reference count */
 };
 
-static struct dom_string empty_string = { 
+static dom_string empty_string = { 
 	.ptr = NULL,
 	.len = 0,
 	.intern = NULL,
@@ -51,7 +51,7 @@ static struct dom_string empty_string = {
  *
  * \param str  The string to claim a reference on
  */
-void dom_string_ref(struct dom_string *str)
+void dom_string_ref(dom_string *str)
 {
 	if (str != NULL)
 		str->refcnt++;
@@ -65,7 +65,7 @@ void dom_string_ref(struct dom_string *str)
  * If the reference count reaches zero, any memory claimed by the
  * string will be released
  */
-void dom_string_unref(struct dom_string *str)
+void dom_string_unref(dom_string *str)
 {
 	if (str == NULL)
 		return;
@@ -98,9 +98,9 @@ void dom_string_unref(struct dom_string *str)
  * returned DOM string.
  */
 dom_exception dom_string_create(dom_alloc alloc, void *pw,
-		const uint8_t *ptr, size_t len, struct dom_string **str)
+		const uint8_t *ptr, size_t len, dom_string **str)
 {
-	struct dom_string *ret;
+	dom_string *ret;
 
 	if (ptr == NULL || len == 0) {
 		dom_string_ref(&empty_string);
@@ -110,7 +110,7 @@ dom_exception dom_string_create(dom_alloc alloc, void *pw,
 		return DOM_NO_ERR;
 	}
 
-	ret = alloc(NULL, sizeof(struct dom_string), pw);
+	ret = alloc(NULL, sizeof(dom_string), pw);
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
@@ -151,7 +151,7 @@ dom_exception dom_string_create(dom_alloc alloc, void *pw,
  *	  real clone, just ref the source string is ok.
  */
 dom_exception dom_string_clone(dom_alloc alloc, void *pw, 
-		struct dom_string *str, struct dom_string **ret)
+		dom_string *str, dom_string **ret)
 {
 	if (alloc == str->alloc && pw == str->pw) {
 		*ret = str;
@@ -175,7 +175,7 @@ dom_exception dom_string_clone(dom_alloc alloc, void *pw,
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  */
 dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
-		lwc_string *str, struct dom_string **ret)
+		lwc_string *str, dom_string **ret)
 {
 	dom_string *r;
 
@@ -184,7 +184,7 @@ dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
 		return DOM_NO_ERR;
 	}
 
-	r = alloc(NULL, sizeof(struct dom_string), pw);
+	r = alloc(NULL, sizeof(dom_string), pw);
 	if (r == NULL)
 		return DOM_NO_MEM_ERR;
 
@@ -218,7 +218,7 @@ dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
  * \param lwcstr  The result lwc_string	
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_string_intern(struct dom_string *str, 
+dom_exception _dom_string_intern(dom_string *str, 
 		struct lwc_string_s **lwcstr)
 {
 	lwc_string *ret;
@@ -254,7 +254,7 @@ dom_exception _dom_string_intern(struct dom_string *str,
  * \param lwcstr  The lwc_string of this dom-string
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception dom_string_get_intern(struct dom_string *str, 
+dom_exception dom_string_get_intern(dom_string *str, 
 		struct lwc_string_s **lwcstr)
 {
 	*lwcstr = str->intern;
@@ -274,7 +274,7 @@ dom_exception dom_string_get_intern(struct dom_string *str,
  *
  * NULL and "" will match.
  */
-int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
+int dom_string_cmp(dom_string *s1, dom_string *s2)
 {
 	bool ret;
 
@@ -308,7 +308,7 @@ int dom_string_cmp(struct dom_string *s1, struct dom_string *s2)
  *
  * NULL and "" will match.
  */
-int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
+int dom_string_icmp(dom_string *s1, dom_string *s2)
 {
 	const uint8_t *d1 = NULL;
 	const uint8_t *d2 = NULL;
@@ -369,7 +369,7 @@ int dom_string_icmp(struct dom_string *s1, struct dom_string *s2)
  * \param chr  UCS4 value to look for
  * \return Character index of found character, or -1 if none found 
  */
-uint32_t dom_string_index(struct dom_string *str, uint32_t chr)
+uint32_t dom_string_index(dom_string *str, uint32_t chr)
 {
 	const uint8_t *s;
 	size_t clen, slen;
@@ -409,7 +409,7 @@ uint32_t dom_string_index(struct dom_string *str, uint32_t chr)
  * \param chr  UCS4 value to look for
  * \return Character index of found character, or -1 if none found
  */
-uint32_t dom_string_rindex(struct dom_string *str, uint32_t chr)
+uint32_t dom_string_rindex(dom_string *str, uint32_t chr)
 {
 	const uint8_t *s;
 	size_t clen, slen;
@@ -453,7 +453,7 @@ uint32_t dom_string_rindex(struct dom_string *str, uint32_t chr)
  * \param str  The string to measure the length of
  * \return The length of the string, in characters
  */
-uint32_t dom_string_length(struct dom_string *str)
+uint32_t dom_string_length(dom_string *str)
 {
 	size_t clen;
 	parserutils_error err;
@@ -476,7 +476,7 @@ uint32_t dom_string_length(struct dom_string *str)
  * \param ch     The UCS4 character
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception dom_string_at(struct dom_string *str, uint32_t index, 
+dom_exception dom_string_at(dom_string *str, uint32_t index, 
 		uint32_t *ch)
 {
 	const uint8_t *s;
@@ -533,10 +533,10 @@ dom_exception dom_string_at(struct dom_string *str, uint32_t index,
  * The returned string will have its reference count increased. The client
  * should dereference it once it has finished with it.
  */
-dom_exception dom_string_concat(struct dom_string *s1, struct dom_string *s2,
-		struct dom_string **result)
+dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
+		dom_string **result)
 {
-	struct dom_string *concat;
+	dom_string *concat;
 	dom_alloc alloc;
 	void *pw;
 
@@ -555,7 +555,7 @@ dom_exception dom_string_concat(struct dom_string *s1, struct dom_string *s2,
 		return DOM_NO_ERR;
 	}
 
-	concat = alloc(NULL, sizeof(struct dom_string), pw);
+	concat = alloc(NULL, sizeof(dom_string), pw);
 
 	if (concat == NULL) {
 		return DOM_NO_MEM_ERR;
@@ -600,8 +600,8 @@ dom_exception dom_string_concat(struct dom_string *s1, struct dom_string *s2,
  * The returned string will have its reference count increased. The client
  * should dereference it once it has finished with it.
  */
-dom_exception dom_string_substr(struct dom_string *str, 
-		uint32_t i1, uint32_t i2, struct dom_string **result)
+dom_exception dom_string_substr(dom_string *str, 
+		uint32_t i1, uint32_t i2, dom_string **result)
 {
 	const uint8_t *s = str->ptr;
 	size_t slen = str->len;
@@ -657,11 +657,11 @@ dom_exception dom_string_substr(struct dom_string *str,
  * The returned string will have its reference count increased. The client
  * should dereference it once it has finished with it. 
  */
-dom_exception dom_string_insert(struct dom_string *target,
-		struct dom_string *source, uint32_t offset,
-		struct dom_string **result)
+dom_exception dom_string_insert(dom_string *target,
+		dom_string *source, uint32_t offset,
+		dom_string **result)
 {
-	struct dom_string *res;
+	dom_string *res;
 	const uint8_t *t, *s;
 	uint32_t tlen, slen, clen;
 	uint32_t ins = 0;
@@ -696,7 +696,7 @@ dom_exception dom_string_insert(struct dom_string *target,
 	}
 
 	/* Allocate result string */
-	res = target->alloc(NULL, sizeof(struct dom_string), target->pw);
+	res = target->alloc(NULL, sizeof(dom_string), target->pw);
 	if (res == NULL) {
 		return DOM_NO_MEM_ERR;
 	}
@@ -750,11 +750,11 @@ dom_exception dom_string_insert(struct dom_string *target,
  * The returned string will have its reference count increased. The client
  * should dereference it once it has finished with it. 
  */
-dom_exception dom_string_replace(struct dom_string *target,
-		struct dom_string *source, uint32_t i1, uint32_t i2,
-		struct dom_string **result)
+dom_exception dom_string_replace(dom_string *target,
+		dom_string *source, uint32_t i1, uint32_t i2,
+		dom_string **result)
 {
-	struct dom_string *res;
+	dom_string *res;
 	const uint8_t *t, *s;
 	uint32_t tlen, slen;
 	uint32_t b1, b2;
@@ -799,7 +799,7 @@ dom_exception dom_string_replace(struct dom_string *target,
 	}
 
 	/* Allocate result string */
-	res = target->alloc(NULL, sizeof(struct dom_string), target->pw);
+	res = target->alloc(NULL, sizeof(dom_string), target->pw);
 
 	if (res == NULL) {
 		return DOM_NO_MEM_ERR;
@@ -853,8 +853,8 @@ dom_exception dom_string_replace(struct dom_string *target,
  * The returned string will have its reference count increased. The client
  * should dereference it once it has finished with it.
  */
-dom_exception dom_string_dup(struct dom_string *str, 
-		struct dom_string **result)
+dom_exception dom_string_dup(dom_string *str, 
+		dom_string **result)
 {
 	if (str->intern != NULL) {
 		return _dom_string_create_from_lwcstring(str->alloc, str->pw,
@@ -871,7 +871,7 @@ dom_exception dom_string_dup(struct dom_string *str,
  * \param str  The string to calculate a hash of
  * \return The hash value associated with the string
  */
-uint32_t dom_string_hash(struct dom_string *str)
+uint32_t dom_string_hash(dom_string *str)
 {
 	const uint8_t *s = str->ptr;
 	size_t slen = str->len;
@@ -918,7 +918,7 @@ dom_exception _dom_exception_from_lwc_error(lwc_error err)
  * @note: This function is just provided for the convenience of accessing the 
  * raw C string character, no change on the result string is allowed.
  */
-char *_dom_string_data(struct dom_string *str)
+char *_dom_string_data(dom_string *str)
 {
 	return (char *) str->ptr;
 }
@@ -927,7 +927,7 @@ char *_dom_string_data(struct dom_string *str)
  *
  * \param str	The dom_string object
  */
-size_t _dom_string_length(struct dom_string *str)
+size_t _dom_string_length(dom_string *str)
 {
 	return str->len;
 }

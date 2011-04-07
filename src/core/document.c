@@ -285,7 +285,7 @@ dom_exception _dom_document_get_document_element(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_create_element(struct dom_document *doc,
-		struct dom_string *tag_name, struct dom_element **result)
+		dom_string *tag_name, struct dom_element **result)
 {
 	lwc_string *name;
 	dom_exception err;
@@ -345,7 +345,7 @@ dom_exception _dom_document_create_document_fragment(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_create_text_node(struct dom_document *doc,
-		struct dom_string *data, struct dom_text **result)
+		dom_string *data, struct dom_text **result)
 {
 	lwc_string *name;
 	dom_exception err;
@@ -374,7 +374,7 @@ dom_exception _dom_document_create_text_node(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_create_comment(struct dom_document *doc,
-		struct dom_string *data, struct dom_comment **result)
+		dom_string *data, struct dom_comment **result)
 {
 	lwc_string *name;
 	dom_exception err;
@@ -405,7 +405,7 @@ dom_exception _dom_document_create_comment(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_create_cdata_section(struct dom_document *doc,
-		struct dom_string *data, struct dom_cdata_section **result)
+		dom_string *data, struct dom_cdata_section **result)
 {
 	lwc_string *name;
 	dom_exception err;
@@ -438,8 +438,8 @@ dom_exception _dom_document_create_cdata_section(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_create_processing_instruction(
-		struct dom_document *doc, struct dom_string *target,
-		struct dom_string *data,
+		struct dom_document *doc, dom_string *target,
+		dom_string *data,
 		struct dom_processing_instruction **result)
 {
 	lwc_string *name;
@@ -472,7 +472,7 @@ dom_exception _dom_document_create_processing_instruction(
  * finished with it.
  */
 dom_exception _dom_document_create_attribute(struct dom_document *doc,
-		struct dom_string *name, struct dom_attr **result)
+		dom_string *name, struct dom_attr **result)
 {
 	lwc_string *n;
 	dom_exception err;
@@ -504,7 +504,7 @@ dom_exception _dom_document_create_attribute(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_create_entity_reference(struct dom_document *doc,
-		struct dom_string *name,
+		dom_string *name,
 		struct dom_entity_reference **result)
 {
 	lwc_string *n;
@@ -535,7 +535,7 @@ dom_exception _dom_document_create_entity_reference(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_get_elements_by_tag_name(struct dom_document *doc,
-		struct dom_string *tagname, struct dom_nodelist **result)
+		dom_string *tagname, struct dom_nodelist **result)
 {
 	lwc_string *name;
 	dom_exception err;
@@ -605,10 +605,10 @@ dom_exception _dom_document_import_node(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_create_element_ns(struct dom_document *doc,
-		struct dom_string *namespace, struct dom_string *qname,
+		dom_string *namespace, dom_string *qname,
 		struct dom_element **result)
 {
-	struct dom_string *prefix, *localname;
+	dom_string *prefix, *localname;
 	dom_exception err;
 
 	if (_dom_validate_name(qname) == false)
@@ -710,10 +710,10 @@ dom_exception _dom_document_create_element_ns(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
-		struct dom_string *namespace, struct dom_string *qname,
+		dom_string *namespace, dom_string *qname,
 		struct dom_attr **result)
 {
-	struct dom_string *prefix, *localname;
+	dom_string *prefix, *localname;
 	dom_exception err;
 
 	if (_dom_validate_name(qname) == false)
@@ -799,8 +799,8 @@ dom_exception _dom_document_create_attribute_ns(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_get_elements_by_tag_name_ns(
-		struct dom_document *doc, struct dom_string *namespace,
-		struct dom_string *localname, struct dom_nodelist **result)
+		struct dom_document *doc, dom_string *namespace,
+		dom_string *localname, struct dom_nodelist **result)
 {
 	dom_exception err;
 	lwc_string *l = NULL, *n = NULL;
@@ -843,7 +843,7 @@ dom_exception _dom_document_get_elements_by_tag_name_ns(
  * finished with it.
  */
 dom_exception _dom_document_get_element_by_id(struct dom_document *doc,
-		struct dom_string *id, struct dom_element **result)
+		dom_string *id, struct dom_element **result)
 {
 	lwc_string *i;
 	dom_node_internal *root;
@@ -877,7 +877,7 @@ dom_exception _dom_document_get_element_by_id(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_get_input_encoding(struct dom_document *doc,
-		struct dom_string **result)
+		dom_string **result)
 {
 	UNUSED(doc);
 	UNUSED(result);
@@ -897,7 +897,7 @@ dom_exception _dom_document_get_input_encoding(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_get_xml_encoding(struct dom_document *doc,
-		struct dom_string **result)
+		dom_string **result)
 {
 	UNUSED(doc);
 	UNUSED(result);
@@ -957,7 +957,7 @@ dom_exception _dom_document_set_xml_standalone(struct dom_document *doc,
  * DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_get_xml_version(struct dom_document *doc,
-		struct dom_string **result)
+		dom_string **result)
 {
 	UNUSED(doc);
 	UNUSED(result);
@@ -978,7 +978,7 @@ dom_exception _dom_document_get_xml_version(struct dom_document *doc,
  * DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_set_xml_version(struct dom_document *doc,
-		struct dom_string *version)
+		dom_string *version)
 {
 	UNUSED(doc);
 	UNUSED(version);
@@ -1030,7 +1030,7 @@ dom_exception _dom_document_set_strict_error_checking(
  * finished with it.
  */
 dom_exception _dom_document_get_uri(struct dom_document *doc,
-		struct dom_string **result)
+		dom_string **result)
 {
 	dom_string_ref(doc->uri);
 	*result = doc->uri;
@@ -1050,7 +1050,7 @@ dom_exception _dom_document_get_uri(struct dom_document *doc,
  * finished with it.
  */
 dom_exception _dom_document_set_uri(struct dom_document *doc,
-		struct dom_string *uri)
+		dom_string *uri)
 {
 	dom_string_unref(doc->uri);
 	dom_string_ref(uri);
@@ -1200,7 +1200,7 @@ dom_exception _dom_document_normalize(struct dom_document *doc)
  */
 dom_exception _dom_document_rename_node(struct dom_document *doc,
 		struct dom_node *node,
-		struct dom_string *namespace, struct dom_string *qname,
+		dom_string *namespace, dom_string *qname,
 		struct dom_node **result)
 {
 	UNUSED(doc);
@@ -1273,7 +1273,7 @@ dom_exception _dom_document_copy(struct dom_node_internal *new,
  * returned DOM string.
  */
 dom_exception _dom_document_create_string(struct dom_document *doc,
-		const uint8_t *data, size_t len, struct dom_string **result)
+		const uint8_t *data, size_t len, dom_string **result)
 {
 	return dom_string_create(doc->alloc, doc->pw, data, len, result);
 }
@@ -1333,7 +1333,7 @@ void _dom_document_get_allocator(struct dom_document *doc, dom_alloc *al,
  */
 dom_exception _dom_document_create_string_from_lwcstring(
 		struct dom_document *doc, struct lwc_string_s *str, 
-		struct dom_string **result)
+		dom_string **result)
 {
 	return _dom_string_create_from_lwcstring(doc->alloc, doc->pw, 
 			str, result);
