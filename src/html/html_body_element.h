@@ -26,29 +26,24 @@ dom_exception _dom_html_body_element_initialise(struct dom_document *doc,
 		struct dom_html_body_element *ele);
 
 /* Finalise a dom_html_body_element object */
-void _dom_html_body_element_finalise(struct dom_document *doc,
-		struct dom_html_body_element *ele);
+void _dom_html_body_element_finalise(struct dom_html_body_element *ele);
 
 /* Destroy a dom_html_body_element object */
-void _dom_html_body_element_destroy(struct dom_document *doc,
-		struct dom_html_body_element *ele);
+void _dom_html_body_element_destroy(struct dom_html_body_element *ele);
 
 /* The protected virtual functions */
 dom_exception _dom_html_body_element_parse_attribute(dom_element *ele,
 		dom_string *name, dom_string *value,
 		dom_string **parsed);
 void _dom_virtual_html_body_element_destroy(dom_node_internal *node);
-dom_exception _dom_html_body_element_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret);
-dom_exception _dom_html_body_element_copy(struct dom_node_internal *new,
-		struct dom_node_internal *old);
+dom_exception _dom_html_body_element_copy(dom_node_internal *old,
+		dom_node_internal **copy);
 
 #define DOM_HTML_BODY_ELEMENT_PROTECT_VTABLE \
 	_dom_html_body_element_parse_attribute
 
 #define DOM_NODE_PROTECT_VTABLE_HTML_BODY_ELEMENT \
 	_dom_virtual_html_body_element_destroy, \
-	_dom_html_body_element_alloc, \
 	_dom_html_body_element_copy
 
 #endif

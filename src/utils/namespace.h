@@ -14,12 +14,6 @@
 
 struct dom_document;
 
-/* Initialise the namespace component */
-dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw);
-
-/* Finalise the namespace component */
-dom_exception _dom_namespace_finalise(void);
-
 /* Ensure a QName is valid */
 dom_exception _dom_namespace_validate_qname(dom_string *qname,
 		dom_string *namespace);

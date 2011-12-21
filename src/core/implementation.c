@@ -53,9 +53,6 @@ dom_exception dom_implementation_has_feature(
  *                                   Document does not support XML
  *                                   namespaces.
  *
- * Any memory allocated by this call should be allocated using
- * the provided memory (de)allocation function.
- *
  * The doctype will be referenced, so the client need not do this
  * explicitly. The client must unref the doctype once it has
  * finished with it.
@@ -63,7 +60,6 @@ dom_exception dom_implementation_has_feature(
 dom_exception dom_implementation_create_document_type(
 		const char *qname, const char *public_id, 
 		const char *system_id,
-		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype)
 {
 	struct dom_document_type *d;
@@ -72,7 +68,7 @@ dom_exception dom_implementation_create_document_type(
 	dom_exception err;
 
 	if (qname != NULL) {
-		err = dom_string_create(alloc, pw, (const uint8_t *) qname,
+		err = dom_string_create((const uint8_t *) qname,
 				strlen(qname), &qname_s);
 		if (err != DOM_NO_ERR)
 			return err;
@@ -99,7 +95,7 @@ dom_exception dom_implementation_create_document_type(
 	}
 
 	if (public_id != NULL) {
-		err = dom_string_create(alloc, pw, (const uint8_t *) public_id,
+		err = dom_string_create((const uint8_t *) public_id,
 				strlen(public_id), &public_id_s);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(lname);
@@ -110,7 +106,7 @@ dom_exception dom_implementation_create_document_type(
 	}
 
 	if (system_id != NULL) {
-		err = dom_string_create(alloc, pw, (const uint8_t *) system_id,
+		err = dom_string_create((const uint8_t *) system_id,
 				strlen(system_id), &system_id_s);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(public_id_s);
@@ -122,8 +118,7 @@ dom_exception dom_implementation_create_document_type(
 	}
 
 	/* Create the doctype */
-	err = _dom_document_type_create(qname_s, public_id_s, system_id_s,
-			alloc, pw, &d);
+	err = _dom_document_type_create(qname_s, public_id_s, system_id_s, &d);
 
 	if (err == DOM_NO_ERR)
 		*doctype = d;
@@ -163,9 +158,6 @@ dom_exception dom_implementation_create_document_type(
  *                                   Document does not support XML
  *                                   namespaces.
  *
- * Any memory allocated by this call should be allocated using
- * the provided memory (de)allocation function.
- *
  * The document will be referenced, so the client need not do this
  * explicitly. The client must unref the document once it has
  * finished with it.
@@ -174,7 +166,6 @@ dom_exception dom_implementation_create_document(
 		uint32_t impl_type,
 		const char *namespace, const char *qname,
 		struct dom_document_type *doctype,
-		dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc)
 {
@@ -183,14 +174,14 @@ dom_exception dom_implementation_create_document(
 	dom_exception err;
 
 	if (namespace != NULL) {
-		err = dom_string_create(alloc, pw, (const uint8_t *) namespace,
+		err = dom_string_create((const uint8_t *) namespace,
 				strlen(namespace), &namespace_s);
 		if (err != DOM_NO_ERR)
 			return err;
 	}
 
 	if (qname != NULL) {
-		err = dom_string_create(alloc, pw, (const uint8_t *) qname, 
+		err = dom_string_create((const uint8_t *) qname, 
 				strlen(qname), &qname_s);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(namespace_s);
@@ -226,7 +217,7 @@ dom_exception dom_implementation_create_document(
  	if (impl_type == DOM_IMPLEMENTATION_HTML) {
 		dom_html_document *html_doc;
 
-		err = dom_html_document_create(alloc, pw, NULL, NULL, 
+		err = dom_html_document_create(NULL, NULL, 
 				daf, NULL, DOM_HTML_PARSER, &html_doc);
 
 		d = (dom_document *) html_doc;
@@ -235,7 +226,7 @@ dom_exception dom_implementation_create_document(
 	UNUSED(impl_type);
 #endif
 	{
-		err = _dom_document_create(alloc, pw, daf, &d);
+		err = _dom_document_create(daf, &d);
 	}
 
 	if (err != DOM_NO_ERR) {

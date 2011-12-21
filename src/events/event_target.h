@@ -8,15 +8,16 @@
 #ifndef dom_internal_events_event_target_h_
 #define dom_internal_events_event_target_h_
 
+#include <dom/core/document.h>
 #include <dom/events/event.h>
 #include <dom/events/mutation_event.h>
 #include <dom/events/event_target.h>
 #include <dom/events/event_listener.h>
 
+#include "events/dispatch.h"
+
 #include "utils/list.h"
 #include "utils/hashtable.h"
-
-struct dom_document;
 
 /**
  * Listener Entry
@@ -44,6 +45,12 @@ struct dom_event_target_internal {
 
 typedef struct dom_event_target_internal dom_event_target_internal;
 
+/* Entry for a EventTarget, used to record the bubbling list */
+typedef struct dom_event_target_entry {
+	struct list_entry entry;	/**< The list entry */
+	dom_event_target *et;	/**< The node */
+} dom_event_target_entry;
+
 /**
  * Constructor and destructor: Since this object is not intended to be 
  * allocated alone, it should be embedded into the Node object, there is
@@ -51,41 +58,35 @@ typedef struct dom_event_target_internal dom_event_target_internal;
  */
 
 /* Initialise this EventTarget */
-dom_exception _dom_event_target_internal_initialise(struct dom_document *doc,
+dom_exception _dom_event_target_internal_initialise(
 		dom_event_target_internal *eti);
 
 /* Finalise this EventTarget */
-void _dom_event_target_internal_finalise(struct dom_document *doc, 
-		dom_event_target_internal *eti);
+void _dom_event_target_internal_finalise(dom_event_target_internal *eti);
 
-/* Dispatch the event on this node */
-dom_exception _dom_event_target_dispatch(dom_event_target *et, 
+dom_exception _dom_event_target_add_event_listener(
+		dom_event_target_internal *eti,
+		dom_string *type, struct dom_event_listener *listener, 
+		bool capture);
+
+dom_exception _dom_event_target_remove_event_listener(
+		dom_event_target_internal *eti,
+		dom_string *type, struct dom_event_listener *listener, 
+		bool capture);
+
+dom_exception _dom_event_target_add_event_listener_ns(
+		dom_event_target_internal *eti,
+		dom_string *namespace, dom_string *type, 
+		struct dom_event_listener *listener, bool capture);
+
+dom_exception _dom_event_target_remove_event_listener_ns(
+		dom_event_target_internal *eti,
+		dom_string *namespace, dom_string *type, 
+		struct dom_event_listener *listener, bool capture);
+
+dom_exception _dom_event_target_dispatch(dom_event_target *et,
+		dom_event_target_internal *eti, 
 		struct dom_event *evt, dom_event_flow_phase phase,
 		bool *success);
 
-/* Dispatch a DOMNodeInserted/DOMNodeRemoved event */
-dom_exception _dom_dispatch_node_change_event(struct dom_document *doc,
-		dom_event_target *et, dom_event_target *related, 
-		dom_mutation_type change, bool *success);
-
-/* Dispatch a DOMCharacterDataModified event */
-dom_exception _dom_dispatch_characterdata_modified_event(
-		struct dom_document *doc, dom_event_target *et,
-		dom_string *prev, dom_string *new, bool *success);
-
-/* Dispatch a DOMAttrModified event */
-dom_exception _dom_dispatch_attr_modified_event(struct dom_document *doc,
-		dom_event_target *et, dom_string *prev,
-		dom_string *new, dom_event_target *related,
-		dom_string *attr_name, dom_mutation_type change,
-		bool *success);
-
-/* Dispatch a DOMSubtreeModified event */
-dom_exception _dom_dispatch_subtree_modified_event(struct dom_document *doc,
-		dom_event_target *et, bool *success);
-
-/* Dispatch a generic event */
-dom_exception _dom_dispatch_generic_event(struct dom_document *doc,
-		dom_event_target *et, const uint8_t *name, size_t len,
-		bool bubble, bool cancelable, bool *success);
 #endif

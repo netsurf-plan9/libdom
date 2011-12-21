@@ -15,7 +15,6 @@
 
 struct dom_event;
 struct dom_document;
-struct lwc_string_s;
 
 typedef struct dom_document dom_document_event;
 
@@ -80,7 +79,7 @@ typedef enum {
  * \return a callback function, NULL if there is none.
  */
 typedef dom_default_action_callback (*dom_events_default_action_fetcher)
-		(struct lwc_string_s *type, dom_default_action_phase phase, 
+		(dom_string *type, dom_default_action_phase phase, 
 		void **pw);
 
 dom_exception _dom_document_event_create_event(dom_document_event *de,

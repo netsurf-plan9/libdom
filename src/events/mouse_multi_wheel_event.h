@@ -28,7 +28,7 @@ dom_exception _dom_mouse_multi_wheel_event_create(struct dom_document *doc,
 		struct dom_mouse_multi_wheel_event **evt);
 
 /* Destructor */
-void _dom_mouse_multi_wheel_event_destroy(struct dom_document *doc, 
+void _dom_mouse_multi_wheel_event_destroy(
 		struct dom_mouse_multi_wheel_event *evt);
 
 /* Initialise function */

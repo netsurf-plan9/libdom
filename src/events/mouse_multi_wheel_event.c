@@ -5,6 +5,8 @@
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
+#include <stdlib.h>
+
 #include "events/mouse_multi_wheel_event.h"
 #include "events/keyboard_event.h"
 #include "core/document.h"
@@ -22,8 +24,7 @@ static struct dom_event_private_vtable _event_vtable = {
 dom_exception _dom_mouse_multi_wheel_event_create(struct dom_document *doc, 
 		struct dom_mouse_multi_wheel_event **evt)
 {
-	*evt = _dom_document_alloc(doc, NULL,
-			sizeof(dom_mouse_multi_wheel_event));
+	*evt = malloc(sizeof(dom_mouse_multi_wheel_event));
 	if (*evt == NULL) 
 		return DOM_NO_MEM_ERR;
 	
@@ -33,12 +34,12 @@ dom_exception _dom_mouse_multi_wheel_event_create(struct dom_document *doc,
 }
 
 /* Destructor */
-void _dom_mouse_multi_wheel_event_destroy(struct dom_document *doc, 
+void _dom_mouse_multi_wheel_event_destroy(
 		struct dom_mouse_multi_wheel_event *evt)
 {
-	_dom_mouse_multi_wheel_event_finalise(doc, (dom_ui_event *) evt);
+	_dom_mouse_multi_wheel_event_finalise((dom_ui_event *) evt);
 
-	_dom_document_alloc(doc, evt, 0);
+	free(evt);
 }
 
 /* Initialise function */
@@ -51,7 +52,7 @@ dom_exception _dom_mouse_multi_wheel_event_initialise(struct dom_document *doc,
 /* The virtual destroy function */
 void _virtual_dom_mouse_multi_wheel_event_destroy(struct dom_event *evt)
 {
-	_dom_mouse_multi_wheel_event_destroy(evt->doc, 
+	_dom_mouse_multi_wheel_event_destroy( 
 			(dom_mouse_multi_wheel_event *) evt);
 }
 

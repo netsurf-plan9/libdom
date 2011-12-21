@@ -5,6 +5,8 @@
  * Copyright 2009 Bo Yang <struggleyb.nku.com>
  */
 
+#include <stdlib.h>
+
 #include "html/html_isindex_element.h"
 
 #include "core/node.h"
@@ -30,7 +32,7 @@ dom_exception _dom_html_isindex_element_create(struct dom_document *doc,
 		struct dom_html_form_element *form, 
 		struct dom_html_isindex_element **ele)
 {
-	*ele = _dom_document_alloc(doc, NULL, sizeof(dom_html_isindex_element));
+	*ele = malloc(sizeof(dom_html_isindex_element));
 	if (*ele == NULL)
 		return DOM_NO_MEM_ERR;
 	
@@ -54,17 +56,16 @@ dom_exception _dom_html_isindex_element_initialise(struct dom_document *doc,
 		struct dom_html_form_element *form, 
 		struct dom_html_isindex_element *ele)
 {
-	const char *str = "ISINDEX";
-	lwc_string *name = NULL;
+	dom_string *name = NULL;
 	dom_exception err;
 
-	err = _dom_document_create_lwcstring(doc, (const uint8_t *) str, SLEN(str),
+	err = dom_string_create((const uint8_t *) "ISINDEX", SLEN("ISINDEX"),
 			&name);
 	if (err != DOM_NO_ERR)
 		return err;
 	
 	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	_dom_document_unref_lwcstring(doc, name);
+	dom_string_unref(name);
 
 	ele->base.form = form;
 	dom_node_ref(form);
@@ -75,26 +76,22 @@ dom_exception _dom_html_isindex_element_initialise(struct dom_document *doc,
 /**
  * Finalise a dom_html_isindex_element object
  *
- * \param doc  The document object
  * \param ele  The dom_html_isindex_element object
  */
-void _dom_html_isindex_element_finalise(struct dom_document *doc,
-		struct dom_html_isindex_element *ele)
+void _dom_html_isindex_element_finalise(struct dom_html_isindex_element *ele)
 {
-	_dom_html_element_finalise(doc, &ele->base);
+	_dom_html_element_finalise(&ele->base);
 }
 
 /**
  * Destroy a dom_html_isindex_element object
  *
- * \param doc  The document object
  * \param ele  The dom_html_isindex_element object
  */
-void _dom_html_isindex_element_destroy(struct dom_document *doc,
-		struct dom_html_isindex_element *ele)
+void _dom_html_isindex_element_destroy(struct dom_html_isindex_element *ele)
 {
-	_dom_html_isindex_element_finalise(doc, ele);
-	_dom_document_alloc(doc, ele, 0);
+	_dom_html_isindex_element_finalise(ele);
+	free(ele);
 }
 
 /*------------------------------------------------------------------------*/
@@ -118,28 +115,14 @@ dom_exception _dom_html_isindex_element_parse_attribute(dom_element *ele,
 /* The virtual destroy function, see src/core/node.c for detail */
 void _dom_virtual_html_isindex_element_destroy(dom_node_internal *node)
 {
-	struct dom_document *doc = dom_node_get_owner(node);
-	_dom_html_isindex_element_destroy(doc, (struct dom_html_isindex_element *) node);
-}
-
-/* The virtual allocation function, see src/core/node.c for detail */
-dom_exception _dom_html_isindex_element_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret)
-{
-	UNUSED(n);
-
-	*ret = _dom_document_alloc(doc, NULL, sizeof(dom_html_isindex_element));
-	if (*ret == NULL)
-		return DOM_NO_MEM_ERR;
-	
-	return DOM_NO_ERR;
+	_dom_html_isindex_element_destroy((struct dom_html_isindex_element *) node);
 }
 
 /* The virtual copy function, see src/core/node.c for detail */
-dom_exception _dom_html_isindex_element_copy(struct dom_node_internal *new,
-		struct dom_node_internal *old)
+dom_exception _dom_html_isindex_element_copy(dom_node_internal *old,
+		dom_node_internal **copy)
 {
-	return _dom_html_element_copy(new, old);
+	return _dom_html_element_copy(old, copy);
 }
 
 

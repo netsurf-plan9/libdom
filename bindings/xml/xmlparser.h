@@ -21,7 +21,7 @@ typedef struct dom_xml_parser dom_xml_parser;
 
 /* Create an XML parser instance */
 dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
-		dom_alloc alloc, void *pw, dom_msg msg, void *mctx);
+		dom_msg msg, void *mctx);
 
 /* Destroy an XML parser instance */
 void dom_xml_parser_destroy(dom_xml_parser *parser);

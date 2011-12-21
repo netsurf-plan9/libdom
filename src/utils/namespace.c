@@ -38,23 +38,20 @@ dom_string *dom_namespaces[DOM_NAMESPACE_COUNT] = {
 /**
  * Initialise the namespace component
  *
- * \param alloc  Pointer to memory (de)allocation function
- * \param pw	 Pointer to client-specific private data
  * \return DOM_NO_ERR on success.
  */
-dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
+static dom_exception _dom_namespace_initialise(void)
 {
 	int i;
 	dom_exception err;
 
-	err = dom_string_create(alloc, pw,
-		(const uint8_t *) "xml", SLEN("xml"), &xml);
+	err = dom_string_create((const uint8_t *) "xml", SLEN("xml"), &xml);
 	if (err != DOM_NO_ERR) {
 		return err;
 	}
 
-	err = dom_string_create(alloc, pw,
-		(const uint8_t *) "xmlns", SLEN("xmlns"), &xmlns);
+	err = dom_string_create((const uint8_t *) "xmlns", SLEN("xmlns"), 
+			&xmlns);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(xml);
 		xml = NULL;
@@ -64,7 +61,7 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
 
 	for (i = 1; i < DOM_NAMESPACE_COUNT; i++) {
 		err = dom_string_create(
-				alloc, pw, (const uint8_t *) namespaces[i],
+				(const uint8_t *) namespaces[i],
 				strlen(namespaces[i]), &dom_namespaces[i]);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(xmlns);
@@ -80,6 +77,7 @@ dom_exception _dom_namespace_initialise(dom_alloc alloc, void *pw)
 	return DOM_NO_ERR;
 }
 
+#ifdef FINALISE_NAMESPACE
 /**
  * Finalise the namespace component
  *
@@ -108,6 +106,7 @@ dom_exception _dom_namespace_finalise(void)
 
 	return DOM_NO_ERR;
 }
+#endif
 
 /**
  * Ensure a QName is valid
@@ -134,7 +133,13 @@ dom_exception _dom_namespace_validate_qname(dom_string *qname,
 {
 	uint32_t colon, len;
 
-	if (qname == NULL){
+	if (xml == NULL) {
+		dom_exception err = _dom_namespace_initialise();
+		if (err != DOM_NO_ERR)
+			return err;
+	}
+
+	if (qname == NULL) {
 		if (namespace != NULL)
 			return DOM_NAMESPACE_ERR;
 		if (namespace == NULL)
@@ -153,16 +158,17 @@ dom_exception _dom_namespace_validate_qname(dom_string *qname,
 		/* No prefix */
 		/* If namespace URI is for xmlns, ensure qname == "xmlns" */
 		if (namespace != NULL && 
-				dom_string_cmp(namespace, 
-				dom_namespaces[DOM_NAMESPACE_XMLNS]) == 0 &&
-				dom_string_cmp(qname, xmlns) != 0) {
+				dom_string_isequal(namespace, 
+				dom_namespaces[DOM_NAMESPACE_XMLNS]) &&
+				dom_string_isequal(qname, xmlns) == false) {
 			return DOM_NAMESPACE_ERR;
 		}
+
 		/* If qname == "xmlns", ensure namespace URI is for xmlns */
 		if (namespace != NULL && 
-				dom_string_cmp(qname, xmlns) == 0 &&
-				dom_string_cmp(namespace, 
-				dom_namespaces[DOM_NAMESPACE_XMLNS]) != 0) {
+				dom_string_isequal(qname, xmlns) &&
+				dom_string_isequal(namespace, 
+				dom_namespaces[DOM_NAMESPACE_XMLNS]) == false) {
 			return DOM_NAMESPACE_ERR;
 		}
 	} else if (colon == 0) {
@@ -196,25 +202,25 @@ dom_exception _dom_namespace_validate_qname(dom_string *qname,
 		}
 
 		/* Test for invalid XML namespace */
-		if (dom_string_cmp(prefix, xml) == 0 &&
-				dom_string_cmp(namespace,
-				dom_namespaces[DOM_NAMESPACE_XML]) != 0) {
+		if (dom_string_isequal(prefix, xml) &&
+				dom_string_isequal(namespace,
+				dom_namespaces[DOM_NAMESPACE_XML]) == false) {
 			dom_string_unref(prefix);
 			return DOM_NAMESPACE_ERR;
 		}
 
 		/* Test for invalid xmlns namespace */
-		if (dom_string_cmp(prefix, xmlns) == 0 &&
-				dom_string_cmp(namespace,
-				dom_namespaces[DOM_NAMESPACE_XMLNS]) != 0) {
+		if (dom_string_isequal(prefix, xmlns) &&
+				dom_string_isequal(namespace,
+				dom_namespaces[DOM_NAMESPACE_XMLNS]) == false) {
 			dom_string_unref(prefix);
 			return DOM_NAMESPACE_ERR;
 		}
 
 		/* Test for presence of xmlns namespace with non xmlns prefix */
-		if (dom_string_cmp(namespace, 
-				dom_namespaces[DOM_NAMESPACE_XMLNS]) == 0 &&
-				dom_string_cmp(prefix, xmlns) != 0) {
+		if (dom_string_isequal(namespace, 
+				dom_namespaces[DOM_NAMESPACE_XMLNS]) &&
+				dom_string_isequal(prefix, xmlns) == false) {
 			dom_string_unref(prefix);
 			return DOM_NAMESPACE_ERR;
 		}
@@ -244,16 +250,19 @@ dom_exception _dom_namespace_split_qname(dom_string *qname,
 	uint32_t colon;
 	dom_exception err;
 
+	if (xml == NULL) {
+		err = _dom_namespace_initialise();
+		if (err != DOM_NO_ERR)
+			return err;
+	}
+
 	/* Find colon, if any */
 	colon = dom_string_index(qname, ':');
 
 	if (colon == (uint32_t) -1) {
 		/* None found => no prefix */
 		*prefix = NULL;
-		err = dom_string_dup(qname, localname);
-		if (err != DOM_NO_ERR) {
-			return err;
-		}
+		*localname = dom_string_ref(qname);
 	} else {
 		/* Found one => prefix */
 		err = dom_string_substr(qname, 0, colon, prefix);
@@ -285,6 +294,11 @@ dom_exception _dom_namespace_split_qname(dom_string *qname,
  */
 dom_string *_dom_namespace_get_xml_prefix(void)
 {
+	if (xml == NULL) {
+		if (_dom_namespace_initialise() != DOM_NO_ERR)
+			return NULL;
+	}
+
 	return xml;
 }
 
@@ -300,5 +314,11 @@ dom_string *_dom_namespace_get_xml_prefix(void)
  */
 dom_string *_dom_namespace_get_xmlns_prefix(void)
 {
+	if (xml == NULL) {
+		if (_dom_namespace_initialise() != DOM_NO_ERR)
+			return NULL;
+	}
+
 	return xmlns;
 }
+

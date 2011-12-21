@@ -97,12 +97,9 @@ dom_exception _dom_document_event_create_event(dom_document_event *de,
 	dom_exception err;
 	struct dom_document *doc = de;
 
-	dom_string_get_intern(type, &t);
-	if (t == NULL) {
-		err = _dom_string_intern(type, &t);
-		if (err != DOM_NO_ERR)
-			return err;
-	}
+	err = dom_string_intern(type, &t);
+	if (err != DOM_NO_ERR)
+		return err;
 
 	assert(t != NULL);
 	

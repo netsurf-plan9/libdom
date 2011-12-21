@@ -6,9 +6,10 @@
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <dom/dom.h>
 #include <dom/core/attr.h>
@@ -37,6 +38,9 @@
 
 struct dom_element_vtable _dom_element_vtable = {
 	{
+		{
+			DOM_NODE_EVENT_TARGET_VTABLE
+		},
 		DOM_NODE_VTABLE_ELEMENT
 	},
 	DOM_ELEMENT_VTABLE
@@ -110,13 +114,32 @@ static struct nnm_operation attributes_opt = {
 	attributes_equal
 };
 
-static void *_key(void *key, void *key_pw, dom_alloc alloc, void *pw, 
-		bool clone);
-static void *_value(void *value, void *value_pw, dom_alloc alloc,
-		void *pw, bool clone);
-static void *_nsattributes(void *value, void *value_pw, dom_alloc alloc,
-		void *pw, bool clone);
+static uint32_t attributes_hash(void *key, void *pw);
+static void *attributes_clone_key(void *key, void *pw);
+static void attributes_destroy_key(void *key, void *pw);
+static void *attributes_clone_value(void *value, void *pw);
+static void attributes_destroy_value(void *value, void *pw);
+static void *attributes_ns_clone_value(void *value, void *pw);
+static void attributes_ns_destroy_value(void *value, void *pw);
+static bool attributes_key_isequal(void *key1, void *key2, void *pw);
 
+static const struct dom_hash_vtable attributes_vtable = {
+	attributes_hash,
+	attributes_clone_key,
+	attributes_destroy_key,
+	attributes_clone_value,
+	attributes_destroy_value,
+	attributes_key_isequal
+};
+
+static const struct dom_hash_vtable attributes_ns_vtable = {
+	attributes_hash,
+	attributes_clone_key,
+	attributes_destroy_key,
+	attributes_ns_clone_value,
+	attributes_ns_destroy_value,
+	attributes_key_isequal
+};
 
 /*----------------------------------------------------------------------*/
 /* Constructors and Destructors */
@@ -139,11 +162,11 @@ static void *_nsattributes(void *value, void *value_pw, dom_alloc alloc,
  * The returned element will already be referenced.
  */
 dom_exception _dom_element_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct lwc_string_s *namespace,
-		struct lwc_string_s *prefix, struct dom_element **result)
+		dom_string *name, dom_string *namespace,
+		dom_string *prefix, struct dom_element **result)
 {
 	/* Allocate the element */
-	*result = _dom_document_alloc(doc, NULL, sizeof(struct dom_element));
+	*result = malloc(sizeof(struct dom_element));
 	if (*result == NULL)
 		return DOM_NO_MEM_ERR;
 
@@ -174,32 +197,35 @@ dom_exception _dom_element_create(struct dom_document *doc,
  * The returned element will already be referenced.
  */
 dom_exception _dom_element_initialise(struct dom_document *doc,
-		struct dom_element *el, struct lwc_string_s *name, 
-		struct lwc_string_s *namespace, struct lwc_string_s *prefix)
+		struct dom_element *el, dom_string *name, 
+		dom_string *namespace, dom_string *prefix)
 {
 	dom_exception err;
 
 	assert(doc != NULL);
 
-	err = _dom_document_create_hashtable(doc, CHAINS_ATTRIBUTES, 
-			_dom_hash_hash_lwcstring, &el->attributes);
-	if (err != DOM_NO_ERR) {
-		_dom_document_alloc(doc, el, 0);
-		return err;
+	el->attributes = _dom_hash_create(CHAINS_ATTRIBUTES, 
+			&attributes_vtable, NULL);
+	if (el->attributes == NULL) {
+		free(el);
+		return DOM_NO_MEM_ERR;;
 	}
 
-	err = _dom_document_create_hashtable(doc, CHAINS_NAMESPACE, 
-			_dom_hash_hash_lwcstring, &el->ns_attributes);
-	if (err != DOM_NO_ERR) {
-		_dom_document_alloc(doc, el, 0);
-		_dom_document_alloc(doc, el->attributes, 0);
-		return err;
+	el->ns_attributes = _dom_hash_create(CHAINS_NAMESPACE, 
+			&attributes_ns_vtable, NULL);
+	if (el->ns_attributes == NULL) {
+		free(el->attributes);
+		free(el);
+		return DOM_NO_MEM_ERR;
 	}
+
 	/* Initialise the base class */
 	err = _dom_node_initialise(&el->base, doc, DOM_ELEMENT_NODE,
 			name, NULL, namespace, prefix);
 	if (err != DOM_NO_ERR) {
-		_dom_document_alloc(doc, el, 0);
+		free(el->ns_attributes);
+		free(el->attributes);
+		free(el);
 		return err;
 	}
 
@@ -214,20 +240,18 @@ dom_exception _dom_element_initialise(struct dom_document *doc,
 /**
  * Finalise a dom_element
  *
- * \param doc  The document
  * \param ele  The element
  */
-void _dom_element_finalise(struct dom_document *doc, struct dom_element *ele)
+void _dom_element_finalise(struct dom_element *ele)
 {
 	/* Destroy attributes attached to this node */
 	if (ele->attributes != NULL) {
-		_dom_hash_destroy(ele->attributes, _key, NULL, _value, doc);
+		_dom_hash_destroy(ele->attributes);
 		ele->attributes = NULL;
 	}
 
 	if (ele->ns_attributes != NULL) {
-		_dom_hash_destroy(ele->ns_attributes, _key, NULL,
-				_nsattributes, doc);
+		_dom_hash_destroy(ele->ns_attributes);
 		ele->ns_attributes = NULL;
 	}
 
@@ -236,24 +260,22 @@ void _dom_element_finalise(struct dom_document *doc, struct dom_element *ele)
 	}
 
 	/* Finalise base class */
-	_dom_node_finalise(doc, &ele->base);
+	_dom_node_finalise(&ele->base);
 }
 
 /**
  * Destroy an element
  *
- * \param doc      The owning document
  * \param element  The element to destroy
  *
  * The contents of ::element will be destroyed and ::element will be freed.
  */
-void _dom_element_destroy(struct dom_document *doc,
-		struct dom_element *element)
+void _dom_element_destroy(struct dom_element *element)
 {
-	_dom_element_finalise(doc, element);
+	_dom_element_finalise(element);
 
 	/* Free the element */
-	_dom_document_alloc(doc, element, 0);
+	free(element);
 }
 
 /*----------------------------------------------------------------------*/
@@ -410,20 +432,14 @@ dom_exception _dom_element_get_elements_by_tag_name(
 		struct dom_nodelist **result)
 {
 	dom_exception err;
-	lwc_string *n;
 	dom_node_internal *base = (dom_node_internal *) element;
 	
 	assert(base->owner != NULL);
 
-	err = _dom_string_intern(name, &n);
-	if (err != DOM_NO_ERR)
-		return err;
-
 	err = _dom_document_get_nodelist(base->owner, DOM_NODELIST_BY_NAME,
-			(struct dom_node_internal *) element, n, NULL, 
+			(struct dom_node_internal *) element, name, NULL, 
 			NULL, result);
 
-	lwc_string_unref(n);
 	return err;
 }
 
@@ -448,19 +464,12 @@ dom_exception _dom_element_get_attribute_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *localname,
 		dom_string **value)
 {
-	lwc_string *str;
-	dom_exception err;
 	struct dom_hash_table *attrs;
 
 	if (namespace == NULL)
 		return _dom_element_get_attribute(element, localname, value);
 
-	err = _dom_node_get_intern_string(&element->base, namespace, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	attrs = (struct dom_hash_table *) _dom_hash_get(element->ns_attributes,
-			str);
+	attrs = _dom_hash_get(element->ns_attributes, namespace);
 	/* The element has no such namespace */
 	if (attrs == NULL) {
 		*value = NULL;
@@ -503,7 +512,6 @@ dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *qname,
 		dom_string *value)
 {
-	lwc_string *str;
 	dom_exception err;
 	struct dom_hash_table *attrs;
 	bool added;
@@ -530,26 +538,22 @@ dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 		return err;
 	}
 
-	err = _dom_node_get_intern_string(&element->base, namespace, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	attrs = (struct dom_hash_table *) _dom_hash_get(element->ns_attributes,
-			str);
+	attrs = _dom_hash_get(element->ns_attributes, namespace);
 	/* The element has no such namespace */
 	if (attrs == NULL) {
 		dom_document *doc;
 		doc = dom_node_get_owner(element);
 		assert(doc != NULL);
-		err = _dom_document_create_hashtable(doc, CHAINS_NS_ATTRIBUTES,
-				_dom_hash_hash_lwcstring, &attrs);
-		if (err != DOM_NO_ERR)
-			return err;
+		attrs = _dom_hash_create(CHAINS_NS_ATTRIBUTES,
+				&attributes_vtable, NULL);
+		if (attrs == NULL)
+			return DOM_NO_MEM_ERR;
 
-		added = _dom_hash_add(element->ns_attributes, str, attrs,
+		added = _dom_hash_add(element->ns_attributes, namespace, attrs,
 				false);
 		if (added == false)
 			return DOM_NO_MEM_ERR;
+		dom_string_ref(namespace);
 	}
 
 	return _dom_element_set_attr(element, attrs, localname, value);
@@ -572,19 +576,12 @@ dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 dom_exception _dom_element_remove_attribute_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *localname)
 {
-	lwc_string *str;
-	dom_exception err;
 	struct dom_hash_table *attrs;
 
 	if (namespace != NULL)
 		return _dom_element_remove_attribute(element, localname);
 
-	err = _dom_node_get_intern_string(&element->base, namespace, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	attrs = (struct dom_hash_table *) _dom_hash_get(element->ns_attributes,
-			str);
+	attrs = _dom_hash_get(element->ns_attributes, namespace);
 	/* The element has no such namespace */
 	if (attrs == NULL) {
 		return DOM_NO_ERR;
@@ -614,8 +611,6 @@ dom_exception _dom_element_get_attribute_node_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *localname,
 		struct dom_attr **result)
 {
-	lwc_string *str;
-	dom_exception err;
 	struct dom_hash_table *attrs;
 
 	if (namespace == NULL) {
@@ -623,12 +618,7 @@ dom_exception _dom_element_get_attribute_node_ns(struct dom_element *element,
 				result);
 	}
 
-	err = _dom_node_get_intern_string(&element->base, namespace, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	attrs = (struct dom_hash_table *) _dom_hash_get(element->ns_attributes,
-			str);
+	attrs = _dom_hash_get(element->ns_attributes, namespace);
 	/* The element has no such namespace */
 	if (attrs == NULL) {
 		*result = NULL;
@@ -663,7 +653,6 @@ dom_exception _dom_element_get_attribute_node_ns(struct dom_element *element,
 dom_exception _dom_element_set_attribute_node_ns(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
-	lwc_string *str;
 	dom_exception err;
 	struct dom_hash_table *attrs;
 	bool added;
@@ -676,26 +665,22 @@ dom_exception _dom_element_set_attribute_node_ns(struct dom_element *element,
 	if (namespace == NULL)
 		return _dom_element_set_attribute_node(element, attr, result);
 
-	err = _dom_node_get_intern_string(&element->base, namespace, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	attrs = (struct dom_hash_table *) _dom_hash_get(element->ns_attributes,
-			str);
+	attrs = _dom_hash_get(element->ns_attributes, namespace);
 	/* The element has no such namespace */
 	if (attrs == NULL) {
 		dom_document *doc;
 		doc = dom_node_get_owner(element);
 		assert(doc != NULL);
-		err = _dom_document_create_hashtable(doc, CHAINS_NS_ATTRIBUTES,
-				_dom_hash_hash_lwcstring, &attrs);
-		if (err != DOM_NO_ERR)
-			return err;
+		attrs = _dom_hash_create(CHAINS_NS_ATTRIBUTES,
+				&attributes_vtable, NULL);
+		if (attrs == NULL)
+			return DOM_NO_MEM_ERR;
 
-		added = _dom_hash_add(element->ns_attributes, str, attrs,
+		added = _dom_hash_add(element->ns_attributes, namespace, attrs,
 				false);
 		if (added == false)
 			return DOM_NO_MEM_ERR;
+		dom_string_ref(namespace);
 	}
 
 	dom_string *localname;
@@ -734,31 +719,11 @@ dom_exception _dom_element_get_elements_by_tag_name_ns(
 
 	/** \todo ensure XML feature is supported */
 
-	/* Get the interned string from the dom_string */
-	lwc_string *l = NULL, *n = NULL;
-	if (localname != NULL) {
-		err = _dom_string_intern(localname, &l);
-		if (err != DOM_NO_ERR)
-			return err;
-	}
-	if (namespace != NULL) {
-		err = _dom_string_intern(namespace, &n);
-		if (err != DOM_NO_ERR) {
-			lwc_string_unref(l);
-
-			return err;
-		}
-	}
-
 	err = _dom_document_get_nodelist(element->base.owner,
 			DOM_NODELIST_BY_NAMESPACE,
-			(struct dom_node_internal *) element, NULL, n, l,
+			(struct dom_node_internal *) element, NULL, 
+			namespace, localname,
 			result);
-
-	if (localname != NULL)
-		lwc_string_unref(l);
-	if (namespace != NULL)
-		lwc_string_unref(n);
 
 	return err;
 }
@@ -796,19 +761,12 @@ dom_exception _dom_element_has_attribute_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *localname,
 		bool *result)
 {
-	lwc_string *str;
-	dom_exception err;
 	struct dom_hash_table *attrs;
 
 	if (namespace == NULL)
 		return _dom_element_has_attribute(element, localname, result);
 
-	err = _dom_node_get_intern_string(&element->base, namespace, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	attrs = (struct dom_hash_table *) _dom_hash_get(element->ns_attributes,
-			str);
+	attrs = _dom_hash_get(element->ns_attributes, namespace);
 	/* The element has no such namespace */
 	if (attrs == NULL) {
 		*result = false;
@@ -878,24 +836,18 @@ dom_exception _dom_element_set_id_attribute_ns(struct dom_element *element,
 {
 	struct dom_hash_table *hs;
 	dom_exception err;
-	lwc_string *ns;
 
 	if (namespace == NULL)
 		return _dom_element_set_id_attribute(element, localname, is_id);
 
-	err = _dom_node_get_intern_string(&element->base, namespace, &ns);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	hs = (struct dom_hash_table *) _dom_hash_get(element->ns_attributes,
-			ns);
+	hs = _dom_hash_get(element->ns_attributes, namespace);
 	assert(hs != NULL);
 
 	err = _dom_element_set_id_attr(element, hs, localname, is_id);
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	element->id_ns = ns;
+	element->id_ns = dom_string_ref(namespace);
 
 	return DOM_NO_ERR;
 }
@@ -916,7 +868,6 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 {
 	struct dom_hash_table *hs;
 	dom_exception err;
-	lwc_string *ns;
 	dom_string *namespace;
 	dom_string *localname;
 
@@ -927,19 +878,14 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	err = _dom_node_get_intern_string(&element->base, namespace, &ns);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	hs = (struct dom_hash_table *) _dom_hash_get(element->ns_attributes,
-			ns);
+	hs = _dom_hash_get(element->ns_attributes, namespace);
 	assert(hs != NULL);
 
 	err = _dom_element_set_id_attr(element, hs, localname, is_id);
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	element->id_ns = ns;
+	element->id_ns = namespace;
 
 	return DOM_NO_ERR;
 
@@ -1017,17 +963,11 @@ dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
 		dom_string *namespace, bool *result)
 {
 	struct dom_element *ele = (struct dom_element *) node;
-	lwc_string *ns;
 	dom_string *value;
 	dom_exception err;
 
-	err = _dom_node_get_intern_string(node, namespace, &ns);
-	if (err != DOM_NO_ERR) {
-		return err;
-	}
 	if (node->prefix == NULL) {
-		lwc_string_isequal(node->namespace, ns, result);
-		lwc_string_unref(ns);
+		*result = dom_string_isequal(node->namespace, namespace);
 		return DOM_NO_ERR;
 	}
 
@@ -1038,23 +978,16 @@ dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
 		return err;
 	
 	if (has == true) {
-		return dom_element_get_attribute(ele, xmlns, &value);
-	}
+		err = dom_element_get_attribute(ele, xmlns, &value);
+		if (err != DOM_NO_ERR)
+			return err;
 
-	lwc_string *ns2;
-	err = _dom_node_get_intern_string(node, value, &ns2);
-	if (err != DOM_NO_ERR) {
-		return err;
-	}
-	
-	if (ns2 != NULL) {
-		lwc_string_isequal(ns2, ns, result);
-		lwc_string_unref(ns);
-		lwc_string_unref(ns2);
+		*result = dom_string_isequal(value, namespace);
+
 		dom_string_unref(value);
+
 		return DOM_NO_ERR;
 	}
-	
 
 	return dom_node_is_default_namespace(node->parent, namespace, result);
 }
@@ -1070,25 +1003,17 @@ dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
 dom_exception _dom_element_lookup_namespace(dom_node_internal *node,
 		dom_string *prefix, dom_string **result)
 {
-	lwc_string *pf;
 	dom_exception err;
 
-	err = _dom_node_get_intern_string(node, prefix, &pf);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	/* To some extent, directly compare the two lwc_string pointer
-	 * is better */
-	if (node->namespace != NULL && node->prefix == pf) {
-		assert(node->owner != NULL);
-		return _dom_document_create_string_from_lwcstring(node->owner,
-				pf, result);
+	if (node->namespace != NULL && 
+			dom_string_isequal(node->prefix, prefix)) {
+		*result = dom_string_ref(node->namespace);
+		return DOM_NO_ERR;
 	}
 	
 	bool has;
 	dom_string *xmlns = _dom_namespace_get_xmlns_prefix();
-	err = dom_element_has_attribute_ns(node,
-			dom_namespaces[DOM_NAMESPACE_XMLNS], prefix, &has);
+	err = dom_element_has_attribute_ns(node, xmlns, prefix, &has);
 	if (err != DOM_NO_ERR)
 		return err;
 	
@@ -1153,26 +1078,7 @@ dom_exception _dom_element_parse_attribute(dom_element *ele,
 /* The destroy virtual function of dom_element */
 void __dom_element_destroy(struct dom_node_internal *node)
 {
-	struct dom_document *doc = dom_node_get_owner(node);
-
-	_dom_element_destroy(doc, (struct dom_element *) node);
-}
-
-/* The memory allocator of this class */
-dom_exception _dom_element_alloc(dom_document *doc, struct dom_node_internal *n,
-		struct dom_node_internal **ret)
-{
-	dom_element *e;
-	UNUSED(n);
-
-	e = _dom_document_alloc(doc, NULL, sizeof(struct dom_element));
-	if (e == NULL)
-		return DOM_NO_MEM_ERR;
-	
-	*ret = (dom_node_internal *) e;
-	dom_node_set_owner(*ret, doc);
-
-	return DOM_NO_ERR;
+	_dom_element_destroy((struct dom_element *) node);
 }
 
 /* TODO: How to deal with default attribue:
@@ -1183,45 +1089,41 @@ dom_exception _dom_element_alloc(dom_document *doc, struct dom_node_internal *n,
  *	are all specified. For the methods like importNode and adoptNode, 
  *	this will make _dom_element_copy can be used in them.
  */
-dom_exception _dom_element_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old)
+dom_exception _dom_element_copy(dom_node_internal *old, 
+		dom_node_internal **copy)
 {
-	dom_element *ne = (dom_element *) new;
-	dom_element *oe = (dom_element *) old;
-	dom_document *od, *nd;
+	dom_element *olde = (dom_element *) old;
+	dom_element *e;
 	struct dom_hash_table *ht;
 	dom_exception err;
-
-	err = _dom_node_copy(new, old);
-	if (err != DOM_NO_ERR)
-		return err;
 	
-	od = dom_node_get_owner(old);
-	nd = dom_node_get_owner(new);
-	assert(od != NULL);
-	assert(nd != NULL);
+	e = malloc(sizeof(dom_element));
+	if (e == NULL)
+		return DOM_NO_MEM_ERR;
 
-	dom_alloc alloc;
-	void *pw;
-	_dom_document_get_allocator(nd, &alloc, &pw);
-
+	err = dom_node_copy_internal(old, e);
+	if (err != DOM_NO_ERR) {
+		free(e);
+		return err;
+	}
+	
 	/* Copy the hash tables */
-	ht = _dom_hash_clone(oe->attributes, alloc, pw, _key, NULL,
-			_value, nd);
+	ht = _dom_hash_clone(olde->attributes);
 	if (ht == NULL)
 		return DOM_NO_MEM_ERR;
-	ne->attributes = ht;
+	e->attributes = ht;
 
-	ht = _dom_hash_clone(oe->ns_attributes, alloc, pw, _key, NULL,
-			_nsattributes, nd);
+	ht = _dom_hash_clone(olde->ns_attributes);
 	if (ht == NULL)
 		return DOM_NO_MEM_ERR;
-	ne->ns_attributes = ht;
+	e->ns_attributes = ht;
 
-	ne->id_ns = NULL;
-	ne->id_name = NULL;
+	e->id_ns = NULL;
+	e->id_name = NULL;
 
 	/* TODO: deal with dom_type_info, it get no definition ! */
+
+	*copy = (dom_node_internal *) e;
 
 	return DOM_NO_ERR;
 }
@@ -1247,14 +1149,10 @@ dom_exception _dom_element_get_attr(struct dom_element *element,
 {
 	void *a;
 	dom_exception err = DOM_NO_ERR;
-	lwc_string *str;
 
-	/* Looking for name */
-	err = _dom_node_get_intern_string(&element->base, name, &str);
-	if (err != DOM_NO_ERR)
-		return err;
+	UNUSED(element);
 
-	a = _dom_hash_get(hs, str);
+	a = _dom_hash_get(hs, name);
 
 	/* Fill in value */
 	if (a == NULL) {
@@ -1280,8 +1178,6 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		dom_string *value)
 {
 	void *a;
-	dom_exception err;
-	lwc_string *str;
 	bool added;
 	dom_node_internal *e = (dom_node_internal *) element;
 
@@ -1292,12 +1188,7 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 	if (_dom_node_readonly(e))
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
-	/* Looking for name */
-	err = _dom_node_get_intern_string(&element->base, name, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	a = _dom_hash_get(hs, str);
+	a = _dom_hash_get(hs, name);
 
 	if (a != NULL) {
 		/* Found an existing attribute, so replace its value */
@@ -1333,7 +1224,7 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		dom_exception err;
 		struct dom_attr *attr;
 
-		err = _dom_attr_create(e->owner, str, NULL, NULL, true, &attr);
+		err = _dom_attr_create(e->owner, name, NULL, NULL, true, &attr);
 		if (err != DOM_NO_ERR)
 			return err;
 
@@ -1360,23 +1251,22 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 			return err;
 		}
 
-		err = _dom_dispatch_node_change_event(doc,
-				(dom_event_target *) attr, 
-				(dom_event_target *) element, 
-				DOM_MUTATION_ADDITION, &success);
+		err = dom_node_dispatch_node_change_event(doc,
+				attr, element, DOM_MUTATION_ADDITION, &success);
 		if (err != DOM_NO_ERR) {
 			dom_node_set_parent(attr, NULL);
 			dom_node_unref(attr);
 			return err;
 		}
 
-		added = _dom_hash_add(hs, str, attr, false);
+		added = _dom_hash_add(hs, name, attr, false);
 		if (added == false) {
 			/* If we failed at this step, there must be no memory */
 			dom_node_set_parent(attr, NULL);
 			dom_node_unref(attr);
 			return DOM_NO_MEM_ERR;
 		}
+		dom_string_ref(name);
 
 		dom_node_unref(attr);
 		dom_node_remove_pending(attr);
@@ -1404,34 +1294,26 @@ dom_exception _dom_element_remove_attr(struct dom_element *element,
 {
 	void *a;
 	dom_exception err;
-	lwc_string *str;
 	dom_node_internal *e = (dom_node_internal *) element;
 
 	/* Ensure element can be written to */
 	if (_dom_node_readonly(e))
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
-	/* Looking for name */
-	err = _dom_node_get_intern_string(&element->base, name, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	a = (dom_node_internal *) _dom_hash_get(hs, str);
+	a = _dom_hash_get(hs, name);
 
 	/* Detach attr node from list */
 	if (a != NULL) {
 		/* Disptach DOMNodeRemoval event */
 		bool success = true;
 		struct dom_document *doc = dom_node_get_owner(element);
-		err = _dom_dispatch_node_change_event(doc,
-				(dom_event_target *) a,
-				(dom_event_target *) element,
-				DOM_MUTATION_REMOVAL, &success);
+		err = dom_node_dispatch_node_change_event(doc,
+				a, element, DOM_MUTATION_REMOVAL, &success);
 		if (err != DOM_NO_ERR)
 			return err;
 
 		/* Delete the attribute node */
-		_dom_hash_del(hs, str);
+		_dom_hash_del(hs, name);
 		/* Claim a reference for later event dispatch */
 		dom_node_ref(a);
 
@@ -1485,15 +1367,10 @@ dom_exception _dom_element_get_attr_node(struct dom_element *element,
 		struct dom_attr **result)
 {
 	void *a;
-	dom_exception err;
-	lwc_string *str;
 
-	/* Looking for name */
-	err = _dom_node_get_intern_string(&element->base, name, &str);
-	if (err != DOM_NO_ERR)
-		return err;
+	UNUSED(element);
 
-	a = _dom_hash_get(hs, str);
+	a = _dom_hash_get(hs, name);
 
 	/* Fill in value */
 	if (a == NULL) {
@@ -1528,7 +1405,6 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 		struct dom_attr **result)
 {
 	dom_exception err;
-	lwc_string *str = NULL;
 	dom_string *name = NULL;
 	bool added;
 	dom_node_internal *e = (dom_node_internal *) element;
@@ -1552,29 +1428,21 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	/* Looking for name */
-	err = _dom_node_get_intern_string(&element->base, name, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	a = _dom_hash_get(hs, str);
+	a = _dom_hash_get(hs, name);
 
 	*result = NULL;
 	if (a != NULL) {
 		/* Disptach DOMNodeRemoval event */
 		bool success = true;
 		struct dom_document *doc = dom_node_get_owner(element);
-		err = _dom_dispatch_node_change_event(doc,
-				(dom_event_target *) a, 
-				(dom_event_target *) element,
-				DOM_MUTATION_REMOVAL, &success);
+		err = dom_node_dispatch_node_change_event(doc,
+				a, element, DOM_MUTATION_REMOVAL, &success);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(name);
-			_dom_node_unref_intern_string(&element->base, str);
 			return err;
 		}
 
-		_dom_hash_del(hs, str);
+		_dom_hash_del(hs, name);
 		dom_node_ref(a);
 		*result = (dom_attr *) a;
 		dom_node_set_parent(a, NULL);
@@ -1590,7 +1458,6 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 		if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR) {
 			dom_node_unref(a);
 			dom_string_unref(name);
-			_dom_node_unref_intern_string(&element->base, str);
 			return err;
 		}
 		err = _dom_dispatch_attr_modified_event(doc, e, old, NULL, 
@@ -1599,7 +1466,6 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 		dom_string_unref(old);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(name);
-			_dom_node_unref_intern_string(&element->base, str);
 			return err;
 		}
 
@@ -1608,18 +1474,17 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 				(dom_event_target *) e, &success);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(name);
-			_dom_node_unref_intern_string(&element->base, str);
 			return err;
 		}
 	}	
 
-	added = _dom_hash_add(hs, str, attr, false);
+	added = _dom_hash_add(hs, name, attr, false);
 	if (added == false) {
 		dom_string_unref(name);
-		_dom_node_unref_intern_string(&element->base, str);
 		/* If we failed at this step, there must be no memory */
 		return DOM_NO_MEM_ERR;
 	}
+	dom_string_ref(name);
 	dom_node_set_parent(attr, element);
 	dom_node_remove_pending(attr);
 
@@ -1639,14 +1504,12 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	/* Cleanup */
 	dom_string_unref(new);
 	dom_string_unref(name);
-	_dom_node_unref_intern_string(&element->base, str);
 	if (err != DOM_NO_ERR) {
 		return err;
 	}
 
-	err = _dom_dispatch_node_change_event(doc, (dom_event_target *) attr,
-			(dom_event_target *) element, DOM_MUTATION_ADDITION,
-			&success);
+	err = dom_node_dispatch_node_change_event(doc, attr, element, 
+			DOM_MUTATION_ADDITION, &success);
 	if (err != DOM_NO_ERR)
 		return err;
 
@@ -1680,7 +1543,6 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 {
 	void *a;
 	dom_exception err;
-	lwc_string *str;
 	dom_string *name;
 	dom_node_internal *e = (dom_node_internal *) element;
 	
@@ -1692,40 +1554,31 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	/* Looking for name */
-	err = _dom_node_get_intern_string(&element->base, name, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	a = _dom_hash_get(hs, str);
+	a = _dom_hash_get(hs, name);
 
 	/** \todo defaulted attribute handling */
 
 	if (a == NULL || a != (void *) attr) {
 		dom_string_unref(name);
-		_dom_node_unref_intern_string(&element->base, str);
 		return DOM_NOT_FOUND_ERR;
 	}
 
 	/* Dispatch a DOMNodeRemoved event */
 	bool success = true;
 	struct dom_document *doc = dom_node_get_owner(element);
-	err = _dom_dispatch_node_change_event(doc, (dom_event_target *) a, 
-			(dom_event_target *) element, DOM_MUTATION_REMOVAL, 
-			&success);
+	err = dom_node_dispatch_node_change_event(doc, a, element, 
+			DOM_MUTATION_REMOVAL, &success);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(name);
-		_dom_node_unref_intern_string(&element->base, str);
 		return err;
 	}
 
 	/* Delete the attribute node */
-	_dom_hash_del(hs, str);
+	_dom_hash_del(hs, name);
 	dom_node_ref(a);
 
-	/* Now, cleaup the dom_string and lwc_string */
+	/* Now, cleaup the dom_string */
 	dom_string_unref(name);
-	_dom_node_unref_intern_string(&element->base, str);
 
 	/* Dispatch a DOMAttrModified event */
 	dom_string *old = NULL;
@@ -1777,15 +1630,10 @@ dom_exception _dom_element_has_attr(struct dom_element *element,
 		bool *result)
 {
 	void *a;
-	dom_exception err;
-	lwc_string *str;
 
-	/* Looking for name */
-	err = _dom_node_get_intern_string(&element->base, name, &str);
-	if (err != DOM_NO_ERR)
-		return err;
+	UNUSED(element);
 
-	a = _dom_hash_get(hs, str);
+	a = _dom_hash_get(hs, name);
 
 	/* Fill in value */
 	if (a == NULL) {
@@ -1810,16 +1658,9 @@ dom_exception _dom_element_set_id_attr(struct dom_element *element,
 		struct dom_hash_table *hs, dom_string *name, bool is_id)
 {
 	dom_attr *attr;
-	lwc_string *str;
-	dom_exception err;
 	struct dom_hash_table *oh;
 
-	/* Looking for name */
-	err = _dom_node_get_intern_string(&element->base, name, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	attr = (dom_attr *) _dom_hash_get(hs, str);
+	attr = _dom_hash_get(hs, name);
 	if (attr == NULL)
 		return DOM_NOT_FOUND_ERR;
 	
@@ -1827,15 +1668,15 @@ dom_exception _dom_element_set_id_attr(struct dom_element *element,
 		/* Firstly, clear the previous id attribute if there is one */
 		if (element->id_ns != NULL) {
 			assert(element->id_name != NULL);
-			oh = (struct dom_hash_table *) _dom_hash_get(
-					element->ns_attributes, element->id_ns);
+			oh = _dom_hash_get(element->ns_attributes, 
+					element->id_ns);
 		} else {
 			oh = element->attributes;
 		}
 		assert(oh != NULL);
 
 		if (element->id_name != NULL) {
-			attr = (dom_attr *) _dom_hash_get(oh, element->id_name);
+			attr = _dom_hash_get(oh, element->id_name);
 			assert(attr != NULL);
 			_dom_attr_set_isid(attr, false);
 		}
@@ -1843,7 +1684,7 @@ dom_exception _dom_element_set_id_attr(struct dom_element *element,
 
 	_dom_attr_set_isid(attr, is_id);
 
-	element->id_name = str;
+	element->id_name = dom_string_ref(name);
 
 	return DOM_NO_ERR;
 }
@@ -1855,7 +1696,7 @@ dom_exception _dom_element_set_id_attr(struct dom_element *element,
  * \param id   The ID of this element
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_element_get_id(struct dom_element *ele, lwc_string **id)
+dom_exception _dom_element_get_id(struct dom_element *ele, dom_string **id)
 {
 	dom_exception err;
 	dom_string *ret = NULL;
@@ -1868,32 +1709,13 @@ dom_exception _dom_element_get_id(struct dom_element *ele, lwc_string **id)
 		doc = dom_node_get_owner(ele);
 		assert(doc != NULL);
 
-		dom_string *namespace, *name;
-		err = _dom_document_create_string_from_lwcstring(doc,
-				ele->id_ns, &namespace);
-		if (err != DOM_NO_ERR)
-			return err;
-
-		err = _dom_document_create_string_from_lwcstring(doc, 
-				ele->id_name, &name);
+		err = _dom_element_get_attribute_ns(ele, ele->id_ns, 
+				ele->id_name, &ret);
 		if (err != DOM_NO_ERR) {
-			dom_string_unref(namespace);
 			return err;
 		}
 
-		err = _dom_element_get_attribute_ns(ele, namespace, name, &ret);
-		if (err != DOM_NO_ERR) {
-			dom_string_unref(namespace);
-			dom_string_unref(name);
-			return err;
-		}
-
-		dom_string_unref(namespace);
-		dom_string_unref(name);
-
-		err = _dom_node_get_intern_string((dom_node_internal *) ele,
-				ret, id);
-		dom_string_unref(ret);
+		*id = ret;
 		return err;
 	}
 
@@ -1903,37 +1725,24 @@ dom_exception _dom_element_get_id(struct dom_element *ele, lwc_string **id)
 	dom_string *name;
 
 	if (ele->id_name != NULL) {
-		err = _dom_document_create_string_from_lwcstring(doc, 
-				ele->id_name, &name);
-		if (err != DOM_NO_ERR) {
-			return err;
-		}
+		name = ele->id_name;
 	} else {
-		lwc_string *id_name = _dom_document_get_id_name(doc);
-		if (id_name == NULL) {
+		name = _dom_document_get_id_name(doc);
+
+		if (name == NULL) {
 			/* No ID attribute at all, just return NULL */
 			*id = NULL;
 			return DOM_NO_ERR;
-		}
-		err = _dom_document_create_string_from_lwcstring(doc, id_name,
-				&name);
-		if (err != DOM_NO_ERR) {
-			return err;
 		}
 	}
 
 	err = _dom_element_get_attribute(ele, name, &ret);
 	if (err != DOM_NO_ERR) {
-		dom_string_unref(name);
 		return err;
 	}
 
-	dom_string_unref(name);
-
 	if (ret != NULL) {
-		err = _dom_node_get_intern_string((dom_node_internal *) ele,
-				ret, id);
-		dom_string_unref(ret);
+		*id = ret;
 	} else {
 		*id = NULL;
 	}
@@ -1951,7 +1760,7 @@ dom_exception attributes_get_length(void *priv,
 		unsigned long *length)
 {
 	unsigned int ret = 0;
-	unsigned int c1, *c2 = NULL;
+	uintptr_t c1, *c2 = NULL;
 	void *key, *value;
 	dom_element *e = (dom_element *) priv;
 
@@ -2023,7 +1832,7 @@ dom_exception attributes_item(void *priv,
 	unsigned int len;
 	dom_element *e = (dom_element *) priv;
 	void *key, *value;
-	unsigned int c1, *c2 = NULL;
+	uintptr_t c1, *c2 = NULL;
 
 	len = _dom_hash_get_length(e->attributes);
 	if (num <= len) {
@@ -2135,85 +1944,80 @@ bool attributes_equal(void *p1, void *p2)
 }
 /*------------------ End of namednodemap functions -----------------------*/
 
-/* The key_func of the hash table, see utils/hashtable.h for details */
-void *_key(void *key, void *key_pw, dom_alloc alloc, void *pw, 
-		bool clone)
+uint32_t attributes_hash(void *key, void *pw)
 {
+	UNUSED(pw);
+
+	return dom_string_hash(key);
+}
+
+void *attributes_clone_key(void *key, void *pw)
+{
+	UNUSED(pw);
+
 	assert(key != NULL);
 
-	UNUSED(key_pw);
-	UNUSED(alloc);
-	UNUSED(pw);
-
-	if (clone == false) {
-		lwc_string_unref((lwc_string *) key);
-		return NULL;
-	} else {
-		lwc_error err;
-		lwc_string *ret;
-		const char *data = lwc_string_data((lwc_string *) key);
-		size_t len = lwc_string_length((lwc_string *) key);
-		err = lwc_intern_string(data, len, &ret);
-		if (err != lwc_error_ok)
-			return NULL;
-
-		return ret;
-	}
+	return dom_string_ref(key);
 }
 
-/* The value_func of the hash table, see utils/hashtable.h for details */
-void *_value(void *value, void *value_pw, dom_alloc alloc,
-		void *pw, bool clone)
+void attributes_destroy_key(void *key, void *pw)
 {
-	assert(value != NULL);
-	assert(value_pw != NULL);
-
-	UNUSED(alloc);
 	UNUSED(pw);
 
-	if (clone == false) {
-		dom_node_internal *a = (dom_node_internal *) value;
-		a->parent = NULL;
-		dom_node_try_destroy(a);
-		return NULL;
-	} else {
-		dom_exception err;
-		dom_node *node;
+	assert(key != NULL);
 
-		err = dom_document_import_node((dom_document *) value_pw, value,
-				true, &node);
-		if (err != DOM_NO_ERR)
-			return NULL;
-
-		return node;
-	}
+	dom_string_unref(key);
 }
 
-/* The value_func of the hash table, see utils/hashtable.h for details */
-void *_nsattributes(void *value, void *value_pw, dom_alloc alloc,
-		void *pw, bool clone)
+void *attributes_clone_value(void *value, void *pw)
 {
-	assert(value != NULL);
-	assert(value_pw != NULL);
+	dom_exception err;
+	dom_node *node;
 
-	UNUSED(alloc);
 	UNUSED(pw);
 
-	if (clone == false) {
-		_dom_hash_destroy((struct dom_hash_table *) value, _key,
-				value_pw, _value, value_pw);
+	assert(value != NULL);
+
+	err = dom_node_clone_node(value, true, &node);
+	if (err != DOM_NO_ERR)
 		return NULL;
-	} else {
-		dom_document *doc = (dom_document *) value_pw;
-		dom_alloc alloc;
-		void *pw;
-		struct dom_hash_table *ret = NULL;
-		_dom_document_get_allocator(doc, &alloc, &pw);
 
-		ret = _dom_hash_clone((struct dom_hash_table *) value, alloc,
-				pw, _key, NULL, _value, doc);
-
-		return ret;
-	}
+	return node;
 }
 
+void attributes_destroy_value(void *value, void *pw)
+{
+	dom_node_internal *a = (dom_node_internal *) value;
+
+	UNUSED(pw);
+
+	assert(value != NULL);
+
+	a->parent = NULL;
+	dom_node_try_destroy(a);
+}
+
+void *attributes_ns_clone_value(void *value, void *pw)
+{
+	UNUSED(pw);
+
+	assert(value != NULL);
+
+	return _dom_hash_clone(value);
+}
+
+void attributes_ns_destroy_value(void *value, void *pw)
+{
+	UNUSED(pw);
+
+	assert(value != NULL);
+
+	_dom_hash_destroy(value);
+}
+
+bool attributes_key_isequal(void *key1, void *key2, void *pw)
+{
+	UNUSED(pw);
+
+	return dom_string_isequal(key1, key2);
+}

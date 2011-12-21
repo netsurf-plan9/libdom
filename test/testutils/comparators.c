@@ -27,12 +27,12 @@ int str_cmp(const void *a, const void *b)
 	dom_exception err;
 	bool ret;
 
-	err = dom_string_create(myrealloc, NULL, expected, strlen((const char *)expected),
+	err = dom_string_create(expected, strlen((const char *)expected),
 			&exp);
 	if (err != DOM_NO_ERR)
 		return false;
 
-	ret = dom_string_cmp(exp, actual) == 0;
+	ret = dom_string_isequal(exp, actual);
 	
 	dom_string_unref(exp);
 
@@ -58,12 +58,12 @@ int str_icmp(const void *a, const void *b)
 	dom_exception err;
 	bool ret;
 
-	err = dom_string_create(myrealloc, NULL, expected, strlen((const char *)expected),
+	err = dom_string_create(expected, strlen((const char *)expected),
 			&exp);
 	if (err != DOM_NO_ERR)
 		return false;
 
-	ret = dom_string_icmp(exp, actual) == 0;
+	ret = dom_string_caseless_isequal(exp, actual);
 	
 	dom_string_unref(exp);
 

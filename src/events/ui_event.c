@@ -5,6 +5,8 @@
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
+#include <stdlib.h>
+
 #include "events/ui_event.h"
 #include "core/document.h"
 
@@ -18,7 +20,7 @@ static struct dom_event_private_vtable _event_vtable = {
 dom_exception _dom_ui_event_create(struct dom_document *doc, 
 		struct dom_ui_event **evt)
 {
-	*evt = _dom_document_alloc(doc, NULL, sizeof(dom_ui_event));
+	*evt = malloc(sizeof(dom_ui_event));
 	if (*evt == NULL) 
 		return DOM_NO_MEM_ERR;
 	
@@ -28,12 +30,11 @@ dom_exception _dom_ui_event_create(struct dom_document *doc,
 }
 
 /* Destructor */
-void _dom_ui_event_destroy(struct dom_document *doc, 
-		struct dom_ui_event *evt)
+void _dom_ui_event_destroy(struct dom_ui_event *evt)
 {
-	_dom_ui_event_finalise(doc, evt);
+	_dom_ui_event_finalise(evt);
 
-	_dom_document_alloc(doc, evt, 0); 
+	free(evt);
 }
 
 /* Initialise function */
@@ -45,17 +46,16 @@ dom_exception _dom_ui_event_initialise(struct dom_document *doc,
 }
 
 /* Finalise function */
-void _dom_ui_event_finalise(struct dom_document *doc, 
-		struct dom_ui_event *evt)
+void _dom_ui_event_finalise(struct dom_ui_event *evt)
 {
 	evt->view = NULL;
-	_dom_event_finalise(doc, &evt->base);
+	_dom_event_finalise(&evt->base);
 }
 
 /* The virtual destroy function */
 void _virtual_dom_ui_event_destroy(struct dom_event *evt)
 {
-	_dom_ui_event_destroy(evt->doc, (dom_ui_event *) evt);
+	_dom_ui_event_destroy((dom_ui_event *) evt);
 }
 
 /*----------------------------------------------------------------------*/

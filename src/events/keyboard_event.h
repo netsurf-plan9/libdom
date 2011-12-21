@@ -36,16 +36,14 @@ dom_exception _dom_keyboard_event_create(struct dom_document *doc,
 		struct dom_keyboard_event **evt);
 
 /* Destructor */
-void _dom_keyboard_event_destroy(struct dom_document *doc, 
-		struct dom_keyboard_event *evt);
+void _dom_keyboard_event_destroy(struct dom_keyboard_event *evt);
 
 /* Initialise function */
 dom_exception _dom_keyboard_event_initialise(struct dom_document *doc, 
 		struct dom_keyboard_event *evt);
 
 /* Finalise function */
-void _dom_keyboard_event_finalise(struct dom_document *doc, 
-		struct dom_keyboard_event *evt);
+void _dom_keyboard_event_finalise(struct dom_keyboard_event *evt);
 
 
 /* Parse the modifier list string to corresponding bool variable state */

@@ -5,14 +5,14 @@
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
+
 #include <assert.h>
+#include <stdlib.h>
 
 #include <dom/core/node.h>
 #include <dom/core/document.h>
 #include <dom/core/nodelist.h>
 #include <dom/core/string.h>
-
-#include <libwapcaplet/libwapcaplet.h>
 
 #include "core/document.h"
 #include "core/node.h"
@@ -24,24 +24,24 @@
  * DOM node list
  */
 struct dom_nodelist {
-	struct dom_document *owner;	/**< Owning document */
+	dom_document *owner;	/**< Owning document */
 
-	struct dom_node_internal *root;	
+	dom_node_internal *root;	
 			/**< Root of applicable subtree */
 
 	nodelist_type type;	/**< Type of this list */
 
 	union {
 		struct {
-			struct lwc_string_s *name;
+			dom_string *name;
 					/**< Tag name to match */
 			bool any_name;		/**< The name is '*' */
 		} n;
 		struct {
 			bool any_namespace;	/**< The namespace is '*' */
 			bool any_localname;	/**< The localname is '*' */
-			struct lwc_string_s *namespace;	/**< Namespace */
-			struct lwc_string_s *localname;	/**< Localname */
+			dom_string *namespace;	/**< Namespace */
+			dom_string *localname;	/**< Localname */
 		} ns;			/**< Data for namespace matching */
 	} data;
 
@@ -65,14 +65,14 @@ struct dom_nodelist {
  * The returned list will already be referenced, so the client need not
  * do so explicitly. The client must unref the list once finished with it.
  */
-dom_exception _dom_nodelist_create(struct dom_document *doc, nodelist_type type,
-		struct dom_node_internal *root, struct lwc_string_s *tagname,
-		struct lwc_string_s *namespace, struct lwc_string_s *localname,
-		struct dom_nodelist **list)
+dom_exception _dom_nodelist_create(dom_document *doc, nodelist_type type,
+		dom_node_internal *root, dom_string *tagname,
+		dom_string *namespace, dom_string *localname,
+		dom_nodelist **list)
 {
-	struct dom_nodelist *l;
+	dom_nodelist *l;
 
-	l = _dom_document_alloc(doc, NULL, sizeof(struct dom_nodelist));
+	l = malloc(sizeof(dom_nodelist));
 	if (l == NULL)
 		return DOM_NO_MEM_ERR;
 
@@ -87,35 +87,34 @@ dom_exception _dom_nodelist_create(struct dom_document *doc, nodelist_type type,
 	if (type == DOM_NODELIST_BY_NAME) {
 		assert(tagname != NULL);
 		l->data.n.any_name = false;
-		if (lwc_string_length(tagname) == 1) {
-			const char *ch = lwc_string_data(tagname);
+		if (_dom_string_byte_length(tagname) == 1) {
+			const char *ch = _dom_string_data(tagname);
 			if (*ch == '*') {
 				l->data.n.any_name = true;
 			}
 		}
 	
-		lwc_string_ref(tagname);
-		l->data.n.name = tagname;
+		l->data.n.name = dom_string_ref(tagname);
 	} else if (type == DOM_NODELIST_BY_NAMESPACE) {
 		l->data.ns.any_localname = false;
 		l->data.ns.any_namespace = false;
 		if (localname != NULL) {
-			if (lwc_string_length(localname) == 1) {
-				const char *ch = lwc_string_data(localname);
+			if (_dom_string_byte_length(localname) == 1) {
+				const char *ch = _dom_string_data(localname);
 				if (*ch == '*') {
 				   l->data.ns.any_localname = true;
 				}
 			}
-			lwc_string_ref(localname);
+			dom_string_ref(localname);
 		}
 		if (namespace != NULL) {
-			if (lwc_string_length(namespace) == 1) {
-				const char *ch = lwc_string_data(namespace);
+			if (_dom_string_byte_length(namespace) == 1) {
+				const char *ch = _dom_string_data(namespace);
 				if (*ch == '*') {
 					l->data.ns.any_namespace = true;
 				}
 			}
-			lwc_string_ref(namespace);
+			dom_string_ref(namespace);
 		}
 
 		l->data.ns.namespace = namespace;
@@ -134,7 +133,7 @@ dom_exception _dom_nodelist_create(struct dom_document *doc, nodelist_type type,
  *
  * \param list  The list to claim a reference on
  */
-void dom_nodelist_ref(struct dom_nodelist *list)
+void dom_nodelist_ref(dom_nodelist *list)
 {
 	assert(list != NULL);
 	list->refcnt++;
@@ -148,27 +147,26 @@ void dom_nodelist_ref(struct dom_nodelist *list)
  * If the reference count reaches zero, any memory claimed by the
  * list will be released
  */
-void dom_nodelist_unref(struct dom_nodelist *list)
+void dom_nodelist_unref(dom_nodelist *list)
 {
 	if (list == NULL)
 		return;
 
 	if (--list->refcnt == 0) {
-		struct dom_node_internal *owner = 
-				(struct dom_node_internal *) list->owner;
+		dom_node_internal *owner = (dom_node_internal *) list->owner;
 		switch (list->type) {
 		case DOM_NODELIST_CHILDREN:
 			/* Nothing to do */
 			break;
 		case DOM_NODELIST_BY_NAMESPACE:
 			if (list->data.ns.namespace != NULL)
-				lwc_string_unref(list->data.ns.namespace);
+				dom_string_unref(list->data.ns.namespace);
 			if (list->data.ns.localname != NULL)
-				lwc_string_unref(list->data.ns.localname);
+				dom_string_unref(list->data.ns.localname);
 			break;
 		case DOM_NODELIST_BY_NAME:
 			assert(list->data.n.name != NULL);
-			lwc_string_unref(list->data.n.name);
+			dom_string_unref(list->data.n.name);
 			break;
 		}
 
@@ -178,7 +176,7 @@ void dom_nodelist_unref(struct dom_nodelist *list)
 		_dom_document_remove_nodelist(list->owner, list);
 
 		/* Destroy the list object */
-		_dom_document_alloc(list->owner, list, 0);
+		free(list);
 
 		/* And release our reference on the owning document
 		 * This must be last as, otherwise, it's possible that
@@ -194,10 +192,9 @@ void dom_nodelist_unref(struct dom_nodelist *list)
  * \param length  Pointer to location to receive length
  * \return DOM_NO_ERR.
  */
-dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
-		unsigned long *length)
+dom_exception dom_nodelist_get_length(dom_nodelist *list, unsigned long *length)
 {
-	struct dom_node_internal *cur = list->root->first_child;
+	dom_node_internal *cur = list->root->first_child;
 	unsigned long len = 0;
 
 	/* Traverse data structure */
@@ -206,21 +203,21 @@ dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
 		if (list->type == DOM_NODELIST_CHILDREN) {
 			len++;
 		} else if (list->type == DOM_NODELIST_BY_NAME) {
-			/* Here, we compare two lwc_string pointer directly */
 			if (list->data.n.any_name == true || (
 					cur->name != NULL && 
-					cur->name == list->data.n.name)) {
+					dom_string_isequal(cur->name, 
+						list->data.n.name))) {
 				if (cur->type == DOM_ELEMENT_NODE)
 					len++;
 			}
 		} else {
-			if (list->data.ns.any_namespace == true || 
-					cur->namespace == 
-					list->data.ns.namespace) {
+			if (list->data.ns.any_namespace == true ||
+					dom_string_isequal(cur->namespace,
+					list->data.ns.namespace)) {
 				if (list->data.ns.any_localname == true ||
 						(cur->name != NULL &&
-						cur->name == 
-						list->data.ns.localname)) {
+						dom_string_isequal(cur->name,
+						list->data.ns.localname))) {
 					if (cur->type == DOM_ELEMENT_NODE)
 						len++;
 				}
@@ -242,7 +239,7 @@ dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
 			} else {
 				/* No children or siblings. 
 				 * Find first unvisited relation. */
-				struct dom_node_internal *parent = cur->parent;
+				dom_node_internal *parent = cur->parent;
 
 				while (parent != list->root &&
 						cur == parent->last_child) {
@@ -274,10 +271,10 @@ dom_exception dom_nodelist_get_length(struct dom_nodelist *list,
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
  */
-dom_exception _dom_nodelist_item(struct dom_nodelist *list,
-		unsigned long index, struct dom_node **node)
+dom_exception _dom_nodelist_item(dom_nodelist *list,
+		unsigned long index, dom_node **node)
 {
-	struct dom_node_internal *cur = list->root->first_child;
+	dom_node_internal *cur = list->root->first_child;
 	unsigned long count = 0;
 
 	/* Traverse data structure */
@@ -288,19 +285,20 @@ dom_exception _dom_nodelist_item(struct dom_nodelist *list,
 		} else if (list->type == DOM_NODELIST_BY_NAME) {
 			if (list->data.n.any_name == true || (
 					cur->name != NULL && 
-					cur->name == list->data.n.name)) {
+					dom_string_isequal(cur->name, 
+						list->data.n.name))) {
 				if (cur->type == DOM_ELEMENT_NODE)
 					count++;
 			}
 		} else {
 			if (list->data.ns.any_namespace == true || 
 					(cur->namespace != NULL &&
-					cur->namespace == 
-					list->data.ns.namespace)) {
+					dom_string_isequal(cur->namespace,
+						list->data.ns.namespace))) {
 				if (list->data.ns.any_localname == true ||
 						(cur->name != NULL &&
-						cur->name == 
-						list->data.ns.localname)) {
+						dom_string_isequal(cur->name,
+						list->data.ns.localname))) {
 					if (cur->type == DOM_ELEMENT_NODE)
 						count++;
 				}
@@ -327,7 +325,7 @@ dom_exception _dom_nodelist_item(struct dom_nodelist *list,
 			} else {
 				/* No children or siblings.
 				 * Find first unvisited relation. */
-				struct dom_node_internal *parent = cur->parent;
+				dom_node_internal *parent = cur->parent;
 
 				while (parent != list->root &&
 						cur == parent->last_child) {
@@ -343,7 +341,7 @@ dom_exception _dom_nodelist_item(struct dom_nodelist *list,
 	if (cur != NULL) {
 		dom_node_ref(cur);
 	}
-	*node = (struct dom_node *) cur;
+	*node = (dom_node *) cur;
 
 	return DOM_NO_ERR;
 }
@@ -359,9 +357,9 @@ dom_exception _dom_nodelist_item(struct dom_nodelist *list,
  * \param localname  Local part of nodes in list (or NULL)
  * \return true if list matches, false otherwise
  */
-bool _dom_nodelist_match(struct dom_nodelist *list, nodelist_type type,
-		struct dom_node_internal *root, struct lwc_string_s *tagname, 
-		struct lwc_string_s *namespace, struct lwc_string_s *localname)
+bool _dom_nodelist_match(dom_nodelist *list, nodelist_type type,
+		dom_node_internal *root, dom_string *tagname, 
+		dom_string *namespace, dom_string *localname)
 {
 	if (list->root != root)
 		return false;
@@ -374,12 +372,12 @@ bool _dom_nodelist_match(struct dom_nodelist *list, nodelist_type type,
 	}
 
 	if (list->type == DOM_NODELIST_BY_NAME) {
-		return (list->data.n.name == tagname);
+		return dom_string_isequal(list->data.n.name, tagname);
 	}
 
 	if (list->type == DOM_NODELIST_BY_NAMESPACE) {
-		return (list->data.ns.namespace == namespace) &&
-			(list->data.ns.localname == localname);
+		return dom_string_isequal(list->data.ns.namespace, namespace) &&
+			dom_string_isequal(list->data.ns.localname, localname);
 	}
 
 	return false;
@@ -392,7 +390,7 @@ bool _dom_nodelist_match(struct dom_nodelist *list, nodelist_type type,
  * \param l2  The other list
  * \reutrn true for equal, false otherwise.
  */
-bool _dom_nodelist_equal(struct dom_nodelist *l1, struct dom_nodelist *l2)
+bool _dom_nodelist_equal(dom_nodelist *l1, dom_nodelist *l2)
 {
 	return _dom_nodelist_match(l1, l1->type, l2->root, l2->data.n.name, 
 			l2->data.ns.namespace, l2->data.ns.localname);

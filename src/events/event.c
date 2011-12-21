@@ -6,28 +6,26 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 #include <time.h>
 
 #include "events/event.h"
-
-#include <libwapcaplet/libwapcaplet.h>
 
 #include "core/string.h"
 #include "core/node.h"
 #include "core/document.h"
 #include "utils/utils.h"
 
-static void _virtual_dom_event_destroy(struct dom_event *evt);
+static void _virtual_dom_event_destroy(dom_event *evt);
 
 static struct dom_event_private_vtable _event_vtable = {
 	_virtual_dom_event_destroy
 };
 
 /* Constructor */
-dom_exception _dom_event_create(struct dom_document *doc, 
-		struct dom_event **evt)
+dom_exception _dom_event_create(dom_document *doc, dom_event **evt)
 {
-	*evt = (dom_event *) _dom_document_alloc(doc, NULL, sizeof(dom_event));
+	*evt = (dom_event *) malloc(sizeof(dom_event));
 	if (*evt == NULL) 
 		return DOM_NO_MEM_ERR;
 	
@@ -37,16 +35,15 @@ dom_exception _dom_event_create(struct dom_document *doc,
 }
 
 /* Destructor */
-void _dom_event_destroy(struct dom_document *doc, struct dom_event *evt)
+void _dom_event_destroy(dom_event *evt)
 {
-	_dom_event_finalise(doc, evt);
+	_dom_event_finalise(evt);
 
-	_dom_document_alloc(doc, evt, sizeof(dom_event));
+	free(evt);
 }
 
 /* Initialise function */
-dom_exception _dom_event_initialise(struct dom_document *doc, 
-		struct dom_event *evt)
+dom_exception _dom_event_initialise(dom_document *doc, dom_event *evt)
 {
 	assert(doc != NULL);
 
@@ -67,14 +64,12 @@ dom_exception _dom_event_initialise(struct dom_document *doc,
 }
 
 /* Finalise function */
-void _dom_event_finalise(struct dom_document *doc, struct dom_event *evt)
+void _dom_event_finalise(dom_event *evt)
 {
-	UNUSED(doc);
-
 	if (evt->type != NULL)
-		lwc_string_unref(evt->type);
+		dom_string_unref(evt->type);
 	if (evt->namespace != NULL)
-		lwc_string_unref(evt->namespace);
+		dom_string_unref(evt->namespace);
 	
 	evt->stop = false;
 	evt->stop_now = false;
@@ -89,9 +84,9 @@ void _dom_event_finalise(struct dom_document *doc, struct dom_event *evt)
 }
 
 /* The virtual destroy function */
-void _virtual_dom_event_destroy(struct dom_event *evt)
+void _virtual_dom_event_destroy(dom_event *evt)
 {
-	_dom_event_destroy(evt->doc, evt);
+	_dom_event_destroy(evt);
 }
 
 /*----------------------------------------------------------------------*/
@@ -131,12 +126,7 @@ void _dom_event_unref(dom_event *evt)
  */
 dom_exception _dom_event_get_type(dom_event *evt, dom_string **type)
 {
-	struct dom_document *doc = evt->doc;
-	dom_exception err;
-
-	err = _dom_document_create_string_from_lwcstring(doc, evt->type, type);
-	if (err != DOM_NO_ERR)
-		return err;
+	*type = dom_string_ref(evt->type);
 	
 	return DOM_NO_ERR;
 }
@@ -249,14 +239,8 @@ dom_exception _dom_event_init(dom_event *evt, dom_string *type,
 		bool bubble, bool cancelable)
 {
 	assert(evt->doc != NULL);
-	lwc_string *str = NULL;
-	dom_exception err;
 
-	err = _dom_string_intern(type, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	evt->type = str;
+	evt->type = dom_string_ref(type);
 	evt->bubble = bubble;
 	evt->cancelable = cancelable;
 
@@ -275,13 +259,7 @@ dom_exception _dom_event_init(dom_event *evt, dom_string *type,
 dom_exception _dom_event_get_namespace(dom_event *evt,
 		dom_string **namespace)
 {
-	struct dom_document *doc = evt->doc;
-	dom_exception err;
-
-	err = _dom_document_create_string_from_lwcstring(doc, evt->namespace,
-			namespace);
-	if (err != DOM_NO_ERR)
-		return err;
+	*namespace = dom_string_ref(evt->namespace);
 	
 	return DOM_NO_ERR;
 }
@@ -341,18 +319,10 @@ dom_exception _dom_event_init_ns(dom_event *evt, dom_string *namespace,
 		dom_string *type, bool bubble, bool cancelable)
 {
 	assert(evt->doc != NULL);
-	lwc_string *str = NULL;
-	dom_exception err;
 
-	err = _dom_string_intern(type, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	evt->type = str;
+	evt->type = dom_string_ref(type);
 
-	err = _dom_string_intern(namespace, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	evt->namespace = str;
+	evt->namespace = dom_string_ref(namespace);
 
 	evt->bubble = bubble;
 	evt->cancelable = cancelable;

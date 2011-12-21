@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <libwapcaplet/libwapcaplet.h>
 
@@ -35,8 +36,7 @@ dom_exception _dom_html_options_collection_create(struct dom_document *doc,
 		dom_callback_is_in_collection ic,
 		struct dom_html_options_collection **col)
 {
-	*col = _dom_document_alloc(doc, NULL,
-			sizeof(dom_html_options_collection));
+	*col = malloc(sizeof(dom_html_options_collection));
 	if (*col == NULL)
 		return DOM_NO_MEM_ERR;
 	
@@ -77,10 +77,9 @@ void _dom_html_options_collection_finalise(struct dom_html_options_collection *c
  */
 void _dom_html_options_collection_destroy(struct dom_html_options_collection *col)
 {
-	struct dom_document *doc = col->base.doc;
 	_dom_html_options_collection_finalise(col);
 
-	_dom_document_alloc(doc, col, 0);
+	free(col);
 }
 
 

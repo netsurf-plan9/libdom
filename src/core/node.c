@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <dom/core/attr.h>
 #include <dom/core/text.h>
@@ -33,7 +34,7 @@
 #include "core/pi.h"
 #include "core/text.h"
 #include "utils/utils.h"
-#include "utils/resource_mgr.h"
+#include "utils/validate.h"
 #include "events/mutation_event.h"
 
 static bool _dom_node_permitted_child(const dom_node_internal *parent, 
@@ -54,6 +55,9 @@ static inline void _dom_node_replace(dom_node_internal *old,
 		dom_node_internal *replacement);
 
 static struct dom_node_vtable node_vtable = {
+	{
+		DOM_NODE_EVENT_TARGET_VTABLE
+	},
 	DOM_NODE_VTABLE
 };
 
@@ -68,11 +72,9 @@ static struct dom_node_protect_vtable node_protect_vtable = {
 /* The constructor and destructor of this object */
 
 /* Create a DOM node and compose the vtable */
-dom_node_internal * _dom_node_create(struct dom_document *doc)
+dom_node_internal * _dom_node_create(void)
 {
-	dom_node_internal *node = _dom_document_alloc(doc, NULL, 
-			sizeof(struct dom_node_internal));
-
+	dom_node_internal *node = malloc(sizeof(struct dom_node_internal));
 	if (node == NULL)
 		return NULL;
 
@@ -111,7 +113,7 @@ void _dom_node_destroy(struct dom_node_internal *node)
 	}
 
 	/* Finalise this node, this should also destroy all the child nodes. */
-	_dom_node_finalise(owner, node);
+	_dom_node_finalise(node);
 
 	if (!null_owner_permitted) {
 		/* Release the reference we claimed on the document. If this
@@ -122,7 +124,7 @@ void _dom_node_destroy(struct dom_node_internal *node)
 	}
 
 	/* Release our memory */
-	_dom_document_alloc(owner, node, 0);
+	free(node);
 }
 
 /**
@@ -142,59 +144,20 @@ void _dom_node_destroy(struct dom_node_internal *node)
  */
 dom_exception _dom_node_initialise(dom_node_internal *node,
 		struct dom_document *doc, dom_node_type type,
-		struct lwc_string_s *name, dom_string *value,
-		struct lwc_string_s *namespace, struct lwc_string_s *prefix)
+		dom_string *name, dom_string *value,
+		dom_string *namespace, dom_string *prefix)
 {
-	dom_alloc alloc;
-	void *pw;
-	dom_exception err;
-
-	_dom_document_get_allocator(doc, &alloc, &pw);
-
-	err = _dom_node_initialise_generic(node, doc, alloc, pw, type,
-			name, value, namespace, prefix);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	return DOM_NO_ERR;
-}
-
-/**
- * Initialise a DOM node
- *
- * \param node       The node to initialise
- * \param doc        The document object
- * \param alloc      The memory allocator 
- * \param pw	     The allocator private pointer data
- * \param type       The node type required
- * \param name       The node (local) name, or NULL
- * \param value      The node value, or NULL
- * \param namespace  Namespace URI to use for node, or NULL
- * \param prefix     Namespace prefix to use for node, or NULL
- * \return DOM_NO_ERR on success.
- *
- * ::name, ::value, ::namespace, and ::prefix  will have their reference 
- * counts increased.
- */
-dom_exception _dom_node_initialise_generic(
-		struct dom_node_internal *node, struct dom_document *doc,
-		dom_alloc alloc, void *pw,
-	 	dom_node_type type, struct lwc_string_s *name, 
-		dom_string *value, struct lwc_string_s *namespace, 
-		struct lwc_string_s *prefix)
-{
-	UNUSED(alloc);
-	UNUSED(pw);
-
 	node->owner = doc;
 
 	if (name != NULL)
-		lwc_string_ref(name);
-	node->name = name;
+		node->name = dom_string_ref(name);
+	else
+		node->name = NULL;
 
 	if (value != NULL)
-		dom_string_ref(value);
-	node->value = value;
+		node->value = dom_string_ref(value);
+	else
+		node->value = NULL;
 
 	node->type = type;
 
@@ -223,15 +186,15 @@ dom_exception _dom_node_initialise_generic(
 	 * those nodes (and their sub-trees) in use by client code.
 	 */
 
-	if (namespace != NULL) {
-		lwc_string_ref(namespace);
-	}
-	node->namespace = namespace;
+	if (namespace != NULL)
+		node->namespace = dom_string_ref(namespace);
+	else
+		node->namespace = NULL;
 
-	if (prefix != NULL) {
-		lwc_string_ref(prefix);
-	}
-	node->prefix = prefix;
+	if (prefix != NULL)
+		node->prefix = dom_string_ref(prefix);
+	else
+		node->prefix = NULL;
 
 	node->user_data = NULL;
 
@@ -243,56 +206,34 @@ dom_exception _dom_node_initialise_generic(
 		dom_node_mark_pending(node);
 	}
 
-	return _dom_event_target_internal_initialise(doc, &node->eti);
+	return _dom_event_target_internal_initialise(&node->eti);
 }
 
 /**
  * Finalise a DOM node
  *
- * \param doc   The owning document (or NULL if it's a standalone DocumentType)
  * \param node  The node to finalise
  *
  * The contents of ::node will be cleaned up. ::node will not be freed.
  * All children of ::node should have been removed prior to finalisation.
  */
-void _dom_node_finalise(struct dom_document *doc, dom_node_internal *node)
-{
-	dom_alloc alloc;
-	void *pw;
-
-	_dom_document_get_allocator(doc, &alloc, &pw);
-
-	_dom_node_finalise_generic(node, alloc, pw);
-}
-
-/**
- * Finalise a DOM node
- *
- * \param node   The node to finalise
- * \param alloc  The allocator
- * \param pw     The allocator private data
- */
-void _dom_node_finalise_generic(dom_node_internal *node, dom_alloc alloc, 
-		void *pw)
+void _dom_node_finalise(dom_node_internal *node)
 {
 	struct dom_user_data *u, *v;
-
-	UNUSED(alloc);
-	UNUSED(pw);
 
 	/* Destroy user data */
 	for (u = node->user_data; u != NULL; u = v) {
 		v = u->next;
 		dom_string_unref(u->key);
-		alloc(u, 0, pw);
+		free(u);
 	}
 	node->user_data = NULL;
 
 	if (node->prefix != NULL)
-		lwc_string_unref(node->prefix);
+		dom_string_unref(node->prefix);
 
 	if (node->namespace != NULL)
-		lwc_string_unref(node->namespace);
+		dom_string_unref(node->namespace);
 
 	/* Destroy all the child nodes of this node */
 	struct dom_node_internal *p = node->first_child;
@@ -315,13 +256,13 @@ void _dom_node_finalise_generic(dom_node_internal *node, dom_alloc alloc,
 		dom_string_unref(node->value);
 
 	if (node->name != NULL)
-		lwc_string_unref(node->name);
+		dom_string_unref(node->name);
 
 	/* If the node has no owner document, we need not to finalise its
 	 * dom_event_target_internal structure. 
 	 */
 	if (node->owner != NULL)
-		_dom_event_target_internal_finalise(node->owner, &node->eti);
+		_dom_event_target_internal_finalise(&node->eti);
 
 	/* Detach from the pending list, if we are in it,
 	 * this part of code should always be the end of this function. */
@@ -393,7 +334,6 @@ dom_exception _dom_node_get_node_name(dom_node_internal *node,
 	dom_string *node_name, *temp;
 	dom_document *doc;
 	dom_exception err;
-	struct dom_resource_mgr rm;
 
 	doc = node->owner;
 	/* Document Node and DocumentType Node can have no owner */
@@ -403,72 +343,39 @@ dom_exception _dom_node_get_node_name(dom_node_internal *node,
 
 	assert(node->name != NULL);
 
-	if (doc != NULL) {
-		_dom_document_get_resource_mgr(doc, &rm);
-	} else if (node->type == DOM_DOCUMENT_TYPE_NODE) {
-		_dom_document_type_get_resource_mgr(
-				(dom_document_type *) node, &rm);
-	}
-
 	/* If this node was created using a namespace-aware method and
 	 * has a defined prefix, then nodeName is a QName comprised
 	 * of prefix:name. */
-	if(node->prefix != NULL) {
+	if (node->prefix != NULL) {
 		dom_string *colon;
 
-		err = _dom_resource_mgr_create_string(&rm, 
-				(const uint8_t *) ":", SLEN(":"), &colon);
+		err = dom_string_create((const uint8_t *) ":", SLEN(":"), 
+				&colon);
 		if (err != DOM_NO_ERR) {
-			return err;
-		}
-
-		/* Make a temp prefix dom_string */
-		err = _dom_resource_mgr_create_string_from_lwcstring(&rm, 
-				node->prefix, &temp);
-		if (err != DOM_NO_ERR) {
-			dom_string_unref(colon);
 			return err;
 		}
 
 		/* Prefix + : */
-		err = dom_string_concat(temp, colon, &node_name);
+		err = dom_string_concat(node->prefix, colon, &temp);
 		if (err != DOM_NO_ERR) {
-			dom_string_unref(temp);
 			dom_string_unref(colon);
 			return err;
 		}
-		/*Finished with temp*/
-		dom_string_unref(temp);
 
 		/* Finished with colon */
 		dom_string_unref(colon);
 
-		/* Make a temp name dom_string */
-		err = _dom_resource_mgr_create_string_from_lwcstring(&rm, 
-				node->name, &temp);
-		if (err != DOM_NO_ERR) {
-			return err;
-		}
 		/* Prefix + : + Localname */
-		err = dom_string_concat(node_name, temp, &colon);
+		err = dom_string_concat(temp, node->name, &node_name);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(temp);
-			dom_string_unref(node_name);
 			return err;
 		}
 
 		/* Finished with temp */
 		dom_string_unref(temp);
-		/* Finished with intermediate node name */
-		dom_string_unref(node_name);
-
-		node_name = colon;
 	} else {
-		err = _dom_resource_mgr_create_string_from_lwcstring(&rm, 
-				node->name, &node_name);
-		if (err != DOM_NO_ERR) {
-			return err;
-		}
+		node_name = dom_string_ref(node->name);
 	}
 
 	*result = node_name;
@@ -1063,7 +970,7 @@ dom_exception _dom_node_remove_child(dom_node_internal *node,
 	/* Dispatch a DOMNodeRemoval event */
 	dom_exception err;
 	bool success = true;
-	err = _dom_dispatch_node_change_event(node->owner, old_child, node,
+	err = dom_node_dispatch_node_change_event(node->owner, old_child, node,
 			DOM_MUTATION_REMOVAL, &success);
 	if (err != DOM_NO_ERR)
 		return err;
@@ -1190,13 +1097,8 @@ dom_exception _dom_node_clone_node(dom_node_internal *node, bool deep,
 	doc = node->owner;
 	assert(doc != NULL);
 
-	err = dom_node_alloc(doc, node, &n);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	err = dom_node_copy(n, node);
+	err = dom_node_copy(node, &n);
 	if (err != DOM_NO_ERR) {
-		_dom_document_alloc(doc, n, 0);
 		return err;
 	}
 
@@ -1325,10 +1227,11 @@ dom_exception _dom_node_get_namespace(dom_node_internal *node,
 
 	/* If there is a namespace, increase its reference count */
 	if (node->namespace != NULL)
-		lwc_string_ref(node->namespace);
+		*result = dom_string_ref(node->namespace);
+	else
+		*result = NULL;
 
-	return _dom_document_create_string_from_lwcstring(node->owner,
-			node->namespace, result);
+	return DOM_NO_ERR;
 }
 
 /**
@@ -1349,11 +1252,11 @@ dom_exception _dom_node_get_prefix(dom_node_internal *node,
 	
 	/* If there is a prefix, increase its reference count */
 	if (node->prefix != NULL)
-		lwc_string_ref(node->prefix);
+		*result = dom_string_ref(node->prefix);
+	else
+		*result = NULL;
 
-	return _dom_document_create_string_from_lwcstring(node->owner,
-			node->prefix,
-			result);
+	return DOM_NO_ERR;
 }
 
 /**
@@ -1382,9 +1285,6 @@ dom_exception _dom_node_get_prefix(dom_node_internal *node,
 dom_exception _dom_node_set_prefix(dom_node_internal *node,
 		dom_string *prefix)
 {
-	dom_exception err;
-	lwc_string *str;
-
 	/* Only Element and Attribute nodes created using 
 	 * namespace-aware methods may have a prefix */
 	if ((node->type != DOM_ELEMENT_NODE &&
@@ -1402,7 +1302,7 @@ dom_exception _dom_node_set_prefix(dom_node_internal *node,
 
 	/* No longer want existing prefix */
 	if (node->prefix != NULL) {
-		lwc_string_unref(node->prefix);
+		dom_string_unref(node->prefix);
 	}
 
 	/* Set the prefix */
@@ -1411,11 +1311,7 @@ dom_exception _dom_node_set_prefix(dom_node_internal *node,
 		if (dom_string_length(prefix) == 0) {
 			node->prefix = NULL;
 		} else {
-			err = _dom_node_get_intern_string(node, prefix, &str);
-			if (err != DOM_NO_ERR)
-				return err;
-
-			node->prefix = str;
+			node->prefix = dom_string_ref(prefix);
 		}
 	} else {
 		node->prefix = NULL;
@@ -1448,12 +1344,12 @@ dom_exception _dom_node_get_local_name(dom_node_internal *node,
 	}
 
 	/* The node may have a local name, reference it if so */
-	if (node->name != NULL) {
-		lwc_string_ref(node->name);
-	}
+	if (node->name != NULL)
+		*result = dom_string_ref(node->name);
+	else
+		*result = NULL;
 
-	return _dom_document_create_string_from_lwcstring(node->owner,
-			node->name, result);
+	return DOM_NO_ERR;
 }
 
 /**
@@ -1725,7 +1621,7 @@ dom_exception _dom_node_is_equal(dom_node_internal *node,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	if (dom_string_cmp(s1, s2) != 0) {
+	if (dom_string_isequal(s1, s2) == false) {
 		*result = false;
 		return DOM_NO_ERR;
 	}
@@ -1737,7 +1633,7 @@ dom_exception _dom_node_is_equal(dom_node_internal *node,
 		return DOM_NO_ERR;
 	}
 
-	if (dom_string_cmp(node->value, other->value) != 0) {
+	if (dom_string_isequal(node->value, other->value) == false) {
 		*result = false;
 		return DOM_NO_ERR;
 	}
@@ -1824,7 +1720,7 @@ dom_exception _dom_node_set_user_data(dom_node_internal *node,
 
 	/* Search for user data */
 	for (ud = node->user_data; ud != NULL; ud = ud->next) {
-		if (dom_string_cmp(ud->key, key) == 0)
+		if (dom_string_isequal(ud->key, key))
 			break;
 	};
 
@@ -1841,15 +1737,14 @@ dom_exception _dom_node_set_user_data(dom_node_internal *node,
 
 		*result = ud->data;
 
-		_dom_document_alloc(node->owner, ud, 0);
+		free(ud);
 
 		return DOM_NO_ERR;
 	}
 
 	/* Otherwise, create a new user data object if one wasn't found */
 	if (ud == NULL) {
-		ud = _dom_document_alloc(node->owner, NULL, 
-				sizeof(struct dom_user_data));
+		ud = malloc(sizeof(struct dom_user_data));
 		if (ud == NULL)
 			return DOM_NO_MEM_ERR;
 
@@ -1892,7 +1787,7 @@ dom_exception _dom_node_get_user_data(dom_node_internal *node,
 
 	/* Search for user data */
 	for (ud = node->user_data; ud != NULL; ud = ud->next) {
-		if (dom_string_cmp(ud->key, key) == 0)
+		if (dom_string_isequal(ud->key, key))
 			break;
 	};
 
@@ -1909,27 +1804,34 @@ dom_exception _dom_node_get_user_data(dom_node_internal *node,
 
 /* The protected virtual functions */
 
-/* We should never call this pure-virtual function directly */
-dom_exception _dom_node_alloc(struct dom_document *doc, 
-		struct dom_node_internal *n, struct dom_node_internal **ret)
-{
-	UNUSED(doc);
-	UNUSED(n);
-	UNUSED(ret);
-
-	return DOM_NOT_SUPPORTED_ERR;
-}
-
-
 /* Copy the internal attributes of a Node from old to new */
-dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
+dom_exception _dom_node_copy(dom_node_internal *old, dom_node_internal **copy)
 {
+	dom_node_internal *new_node;
 	dom_exception err;
 
+	new_node = malloc(sizeof(dom_node_internal));
+	if (new_node == NULL)
+		return DOM_NO_MEM_ERR;
+
+	err = _dom_node_copy_internal(old, new_node);
+	if (err != DOM_NO_ERR) {
+		free(new_node);
+		return err;
+	}
+
+	*copy = new_node;
+
+	return DOM_NO_ERR;
+}
+
+dom_exception _dom_node_copy_internal(dom_node_internal *old, 
+		dom_node_internal *new)
+{
 	new->base.vtable = old->base.vtable;
 	new->vtable = old->vtable;
 
-	new->name = lwc_string_ref(old->name);
+	new->name = dom_string_ref(old->name);
 
 	/* Value - see below */
 
@@ -1941,16 +1843,16 @@ dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
 	new->next = NULL;
 
 	assert(old->owner != NULL);
-	assert(new->owner != NULL);
+
 	new->owner = old->owner;
 
 	if (old->namespace != NULL)
-		new->namespace = lwc_string_ref(old->namespace);
+		new->namespace = dom_string_ref(old->namespace);
 	else
 		new->namespace = NULL;
 
 	if (old->prefix != NULL)
-		new->prefix = lwc_string_ref(old->prefix);
+		new->prefix = dom_string_ref(old->prefix);
 	else
 		new->prefix = NULL;
 
@@ -1961,16 +1863,9 @@ dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
 
 	/* Value */	
 	if (old->value != NULL) {
-		dom_alloc al;
-		void *pw;
+		dom_string_ref(old->value);
 
-		_dom_document_get_allocator(new->owner, &al, &pw);
-		dom_string *value;
-		err = dom_string_clone(al, pw, old->value, &value);
-		if (err != DOM_NO_ERR)
-			return err;
-		
-		new->value = value;
+		new->value = old->value;
 	} else {
 		new->value = NULL;
 	}
@@ -1980,7 +1875,7 @@ dom_exception _dom_node_copy(dom_node_internal *new, dom_node_internal *old)
 	dom_node_mark_pending(new);
 
 	/* Intialise the EventTarget interface */
-	return _dom_event_target_internal_initialise(new->owner, &new->eti);
+	return _dom_event_target_internal_initialise(&new->eti);
 }
 
 
@@ -2157,8 +2052,8 @@ dom_exception _dom_node_attach_range(dom_node_internal *first,
 	for (dom_node_internal *n = first; n != last->next; n = n->next) {
 		n->parent = parent;
 		/* Dispatch a DOMNodeInserted event */
-		err = _dom_dispatch_node_change_event(parent->owner, n, parent,
-				DOM_MUTATION_ADDITION, &success);
+		err = dom_node_dispatch_node_change_event(parent->owner, 
+				n, parent, DOM_MUTATION_ADDITION, &success);
 		if (err != DOM_NO_ERR)
 			return err;
 	}
@@ -2197,7 +2092,7 @@ void _dom_node_detach_range(dom_node_internal *first,
 	dom_node_internal *parent = first->parent;
 	for (dom_node_internal *n = first; n != last->next; n = n->next) {
 		/* Dispatch a DOMNodeRemoval event */
-		_dom_dispatch_node_change_event(n->owner, n, n->parent, 
+		dom_node_dispatch_node_change_event(n->owner, n, n->parent, 
 				DOM_MUTATION_REMOVAL, &success);
 
 		n->parent = NULL;
@@ -2257,36 +2152,6 @@ void _dom_node_replace(dom_node_internal *old,
 }
 
 /**
- * Migrate one dom_string from one document to another, this function 
- * may be used when we import/adopt a Node between documents.
- *
- * \param old     The source document 
- * \param new     The new document
- * \param string  The dom_string to migrate
- * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
- */
-dom_exception _redocument_domstring(dom_document *old, dom_document* new,
-		dom_string **string)
-{
-	dom_exception err;
-	dom_string *str;
-
-	UNUSED(old);
-	err = _dom_document_create_string(new, NULL, 0, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	err = dom_string_dup(*string, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	dom_string_unref(*string);
-	*string = str;
-
-	return DOM_NO_ERR;
-}
-
-/**
  * Merge two adjacent text nodes into one text node.
  *
  * \param p  The first text node
@@ -2313,78 +2178,6 @@ dom_exception _dom_merge_adjacent_text(dom_node_internal *p,
 	dom_string_unref(str);
 
 	return DOM_NO_ERR;
-}
-
-/**
- * Intern a dom_string
- *
- * \param node    The node
- * \param str     The dom_string to be interned
- * \param intern  The returned interned string
- * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
- */
-dom_exception _dom_node_get_intern_string(dom_node_internal *node, 
-		dom_string *str, lwc_string **intern)
-{
-	dom_exception err;
-	lwc_string *ret;
-
-	UNUSED(node);
-
-	assert(str != NULL);
-
-	err = dom_string_get_intern(str, &ret);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	err = _dom_string_intern(str, &ret);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	*intern = ret;
-
-	return DOM_NO_ERR;
-}
-
-/**
- * Unref a lwc_string used in this node
- *
- * \param node    The node
- * \param intern  The lwc_string to unref
- */
-void _dom_node_unref_intern_string(dom_node_internal *node, 
-		struct lwc_string_s *intern)
-{
-	struct dom_resource_mgr rm;	
-	struct dom_document *doc = node->owner;
-
-	if (doc != NULL) {
-		_dom_document_get_resource_mgr(doc, &rm);
-	} else if (node->type == DOM_DOCUMENT_TYPE_NODE) {
-		_dom_document_type_get_resource_mgr(
-				(dom_document_type *) node, &rm);
-	}
-
-	lwc_string_unref(intern);
-}
-
-/**
- * Create a lwc_string using the node's owner's lwc_context 
- *
- * \param node  The node object
- * \param data  The string data
- * \param len   The length of the string data
- * \param str   The returned lwc_string
- * \return DOM_NO_ERR on success, appropirate dom_exception on failure.
- */
-dom_exception _dom_node_create_lwcstring(dom_node_internal *node,
-		const uint8_t *data, size_t len, struct lwc_string_s **str)
-{
-	dom_document *doc = dom_node_get_owner(node);
-
-	assert(doc != NULL);
-
-	return _dom_document_create_lwcstring(doc, data, len, str);
 }
 
 /**
@@ -2452,5 +2245,264 @@ void _dom_node_remove_pending(dom_node_internal *node)
 
 		list_del(&node->pending_list);
 	}
+}
+
+/******************************************************************************
+ * Event Target API                                                           *
+ ******************************************************************************/
+
+dom_exception _dom_node_add_event_listener(dom_event_target *et,
+		dom_string *type, struct dom_event_listener *listener, 
+		bool capture)
+{
+	dom_node_internal *node = (dom_node_internal *) et;
+
+	return _dom_event_target_add_event_listener(&node->eti, type, 
+			listener, capture);
+}
+
+dom_exception _dom_node_remove_event_listener(dom_event_target *et,
+		dom_string *type, struct dom_event_listener *listener, 
+		bool capture)
+{
+	dom_node_internal *node = (dom_node_internal *) et;
+
+	return _dom_event_target_remove_event_listener(&node->eti,
+			type, listener, capture);
+}
+
+dom_exception _dom_node_add_event_listener_ns(dom_event_target *et,
+		dom_string *namespace, dom_string *type, 
+		struct dom_event_listener *listener, bool capture)
+{
+	dom_node_internal *node = (dom_node_internal *) et;
+
+	return _dom_event_target_add_event_listener_ns(&node->eti,
+			namespace, type, listener, capture);
+}
+
+dom_exception _dom_node_remove_event_listener_ns(dom_event_target *et,
+		dom_string *namespace, dom_string *type, 
+		struct dom_event_listener *listener, bool capture)
+{
+	dom_node_internal *node = (dom_node_internal *) et;
+
+	return _dom_event_target_remove_event_listener_ns(&node->eti,
+			namespace, type, listener, capture);
+}
+
+/**
+ * Dispatch an event into the implementation's event model
+ *
+ * \param et       The EventTarget object
+ * \param eti      Internal EventTarget
+ * \param evt      The event object
+ * \param success  Indicates whether any of the listeners which handled the 
+ *                 event called Event.preventDefault(). If 
+ *                 Event.preventDefault() was called the returned value is 
+ *                 false, else it is true.
+ * \return DOM_NO_ERR                     on success
+ *         DOM_DISPATCH_REQUEST_ERR       If the event is already in dispatch
+ *         DOM_UNSPECIFIED_EVENT_TYPE_ERR If the type of the event is Null or
+ *                                        empty string.
+ *         DOM_NOT_SUPPORTED_ERR          If the event is not created by 
+ *                                        Document.createEvent
+ *         DOM_INVALID_CHARACTER_ERR      If the type of this event is not a
+ *                                        valid NCName.
+ */
+dom_exception _dom_node_dispatch_event(dom_event_target *et,
+		struct dom_event *evt, bool *success)
+{
+	dom_exception err, ret = DOM_NO_ERR;
+
+	assert(et != NULL);
+	assert(evt != NULL);
+
+	/* To test whether this event is in dispatch */
+	if (evt->in_dispatch == true) {
+		return DOM_DISPATCH_REQUEST_ERR;
+	} else {
+		evt->in_dispatch = true;
+	}
+
+	if (evt->type == NULL || dom_string_length(evt->type) == 0) {
+		return DOM_UNSPECIFIED_EVENT_TYPE_ERR;
+	}
+
+	if (evt->doc == NULL)
+		return DOM_NOT_SUPPORTED_ERR;
+	
+	dom_document *doc = dom_node_get_owner(et);
+	if (doc == NULL) {
+		/* TODO: In the progress of parsing, many Nodes in the DTD has
+		 * no document at all, do nothing for this kind of node */
+		return DOM_NO_ERR;
+	}
+	
+	if (_dom_validate_ncname(evt->type) == false) {
+		return DOM_INVALID_CHARACTER_ERR;
+	}
+
+	dom_event_target_entry list;
+	dom_node_internal *target = (dom_node_internal *) et;
+
+	*success = true;
+
+	/* Compose the event target list */
+	list_init(&list.entry);
+	list.et = et;
+	dom_node_ref(et);
+	target = target->parent;
+
+	while (target != NULL) {
+		dom_event_target_entry *l = malloc(
+				sizeof(dom_event_target_entry));
+		if (l == NULL) {
+			ret = DOM_NO_MEM_ERR;
+			goto cleanup;
+		}
+		list_append(&list.entry, &l->entry);
+		l->et = (dom_event_target *) target;
+		dom_node_ref(target);
+		target = target->parent;
+	}
+
+	/* Fill the target of the event */
+	evt->target = et;
+	evt->phase = DOM_CAPTURING_PHASE;
+
+	/* The started callback of default action */
+	dom_document_event_internal *dei = &doc->dei;
+	void *pw = NULL; 
+	if (dei->actions != NULL) {
+		dom_default_action_callback cb = dei->actions(evt->type,
+				DOM_DEFAULT_ACTION_STARTED, &pw);
+		if (cb != NULL) {
+			cb(evt, pw);
+		}
+	}
+
+	/* The capture phase */
+	struct list_entry *e = list.entry.prev;
+	for (; e != &list.entry; e = e->prev) {
+		dom_event_target_entry *l = (dom_event_target_entry *) e;
+		dom_node_internal *node = (dom_node_internal *) l->et;
+
+		err = _dom_event_target_dispatch(l->et, &node->eti, evt,
+				DOM_CAPTURING_PHASE, success);
+		if (err != DOM_NO_ERR) {
+			ret = err;
+			goto cleanup;
+		}
+		/* If the stopImmediatePropagation or stopPropagation is
+		 * called, we should break */
+		if (evt->stop_now == true || evt->stop == true)
+			goto cleanup;
+	}
+
+	/* Target phase */
+	evt->phase = DOM_AT_TARGET;
+	evt->current = et;
+	err = _dom_event_target_dispatch(et, &((dom_node_internal *) et)->eti,
+			evt, DOM_AT_TARGET, success);
+	if (evt->stop_now == true || evt->stop == true)
+		goto cleanup;
+
+	/* Bubbling phase */
+	evt->phase = DOM_BUBBLING_PHASE;
+
+	e = list.entry.next;
+	for (; e != &list.entry; e = e->next) {
+		dom_event_target_entry *l = (dom_event_target_entry *) e;
+		dom_node_internal *node = (dom_node_internal *) l->et;
+		err = _dom_event_target_dispatch(l->et, &node->eti, evt,
+				DOM_BUBBLING_PHASE, success);
+		if (err != DOM_NO_ERR) {
+			ret = err;
+			goto cleanup;
+		}
+		/* If the stopImmediatePropagation or stopPropagation is
+		 * called, we should break */
+		if (evt->stop_now == true || evt->stop == true)
+			goto cleanup;
+	}
+
+	if (dei->actions == NULL)
+		goto cleanup;
+
+	/* The end callback of default action */
+	if (evt->prevent_default != true) {
+		dom_default_action_callback cb = dei->actions(evt->type,
+				DOM_DEFAULT_ACTION_END, &pw);
+		if (cb != NULL) {
+			cb(evt, pw);
+		}
+	}
+
+	/* The prevented callback of default action */
+	if (evt->prevent_default != true) {
+		dom_default_action_callback cb = dei->actions(evt->type,
+				DOM_DEFAULT_ACTION_PREVENTED, &pw);
+		if (cb != NULL) {
+			cb(evt, pw);
+		}
+	}
+
+cleanup:
+	if (evt->prevent_default == true) {
+		*success = false;
+	}
+
+	while (list.entry.next != &list.entry) {
+		dom_event_target_entry *e = (dom_event_target_entry *)
+				list.entry.next;
+		dom_node_unref(e->et);
+		list_del(list.entry.next);
+		free(e);
+	}
+
+	dom_node_unref(et);
+
+	return ret;
+}
+
+dom_exception _dom_node_dispatch_node_change_event(dom_document *doc,
+		dom_node_internal *node, dom_node_internal *related,
+		dom_mutation_type change, bool *success)
+{
+	dom_node_internal *target;
+	dom_exception err;
+
+	/* Fire change event at immediate target */
+	err = _dom_dispatch_node_change_event(doc, node, related, 
+			change, success);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	/* Fire document change event at subtree */
+	target = node->first_child;
+	while (target != NULL) {
+		err = _dom_dispatch_node_change_document_event(doc, target, 
+				change, success);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		if (target->first_child != NULL) {
+			target = target->first_child;
+		} else if (target->next != NULL) {
+			target = target->next;
+		} else {
+			dom_node_internal *parent = target->parent;
+
+			while (parent != node && target == parent->last_child) {
+				target = parent;
+				parent = target->parent;
+			}
+
+			target = target->next;
+		}
+	}
+
+	return DOM_NO_ERR;
 }
 

@@ -22,15 +22,13 @@ dom_exception _dom_custom_event_create(struct dom_document *doc,
 		struct dom_custom_event **evt);
 
 /* Destructor */
-void _dom_custom_event_destroy(struct dom_document *doc, 
-		struct dom_custom_event *evt);
+void _dom_custom_event_destroy(struct dom_custom_event *evt);
 
 /* Initialise function */
 dom_exception _dom_custom_event_initialise(struct dom_document *doc, 
 		struct dom_custom_event *evt);
 
 /* Finalise function */
-void _dom_custom_event_finalise(struct dom_document *doc, 
-		struct dom_custom_event *evt);
+void _dom_custom_event_finalise(struct dom_custom_event *evt);
 
 #endif

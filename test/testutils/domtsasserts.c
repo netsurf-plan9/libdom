@@ -90,15 +90,15 @@ bool is_equals_string(const char *expected, dom_string *actual,
 	dom_exception err;
 	bool ret;
 
-	err = dom_string_create(myrealloc, NULL, (const uint8_t *)expected, strlen(expected),
+	err = dom_string_create((const uint8_t *)expected, strlen(expected),
 			&exp);
 	if (err != DOM_NO_ERR)
 		return false;
 
 	if (ignoreCase == true)
-		ret = dom_string_icmp(exp, actual) == 0;
+		ret = dom_string_caseless_isequal(exp, actual);
 	else
-		ret = dom_string_cmp(exp, actual) == 0;
+		ret = dom_string_isequal(exp, actual);
 	
 	dom_string_unref(exp);
 	return ret;
@@ -109,9 +109,9 @@ bool is_equals_domstring(dom_string *expected, dom_string *actual,
 		bool ignoreCase)
 {
 	if (ignoreCase == true)
-		return dom_string_icmp(expected, actual) == 0;
+		return dom_string_caseless_isequal(expected, actual);
 	else
-		return dom_string_cmp(expected, actual) == 0;
+		return dom_string_isequal(expected, actual);
 }
 
 /* The param actual should always contain dom_sting and expectd should

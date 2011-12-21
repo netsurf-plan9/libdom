@@ -5,6 +5,8 @@
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
+#include <stdlib.h>
+
 #include "events/event_listener.h"
 #include "core/document.h"
 
@@ -20,8 +22,7 @@
 dom_exception dom_event_listener_create(struct dom_document *doc,
 		handle_event handler, void *pw, dom_event_listener **listener)
 {
-	dom_event_listener *ret = (dom_event_listener *) _dom_document_alloc(
-			doc, NULL, sizeof(dom_event_listener));
+	dom_event_listener *ret = malloc(sizeof(dom_event_listener));
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 	
@@ -56,7 +57,6 @@ void dom_event_listener_unref(dom_event_listener *listener)
 		listener->refcnt--;
 
 	if (listener->refcnt == 0)
-		_dom_document_alloc(listener->doc, listener,
-				sizeof(dom_event_listener));
+		free(listener);
 }
 

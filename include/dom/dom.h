@@ -54,7 +54,4 @@ typedef enum dom_namespace {
 
 extern dom_string *dom_namespaces[DOM_NAMESPACE_COUNT];
 
-dom_exception dom_initialise(dom_alloc alloc, void *pw);
-dom_exception dom_finalise(void);
-
 #endif

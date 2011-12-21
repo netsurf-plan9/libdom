@@ -374,11 +374,6 @@ int main(int argc, char **argv)
 	(void)argc;
 	(void)argv;
 
-	/* Firstly, initialise dom and dom implementations */
-	exp = dom_initialise(myrealloc, NULL);
-	if (exp != DOM_NO_ERR)
-		return exp;
-
 	if (chdir("$self->{chdir}") < 0) {
 		perror("chdir (\\"$self->{chdir})\\"");
 		return 1;
@@ -1215,7 +1210,7 @@ sub generate_control_statement {
 				print "while(get_next_list($coll, \&iterator$iterator_index, ";
 				if ($conversion eq 1) {
 					print "\&tstring$temp_index)) {\n";
-					print "exp = dom_string_create(myrealloc, NULL, (const uint8_t *)tstring$temp_index,";
+					print "exp = dom_string_create((const uint8_t *)tstring$temp_index,";
 					print "strlen(tstring$temp_index), &$member);";
 					print "if (exp != DOM_NO_ERR) {";
 					print "fprintf(stderr, \"Can't create DOMString\\n\");";
@@ -1275,7 +1270,7 @@ sub generate_domstring {
 	print << "__EOF__";
 	const char *string$string_index = $str;
 	dom_string *dstring$string_index;
-	exp = dom_string_create(myrealloc, NULL, (const uint8_t *)string$string_index,
+	exp = dom_string_create((const uint8_t *)string$string_index,
 			strlen(string$string_index), &dstring$string_index);
 	if (exp != DOM_NO_ERR) {
 		fprintf(stderr, "Can't create DOMString\\n");
@@ -1453,7 +1448,7 @@ sub end_half_assertion {
 sub cleanup_domvar {
 	my ($self, $indent) = @_;
 
-	my $str = join($indent, @{$self->{unref}});
+	my $str = join($indent, reverse @{$self->{unref}});
 	print $indent.$str."\n";
 }
 

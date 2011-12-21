@@ -21,13 +21,12 @@ struct dom_characterdata {
 
 /* The CharacterData is a intermediate node type, so the following function
  * may never be used */
-dom_characterdata *_dom_characterdata_create(struct dom_document *doc);
+dom_characterdata *_dom_characterdata_create(void);
 dom_exception _dom_characterdata_initialise(struct dom_characterdata *cdata,
 		struct dom_document *doc, dom_node_type type,
-		struct lwc_string_s *name, dom_string *value);
+		dom_string *name, dom_string *value);
 
-void _dom_characterdata_finalise(struct dom_document *doc,
-		struct dom_characterdata *cdata);
+void _dom_characterdata_finalise(struct dom_characterdata *cdata);
 
 /* The virtual functions for dom_characterdata */
 dom_exception _dom_characterdata_get_data(struct dom_characterdata *cdata,
@@ -63,17 +62,20 @@ dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
  *
  * Only the _copy function can be used by sub-class of this.
  */
-void _dom_characterdata_destroy(struct dom_node_internal *node);
-dom_exception _dom_characterdata_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret);
-dom_exception _dom_characterdata_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old);
+void _dom_characterdata_destroy(dom_node_internal *node);
+dom_exception _dom_characterdata_copy(dom_node_internal *old, 
+		dom_node_internal **copy);
 
 #define DOM_CHARACTERDATA_PROTECT_VTABLE \
 	_dom_characterdata_destroy, \
-	_dom_characterdata_alloc, \
 	_dom_characterdata_copy
 
 extern struct dom_characterdata_vtable characterdata_vtable;
+
+dom_exception _dom_characterdata_copy_internal(dom_characterdata *old, 
+		dom_characterdata *new);
+#define dom_characterdata_copy_internal(o, n) \
+		_dom_characterdata_copy_internal( \
+		(dom_characterdata *) (o), (dom_characterdata *) (n))
 
 #endif

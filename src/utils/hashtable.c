@@ -27,13 +27,11 @@ struct _dom_hash_entry {
 
 /* The hash table */
 struct dom_hash_table {
-	unsigned int nchains;	/**< The chains number */
-	dom_hash_func hash;		/**< The hash function */
+	const dom_hash_vtable *vtable;	/**< Vtable */
+	void *pw;			/**< Client data */
+	unsigned int nchains;		/**< Number of chains */
 	struct _dom_hash_entry **chain;	/**< The chain head */
-	unsigned int number;		/**< The enries in this table */
-
-	dom_alloc alloc;	/**< Memory allocation function */
-	void *ptr;	/**< The private data for the memory allocator */
+	unsigned int nentries;		/**< The entries in this table */
 };
 
 
@@ -44,36 +42,26 @@ struct dom_hash_table {
  * \param chains  Number of chains/buckets this hash table will have.  This
  *                should be a prime number, and ideally a prime number just
  *                over a power of two, for best performance and distribution
- * \param hash    The hash function
- * \param alloc   The memory allocator
- * \param ptr     The private pointer for the allocator
+ * \param vtable  Client vtable
+ * \param pw      Client private data
  * \return struct dom_hash_table containing the context of this hash table or
  *         NULL if there is insufficent memory to create it and its chains.
  */
-struct dom_hash_table *_dom_hash_create(unsigned int chains, dom_hash_func hash,
-		dom_alloc alloc, void *ptr)
+dom_hash_table *_dom_hash_create(unsigned int chains, 
+		const dom_hash_vtable *vtable, void *pw)
 {
-	struct dom_hash_table *r = alloc(NULL, sizeof(struct dom_hash_table),
-			ptr);
-
+	dom_hash_table *r = malloc(sizeof(struct dom_hash_table));
 	if (r == NULL) {
 		return NULL;
 	}
 
+	r->vtable = vtable;
+	r->pw = pw;
+	r->nentries = 0;
 	r->nchains = chains;
-	r->hash = hash;
-	r->alloc = alloc;
-	r->ptr = ptr;
-	r->chain = (struct _dom_hash_entry **)alloc(NULL, 
-			chains*sizeof(struct _dom_hash_entry *), ptr);
-	r->number = 0;
-
-	unsigned int i;
-	for (i = 0; i < chains; i++)
-		r->chain[i] = NULL;
-
+	r->chain = calloc(chains, sizeof(struct _dom_hash_entry *));
 	if (r->chain == NULL) {
-		alloc(r, 0, ptr);
+		free(r);
 		return NULL;
 	}
 
@@ -84,45 +72,37 @@ struct dom_hash_table *_dom_hash_create(unsigned int chains, dom_hash_func hash,
  * Clone a hash table.
  *
  * \param ht        Hash table to clone.
- * \param alloc     The allocator.
- * \param pw        The private data for the allocator.
- * \param kf        The function pointer used to copy the key.
- * \param key_pw    The private data for the key cloner.
- * \param vf        The function pointer used to copy the value.
- * \param value_pw  The private data for the value cloner.
  *
  * \return The cloned hash table.
  */
-struct dom_hash_table *_dom_hash_clone(struct dom_hash_table *ht, 
-		dom_alloc alloc, void *pw, dom_key_func kf, void *key_pw, 
-		dom_value_func vf, void *value_pw)
+dom_hash_table *_dom_hash_clone(dom_hash_table *ht)
 {
+	void *key = NULL, *nkey = NULL;
+	void *value = NULL, *nvalue = NULL;
+	uintptr_t c1, *c2 = NULL;
 	struct dom_hash_table *ret;
 	
-	ret = _dom_hash_create(ht->nchains, ht->hash, alloc, pw);
+	ret = _dom_hash_create(ht->nchains, ht->vtable, ht->pw);
 	if (ret == NULL)
 		return NULL;
 
-	void *key = NULL, *nkey = NULL;
-	void *value = NULL, *nvalue = NULL;
-	unsigned int c1, *c2 = NULL;
 	while ( (key = _dom_hash_iterate(ht, &c1, &c2)) != NULL) {
-		nkey = kf(key, key_pw, alloc, pw, true);
+		nkey = ht->vtable->clone_key(key, ht->pw);
 		if (nkey == NULL) {
-			_dom_hash_destroy(ret, kf, key_pw, vf, value_pw);
+			_dom_hash_destroy(ret);
 			return NULL;
 		}
 
 		value = _dom_hash_get(ht, key);
-		nvalue = vf(value, value_pw, alloc, pw, true);
+		nvalue = ht->vtable->clone_value(value, ht->pw);
 		if (nvalue == NULL) {
-			kf(nkey, key_pw, alloc, pw, false);
-			_dom_hash_destroy(ret, kf, key_pw, vf, value_pw);
+			ht->vtable->destroy_key(nkey, ht->pw);
+			_dom_hash_destroy(ret);
 			return NULL;
 		}
 
 		if (_dom_hash_add(ret, nkey, nvalue, false) == false) {
-			_dom_hash_destroy(ret, kf, key_pw, vf, value_pw);
+			_dom_hash_destroy(ret);
 			return NULL;
 		}
 	}
@@ -135,42 +115,29 @@ struct dom_hash_table *_dom_hash_clone(struct dom_hash_table *ht,
  *
  * \param ht        Hash table to destroy. After the function returns, this
  *                  will nolonger be valid
- * \param kf        The key destroy function
- * \param key_pw    The key destroy function private data
- * \param vf        The value destroy function
- * \param value_pw  The value destroy function private data
  */
-void _dom_hash_destroy(struct dom_hash_table *ht, dom_key_func kf, 
-		void *key_pw, dom_value_func vf, void *value_pw)
+void _dom_hash_destroy(dom_hash_table *ht) 
 {
 	unsigned int i;
 
 	if (ht == NULL)
 		return;
 
-	assert(ht->alloc != NULL);
-
 	for (i = 0; i < ht->nchains; i++) {
 		if (ht->chain[i] != NULL) {
 			struct _dom_hash_entry *e = ht->chain[i];
 			while (e) {
 				struct _dom_hash_entry *n = e->next;
-				if (kf != NULL) {
-					kf(e->key, key_pw, ht->alloc,
-							ht->ptr, false);
-				}
-				if (vf != NULL) {
-					vf(e->value, value_pw, ht->alloc,
-							ht->ptr, false);
-				}
-				ht->alloc(e, 0, ht->ptr);
+				ht->vtable->destroy_key(e->key, ht->pw);
+				ht->vtable->destroy_value(e->value, ht->pw);
+				free(e);
 				e = n;
 			}
 		}
 	}
 
-	ht->alloc(ht->chain, 0, ht->ptr);
-	ht->alloc(ht, 0, ht->ptr);
+	free(ht->chain);
+	free(ht);
 }
 
 /**
@@ -182,7 +149,7 @@ void _dom_hash_destroy(struct dom_hash_table *ht, dom_key_func kf,
  * \return true if the add succeeded, false otherwise.  (Failure most likely
  *         indicates insufficent memory to make copies of the key and value.
  */
-bool _dom_hash_add(struct dom_hash_table *ht, void *key, void *value, 
+bool _dom_hash_add(dom_hash_table *ht, void *key, void *value, 
 		bool replace)
 {
 	unsigned int h, c;
@@ -191,11 +158,11 @@ bool _dom_hash_add(struct dom_hash_table *ht, void *key, void *value,
 	if (ht == NULL || key == NULL || value == NULL)
 		return false;
 
-	h = ht->hash(key);
+	h = ht->vtable->hash(key, ht->pw);
 	c = h % ht->nchains;
 
-	for (e = ht->chain[c]; e; e = e->next)
-		if (key == e->key) {
+	for (e = ht->chain[c]; e; e = e->next) {
+		if (ht->vtable->key_isequal(key, e->key, ht->pw)) {
 			if (replace == true) {
 				e->value = value;
 				return true;
@@ -203,10 +170,9 @@ bool _dom_hash_add(struct dom_hash_table *ht, void *key, void *value,
 				return false;
 			}
 		}
+	}
 
-	assert(ht->alloc != NULL);
-
-	e = ht->alloc(NULL, sizeof(struct _dom_hash_entry), ht->ptr);
+	e = malloc(sizeof(struct _dom_hash_entry));
 	if (e == NULL) {
 		return false;
 	}
@@ -216,7 +182,7 @@ bool _dom_hash_add(struct dom_hash_table *ht, void *key, void *value,
 
 	e->next = ht->chain[c];
 	ht->chain[c] = e;
-	ht->number ++;
+	ht->nentries++;
 
 	return true;
 }
@@ -236,12 +202,13 @@ void *_dom_hash_get(struct dom_hash_table *ht, void *key)
 	if (ht == NULL || key == NULL)
 		return NULL;
 
-	h = ht->hash(key);
+	h = ht->vtable->hash(key, ht->pw);
 	c = h % ht->nchains;
 
-	for (e = ht->chain[c]; e; e = e->next)
-		if (key == e->key) 
+	for (e = ht->chain[c]; e; e = e->next) {
+		if (ht->vtable->key_isequal(key, e->key, ht->pw))
 			return e->value;
+	}
 
 	return NULL;
 }
@@ -262,14 +229,12 @@ void *_dom_hash_del(struct dom_hash_table *ht, void *key)
 	if (ht == NULL || key == NULL)
 		return NULL;
 
-	h = ht->hash(key);
+	h = ht->vtable->hash(key, ht->pw);
 	c = h % ht->nchains;
 
-	assert(ht->alloc != NULL);
-
 	p = ht->chain[c];
-	for (e = p; e; p = e, e = e->next)
-		if (key == e->key) {
+	for (e = p; e; p = e, e = e->next) {
+		if (ht->vtable->key_isequal(key, e->key, ht->pw)) {
 			if (p != e) {
 				p->next = e->next;
 			} else {
@@ -278,10 +243,11 @@ void *_dom_hash_del(struct dom_hash_table *ht, void *key)
 			}
 
 			ret = e->value;
-			ht->alloc(e, 0, ht->ptr);
-			ht->number --;
+			free(e);
+			ht->nentries--;
 			return ret;
 		}
+	}
 	
 	return NULL;
 }
@@ -294,10 +260,10 @@ void *_dom_hash_del(struct dom_hash_table *ht, void *key)
  * \param  c2  Pointer to second context (set to 0 on first call)
  * \return The next hash key, or NULL for no more keys
  */
-void *_dom_hash_iterate(struct dom_hash_table *ht, unsigned int *c1,
-		unsigned int **c2)
+void *_dom_hash_iterate(struct dom_hash_table *ht, uintptr_t *c1,
+		uintptr_t **c2)
 {
-	struct _dom_hash_entry **he = (struct _dom_hash_entry **)c2;
+	struct _dom_hash_entry **he = (struct _dom_hash_entry **) c2;
 
 	if (ht == NULL)
 		return NULL;
@@ -328,41 +294,10 @@ void *_dom_hash_iterate(struct dom_hash_table *ht, unsigned int *c1,
  */
 unsigned int _dom_hash_get_length(struct dom_hash_table *ht)
 {
-	return ht->number;
-}
-
-/**
- * Get the chain number of this hash table 
- *
- * \param ht  The hash table
- * 
- * \return the number of chains
- */
-unsigned int _dom_hash_get_chains(struct dom_hash_table *ht)
-{
-	return ht->nchains;
-}
-
-/**
- * Get the hash function of this hash table 
- *
- * \param ht  The hash table
- * 
- * \return the hash function
- */
-dom_hash_func _dom_hash_get_func(struct dom_hash_table *ht)
-{
-	return ht->hash;
+	return ht->nentries;
 }
 
 /*-----------------------------------------------------------------------*/
-/* The hash function for lwc_string type */
-unsigned int _dom_hash_hash_lwcstring(void *key)
-{
-	lwc_string *lstr = (lwc_string *) key; 
-
-	return lwc_string_hash_value(lstr);
-}
 
 /* A simple test rig.  To compile, use:
  * gcc -g  -o hashtest -I../ -I../../include  -DTEST_RIG  hashtable.c

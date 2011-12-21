@@ -6,9 +6,10 @@
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
-#include <stddef.h>
-#include <string.h>
 #include <assert.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <dom/core/attr.h>
 #include <dom/core/document.h>
@@ -51,6 +52,9 @@ struct dom_attr {
 /* The vtable for dom_attr node */
 static struct dom_attr_vtable attr_vtable = {
 	{
+		{
+			DOM_NODE_EVENT_TARGET_VTABLE,
+		},
 		DOM_NODE_VTABLE_ATTR
 	},
 	DOM_ATTR_VTABLE
@@ -84,15 +88,15 @@ static struct dom_node_protect_vtable attr_protect_vtable = {
  * The returned attribute will already be referenced.
  */
 dom_exception _dom_attr_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct lwc_string_s *namespace,
-		struct lwc_string_s *prefix, bool specified, 
+		dom_string *name, dom_string *namespace,
+		dom_string *prefix, bool specified, 
 		struct dom_attr **result)
 {
 	struct dom_attr *a;
 	dom_exception err;
 
 	/* Allocate the attribute node */
-	a = _dom_document_alloc(doc, NULL, sizeof(struct dom_attr));
+	a = malloc(sizeof(struct dom_attr));
 	if (a == NULL)
 		return DOM_NO_MEM_ERR;
 
@@ -104,9 +108,10 @@ dom_exception _dom_attr_create(struct dom_document *doc,
 	err = _dom_attr_initialise(a, doc, name, namespace, prefix, specified, 
 			result);
 	if (err != DOM_NO_ERR) {
-		_dom_document_alloc(doc, a, 0);
+		free(a);
 		return err;
 	}
+
 	return DOM_NO_ERR;
 }
 
@@ -123,8 +128,8 @@ dom_exception _dom_attr_create(struct dom_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_attr_initialise(dom_attr *a, 
-		struct dom_document *doc,  struct lwc_string_s *name,
-		struct lwc_string_s *namespace, struct lwc_string_s *prefix,
+		struct dom_document *doc, dom_string *name,
+		dom_string *namespace, dom_string *prefix,
 		bool specified, struct dom_attr **result)
 {
 	dom_exception err;
@@ -150,10 +155,9 @@ dom_exception _dom_attr_initialise(dom_attr *a,
 /**
  * The destructor of dom_attr
  *
- * \param doc   The owner document
  * \param attr  The attribute
  */
-void _dom_attr_finalise(dom_document *doc, dom_attr *attr)
+void _dom_attr_finalise(dom_attr *attr)
 {
 	/* Now, clean up this node and destroy it */
 
@@ -161,22 +165,21 @@ void _dom_attr_finalise(dom_document *doc, dom_attr *attr)
 		/** \todo destroy schema type info */
 	}
 
-	_dom_node_finalise(doc, &attr->base);
+	_dom_node_finalise(&attr->base);
 }
 
 /**
  * Destroy an attribute node
  *
- * \param doc   The owning document
  * \param attr  The attribute to destroy
  *
  * The contents of ::attr will be destroyed and ::attr will be freed
  */
-void _dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr)
+void _dom_attr_destroy(struct dom_attr *attr)
 {
-	_dom_attr_finalise(doc, attr);
+	_dom_attr_finalise(attr);
 
-	_dom_document_alloc(doc, attr, 0);
+	free(attr);
 }
 
 /*-----------------------------------------------------------------------*/
@@ -435,8 +438,7 @@ dom_exception _dom_attr_get_value(struct dom_attr *attr,
 	dom_string *value, *temp;
 	dom_exception err;
 
-	err = _dom_document_create_string(a->owner, 
-			NULL, 0, &value);
+	err = dom_string_create(NULL, 0, &value);
 	if (err != DOM_NO_ERR) {
 		return err;
 	}
@@ -749,51 +751,43 @@ dom_exception _dom_attr_lookup_namespace(dom_node_internal *node,
 /* The virtual destroy function of this class */
 void __dom_attr_destroy(dom_node_internal *node)
 {
-	dom_document *doc = node->owner;
-
-	assert(doc != NULL);
-	_dom_attr_destroy(doc, (dom_attr *) node);
+	_dom_attr_destroy((dom_attr *) node);
 }
 
 /* The memory allocator of this class */
-dom_exception _dom_attr_alloc(struct dom_document *doc, 
-		struct dom_node_internal *n, struct dom_node_internal **ret)
+dom_exception _dom_attr_copy(dom_node_internal *n, dom_node_internal **copy)
 {
-	UNUSED(n);
+	dom_attr *old = (dom_attr *) n;
 	dom_attr *a;
+	dom_exception err;
 	
-	a = _dom_document_alloc(doc, NULL, sizeof(struct dom_attr));
+	a = malloc(sizeof(struct dom_attr));
 	if (a == NULL)
 		return DOM_NO_MEM_ERR;
+
+	err = dom_node_copy_internal(n, a);
+	if (err != DOM_NO_ERR) {
+		free(a);
+		return err;
+	}
 	
-	*ret = (dom_node_internal *) a;
-	dom_node_set_owner(*ret, doc);
-
-	return DOM_NO_ERR;
-}
-
-/* The copy constructor of this class  */
-dom_exception _dom_attr_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old)
-{
-	dom_attr *na = (dom_attr *) new;
-	dom_attr *oa = (dom_attr *) old;
-
-	na->specified = oa->specified;
+	a->specified = old->specified;
 
 	/* TODO: deal with dom_type_info, it get no definition ! */
-	na->schema_type_info = NULL;
+	a->schema_type_info = NULL;
 
-	na->is_id = oa->is_id;
+	a->is_id = old->is_id;
 
-	na->type = oa->type;
+	a->type = old->type;
 
-	na->value = oa->value;
+	a->value = old->value;
 
 	/* TODO: is this correct? */
-	na->read_only = false;
+	a->read_only = false;
 
-	return _dom_node_copy(new, old);
+	*copy = (dom_node_internal *) a;
+
+	return DOM_NO_ERR;
 }
 
 

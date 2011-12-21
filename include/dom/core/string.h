@@ -19,26 +19,22 @@
 typedef struct dom_string dom_string;
 
 /* Claim a reference on a DOM string */
-void dom_string_ref(dom_string *str);
+dom_string *dom_string_ref(dom_string *str);
 /* Release a reference on a DOM string */
 void dom_string_unref(dom_string *str);
 
 /* Create a DOM string from a string of characters */
-dom_exception dom_string_create(dom_alloc alloc, void *pw,
-		const uint8_t *ptr, size_t len, dom_string **str);
+dom_exception dom_string_create(const uint8_t *ptr, size_t len, 
+		dom_string **str);
 
-/* Clone a dom_string */
-dom_exception dom_string_clone(dom_alloc alloc, void *pw,
-		dom_string *str, dom_string **ret);
-
-/* Get the internal lwc_string */
-dom_exception dom_string_get_intern(dom_string *str, 
+/* Obtain an interned representation of a dom string */
+dom_exception dom_string_intern(dom_string *str, 
 		struct lwc_string_s **lwcstr);
 
 /* Case sensitively compare two DOM strings */
-int dom_string_cmp(dom_string *s1, dom_string *s2);
+bool dom_string_isequal(const dom_string *s1, const dom_string *s2);
 /* Case insensitively compare two DOM strings */
-int dom_string_icmp(dom_string *s1, dom_string *s2);
+bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2);
 
 /* Get the index of the first occurrence of a character in a dom string */
 uint32_t dom_string_index(dom_string *str, uint32_t chr);
@@ -70,10 +66,6 @@ dom_exception dom_string_insert(dom_string *target,
 /* Replace a section of a dom string */
 dom_exception dom_string_replace(dom_string *target,
 		dom_string *source, uint32_t i1, uint32_t i2,
-		dom_string **result);
-
-/* Duplicate a dom string */
-dom_exception dom_string_dup(dom_string *str, 
 		dom_string **result);
 
 /* Calculate a hash value from a dom string */

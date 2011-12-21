@@ -96,9 +96,6 @@ struct dom_xml_parser {
 
 	dom_string *udkey;	/**< Key for DOM node user data */
 
-	dom_alloc alloc;		/**< Memory (de)allocation function */
-	void *pw;			/**< Pointer to client data */
-
 	dom_msg msg;		/**< Informational message function */
 	void *mctx;		/**< Pointer to client data */
 };
@@ -141,13 +138,26 @@ static xmlSAXHandler sax_handler = {
 	.serror                 = NULL
 };
 
+static void *dom_xml_alloc(void *ptr, size_t len, void *pw)
+{
+	UNUSED(pw);
+
+	if (ptr == NULL)
+		return len > 0 ? malloc(len) : NULL;
+
+	if (len == 0) {
+		free(ptr);
+		return NULL;
+	}
+
+	return realloc(ptr, len);
+}
+
 /**
  * Create an XML parser instance
  *
  * \param enc      Source charset, or NULL
  * \param int_enc  Desired charset of document buffer (UTF-8 or UTF-16)
- * \param alloc    Memory (de)allocation function
- * \param pw       Pointer to client-specific private data
  * \param msg      Informational message function
  * \param mctx     Pointer to client-specific private data
  * \return Pointer to instance, or NULL on memory exhaustion
@@ -157,7 +167,7 @@ static xmlSAXHandler sax_handler = {
  * parser encoding is not yet implemented
  */
 dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
-		dom_alloc alloc, void *pw, dom_msg msg, void *mctx)
+		dom_msg msg, void *mctx)
 {
 	dom_xml_parser *parser;
 	dom_exception err;
@@ -166,7 +176,7 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 	UNUSED(enc);
 	UNUSED(int_enc);
 
-	parser = alloc(NULL, sizeof(dom_xml_parser), pw);
+	parser = dom_xml_alloc(NULL, sizeof(dom_xml_parser), NULL);
 	if (parser == NULL) {
 		msg(DOM_MSG_CRITICAL, mctx, "No memory for parser");
 		return NULL;
@@ -175,7 +185,7 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 	parser->xml_ctx =
 		xmlCreatePushParserCtxt(&sax_handler, parser, "", 0, NULL);
 	if (parser->xml_ctx == NULL) {
-		alloc(parser, 0, pw);
+		dom_xml_alloc(parser, 0, NULL);
 		msg(DOM_MSG_CRITICAL, mctx, "Failed to create XML parser");
 		return NULL;
 	}
@@ -183,25 +193,26 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 	/* Set options of parsing context */
 	ret = xmlCtxtUseOptions(parser->xml_ctx, XML_PARSE_DTDATTR | 
 			XML_PARSE_DTDLOAD);
-	assert(ret == 0);
+	if (ret != 0) {
+		xmlFreeParserCtxt(parser->xml_ctx);
+		dom_xml_alloc(parser, 0, NULL);
+		msg(DOM_MSG_CRITICAL, mctx, "Failed setting parser options");
+		return NULL;
+	}
 
 	parser->doc = NULL;
 
 	parser->complete = false;
 
 	/* Create key for user data registration */
-	err = dom_string_create((dom_alloc) alloc, pw,
-			(const uint8_t *) "__xmlnode", SLEN("__xmlnode"),
-			&parser->udkey);
+	err = dom_string_create((const uint8_t *) "__xmlnode", 
+			SLEN("__xmlnode"), &parser->udkey);
 	if (err != DOM_NO_ERR) {
 		xmlFreeParserCtxt(parser->xml_ctx);
-		alloc(parser, 0, pw);
+		dom_xml_alloc(parser, 0, NULL);
 		msg(DOM_MSG_CRITICAL, mctx, "No memory for userdata key");
 		return NULL;
 	}
-
-	parser->alloc = alloc;
-	parser->pw = pw;
 
 	parser->msg = msg;
 	parser->mctx = mctx;
@@ -218,11 +229,11 @@ void dom_xml_parser_destroy(dom_xml_parser *parser)
 {
 	dom_string_unref(parser->udkey);
 
+	xmlFreeDoc(parser->xml_ctx->myDoc);
+	
 	xmlFreeParserCtxt(parser->xml_ctx);
 
-	xmlFreeDoc(parser->xml_ctx->myDoc);
-
-	parser->alloc(parser, 0, parser->pw);
+	dom_xml_alloc(parser, 0, NULL);
 }
 
 /**
@@ -259,8 +270,8 @@ dom_xml_error dom_xml_parser_parse_chunk(dom_xml_parser *parser,
 dom_xml_error dom_xml_parser_completed(dom_xml_parser *parser)
 {
 	xmlParserErrors err;
-	lwc_string *name = NULL;
-	lwc_error lerr;
+	dom_string *name = NULL;
+	dom_exception derr;
 
 	err = xmlParseChunk(parser->xml_ctx, "", 0, 1);
 	if (err != XML_ERR_OK) {
@@ -274,12 +285,12 @@ dom_xml_error dom_xml_parser_completed(dom_xml_parser *parser)
 	/* TODO: In future, this string "id" should be extracted from the 
 	 * document schema file instead of just setting it as "id".
 	 */
-	lerr = lwc_intern_string("id", SLEN("id"), &name);
-	if (lerr != lwc_error_ok)
-		return  _dom_exception_from_lwc_error(lerr);
+	derr = dom_string_create((const uint8_t *) "id", SLEN("id"), &name);
+	if (derr != DOM_NO_ERR)
+		return derr;
 	
 	_dom_document_set_id_name(parser->doc, name);
-	lwc_string_unref(name);
+	dom_string_unref(name);
 
 	return DOM_XML_OK;
 }
@@ -319,7 +330,7 @@ void xml_parser_start_document(void *ctx)
 			/* namespace */ NULL,
 			/* qname */ NULL,
 			/* doctype */ NULL,
-			parser->alloc, parser->pw, NULL,
+			NULL,
 			&doc);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx, 
@@ -642,9 +653,8 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 		dom_string *tag_name;
 
 		/* Create tag name DOM string */
-		err = _dom_document_create_string(parser->doc,
-				child->name, strlen((const char *) child->name),
-				&tag_name);
+		err = dom_string_create(child->name, 
+				strlen((const char *) child->name), &tag_name);
 		if (err != DOM_NO_ERR) {
 			parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 					"No memory for tag name");
@@ -675,7 +685,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 		uint8_t qnamebuf[qnamelen + 1 /* '\0' */];
 
 		/* Create namespace DOM string */
-		err = _dom_document_create_string(parser->doc,
+		err = dom_string_create(
 				child->ns->href,
 				strlen((const char *) child->ns->href),
 				&namespace);
@@ -694,7 +704,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 			(const char *) child->name);
 
 		/* Create qname DOM string */
-		err = _dom_document_create_string(parser->doc,
+		err = dom_string_create(
 				qnamebuf,
 				qnamelen,
 				&qname);
@@ -733,7 +743,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 			dom_string *name;
 
 			/* Create attribute name DOM string */
-			err = _dom_document_create_string(parser->doc,
+			err = dom_string_create(
 					a->name,
 					strlen((const char *) a->name),
 					&name);
@@ -767,7 +777,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 			uint8_t qnamebuf[qnamelen + 1 /* '\0' */];
 
 			/* Create namespace DOM string */
-			err = _dom_document_create_string(parser->doc,
+			err = dom_string_create(
 					a->ns->href,
 					strlen((const char *) a->ns->href),
 					&namespace);
@@ -786,7 +796,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 				(const char *) a->name);
 
 			/* Create qname DOM string */
-			err = _dom_document_create_string(parser->doc,
+			err = dom_string_create(
 					qnamebuf,
 					qnamelen,
 					&qname);
@@ -908,7 +918,7 @@ void xml_parser_add_text_node(dom_xml_parser *parser, struct dom_node *parent,
 	dom_exception err;
 
 	/* Create DOM string data for text node */
-	err = _dom_document_create_string(parser->doc, child->content,
+	err = dom_string_create(child->content,
 			strlen((const char *) child->content), &data);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -969,7 +979,7 @@ void xml_parser_add_cdata_section(dom_xml_parser *parser,
 	dom_exception err;
 
 	/* Create DOM string data for cdata section */
-	err = _dom_document_create_string(parser->doc, child->content,
+	err = dom_string_create(child->content,
 			strlen((const char *) child->content), &data);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -1031,7 +1041,7 @@ void xml_parser_add_entity_reference(dom_xml_parser *parser,
 	dom_exception err;
 
 	/* Create name of entity reference */
-	err = _dom_document_create_string(parser->doc, child->name,
+	err = dom_string_create(child->name,
 			strlen((const char *) child->name), &name);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -1106,7 +1116,7 @@ void xml_parser_add_comment(dom_xml_parser *parser, struct dom_node *parent,
 	dom_exception err;
 
 	/* Create DOM string data for comment */
-	err = _dom_document_create_string(parser->doc, child->content,
+	err = dom_string_create(child->content,
 			strlen((const char *) child->content), &data);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -1181,7 +1191,7 @@ void xml_parser_add_document_type(dom_xml_parser *parser,
 	/* Create doctype */
 	err = dom_implementation_create_document_type(
 			qname, public_id, system_id, 
-			parser->alloc, parser->pw, &doctype);
+			&doctype);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 				"Failed to create document type");

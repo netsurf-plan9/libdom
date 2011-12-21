@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <parserutils/charset/utf8.h>
@@ -18,43 +19,52 @@
 #include "utils/utils.h"
 
 /**
+ * Type of a DOM string
+ */
+enum dom_string_type {
+	DOM_STRING_CDATA = 0,
+	DOM_STRING_INTERNED = 1
+};
+
+/**
  * A DOM string
  *
  * Strings are reference counted so destruction is performed correctly.
  */
 struct dom_string {
-	uint8_t *ptr;			/**< Pointer to string data */
+	union {
+		struct {
+			uint8_t *ptr;	/**< Pointer to string data */
+			size_t len;	/**< Byte length of string */
+		} cdata;
+		lwc_string *intern;	/**< Interned string */
+	} data;
 
-	size_t len;			/**< Byte length of string */
-
-	lwc_string *intern;		/**< The lwc_string of this string */
-
-	dom_alloc alloc;		/**< Memory (de)allocation function */
-	void *pw;			/**< Client-specific data */
-
-	uint32_t refcnt;		/**< Reference count */
+	unsigned int refcnt : 31,	/**< Reference count */
+		     type   :  1;	/**< String type */
 };
 
-static dom_string empty_string = { 
-	.ptr = NULL,
-	.len = 0,
-	.intern = NULL,
-	.alloc = NULL,
-	.pw = NULL,
-	.refcnt = 1
+/**
+ * Empty string, for comparisons against NULL
+ */
+static const dom_string empty_string = {
+	{ { (uint8_t *) "", 0 } },
+	0,
+	DOM_STRING_CDATA
 };
-
-
 
 /**
  * Claim a reference on a DOM string
  *
  * \param str  The string to claim a reference on
+ * \return \a str
  */
-void dom_string_ref(dom_string *str)
+dom_string *dom_string_ref(dom_string *str)
 {
 	if (str != NULL)
 		str->refcnt++;
+
+	return str;
 }
 
 /**
@@ -67,25 +77,25 @@ void dom_string_ref(dom_string *str)
  */
 void dom_string_unref(dom_string *str)
 {
-	if (str == NULL)
-		return;
-	
-	if (--str->refcnt == 0) {
-		if (str->intern != NULL) {
-			lwc_string_unref(str->intern);
-			str->alloc(str, 0, str->pw);
-		} else if (str->alloc != NULL) {
-			str->alloc(str->ptr, 0, str->pw);
-			str->alloc(str, 0, str->pw);
+	if (str != NULL && --str->refcnt == 0) {
+		switch (str->type) {
+		case DOM_STRING_INTERNED:
+			if (str->data.intern != NULL) {
+				lwc_string_unref(str->data.intern);
+			}
+			break;
+		case DOM_STRING_CDATA:
+			free(str->data.cdata.ptr);
+			break;
 		}
+
+		free(str);
 	}
 }
 
 /**
  * Create a DOM string from a string of characters
  *
- * \param alloc  Memory (de)allocation function
- * \param pw     Pointer to client-specific private data
  * \param ptr    Pointer to string of characters
  * \param len    Length, in bytes, of string of characters
  * \param str    Pointer to location to receive result
@@ -97,74 +107,37 @@ void dom_string_unref(dom_string *str)
  * The string of characters passed in will be copied for use by the 
  * returned DOM string.
  */
-dom_exception dom_string_create(dom_alloc alloc, void *pw,
-		const uint8_t *ptr, size_t len, dom_string **str)
+dom_exception dom_string_create(const uint8_t *ptr, size_t len, 
+		dom_string **str)
 {
 	dom_string *ret;
 
 	if (ptr == NULL || len == 0) {
-		dom_string_ref(&empty_string);
-
-		*str = &empty_string;
-
-		return DOM_NO_ERR;
+		ptr = (const uint8_t *) "";
+		len = 0;
 	}
 
-	ret = alloc(NULL, sizeof(dom_string), pw);
+	ret = malloc(sizeof(dom_string));
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
-	ret->ptr = alloc(NULL, len, pw);
-	if (ret->ptr == NULL) {
-		alloc(ret, 0, pw);
+	ret->data.cdata.ptr = malloc(len);
+	if (ret->data.cdata.ptr == NULL) {
+		free(ret);
 		return DOM_NO_MEM_ERR;
 	}
 
-	memcpy(ret->ptr, ptr, len);
+	memcpy(ret->data.cdata.ptr, ptr, len);
 
-	ret->len = len;
-
-	ret->alloc = alloc;
-	ret->pw = pw;
-
-	ret->intern = NULL;
+	ret->data.cdata.len = len;
 
 	ret->refcnt = 1;
+
+	ret->type = DOM_STRING_CDATA;
 
 	*str = ret;
 
 	return DOM_NO_ERR;
-}
-
-/**
- * Clone a dom_string if necessary. This method is used to create a new string
- * with a new allocator, but if the allocator is the same with the paramter 
- * str, just ref the string.
- *
- * \param alloc  The new allocator for this string
- * \param pw     The new pw for this string
- * \param str    The source dom_string
- * \param ret    The cloned dom_string
- * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
- *
- * @note: When both the alloc and pw are the same as the str's, we need no
- *	  real clone, just ref the source string is ok.
- */
-dom_exception dom_string_clone(dom_alloc alloc, void *pw, 
-		dom_string *str, dom_string **ret)
-{
-	if (alloc == str->alloc && pw == str->pw) {
-		*ret = str;
-		dom_string_ref(str);
-		return DOM_NO_ERR;
-	}
-
-	if (str->intern != NULL) {
-		return _dom_string_create_from_lwcstring(alloc, pw,
-				str->intern, ret);
-	} else {
-		return dom_string_create(alloc, pw, str->ptr, str->len, ret);
-	}
 }
 
 /**
@@ -174,8 +147,8 @@ dom_exception dom_string_clone(dom_alloc alloc, void *pw,
  * \param ret  The new dom_string
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  */
-dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
-		lwc_string *str, dom_string **ret)
+dom_exception _dom_string_create_from_lwcstring(lwc_string *str, 
+		dom_string **ret)
 {
 	dom_string *r;
 
@@ -184,27 +157,15 @@ dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
 		return DOM_NO_ERR;
 	}
 
-	r = alloc(NULL, sizeof(dom_string), pw);
+	r = malloc(sizeof(dom_string));
 	if (r == NULL)
 		return DOM_NO_MEM_ERR;
 
-	if (str == NULL) {
-		*ret = &empty_string;
-		dom_string_ref(*ret);
-		return DOM_NO_ERR;
-	}
-
-	r->intern = str;
-	r->ptr = (uint8_t *)lwc_string_data(str);
-	r->len = lwc_string_length(str);
-
-	r->alloc = alloc;
-	r->pw = pw;
+	r->data.intern = lwc_string_ref(str);
 
 	r->refcnt = 1;
 
-	/* Ref the lwc_string */
-	lwc_string_ref(str);
+	r->type = DOM_STRING_INTERNED;
 
 	*ret = r;
 	return DOM_NO_ERR;
@@ -218,49 +179,28 @@ dom_exception _dom_string_create_from_lwcstring(dom_alloc alloc, void *pw,
  * \param lwcstr  The result lwc_string	
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_string_intern(dom_string *str, 
+dom_exception dom_string_intern(dom_string *str, 
 		struct lwc_string_s **lwcstr)
 {
-	lwc_string *ret;
-	lwc_error lerr;
-
 	/* If this string is already interned, do nothing */
-	if (str->intern != NULL) {
-		*lwcstr = lwc_string_ref(str->intern);
-		return DOM_NO_ERR;
+	if (str->type != DOM_STRING_INTERNED) {
+		lwc_string *ret;
+		lwc_error lerr;
+
+		lerr = lwc_intern_string((const char *) str->data.cdata.ptr, 
+				str->data.cdata.len, &ret);
+		if (lerr != lwc_error_ok) {
+			return _dom_exception_from_lwc_error(lerr);
+		}
+
+		free(str->data.cdata.ptr);
+
+		str->data.intern = ret;
+
+		str->type = DOM_STRING_INTERNED;
 	}
 
-	lerr = lwc_intern_string((const char *)str->ptr, str->len, &ret);
-	if (lerr != lwc_error_ok) {
-		return _dom_exception_from_lwc_error(lerr);
-	}
-
-	str->intern = ret;
-
-	if (str->ptr != NULL) {
-		str->alloc(str->ptr, 0, str->pw);
-	}
-
-	str->ptr = (uint8_t *) lwc_string_data(ret);
-
-	*lwcstr = lwc_string_ref(ret);
-	return DOM_NO_ERR;
-}
-
-/**
- * Get the internal lwc_string 
- *
- * \param str     The dom_string object
- * \param lwcstr  The lwc_string of this dom-string
- * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
- */
-dom_exception dom_string_get_intern(dom_string *str, 
-		struct lwc_string_s **lwcstr)
-{
-	*lwcstr = str->intern;
-
-	if (*lwcstr != NULL)
-		lwc_string_ref(*lwcstr);
+	*lwcstr = lwc_string_ref(str->data.intern);
 
 	return DOM_NO_ERR;
 }
@@ -270,33 +210,40 @@ dom_exception dom_string_get_intern(dom_string *str,
  *
  * \param s1  The first string to compare
  * \param s2  The second string to compare
- * \return 0 if strings match, non-0 otherwise
- *
- * NULL and "" will match.
+ * \return true if strings match, false otherwise
  */
-int dom_string_cmp(dom_string *s1, dom_string *s2)
+bool dom_string_isequal(const dom_string *s1, const dom_string *s2)
 {
-	bool ret;
-
 	if (s1 == NULL)
 		s1 = &empty_string;
 
 	if (s2 == NULL)
 		s2 = &empty_string;
 
-	if (s1->intern != NULL && s2->intern != NULL) {
-		lwc_string_isequal(s1->intern, s2->intern, &ret);
-		if (ret == true) {
-			return 0;
-		} else {
-			return -1;
-		}
+	if (s1->type == DOM_STRING_INTERNED && 
+			s2->type == DOM_STRING_INTERNED) {
+		bool match;
+
+		lwc_string_isequal(s1->data.intern, s2->data.intern, &match);
+
+		return match;
 	}
 
-	if (s1->len != s2->len)
-		return 1;
+	if (s1->data.cdata.len != s2->data.cdata.len)
+		return false;
 
-	return memcmp(s1->ptr, s2->ptr, s1->len);
+	return 0 == memcmp(s1->data.cdata.ptr, s2->data.cdata.ptr, 
+			s1->data.cdata.len);
+}
+
+/**
+ * Trivial locale-agnostic lower case convertor
+ */
+static inline uint8_t dolower(const uint8_t c)
+{
+	if ('A' <= c && c <= 'Z')
+		return c + 'a' - 'A';
+	return c;
 }
 
 /**
@@ -304,62 +251,47 @@ int dom_string_cmp(dom_string *s1, dom_string *s2)
  *
  * \param s1  The first string to compare
  * \param s2  The second string to compare
- * \return 0 if strings match, non-0 otherwise
- *
- * NULL and "" will match.
+ * \return true if strings match, false otherwise
  */
-int dom_string_icmp(dom_string *s1, dom_string *s2)
+bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 {
 	const uint8_t *d1 = NULL;
 	const uint8_t *d2 = NULL;
-	size_t l1, l2;
+	size_t len;
 
 	if (s1 == NULL)
 		s1 = &empty_string;
+
 	if (s2 == NULL)
 		s2 = &empty_string;
 
-	bool ret;
-	if (s1->intern != NULL && s2->intern != NULL) {
-		lwc_string_caseless_isequal(s1->intern, s2->intern, &ret);
-		if (ret == true) {
-			return 0;
-		} else {
-			return -1;
-		}
+	if (s1->type == DOM_STRING_INTERNED && 
+			s2->type == DOM_STRING_INTERNED) {
+		bool match;
+
+		lwc_string_caseless_isequal(s1->data.intern, s2->data.intern, 
+				&match);
+
+		return match;
 	}
 
-	d1 = s1->ptr;
-	d2 = s2->ptr;
-	l1 = s1->len;
-	l2 = s2->len;
+	if (s1->data.cdata.len != s2->data.cdata.len)
+		return false;
 
-	while (l1 > 0 && l2 > 0) {
-		uint32_t c1, c2;
-		size_t cl1, cl2;
-		parserutils_error err;
+	d1 = s1->data.cdata.ptr;
+	d2 = s2->data.cdata.ptr;
+	len = s1->data.cdata.len;
 
-		err = parserutils_charset_utf8_to_ucs4(d1, l1, &c1, &cl1); 
-		if (err != PARSERUTILS_OK) {
-		}
+	while (len > 0) {
+		if (dolower(*d1) != dolower(*d2))
+			return false;
 
-		err = parserutils_charset_utf8_to_ucs4(d2, l2, &c2, &cl2);
-		if (err != PARSERUTILS_OK) {
-		}
-
-		/** \todo improved lower-casing algorithm */
-		if (tolower(c1) != tolower(c2)) {
-			return (int)(tolower(c1) - tolower(c2));
-		}
-
-		d1 += cl1;
-		d2 += cl2;
-
-		l1 -= cl1;
-		l2 -= cl2;
+		d1++;
+		d2++;
+		len--;
 	}
 
-	return (int)(l1 - l2);
+	return true;
 }
 
 /**
@@ -376,11 +308,8 @@ uint32_t dom_string_index(dom_string *str, uint32_t chr)
 	uint32_t c, index;
 	parserutils_error err;
 
-	if (str == NULL)
-		str = &empty_string;
-
-	s = str->ptr;
-	slen = str->len;
+	s = (const uint8_t *) _dom_string_data(str);
+	slen = _dom_string_byte_length(str);
 
 	index = 0;
 
@@ -416,11 +345,8 @@ uint32_t dom_string_rindex(dom_string *str, uint32_t chr)
 	uint32_t c, coff, index;
 	parserutils_error err;
 
-	if (str == NULL)
-		str = &empty_string;
-
-	s = str->ptr;
-	slen = str->len;
+	s = (const uint8_t *) _dom_string_data(str);
+	slen = _dom_string_byte_length(str);
 
 	index = dom_string_length(str);
 
@@ -455,13 +381,14 @@ uint32_t dom_string_rindex(dom_string *str, uint32_t chr)
  */
 uint32_t dom_string_length(dom_string *str)
 {
-	size_t clen;
+	const uint8_t *s;
+	size_t slen, clen;
 	parserutils_error err;
 
-	if (str == NULL)
-		str = &empty_string;
+	s = (const uint8_t *) _dom_string_data(str);
+	slen = _dom_string_byte_length(str);
 
-	err = parserutils_charset_utf8_length(str->ptr, str->len, &clen);
+	err = parserutils_charset_utf8_length(s, slen, &clen);
 	if (err != PARSERUTILS_OK) {
 		return 0;
 	}
@@ -484,11 +411,8 @@ dom_exception dom_string_at(dom_string *str, uint32_t index,
 	uint32_t c, i;
 	parserutils_error err;
 
-	if (str == NULL)
-		str = &empty_string;
-
-	s = str->ptr;
-	slen = str->len;
+	s = (const uint8_t *) _dom_string_data(str);
+	slen = _dom_string_byte_length(str);
 
 	i = 0;
 
@@ -527,58 +451,46 @@ dom_exception dom_string_at(dom_string *str, uint32_t index,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  *
- * The returned string will be allocated using the allocation details
- * stored in ::s1.
- * 
- * The returned string will have its reference count increased. The client
+ * The returned string will be referenced. The client
  * should dereference it once it has finished with it.
  */
 dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 		dom_string **result)
 {
 	dom_string *concat;
-	dom_alloc alloc;
-	void *pw;
+	const uint8_t *s1ptr, *s2ptr;
+	size_t s1len, s2len;
 
 	assert(s1 != NULL);
 	assert(s2 != NULL);
 
-	if (s1->alloc != NULL) {
-		alloc = s1->alloc;
-		pw = s1->pw;
-	} else if (s2->alloc != NULL) {
-		alloc = s2->alloc;
-		pw = s2->pw;
-	} else {
-		/* s1 == s2 == empty_string */
-		*result = &empty_string;
-		return DOM_NO_ERR;
-	}
+	s1ptr = (const uint8_t *) _dom_string_data(s1);
+	s2ptr = (const uint8_t *) _dom_string_data(s2);
+	s1len = _dom_string_byte_length(s1);
+	s2len = _dom_string_byte_length(s2);
 
-	concat = alloc(NULL, sizeof(dom_string), pw);
+	concat = malloc(sizeof(dom_string));
 
 	if (concat == NULL) {
 		return DOM_NO_MEM_ERR;
 	}
 
-	concat->ptr = alloc(NULL, s1->len + s2->len, pw);
-	if (concat->ptr == NULL) {
-		alloc(concat, 0, pw);
+	concat->data.cdata.ptr = malloc(s1len + s2len);
+	if (concat->data.cdata.ptr == NULL) {
+		free(concat);
 
 		return DOM_NO_MEM_ERR;
 	}
 
-	memcpy(concat->ptr, s1->ptr, s1->len);
+	memcpy(concat->data.cdata.ptr, s1ptr, s1len);
 
-	memcpy(concat->ptr + s1->len, s2->ptr, s2->len);
+	memcpy(concat->data.cdata.ptr + s1len, s2ptr, s2len);
 
-	concat->len = s1->len + s2->len;
-
-	concat->alloc = alloc;
-	concat->pw = pw;
-	concat->intern = NULL;
+	concat->data.cdata.len = s1len + s2len;
 
 	concat->refcnt = 1;
+
+	concat->type = DOM_STRING_CDATA;
 
 	*result = concat;
 
@@ -594,17 +506,14 @@ dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
  *
- * The returned string will be allocated using the allocation details
- * stored in ::str.
- *
  * The returned string will have its reference count increased. The client
  * should dereference it once it has finished with it.
  */
 dom_exception dom_string_substr(dom_string *str, 
 		uint32_t i1, uint32_t i2, dom_string **result)
 {
-	const uint8_t *s = str->ptr;
-	size_t slen = str->len;
+	const uint8_t *s = (const uint8_t *) _dom_string_data(str);
+	size_t slen = _dom_string_byte_length(str);
 	uint32_t b1, b2;
 	parserutils_error err;
 
@@ -637,7 +546,7 @@ dom_exception dom_string_substr(dom_string *str,
 	}
 
 	/* Create a string from the specified byte range */
-	return dom_string_create(str->alloc, str->pw, s + b1, b2 - b1, result);
+	return dom_string_create(s + b1, b2 - b1, result);
 }
 
 /**
@@ -650,9 +559,6 @@ dom_exception dom_string_substr(dom_string *str,
  * \return DOM_NO_ERR          on success, 
  *         DOM_NO_MEM_ERR      on memory exhaustion,
  *         DOM_INDEX_SIZE_ERR  if ::offset > len(::target).
- *
- * The returned string will be allocated using the allocation details
- * stored in ::target.
  *
  * The returned string will have its reference count increased. The client
  * should dereference it once it has finished with it. 
@@ -667,10 +573,10 @@ dom_exception dom_string_insert(dom_string *target,
 	uint32_t ins = 0;
 	parserutils_error err;
 
-	t = target->ptr;
-	tlen = target->len;
-	s = source->ptr;
-	slen = source->len;
+	t = (const uint8_t *) _dom_string_data(target);
+	tlen = _dom_string_byte_length(target);
+	s = (const uint8_t *) _dom_string_data(source);
+	slen = _dom_string_byte_length(source);
 
 	clen = dom_string_length(target);
 
@@ -696,38 +602,36 @@ dom_exception dom_string_insert(dom_string *target,
 	}
 
 	/* Allocate result string */
-	res = target->alloc(NULL, sizeof(dom_string), target->pw);
+	res = malloc(sizeof(dom_string));
 	if (res == NULL) {
 		return DOM_NO_MEM_ERR;
 	}
 
 	/* Allocate data buffer for result contents */
-	res->ptr = target->alloc(NULL, tlen + slen, target->pw);
-	if (res->ptr == NULL) {
-		target->alloc(res, 0, target->pw);
+	res->data.cdata.ptr = malloc(tlen + slen);
+	if (res->data.cdata.ptr == NULL) {
+		free(res);
 		return DOM_NO_MEM_ERR;
 	}
 
 	/* Copy initial portion of target, if any, into result */
 	if (ins > 0) {
-		memcpy(res->ptr, t, ins);
+		memcpy(res->data.cdata.ptr, t, ins);
 	}
 
 	/* Copy inserted data into result */
-	memcpy(res->ptr + ins, s, slen);
+	memcpy(res->data.cdata.ptr + ins, s, slen);
 
 	/* Copy remainder of target, if any, into result */
 	if (tlen - ins > 0) {
-		memcpy(res->ptr + ins + slen, t + ins, tlen - ins);
+		memcpy(res->data.cdata.ptr + ins + slen, t + ins, tlen - ins);
 	}
 
-	res->len = tlen + slen;
+	res->data.cdata.len = tlen + slen;
 
-	res->alloc = target->alloc;
-	res->pw = target->pw;
-	res->intern = NULL;
-	
 	res->refcnt = 1;
+
+	res->type = DOM_STRING_CDATA;
 
 	*result = res;
 
@@ -744,9 +648,6 @@ dom_exception dom_string_insert(dom_string *target,
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
  *
- * The returned string will be allocated using the allocation details
- * stored in ::target.
- *
  * The returned string will have its reference count increased. The client
  * should dereference it once it has finished with it. 
  */
@@ -760,13 +661,10 @@ dom_exception dom_string_replace(dom_string *target,
 	uint32_t b1, b2;
 	parserutils_error err;
 
-	if (source == NULL)
-		source = &empty_string;
-
-	t = target->ptr;
-	tlen = target->len;
-	s = source->ptr;
-	slen = source->len;
+	t = (const uint8_t *) _dom_string_data(target);
+	tlen = _dom_string_byte_length(target);
+	s = (const uint8_t *) _dom_string_data(source);
+	slen = _dom_string_byte_length(source);
 
 	/* Initialise the byte index of the start to 0 */
 	b1 = 0;
@@ -799,70 +697,42 @@ dom_exception dom_string_replace(dom_string *target,
 	}
 
 	/* Allocate result string */
-	res = target->alloc(NULL, sizeof(dom_string), target->pw);
-
+	res = malloc(sizeof(dom_string));
 	if (res == NULL) {
 		return DOM_NO_MEM_ERR;
 	}
 
 	/* Allocate data buffer for result contents */
-	res->ptr = target->alloc(NULL, tlen + slen - (b2 - b1), target->pw);
-	if (res->ptr == NULL) {
-		target->alloc(res, 0, target->pw);
+	res->data.cdata.ptr = malloc(tlen + slen - (b2 - b1));
+	if (res->data.cdata.ptr == NULL) {
+		free(res);
 		return DOM_NO_MEM_ERR;
 	}
 
 	/* Copy initial portion of target, if any, into result */
 	if (b1 > 0) {
-		memcpy(res->ptr, t, b1);
+		memcpy(res->data.cdata.ptr, t, b1);
 	}
 
 	/* Copy replacement data into result */
 	if (slen > 0) {
-		memcpy(res->ptr + b1, s, slen);
+		memcpy(res->data.cdata.ptr + b1, s, slen);
 	}
 
 	/* Copy remainder of target, if any, into result */
 	if (tlen - b2 > 0) {
-		memcpy(res->ptr + b1 + slen, t + b2, tlen - b2);
+		memcpy(res->data.cdata.ptr + b1 + slen, t + b2, tlen - b2);
 	}
 
-	res->len = tlen + slen - (b2 - b1);
-
-	res->alloc = target->alloc;
-	res->pw = target->pw;
-	res->intern = NULL;
+	res->data.cdata.len = tlen + slen - (b2 - b1);
 
 	res->refcnt = 1;
+
+	res->type = DOM_STRING_CDATA;
 
 	*result = res;
 
 	return DOM_NO_ERR;
-}
-
-/**
- * Duplicate a dom string 
- *
- * \param str     The string to duplicate
- * \param result  Pointer to location to receive result
- * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
- *
- * The returned string will be allocated using the allocation details
- * stored in ::str.
- *
- * The returned string will have its reference count increased. The client
- * should dereference it once it has finished with it.
- */
-dom_exception dom_string_dup(dom_string *str, 
-		dom_string **result)
-{
-	if (str->intern != NULL) {
-		return _dom_string_create_from_lwcstring(str->alloc, str->pw,
-				str->intern, result);
-	} else {
-		return dom_string_create(str->alloc, str->pw, str->ptr,
-				str->len, result);
-	}
 }
 
 /**
@@ -873,9 +743,9 @@ dom_exception dom_string_dup(dom_string *str,
  */
 uint32_t dom_string_hash(dom_string *str)
 {
-	const uint8_t *s = str->ptr;
-	size_t slen = str->len;
-	uint32_t hash = 0x01000193;
+	const uint8_t *s = (const uint8_t *) _dom_string_data(str);
+	size_t slen = _dom_string_byte_length(str);
+	uint32_t hash = 0x811c9dc5;
 
 	while (slen > 0) {
 		hash *= 0x01000193;
@@ -897,15 +767,14 @@ uint32_t dom_string_hash(dom_string *str)
 dom_exception _dom_exception_from_lwc_error(lwc_error err)
 {
 	switch (err) {
-		case lwc_error_ok:
-			return DOM_NO_ERR;
-		case lwc_error_oom:
-			return DOM_NO_MEM_ERR;
-		case lwc_error_range:
-			return DOM_INDEX_SIZE_ERR;
+	case lwc_error_ok:
+		return DOM_NO_ERR;
+	case lwc_error_oom:
+		return DOM_NO_MEM_ERR;
+	case lwc_error_range:
+		return DOM_INDEX_SIZE_ERR;
 	}
-	assert ("Unknow lwc_error, can't convert to dom_exception");
-	/* Suppress compile errors */
+
 	return DOM_NO_ERR;
 }
 
@@ -913,22 +782,30 @@ dom_exception _dom_exception_from_lwc_error(lwc_error err)
  * Get the raw character data of the dom_string.
  *
  * \param str	The dom_string object
- * \return		The C string pointer
+ * \return      The C string pointer
  *
  * @note: This function is just provided for the convenience of accessing the 
  * raw C string character, no change on the result string is allowed.
  */
-char *_dom_string_data(dom_string *str)
+const char *_dom_string_data(dom_string *str)
 {
-	return (char *) str->ptr;
+	if (str->type == DOM_STRING_CDATA) {
+		return (const char *) str->data.cdata.ptr;
+	} else {
+		return lwc_string_data(str->data.intern);
+	}
 }
 
-/* Get the string length of this dom_string 
+/* Get the byte length of this dom_string 
  *
  * \param str	The dom_string object
  */
-size_t _dom_string_length(dom_string *str)
+size_t _dom_string_byte_length(dom_string *str)
 {
-	return str->len;
+	if (str->type == DOM_STRING_CDATA) {
+		return str->data.cdata.len;
+	} else {
+		return lwc_string_length(str->data.intern);
+	}
 }
 

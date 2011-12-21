@@ -42,8 +42,7 @@ dom_document *load_xml(const char *file, bool willBeModified)
 
 	UNUSED(willBeModified);
 
-	parser = dom_xml_parser_create(NULL, NULL, 
-			myrealloc, NULL, mymsg, NULL);
+	parser = dom_xml_parser_create(NULL, NULL, mymsg, NULL);
 	if (parser == NULL) {
 		fprintf(stderr, "Can't create XMLParser\n");
 		return NULL;
@@ -104,8 +103,7 @@ dom_document *load_html(const char *file, bool willBeModified)
 
 	UNUSED(willBeModified);
 
-	parser = dom_hubbub_parser_create(NULL, true,
-			myrealloc, NULL, mymsg, NULL);
+	parser = dom_hubbub_parser_create(NULL, true, mymsg, NULL);
 	if (parser == NULL) {
 		fprintf(stderr, "Can't create Hubbub Parser\n");
 		return NULL;

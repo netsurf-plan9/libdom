@@ -13,28 +13,23 @@
 
 struct dom_comment;
 struct dom_document;
-struct lwc_string_s;
 
 dom_exception _dom_comment_create(struct dom_document *doc,
-		struct lwc_string_s *name, dom_string *value,
-		struct dom_comment **result);
+		dom_string *name, dom_string *value,
+		dom_comment **result);
 
 #define  _dom_comment_initialise _dom_characterdata_initialise
 #define  _dom_comment_finalise _dom_characterdata_finalise
 
-void _dom_comment_destroy(struct dom_document *doc,
-		struct dom_comment *comment);
+void _dom_comment_destroy(dom_comment *comment);
 
 /* Following comes the protected vtable  */
-void __dom_comment_destroy(struct dom_node_internal *node);
-dom_exception _dom_comment_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret);
-dom_exception _dom_comment_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old);
+void __dom_comment_destroy(dom_node_internal *node);
+dom_exception _dom_comment_copy(dom_node_internal *old, 
+		dom_node_internal **copy);
 
 #define DOM_COMMENT_PROTECT_VTABLE \
 	__dom_comment_destroy, \
-	_dom_comment_alloc, \
 	_dom_comment_copy
 
 #endif

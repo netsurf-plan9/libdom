@@ -33,25 +33,24 @@ struct dom_element {
 	struct dom_hash_table *ns_attributes;
 			/**< Attributes with prefix */
 
-	struct lwc_string_s *id_ns;	/**< The id attribute's namespace */
+	dom_string *id_ns;	/**< The id attribute's namespace */
 
-	struct lwc_string_s *id_name; 	/**< The id attribute's name */
+	dom_string *id_name; 	/**< The id attribute's name */
 
 	struct dom_type_info *schema_type_info;	/**< Type information */
 };
 
 dom_exception _dom_element_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct lwc_string_s *namespace,
-		struct lwc_string_s *prefix, struct dom_element **result);
+		dom_string *name, dom_string *namespace,
+		dom_string *prefix, struct dom_element **result);
 
 dom_exception _dom_element_initialise(struct dom_document *doc,
-		struct dom_element *el, struct lwc_string_s *name, 
-		struct lwc_string_s *namespace, struct lwc_string_s *prefix);
+		struct dom_element *el, dom_string *name, 
+		dom_string *namespace, dom_string *prefix);
 
-void _dom_element_finalise(struct dom_document *doc, struct dom_element *ele);
+void _dom_element_finalise(struct dom_element *ele);
 
-void _dom_element_destroy(struct dom_document *doc,
-		struct dom_element *element);
+void _dom_element_destroy(struct dom_element *element);
 
 
 /* The virtual functions of dom_element */
@@ -212,22 +211,18 @@ dom_exception _dom_element_parse_attribute(dom_element *ele,
 		dom_string *name, dom_string *value,
 		dom_string **parsed);
 void __dom_element_destroy(dom_node_internal *node);
-dom_exception _dom_element_alloc(struct dom_document *doc, 
-		struct dom_node_internal *n, struct dom_node_internal **ret);
-dom_exception _dom_element_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old);
+dom_exception _dom_element_copy(dom_node_internal *old, 
+		dom_node_internal **copy);
 
 #define DOM_ELEMENT_PROTECT_VTABLE \
 	_dom_element_parse_attribute
 
 #define DOM_NODE_PROTECT_VTABLE_ELEMENT \
 	__dom_element_destroy, \
-	_dom_element_alloc, \
 	_dom_element_copy
 
 /* Helper functions*/
-dom_exception _dom_element_get_id(struct dom_element *ele, 
-		struct lwc_string_s **id);
+dom_exception _dom_element_get_id(struct dom_element *ele, dom_string **id);
 
 extern struct dom_element_vtable _dom_element_vtable;
 

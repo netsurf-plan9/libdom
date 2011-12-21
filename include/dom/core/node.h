@@ -13,6 +13,7 @@
 
 #include <dom/core/exceptions.h>
 #include <dom/core/string.h>
+#include <dom/events/event_target.h>
 
 struct dom_document;
 struct dom_nodelist;
@@ -81,6 +82,7 @@ typedef struct dom_node {
 
 /* DOM node vtable */
 typedef struct dom_node_vtable {
+	dom_event_target_vtable base;
 
 	/* The DOM level 3 node's oprations */
 	dom_exception (*dom_node_get_node_name)(dom_node_internal *node,

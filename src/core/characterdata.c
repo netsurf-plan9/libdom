@@ -7,6 +7,7 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <dom/core/characterdata.h>
 #include <dom/core/string.h>
@@ -22,6 +23,9 @@
  * public to each child class */
 struct dom_characterdata_vtable characterdata_vtable = {
 	{
+		{
+			DOM_NODE_EVENT_TARGET_VTABLE
+		},
 		DOM_NODE_VTABLE
 	},
 	DOM_CHARACTERDATA_VTABLE
@@ -29,11 +33,9 @@ struct dom_characterdata_vtable characterdata_vtable = {
 
 
 /* Create a DOM characterdata node and compose the vtable */
-dom_characterdata *_dom_characterdata_create(struct dom_document *doc)
+dom_characterdata *_dom_characterdata_create(void)
 {
-	dom_characterdata *cdata = _dom_document_alloc(doc, NULL,
-			sizeof(struct dom_characterdata));
-
+	dom_characterdata *cdata = malloc(sizeof(struct dom_characterdata));
 	if (cdata == NULL)
 		return NULL;
 
@@ -57,7 +59,7 @@ dom_characterdata *_dom_characterdata_create(struct dom_document *doc)
  */
 dom_exception _dom_characterdata_initialise(struct dom_characterdata *cdata,
 		struct dom_document *doc, dom_node_type type,
-		lwc_string *name, dom_string *value)
+		dom_string *name, dom_string *value)
 {
 	return _dom_node_initialise(&cdata->base, doc, type, 
 			name, value, NULL, NULL);
@@ -66,15 +68,13 @@ dom_exception _dom_characterdata_initialise(struct dom_characterdata *cdata,
 /**
  * Finalise a character data node
  *
- * \param doc    The owning document
  * \param cdata  The node to finalise
  *
  * The contents of ::cdata will be cleaned up. ::cdata will not be freed.
  */
-void _dom_characterdata_finalise(struct dom_document *doc,
-		struct dom_characterdata *cdata)
+void _dom_characterdata_finalise(struct dom_characterdata *cdata)
 {
-	_dom_node_finalise(doc, &cdata->base);
+	_dom_node_finalise(&cdata->base);
 }
 
 
@@ -451,34 +451,38 @@ dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 
 /*----------------------------------------------------------------------*/
 
-/* The protected virtual functions of Node, see core/node.h for details 
- *
- * @note: the three following API never be called directly from the virtual
- *	  functions dispatch mechanism, they are here for the code consistent.
- */
+/* The protected virtual functions of Node, see core/node.h for details */
 void _dom_characterdata_destroy(struct dom_node_internal *node)
 {
 	assert("Should never be here" == NULL);
 	UNUSED(node);
 }
 
-/* The memory allocator of this class */
-dom_exception _dom_characterdata_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret)
+/* The copy constructor of this class */
+dom_exception _dom_characterdata_copy(dom_node_internal *old, 
+		dom_node_internal **copy)
 {
-	assert("Should never be here" == NULL);
-	UNUSED(doc);
-	UNUSED(n);
-	UNUSED(ret);
+	dom_characterdata *new_node;
+	dom_exception err;
+
+	new_node = malloc(sizeof(dom_characterdata));
+	if (new_node == NULL)
+		return DOM_NO_MEM_ERR;
+
+	err = dom_characterdata_copy_internal(old, new_node);
+	if (err != DOM_NO_ERR) {
+		free(new_node);
+		return err;
+	}
+
+	*copy = (dom_node_internal *) new_node;
 
 	return DOM_NO_ERR;
 }
 
-/* The copy constructor of this class
- * The sub-class of characterdata should call this API */
-dom_exception _dom_characterdata_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old)
+dom_exception _dom_characterdata_copy_internal(dom_characterdata *old,
+		dom_characterdata *new)
 {
-	return _dom_node_copy(new, old);
+	return dom_node_copy_internal(old, new);
 }
 

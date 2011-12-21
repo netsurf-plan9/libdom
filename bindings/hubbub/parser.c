@@ -38,9 +38,6 @@ struct dom_hubbub_parser {
 
 	bool complete;			/**< Indicate stream completion */
 
-	dom_alloc alloc;		/**< Memory (de)allocation function */
-	void *pw;			/**< Pointer to client data */
-
 	dom_msg msg;		/**< Informational messaging function */
 	void *mctx;		/**< Pointer to client data */
 };
@@ -97,27 +94,40 @@ static hubbub_tree_handler tree_handler = {
 	NULL
 };
 
+static void *dom_hubbub_alloc(void *ptr, size_t len, void *pw)
+{
+	UNUSED(pw);
+
+	if (ptr == NULL)
+		return len > 0 ? malloc(len) : NULL;
+
+	if (len == 0) {
+		free(ptr);
+		return NULL;
+	}
+
+	return realloc(ptr, len);
+}
+
 /**
  * Create a Hubbub parser instance
  *
  * \param enc      Source charset, or NULL
  * \param fix_enc  Whether fix the encoding
- * \param alloc    Memory (de)allocation function
- * \param pw       Pointer to client-specific private data
  * \param msg      Informational message function
  * \param mctx     Pointer to client-specific private data
  * \return Pointer to instance, or NULL on memory exhaustion
  */
 dom_hubbub_parser *dom_hubbub_parser_create(
 		const char *enc, bool fix_enc,
-		dom_alloc alloc, void *pw, dom_msg msg, void *mctx)
+		dom_msg msg, void *mctx)
 {
 	dom_hubbub_parser *parser;
 	hubbub_parser_optparams params;
 	hubbub_error error;
 	dom_exception err;
 
-	parser = alloc(NULL, sizeof(dom_hubbub_parser), pw);
+	parser = dom_hubbub_alloc(NULL, sizeof(dom_hubbub_parser), NULL);
 	if (parser == NULL) {
 		msg(DOM_MSG_CRITICAL, mctx, "No memory for parsing context");
 		return NULL;
@@ -130,14 +140,13 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 					      : ENCODING_SOURCE_DETECTED;
 	parser->complete = false;
 
-	parser->alloc = alloc;
-	parser->pw = pw;
 	parser->msg = msg;
 	parser->mctx = mctx;
 
-	error = hubbub_parser_create(enc, fix_enc, alloc, pw, &parser->parser);
+	error = hubbub_parser_create(enc, fix_enc, dom_hubbub_alloc, NULL, 
+			&parser->parser);
 	if (error != HUBBUB_OK)	 {
-		parser->alloc(parser, 0, parser->pw);
+		dom_hubbub_alloc(parser, 0, NULL);
 		msg(DOM_MSG_CRITICAL, mctx, "Can't create parser");
 		return NULL;
 	}
@@ -147,10 +156,10 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 	 * Netsurf */
 	err = dom_implementation_create_document(DOM_IMPLEMENTATION_HTML,
 			NULL, NULL, NULL,
-			alloc, pw, NULL, &parser->doc);
+			NULL, &parser->doc);
 	if (err != DOM_NO_ERR) {
 		hubbub_parser_destroy(parser->parser);
-		alloc(parser, 0, pw);
+		dom_hubbub_alloc(parser, 0, NULL);
 		msg(DOM_MSG_ERROR, mctx, "Can't create DOM document");
 		return NULL;
 	}
@@ -185,7 +194,7 @@ void dom_hubbub_parser_destroy(dom_hubbub_parser *parser)
 		parser->doc = NULL;
 	}
 
-	parser->alloc(parser, 0, parser->pw);
+	dom_hubbub_alloc(parser, 0, NULL);
 }
 
 /**
@@ -219,9 +228,9 @@ dom_hubbub_error dom_hubbub_parser_parse_chunk(dom_hubbub_parser *parser,
  */
 dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
 {
+	dom_exception derr;
 	hubbub_error err;
-	lwc_string *name = NULL;
-	lwc_error lerr;
+	dom_string *name = NULL;
 
 	err = hubbub_parser_completed(parser->parser);
 	if (err != HUBBUB_OK) {
@@ -232,12 +241,12 @@ dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
 
 	parser->complete = true;
 
-	lerr = lwc_intern_string("id", strlen("id"), &name);
-	if (lerr != lwc_error_ok)
+	derr = dom_string_create((const uint8_t *) "id", SLEN("id"), &name);
+	if (derr != DOM_NO_ERR)
 		return HUBBUB_UNKNOWN;
 	
 	_dom_document_set_id_name(parser->doc, name);
-	lwc_string_unref(name);
+	dom_string_unref(name);
 
 	return DOM_HUBBUB_OK;
 }
@@ -288,8 +297,7 @@ static hubbub_error create_comment(void *parser, const hubbub_string *data,
 
 	*result = NULL;
 
-	err = dom_string_create(dom_parser->alloc, dom_parser->pw, data->ptr,
-			data->len, &str);
+	err = dom_string_create(data->ptr, data->len, &str);
 	if (err != DOM_NO_ERR) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't create comment node text");
@@ -355,8 +363,7 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 	}
 
 	err = dom_implementation_create_document_type(qname,
-			public_id, system_id, dom_parser->alloc, 
-			dom_parser->pw, &dtype);
+			public_id, system_id, &dtype);
 	if (err != DOM_NO_ERR) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't create the document type");
@@ -392,8 +399,7 @@ static hubbub_error create_element(void *parser, const hubbub_tag *tag,
 
 	*result = NULL;
 
-	err = dom_string_create(dom_parser->alloc, dom_parser->pw, 
-			tag->name.ptr, tag->name.len, &name);
+	err = dom_string_create(tag->name.ptr, tag->name.len, &name);
 	if (err != DOM_NO_ERR) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't create element name");
@@ -448,8 +454,7 @@ static hubbub_error create_text(void *parser, const hubbub_string *data,
 
 	*result = NULL;
 
-	err = dom_string_create(dom_parser->alloc, dom_parser->pw, data->ptr,
-			data->len, &str);
+	err = dom_string_create(data->ptr, data->len, &str);
 	if (err != DOM_NO_ERR) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't create text '%.*s'", data->len, 
@@ -691,8 +696,7 @@ static hubbub_error add_attributes(void *parser, void *node,
 
 	for (i = 0; i < n_attributes; i++) {
 		dom_string *name, *value;
-		err = dom_string_create(dom_parser->alloc, dom_parser->pw,
-				attributes[i].name.ptr,
+		err = dom_string_create(attributes[i].name.ptr,
 				attributes[i].name.len, &name);
 		if (err != DOM_NO_ERR) {
 			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
@@ -700,8 +704,7 @@ static hubbub_error add_attributes(void *parser, void *node,
 			goto fail;
 		}
 
-		err = dom_string_create(dom_parser->alloc, dom_parser->pw,
-				attributes[i].value.ptr,
+		err = dom_string_create(attributes[i].value.ptr,
 				attributes[i].value.len, &value);
 		if (err != DOM_NO_ERR) {
 			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,

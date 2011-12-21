@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <libwapcaplet/libwapcaplet.h>
 
@@ -34,7 +35,7 @@ dom_exception _dom_html_collection_create(struct dom_document *doc,
 		dom_callback_is_in_collection ic,
 		struct dom_html_collection **col)
 {
-	*col = _dom_document_alloc(doc, NULL, sizeof(dom_html_collection));
+	*col = malloc(sizeof(dom_html_collection));
 	if (*col == NULL)
 		return DOM_NO_MEM_ERR;
 	
@@ -94,10 +95,9 @@ void _dom_html_collection_finalise(struct dom_html_collection *col)
  */
 void _dom_html_collection_destroy(struct dom_html_collection *col)
 {
-	struct dom_document *doc = col->doc;
 	_dom_html_collection_finalise(col);
 
-	_dom_document_alloc(doc, col, 0);
+	free(col);
 }
 
 
@@ -210,33 +210,27 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
 {
 	struct dom_node_internal *n = col->root;
 	dom_exception err;
-	lwc_string *str = NULL;
-	err = _dom_node_get_intern_string(n, name, &str);
-	if (err != DOM_NO_ERR)
-		return err;
-
 
 	while (node != NULL) {
 		if (n->type == DOM_ELEMENT_NODE && col->ic(n) == true) {
-			lwc_string *id = NULL;
+			dom_string *id = NULL;
+
 			err = _dom_element_get_id((struct dom_element *) n,
 					&id);
 			if (err != DOM_NO_ERR) {
-				_dom_node_unref_intern_string(n, id);
 				return err;
 			}
 
-			/* Compare the lwc_string directly */
-			if (str == id) {
+			if (id != NULL && dom_string_isequal(name, id)) {
 				*node = (struct dom_node *) n;
 				dom_node_ref(n);
-				_dom_node_unref_intern_string(n, id);
-				_dom_node_unref_intern_string(n, str);
-				
+				dom_string_unref(id);
+
 				return DOM_NO_ERR;
 			}
 
-			_dom_node_unref_intern_string(n, id);
+			if (id != NULL)
+				dom_string_unref(id);
 		}
 
 		/* Depth first iterating */
@@ -263,7 +257,6 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
 
 	/* Not found the target node */
 	*node = NULL;
-	_dom_node_unref_intern_string(n, str);
 
 	return DOM_NO_ERR;
 }

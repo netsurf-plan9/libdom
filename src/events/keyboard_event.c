@@ -5,6 +5,7 @@
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "events/keyboard_event.h"
@@ -22,7 +23,7 @@ static struct dom_event_private_vtable _event_vtable = {
 dom_exception _dom_keyboard_event_create(struct dom_document *doc, 
 		struct dom_keyboard_event **evt)
 {
-	*evt = _dom_document_alloc(doc, NULL, sizeof(dom_keyboard_event));
+	*evt = malloc(sizeof(dom_keyboard_event));
 	if (*evt == NULL) 
 		return DOM_NO_MEM_ERR;
 	
@@ -32,12 +33,11 @@ dom_exception _dom_keyboard_event_create(struct dom_document *doc,
 }
 
 /* Destructor */
-void _dom_keyboard_event_destroy(struct dom_document *doc, 
-		struct dom_keyboard_event *evt)
+void _dom_keyboard_event_destroy(struct dom_keyboard_event *evt)
 {
-	_dom_keyboard_event_finalise(doc, evt);
+	_dom_keyboard_event_finalise(evt);
 
-	_dom_document_alloc(doc, evt, 0);
+	free(evt);
 }
 
 /* Initialise function */
@@ -51,16 +51,15 @@ dom_exception _dom_keyboard_event_initialise(struct dom_document *doc,
 }
 
 /* Finalise function */
-void _dom_keyboard_event_finalise(struct dom_document *doc, 
-		struct dom_keyboard_event *evt)
+void _dom_keyboard_event_finalise(struct dom_keyboard_event *evt)
 {
-	_dom_ui_event_finalise(doc, &evt->base);
+	_dom_ui_event_finalise(&evt->base);
 }
 
 /* The virtual destroy function */
 void _virtual_dom_keyboard_event_destroy(struct dom_event *evt)
 {
-	_dom_keyboard_event_destroy(evt->doc, (dom_keyboard_event *) evt);
+	_dom_keyboard_event_destroy((dom_keyboard_event *) evt);
 }
 
 /*----------------------------------------------------------------------*/
@@ -179,7 +178,7 @@ dom_exception _dom_keyboard_event_get_modifier_state(dom_keyboard_event *evt,
 	}
 
 	const char *data = _dom_string_data(m);
-	size_t len = _dom_string_length(m);
+	size_t len = _dom_string_byte_length(m);
 
 	if (len == SLEN("AltGraph") && strncmp(data, "AltGraph", len) == 0) {
 		*state = ((evt->modifier_state & DOM_MOD_ALT_GRAPH) != 0);
@@ -292,8 +291,8 @@ dom_exception _dom_parse_modifier_list(dom_string *modifier_list,
 	if (modifier_list == NULL)
 		return DOM_NO_ERR;
 	
-	char *data = _dom_string_data(modifier_list);
-	char *m = data;
+	const char *data = _dom_string_data(modifier_list);
+	const char *m = data;
 	size_t len = 0;
 
 	while (true) {

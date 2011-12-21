@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include "html/html_document.h"
 
@@ -13,29 +14,24 @@
 #include "utils/utils.h"
 
 /* Create a HTMLDocument */
-dom_exception dom_html_document_create(dom_alloc alloc, void *pw, dom_msg msg,
-		void *msg_pw,
+dom_exception dom_html_document_create(dom_msg msg, void *msg_pw,
 		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
 		dom_parser_type pt, dom_html_document **doc)
 {
-	assert(alloc != NULL);
-	*doc = alloc(NULL, sizeof(dom_html_document), pw);
+	*doc = malloc(sizeof(dom_html_document));
 	if (*doc == NULL)
 		return DOM_NO_MEM_ERR;
 	
-	return _dom_html_document_initialise(*doc, alloc, pw, msg, msg_pw,
-			daf, ui, pt);
+	return _dom_html_document_initialise(*doc, msg, msg_pw, daf, ui, pt);
 }
 
 /* Initialise a HTMLDocument */
 dom_exception _dom_html_document_initialise(dom_html_document *doc,
-		dom_alloc alloc, void *pw, dom_msg msg, void *msg_pw,
+		dom_msg msg, void *msg_pw,
 		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
 		dom_parser_type pt)
 {
 	UNUSED(doc);
-	UNUSED(alloc);
-	UNUSED(pw);
 	UNUSED(msg);
 	UNUSED(msg_pw);
 	UNUSED(daf);

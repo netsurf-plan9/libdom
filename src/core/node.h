@@ -41,10 +41,7 @@ typedef struct dom_node_protect_vtable {
 	void (*destroy)(dom_node_internal *n);
 					/**< The destroy virtual function, it 
 					 * should be private to client */
-	dom_exception (*alloc)(struct dom_document *doc, 
-			dom_node_internal *n, dom_node_internal **ret);
-				/**< Allocate the memory of the new Node */
-	dom_exception (*copy)(dom_node_internal *new, dom_node_internal *old);
+	dom_exception (*copy)(dom_node_internal *old, dom_node_internal **copy);
 				/**< Copy the old to new as well as 
 				 * all its attributes, but not its children */
 } dom_node_protect_vtable; 
@@ -58,10 +55,10 @@ struct dom_node_internal {
 	struct dom_node base;		/**< The vtable base */
 	void *vtable;			/**< The protected vtable */
 
-	struct lwc_string_s *name;	/**< Node name (this is the local part
+	dom_string *name;		/**< Node name (this is the local part
 		 			 * of a QName in the cases where a
 		 			 * namespace exists) */
-	dom_string *value;	/**< Node value */
+	dom_string *value;		/**< Node value */
 	dom_node_type type;		/**< Node type */
 	dom_node_internal *parent;	/**< Parent node */
 	dom_node_internal *first_child;	/**< First child node */
@@ -71,8 +68,8 @@ struct dom_node_internal {
 
 	struct dom_document *owner;	/**< Owning document */
 
-	struct lwc_string_s *namespace;	/**< Namespace URI */
-	struct lwc_string_s *prefix;	/**< Namespace prefix */
+	dom_string *namespace;		/**< Namespace URI */
+	dom_string *prefix;		/**< Namespace prefix */
 
 	struct dom_user_data *user_data;	/**< User data list */
 
@@ -83,25 +80,32 @@ struct dom_node_internal {
 	dom_event_target_internal eti;	/**< The EventTarget interface */
 };
 
-dom_node_internal * _dom_node_create(struct dom_document *doc);
+dom_node_internal * _dom_node_create(void);
 
 dom_exception _dom_node_initialise(struct dom_node_internal *node,
 		struct dom_document *doc, dom_node_type type,
-		struct lwc_string_s *name, dom_string *value,
-		struct lwc_string_s *namespace, struct lwc_string_s *prefix);
+		dom_string *name, dom_string *value,
+		dom_string *namespace, dom_string *prefix);
 
-dom_exception _dom_node_initialise_generic(
-		struct dom_node_internal *node, struct dom_document *doc,
-		dom_alloc alloc, void *pw,
-	 	dom_node_type type, struct lwc_string_s *name, 
-		dom_string *value, struct lwc_string_s *namespace, 
-		struct lwc_string_s *prefix);
-
-void _dom_node_finalise(struct dom_document *doc, dom_node_internal *node);
-void _dom_node_finalise_generic(dom_node_internal *node, dom_alloc alloc, 
-		void *pw);
+void _dom_node_finalise(dom_node_internal *node);
 
 bool _dom_node_readonly(const dom_node_internal *node);
+
+/* Event Target implementation */
+dom_exception _dom_node_add_event_listener(dom_event_target *et,
+		dom_string *type, struct dom_event_listener *listener, 
+		bool capture);
+dom_exception _dom_node_remove_event_listener(dom_event_target *et,
+		dom_string *type, struct dom_event_listener *listener, 
+		bool capture);
+dom_exception _dom_node_add_event_listener_ns(dom_event_target *et,
+		dom_string *namespace, dom_string *type, 
+		struct dom_event_listener *listener, bool capture);
+dom_exception _dom_node_remove_event_listener_ns(dom_event_target *et,
+		dom_string *namespace, dom_string *type, 
+		struct dom_event_listener *listener, bool capture);
+dom_exception _dom_node_dispatch_event(dom_event_target *et,
+		struct dom_event *evt, bool *success);
 
 /* The DOM Node's vtable methods */
 dom_exception _dom_node_get_node_name(dom_node_internal *node,
@@ -183,6 +187,13 @@ dom_exception _dom_node_set_user_data(dom_node_internal *node,
 dom_exception _dom_node_get_user_data(dom_node_internal *node,
 		dom_string *key, void **result);
 
+#define DOM_NODE_EVENT_TARGET_VTABLE \
+	_dom_node_add_event_listener, \
+	_dom_node_remove_event_listener, \
+	_dom_node_dispatch_event, \
+	_dom_node_add_event_listener_ns, \
+	_dom_node_remove_event_listener_ns
+
 #define DOM_NODE_VTABLE \
 	_dom_node_get_node_name, \
 	_dom_node_get_node_value, \
@@ -225,14 +236,11 @@ dom_exception _dom_node_get_user_data(dom_node_internal *node,
 
 /* Following comes the protected vtable */
 void _dom_node_destroy(struct dom_node_internal *node);
-dom_exception _dom_node_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret);
-dom_exception _dom_node_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old);
+dom_exception _dom_node_copy(struct dom_node_internal *old, 
+		struct dom_node_internal **copy);
 
 #define DOM_NODE_PROTECT_VTABLE \
 	_dom_node_destroy, \
-	_dom_node_alloc, \
 	_dom_node_copy
 
 
@@ -243,26 +251,21 @@ static inline void dom_node_destroy(struct dom_node_internal *node)
 }
 #define dom_node_destroy(n) dom_node_destroy((dom_node_internal *) (n))
 
-/* Allocate the Node */
-static inline dom_exception dom_node_alloc(struct dom_document *doc, 
-		struct dom_node_internal *n, struct dom_node_internal **ret)
-{
-	return ((dom_node_protect_vtable *) n->vtable)->alloc(doc, n, ret);
-}
-#define dom_node_alloc(d,n,r) dom_node_alloc((struct dom_document *) (d), \
-		(dom_node_internal *) (n), (dom_node_internal **) (r))
-
-
 /* Copy the Node old to new */
-static inline dom_exception dom_node_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old)
+static inline dom_exception dom_node_copy(struct dom_node_internal *old, 
+		struct dom_node_internal **copy)
 {
-	return ((dom_node_protect_vtable *) old->vtable)->copy(new, old);
+	return ((dom_node_protect_vtable *) old->vtable)->copy(old, copy);
 }
-#define dom_node_copy(n,o) dom_node_copy((dom_node_internal *) (n), \
-		(dom_node_internal *) (o))
+#define dom_node_copy(o,c) dom_node_copy((dom_node_internal *) (o), \
+		(dom_node_internal **) (c))
 
 /* Following are some helper functions */
+dom_exception _dom_node_copy_internal(dom_node_internal *old, 
+		dom_node_internal *new);
+#define dom_node_copy_internal(o, n) _dom_node_copy_internal( \
+		(dom_node_internal *) (o), (dom_node_internal *) (n))
+
 #define dom_node_get_owner(n) ((dom_node_internal *) (n))->owner
 
 #define dom_node_set_owner(n, d) ((dom_node_internal *) (n))->owner = \
@@ -275,19 +278,8 @@ static inline dom_exception dom_node_copy(struct dom_node_internal *new,
 
 #define dom_node_get_refcount(n) ((dom_node_internal *) (n))->refcnt
 
-dom_exception _redocument_domstring(struct dom_document *old, 
-		struct dom_document* new, dom_string **string);
 dom_exception _dom_merge_adjacent_text(dom_node_internal *p,
 		dom_node_internal *n);
-/* Used to extract the lwc_string from dom_string.
- * If there is no lwc_string inside the param, create one use the node->owner
- * as document */
-dom_exception _dom_node_get_intern_string(dom_node_internal *node, 
-		dom_string *str, struct lwc_string_s **intern);
-void _dom_node_unref_intern_string(dom_node_internal *node, 
-		struct lwc_string_s *inter);
-dom_exception _dom_node_create_lwcstring(dom_node_internal *node,
-		const uint8_t *data, size_t len, struct lwc_string_s **str);
 
 /* Try to destroy the node, if its refcnt is not zero, then append it to the
  * owner document's pending list */
@@ -303,5 +295,16 @@ void _dom_node_mark_pending(dom_node_internal *node);
 void _dom_node_remove_pending(dom_node_internal *node);
 #define dom_node_remove_pending(n) _dom_node_remove_pending(\
 		(dom_node_internal *) (n))
+
+dom_exception _dom_node_dispatch_node_change_event(dom_document *doc,
+		dom_node_internal *node, dom_node_internal *related,
+		dom_mutation_type change, bool *success);
+#define dom_node_dispatch_node_change_event( \
+		doc, node, related, change, success) \
+	_dom_node_dispatch_node_change_event((dom_document *) (doc), \
+			(dom_node_internal *) (node), \
+			(dom_node_internal *) (related), \
+			(dom_mutation_type) (change), \
+			(bool *) (success))
 
 #endif

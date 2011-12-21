@@ -8,30 +8,30 @@
  */
 
 #include <assert.h>
-
-#include <dom/core/document_type.h>
+#include <stdlib.h>
 
 #include "core/string.h"
 #include "core/document_type.h"
+#include "core/namednodemap.h"
 #include "core/node.h"
 #include "utils/utils.h"
 #include "utils/namespace.h"
-#include "utils/resource_mgr.h"
 
 /**
  * DOM DocumentType node
  */
 struct dom_document_type {
-	struct dom_node_internal base;		/**< Base node */
+	dom_node_internal base;		/**< Base node */
 
 	dom_string *public_id;	/**< Doctype public ID */
 	dom_string *system_id;	/**< Doctype system ID */
-
-	struct dom_resource_mgr res;	/**< resource_mgr of this node */
 };
 
 static struct dom_document_type_vtable document_type_vtable = {
 	{
+		{
+			DOM_NODE_EVENT_TARGET_VTABLE
+		},
 		DOM_NODE_VTABLE	
 	},
 	DOM_DOCUMENT_TYPE_VTABLE
@@ -63,14 +63,13 @@ static struct dom_node_protect_vtable dt_protect_vtable = {
  */
 dom_exception _dom_document_type_create(dom_string *qname,
 		dom_string *public_id, dom_string *system_id,
-		dom_alloc alloc, void *pw,
-		struct dom_document_type **doctype)
+		dom_document_type **doctype)
 {
-	struct dom_document_type *result;
+	dom_document_type *result;
 	dom_exception err;
 
 	/* Create node */
-	result = alloc(NULL, sizeof(struct dom_document_type), pw);
+	result = malloc(sizeof(dom_document_type));
 	if (result == NULL)
 		return DOM_NO_MEM_ERR;
 
@@ -78,8 +77,12 @@ dom_exception _dom_document_type_create(dom_string *qname,
 	result->base.base.vtable = &document_type_vtable;
 	result->base.vtable = &dt_protect_vtable;
 	
-	err = _dom_document_type_initialise(result, qname, public_id, system_id,
-			alloc, pw);
+	err = _dom_document_type_initialise(result, qname, 
+			public_id, system_id);
+	if (err != DOM_NO_ERR) {
+		free(result);
+		return err;
+	}
 
 	*doctype = result;
 
@@ -93,62 +96,37 @@ dom_exception _dom_document_type_create(dom_string *qname,
  *
  * The contents of ::doctype will be destroyed and ::doctype will be freed.
  */
-void _dom_document_type_destroy(struct dom_node_internal *doctypenode)
+void _dom_document_type_destroy(dom_node_internal *doctypenode)
 {
-	struct dom_document_type *doctype = 
-			(struct dom_document_type *)doctypenode;
+	dom_document_type *doctype = (dom_document_type *) doctypenode;
 
 	/* Finalise base class */
 	_dom_document_type_finalise(doctype);
 
 	/* Free doctype */
-	doctype->res.alloc(doctype, 0, doctype->res.pw);
+	free(doctype);
 }
 
 /* Initialise this document_type */
-dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
+dom_exception _dom_document_type_initialise(dom_document_type *doctype,
 		dom_string *qname, dom_string *public_id,
-		dom_string *system_id, dom_alloc alloc, void *pw)
+		dom_string *system_id)
 {
+	dom_string *prefix, *localname;
 	dom_exception err;
 
-	dom_string *prefix, *localname;
 	err = _dom_namespace_split_qname(qname, &prefix, &localname);
-	if (err != DOM_NO_ERR) {
-		alloc(doctype, 0, pw);
+	if (err != DOM_NO_ERR)
 		return err;
-	}
-
-	lwc_string *lprefix = NULL, *lname = NULL;
-	if (prefix != NULL) {
-		err = _dom_string_intern(prefix, &lprefix);
-		if (err != DOM_NO_ERR) {
-			dom_string_unref(prefix);
-			dom_string_unref(localname);
-			alloc(doctype, 0, pw);
-			return err;
-		}
-	}
-
-	if (localname != NULL) {
-		err = _dom_string_intern(localname, &lname);
-		if (err != DOM_NO_ERR) {
-			dom_string_unref(prefix);
-			dom_string_unref(localname);
-			if (lprefix != NULL)
-				lwc_string_unref(lprefix);
-			alloc(doctype, 0, pw);
-			return err;
-		}
-	}
 
 	/* TODO: I should figure out how the namespaceURI can be got */
 
 	/* Initialise base node */
-	err = _dom_node_initialise_generic(&doctype->base, NULL, alloc, pw,
-			DOM_DOCUMENT_TYPE_NODE, lname, NULL, NULL, lprefix);
+	err = _dom_node_initialise(&doctype->base, NULL,
+			DOM_DOCUMENT_TYPE_NODE, localname, NULL, NULL, prefix);
 	if (err != DOM_NO_ERR) {
-		alloc(doctype, 0, pw);
+		dom_string_unref(prefix);
+		dom_string_unref(localname);
 		return err;
 	}
 
@@ -166,15 +144,11 @@ dom_exception _dom_document_type_initialise(struct dom_document_type *doctype,
 	if (localname != NULL)
 		dom_string_unref(localname);
 
-	/* Fill in allocation information */
-	doctype->res.alloc = alloc;
-	doctype->res.pw = pw;
-
 	return DOM_NO_ERR;
 }
 
 /* The destructor function of dom_document_type */
-void _dom_document_type_finalise(struct dom_document_type *doctype)
+void _dom_document_type_finalise(dom_document_type *doctype)
 {
 	if (doctype->public_id != NULL)
 		dom_string_unref(doctype->public_id);
@@ -183,8 +157,7 @@ void _dom_document_type_finalise(struct dom_document_type *doctype)
 	
 	assert(doctype->base.owner != NULL || doctype->base.user_data == NULL);
 	
-	_dom_node_finalise_generic(&doctype->base, doctype->res.alloc, 
-			doctype->res.pw);
+	_dom_node_finalise(&doctype->base);
 }
 
 
@@ -206,7 +179,7 @@ void _dom_document_type_finalise(struct dom_document_type *doctype)
  * We don't support this API now, so this function call should always
  * return DOM_NOT_SUPPORTED_ERR.
  */
-dom_exception _dom_document_type_get_name(struct dom_document_type *doc_type,
+dom_exception _dom_document_type_get_name(dom_document_type *doc_type,
 		dom_string **result)
 {
 	return dom_node_get_node_name(doc_type, result);
@@ -227,8 +200,8 @@ dom_exception _dom_document_type_get_name(struct dom_document_type *doc_type,
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_entities(
-		struct dom_document_type *doc_type,
-		struct dom_namednodemap **result)
+		dom_document_type *doc_type,
+		dom_namednodemap **result)
 {
 	UNUSED(doc_type);
 	UNUSED(result);
@@ -251,8 +224,8 @@ dom_exception _dom_document_type_get_entities(
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_notations(
-		struct dom_document_type *doc_type,
-		struct dom_namednodemap **result)
+		dom_document_type *doc_type,
+		dom_namednodemap **result)
 {
 	UNUSED(doc_type);
 	UNUSED(result);
@@ -275,7 +248,7 @@ dom_exception _dom_document_type_get_notations(
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_public_id(
-		struct dom_document_type *doc_type,
+		dom_document_type *doc_type,
 		dom_string **result)
 {
 	UNUSED(doc_type);
@@ -299,7 +272,7 @@ dom_exception _dom_document_type_get_public_id(
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_system_id(
-		struct dom_document_type *doc_type,
+		dom_document_type *doc_type,
 		dom_string **result)
 {
 	UNUSED(doc_type);
@@ -323,7 +296,7 @@ dom_exception _dom_document_type_get_system_id(
  * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_internal_subset(
-		struct dom_document_type *doc_type,
+		dom_document_type *doc_type,
 		dom_string **result)
 {
 	UNUSED(doc_type);
@@ -337,42 +310,17 @@ dom_exception _dom_document_type_get_internal_subset(
 /* Overload protected virtual functions */
 
 /* The virtual destroy function of this class */
-void _dom_dt_destroy(struct dom_node_internal *node)
+void _dom_dt_destroy(dom_node_internal *node)
 {
 	_dom_document_type_destroy(node);
 }
 
-/* The memory allocator of this class */
-dom_exception _dom_dt_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret)
-{
-	UNUSED(doc);
-	UNUSED(n);
-	UNUSED(ret);
-
-	return DOM_NOT_SUPPORTED_ERR;
-}
-
 /* The copy constructor of this class */
-dom_exception _dom_dt_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old)
+dom_exception _dom_dt_copy(dom_node_internal *old, dom_node_internal **copy)
 {
-	UNUSED(new);
 	UNUSED(old);
+	UNUSED(copy);
 
 	return DOM_NOT_SUPPORTED_ERR;
-}
-
-
-/*----------------------------------------------------------------------*/
-
-/* Helper functions */
-
-/* Get the resource manager of this object */
-void _dom_document_type_get_resource_mgr(
-		struct dom_document_type *dt, struct dom_resource_mgr *rm)
-{
-	rm->alloc = dt->res.alloc;
-	rm->pw = dt->res.pw;
 }
 

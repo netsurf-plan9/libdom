@@ -13,33 +13,25 @@
 #include <dom/functypes.h>
 
 typedef struct dom_hash_table dom_hash_table;
-/* The hash function */
-typedef unsigned int (*dom_hash_func)(void *key);
-/* Function to clone/delete key */
-typedef void *(*dom_key_func)(void *key, void *pw, dom_alloc alloc, 
-		void *alloc_pw, bool clone);
-/* Function to clone/delete value */
-typedef void *(*dom_value_func)(void *value, void *pw, dom_alloc alloc,
-		void *alloc_pw, bool clone);
 
-struct dom_hash_table *_dom_hash_create(unsigned int chains, dom_hash_func hash,
-		dom_alloc alloc, void *ptr);
-struct dom_hash_table *_dom_hash_clone(struct dom_hash_table *ht, 
-		dom_alloc alloc, void *pw, dom_key_func kf, void *key_pw, 
-		dom_value_func vf, void *value_pw);
-void _dom_hash_destroy(struct dom_hash_table *ht, dom_key_func kf, void *key_pw,
-		dom_value_func vf, void *value_pw);
-bool _dom_hash_add(struct dom_hash_table *ht, void *key, void *value, 
+typedef struct dom_hash_vtable {
+	uint32_t (*hash)(void *key, void *pw);
+	void *(*clone_key)(void *key, void *pw);
+	void (*destroy_key)(void *key, void *pw);
+	void *(*clone_value)(void *value, void *pw);
+	void (*destroy_value)(void *value, void *pw);
+	bool (*key_isequal)(void *key1, void *key2, void *pw);
+} dom_hash_vtable;
+
+dom_hash_table *_dom_hash_create(unsigned int chains, 
+		const dom_hash_vtable *vtable, void *pw);
+dom_hash_table *_dom_hash_clone(dom_hash_table *ht);
+void _dom_hash_destroy(dom_hash_table *ht);
+bool _dom_hash_add(dom_hash_table *ht, void *key, void *value, 
 		bool replace);
-void *_dom_hash_get(struct dom_hash_table *ht, void *key);
-void *_dom_hash_del(struct dom_hash_table *ht, void *key);
-void *_dom_hash_iterate(struct dom_hash_table *ht, unsigned int *c1,
-		unsigned int **c2);
-unsigned int _dom_hash_get_length(struct dom_hash_table *ht);
-unsigned int _dom_hash_get_chains(struct dom_hash_table *ht);
-dom_hash_func _dom_hash_get_func(struct dom_hash_table *ht);
-
-/*-----------------------------------------------------------------------*/
-unsigned int _dom_hash_hash_lwcstring(void *key);
+void *_dom_hash_get(dom_hash_table *ht, void *key);
+void *_dom_hash_del(dom_hash_table *ht, void *key);
+void *_dom_hash_iterate(dom_hash_table *ht, uintptr_t *c1, uintptr_t **c2);
+uint32_t _dom_hash_get_length(dom_hash_table *ht);
 
 #endif

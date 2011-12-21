@@ -15,7 +15,6 @@
 struct dom_document;
 struct dom_node;
 struct dom_nodelist;
-struct lwc_string_s;
 
 /**
  * The NodeList type
@@ -28,14 +27,14 @@ typedef enum {
 
 /* Create a nodelist */
 dom_exception _dom_nodelist_create(struct dom_document *doc, nodelist_type type,
-		struct dom_node_internal *root, struct lwc_string_s *tagname,
-		struct lwc_string_s *namespace, struct lwc_string_s *localname,
+		struct dom_node_internal *root, dom_string *tagname,
+		dom_string *namespace, dom_string *localname,
 		struct dom_nodelist **list);
 
 /* Match a nodelist instance against a set of nodelist creation parameters */
 bool _dom_nodelist_match(struct dom_nodelist *list, nodelist_type type,
-		struct dom_node_internal *root, struct lwc_string_s *tagname, 
-		struct lwc_string_s *namespace, struct lwc_string_s *localname);
+		struct dom_node_internal *root, dom_string *tagname, 
+		dom_string *namespace, dom_string *localname);
 
 bool _dom_nodelist_equal(struct dom_nodelist *l1, struct dom_nodelist *l2);
 #define dom_nodelist_equal(l1, l2) _dom_nodelist_equal( \

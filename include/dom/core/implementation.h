@@ -36,14 +36,12 @@ dom_exception dom_implementation_has_feature(
 dom_exception dom_implementation_create_document_type(
 		const char *qname,
 		const char *public_id, const char *system_id,
-		dom_alloc alloc, void *pw,
 		struct dom_document_type **doctype);
 
 dom_exception dom_implementation_create_document(
 		uint32_t impl_type,
 		const char *namespace, const char *qname,
 		struct dom_document_type *doctype,
-		dom_alloc alloc, void *pw,
 		dom_events_default_action_fetcher daf,
 		struct dom_document **doc);
 

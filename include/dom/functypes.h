@@ -12,11 +12,6 @@
 #include <inttypes.h>
 
 /**
- * Type of allocation function for DOM implementation
- */
-typedef void *(*dom_alloc)(void *ptr, size_t size, void *pw);
-
-/**
  * Severity levels for dom_msg function, based on syslog(3)
  */
 enum {

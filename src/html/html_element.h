@@ -28,18 +28,15 @@ struct dom_html_element {
 };
 
 dom_exception _dom_html_element_initialise(struct dom_document *doc,
-		struct dom_html_element *el, struct lwc_string_s *name, 
-		struct lwc_string_s *namespace, struct lwc_string_s *prefix);
+		struct dom_html_element *el, dom_string *name, 
+		dom_string *namespace, dom_string *prefix);
 
-void _dom_html_element_finalise(struct dom_document *doc,
-		struct dom_html_element *ele);
+void _dom_html_element_finalise(struct dom_html_element *ele);
 
 /* The protected virtual functions */
 void _dom_virtual_html_element_destroy(dom_node_internal *node);
-dom_exception _dom_html_element_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret);
-dom_exception _dom_html_element_copy(struct dom_node_internal *new,
-		struct dom_node_internal *old);
+dom_exception _dom_html_element_copy(dom_node_internal *old,
+		dom_node_internal **copy);
 
 /* The API functions */
 dom_exception _dom_html_element_get_id(dom_html_element *element,

@@ -7,6 +7,7 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <dom/core/string.h>
 #include <dom/core/text.h>
@@ -22,6 +23,9 @@
 struct dom_text_vtable text_vtable = {
 	{
 		{
+			{
+				DOM_NODE_EVENT_TARGET_VTABLE,
+			},
 			DOM_NODE_VTABLE
 		},
 		DOM_CHARACTERDATA_VTABLE
@@ -68,28 +72,28 @@ static dom_exception walk_logic_adjacent_text(dom_text *text,
  *
  * The returned node will already be referenced.
  */
-dom_exception _dom_text_create(struct dom_document *doc,
-		struct lwc_string_s *name, dom_string *value,
-		struct dom_text **result)
+dom_exception _dom_text_create(dom_document *doc,
+		dom_string *name, dom_string *value,
+		dom_text **result)
 {
-	struct dom_text *t;
+	dom_text *t;
 	dom_exception err;
 
 	/* Allocate the text node */
-	t = _dom_document_alloc(doc, NULL, sizeof(struct dom_text));
+	t = malloc(sizeof(dom_text));
 	if (t == NULL)
 		return DOM_NO_MEM_ERR;
 
 	/* And initialise the node */
 	err = _dom_text_initialise(t, doc, DOM_TEXT_NODE, name, value);
 	if (err != DOM_NO_ERR) {
-		_dom_document_alloc(doc, t, 0);
+		free(t);
 		return err;
 	}
 
 	/* Compose the vtable */
-	((struct dom_node *) t)->vtable = &text_vtable;
-	((struct dom_node_internal *) t)->vtable = &text_protect_vtable;
+	((dom_node *) t)->vtable = &text_vtable;
+	((dom_node_internal *) t)->vtable = &text_protect_vtable;
 
 	*result = t;
 
@@ -104,13 +108,13 @@ dom_exception _dom_text_create(struct dom_document *doc,
  *
  * The contents of ::text will be destroyed and ::text will be freed.
  */
-void _dom_text_destroy(struct dom_document *doc, struct dom_text *text)
+void _dom_text_destroy(dom_text *text)
 {
 	/* Finalise node */
-	_dom_text_finalise(doc, text);
+	_dom_text_finalise(text);
 
 	/* Free node */
-	_dom_document_alloc(doc, text, 0);
+	free(text);
 }
 
 /**
@@ -125,9 +129,9 @@ void _dom_text_destroy(struct dom_document *doc, struct dom_text *text)
  *
  * ::doc, ::name and ::value will have their reference counts increased.
  */
-dom_exception _dom_text_initialise(struct dom_text *text,
-		struct dom_document *doc, dom_node_type type,
-		struct lwc_string_s *name, dom_string *value)
+dom_exception _dom_text_initialise(dom_text *text,
+		dom_document *doc, dom_node_type type,
+		dom_string *name, dom_string *value)
 {
 	dom_exception err;
 
@@ -151,9 +155,9 @@ dom_exception _dom_text_initialise(struct dom_text *text,
  *
  * The contents of ::text will be cleaned up. ::text will not be freed.
  */
-void _dom_text_finalise(struct dom_document *doc, struct dom_text *text)
+void _dom_text_finalise(dom_text *text)
 {
-	_dom_characterdata_finalise(doc, &text->base);
+	_dom_characterdata_finalise(&text->base);
 }
 
 /*----------------------------------------------------------------------*/
@@ -173,12 +177,12 @@ void _dom_text_finalise(struct dom_document *doc, struct dom_text *text)
  * The returned node will be referenced. The client should unref the node
  * once it has finished with it.
  */
-dom_exception _dom_text_split_text(struct dom_text *text,
-		unsigned long offset, struct dom_text **result)
+dom_exception _dom_text_split_text(dom_text *text,
+		unsigned long offset, dom_text **result)
 {
-	struct dom_node_internal *t = (struct dom_node_internal *) text;
+	dom_node_internal *t = (dom_node_internal *) text;
 	dom_string *value;
-	struct dom_text *res;
+	dom_text *res;
 	unsigned long len;
 	dom_exception err;
 
@@ -233,7 +237,7 @@ dom_exception _dom_text_split_text(struct dom_text *text,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_text_get_is_element_content_whitespace(
-		struct dom_text *text, bool *result)
+		dom_text *text, bool *result)
 {
 	*result = text->element_content_whitespace;
 
@@ -247,7 +251,7 @@ dom_exception _dom_text_get_is_element_content_whitespace(
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR.
  */
-dom_exception _dom_text_get_whole_text(struct dom_text *text,
+dom_exception _dom_text_get_whole_text(dom_text *text,
 		dom_string **result)
 {
 	return walk_logic_adjacent_text(text, COLLECT, result);
@@ -266,8 +270,8 @@ dom_exception _dom_text_get_whole_text(struct dom_text *text,
  * The returned node will be referenced. The client should unref the node
  * once it has finished with it.
  */
-dom_exception _dom_text_replace_whole_text(struct dom_text *text,
-		dom_string *content, struct dom_text **result)
+dom_exception _dom_text_replace_whole_text(dom_text *text,
+		dom_string *content, dom_text **result)
 {
 	dom_exception err;
 	dom_string *ret;
@@ -290,41 +294,43 @@ dom_exception _dom_text_replace_whole_text(struct dom_text *text,
 /* The protected virtual functions */
 
 /* The destroy function of this class */
-void __dom_text_destroy(struct dom_node_internal *node)
+void __dom_text_destroy(dom_node_internal *node)
 {
-	struct dom_document *doc;
-	doc = dom_node_get_owner(node);
-
-	_dom_text_destroy(doc, (struct dom_text *) node);
+	_dom_text_destroy((dom_text *) node);
 }
 
-/* The memory allocator for this class */
-dom_exception _dom_text_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret)
+/* The copy constructor of this class */
+dom_exception _dom_text_copy(dom_node_internal *old, dom_node_internal **copy)
 {
-	UNUSED(n);
-	dom_text *a;
-	
-	a = _dom_document_alloc(doc, NULL, sizeof(struct dom_text));
-	if (a == NULL)
+	dom_text *new_text;
+	dom_exception err;
+
+	new_text = malloc(sizeof(dom_text));
+	if (new_text == NULL)
 		return DOM_NO_MEM_ERR;
-	
-	*ret = (dom_node_internal *) a;
-	dom_node_set_owner(*ret, doc);
+
+	err = dom_text_copy_internal(old, new_text);
+	if (err != DOM_NO_ERR) {
+		free(new_text);
+		return err;
+	}
+
+	*copy = (dom_node_internal *) new_text;
 
 	return DOM_NO_ERR;
 }
 
-/* The copy constructor of this class */
-dom_exception _dom_text_copy(struct dom_node_internal *new, 
-		struct dom_node_internal *old)
+dom_exception _dom_text_copy_internal(dom_text *old, dom_text *new)
 {
-	dom_text *ot = (dom_text *) old;
-	dom_text *nt = (dom_text *) new;
+	dom_exception err;
 
-	nt->element_content_whitespace = ot->element_content_whitespace;
+	err = dom_characterdata_copy_internal(old, new);
+	if (err != DOM_NO_ERR)
+		return err;
 
-	return _dom_characterdata_copy(new, old);
+	new->element_content_whitespace = old->element_content_whitespace;
+
+	return DOM_NO_ERR;
 }
 
 /*----------------------------------------------------------------------*/

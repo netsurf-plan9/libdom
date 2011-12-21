@@ -5,6 +5,8 @@
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
+#include <stdlib.h>
+
 #include "events/custom_event.h"
 
 #include "core/document.h"
@@ -19,7 +21,7 @@ static struct dom_event_private_vtable _event_vtable = {
 dom_exception _dom_custom_event_create(struct dom_document *doc, 
 		struct dom_custom_event **evt)
 {
-	*evt = _dom_document_alloc(doc, NULL, sizeof(dom_custom_event));
+	*evt = malloc(sizeof(dom_custom_event));
 	if (*evt == NULL) 
 		return DOM_NO_MEM_ERR;
 	
@@ -29,12 +31,11 @@ dom_exception _dom_custom_event_create(struct dom_document *doc,
 }
 
 /* Destructor */
-void _dom_custom_event_destroy(struct dom_document *doc, 
-		struct dom_custom_event *evt)
+void _dom_custom_event_destroy(struct dom_custom_event *evt)
 {
-	_dom_custom_event_finalise(doc, evt);
+	_dom_custom_event_finalise(evt);
 
-	_dom_document_alloc(doc, evt, 0);
+	free(evt);
 }
 
 /* Initialise function */
@@ -46,17 +47,16 @@ dom_exception _dom_custom_event_initialise(struct dom_document *doc,
 }
 
 /* Finalise function */
-void _dom_custom_event_finalise(struct dom_document *doc, 
-		struct dom_custom_event *evt)
+void _dom_custom_event_finalise(struct dom_custom_event *evt)
 {
 	evt->detail = NULL;
-	_dom_event_finalise(doc, &evt->base);
+	_dom_event_finalise(&evt->base);
 }
 
 /* The virtual destroy function */
 void _virtual_dom_custom_event_destroy(struct dom_event *evt)
 {
-	_dom_custom_event_destroy(evt->doc, (dom_custom_event *) evt);
+	_dom_custom_event_destroy((dom_custom_event *) evt);
 }
 
 /*----------------------------------------------------------------------*/

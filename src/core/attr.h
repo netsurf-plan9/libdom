@@ -12,18 +12,17 @@
 
 struct dom_document;
 struct dom_type_info;
-struct lwc_string_s;
 
 dom_exception _dom_attr_create(struct dom_document *doc,
-		struct lwc_string_s *name, struct lwc_string_s *namespace,
-		struct lwc_string_s *prefix, bool specified,
+		dom_string *name, dom_string *namespace,
+		dom_string *prefix, bool specified,
 		struct dom_attr **result);
-void _dom_attr_destroy(struct dom_document *doc, struct dom_attr *attr);
+void _dom_attr_destroy(struct dom_attr *attr);
 dom_exception _dom_attr_initialise(struct dom_attr *a,
-		struct dom_document *doc,  struct lwc_string_s *name,
-		struct lwc_string_s *namespace, struct lwc_string_s *prefix,
+		struct dom_document *doc, dom_string *name,
+		dom_string *namespace, dom_string *prefix,
 		bool specified, struct dom_attr **result);
-void _dom_attr_finalise(struct dom_document *doc, struct dom_attr *attr);
+void _dom_attr_finalise(struct dom_attr *attr);
 
 /* Virtual functions for dom_attr */
 dom_exception _dom_attr_get_name(struct dom_attr *attr,
@@ -103,14 +102,11 @@ dom_exception _dom_attr_lookup_namespace(dom_node_internal *node,
 
 /* The protected virtual functions */
 void __dom_attr_destroy(dom_node_internal *node);
-dom_exception _dom_attr_alloc(struct dom_document *doc,
-		struct dom_node_internal *n, struct dom_node_internal **ret);
-dom_exception _dom_attr_copy(struct dom_node_internal *new,
-		struct dom_node_internal *old);
+dom_exception _dom_attr_copy(dom_node_internal *old,
+		dom_node_internal **copy);
 
 #define DOM_ATTR_PROTECT_VTABLE \
 	__dom_attr_destroy, \
-	_dom_attr_alloc, \
 	_dom_attr_copy
 
 

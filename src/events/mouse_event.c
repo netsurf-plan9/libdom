@@ -5,6 +5,7 @@
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
  */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "events/mouse_event.h"
@@ -22,7 +23,7 @@ static struct dom_event_private_vtable _event_vtable = {
 dom_exception _dom_mouse_event_create(struct dom_document *doc, 
 		struct dom_mouse_event **evt)
 {
-	*evt = _dom_document_alloc(doc, NULL, sizeof(dom_mouse_event));
+	*evt = malloc(sizeof(dom_mouse_event));
 	if (*evt == NULL) 
 		return DOM_NO_MEM_ERR;
 	
@@ -32,12 +33,11 @@ dom_exception _dom_mouse_event_create(struct dom_document *doc,
 }
 
 /* Destructor */
-void _dom_mouse_event_destroy(struct dom_document *doc, 
-		struct dom_mouse_event *evt)
+void _dom_mouse_event_destroy(struct dom_mouse_event *evt)
 {
-	_dom_mouse_event_finalise(doc, (dom_ui_event *) evt);
+	_dom_mouse_event_finalise((dom_ui_event *) evt);
 
-	_dom_document_alloc(doc, evt, 0);
+	free(evt);
 }
 
 /* Initialise function */
@@ -52,7 +52,7 @@ dom_exception _dom_mouse_event_initialise(struct dom_document *doc,
 /* The virtual destroy function */
 void _virtual_dom_mouse_event_destroy(struct dom_event *evt)
 {
-	_dom_mouse_event_destroy(evt->doc, (dom_mouse_event *) evt);
+	_dom_mouse_event_destroy((dom_mouse_event *) evt);
 }
 
 /*----------------------------------------------------------------------*/
@@ -230,7 +230,7 @@ dom_exception _dom_mouse_event_get_modifier_state(dom_mouse_event *evt,
 	}
 
 	const char *data = _dom_string_data(m);
-	size_t len = _dom_string_length(m);
+	size_t len = _dom_string_byte_length(m);
 
 	if (len == SLEN("AltGraph") && strncmp(data, "AltGraph", len) == 0) {
 		*state = ((evt->modifier_state & DOM_MOD_ALT_GRAPH) != 0);
