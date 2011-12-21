@@ -300,35 +300,35 @@ dom_exception _dom_parse_modifier_list(dom_string *modifier_list,
 		 * the new token. */
 		if (*data == ' ' || *data == '\0') {
 			if (len == SLEN("AltGraph") &&
-					strncmp(data, "AltGraph", len) == 0) {
+					strncmp(m, "AltGraph", len) == 0) {
 				*modifier_state = *modifier_state | 
 						DOM_MOD_ALT_GRAPH;
 			} else if (len == SLEN("Alt") &&
-					strncmp(data, "Alt", len) == 0) {
+					strncmp(m, "Alt", len) == 0) {
 				*modifier_state = *modifier_state | 
 						DOM_MOD_ALT;
 			} else if (len == SLEN("CapsLock") &&
-					strncmp(data, "CapsLock", len) == 0) {
+					strncmp(m, "CapsLock", len) == 0) {
 				*modifier_state = *modifier_state | 
 						DOM_MOD_CAPS_LOCK;
 			} else if (len == SLEN("Control") &&
-					strncmp(data, "Control", len) == 0) {
+					strncmp(m, "Control", len) == 0) {
 				*modifier_state = *modifier_state | 
 						DOM_MOD_CTRL;
 			} else if (len == SLEN("Meta") &&
-					strncmp(data, "Meta", len) == 0) {
+					strncmp(m, "Meta", len) == 0) {
 				*modifier_state = *modifier_state | 
 						DOM_MOD_META;
 			} else if (len == SLEN("NumLock") &&
-					strncmp(data, "NumLock", len) == 0) {
+					strncmp(m, "NumLock", len) == 0) {
 				*modifier_state = *modifier_state | 
 						DOM_MOD_NUM_LOCK;
 			} else if (len == SLEN("Scroll") &&
-					strncmp(data, "Scroll", len) == 0) {
+					strncmp(m, "Scroll", len) == 0) {
 				*modifier_state = *modifier_state | 
 						DOM_MOD_SCROLL;
 			} else if (len == SLEN("Shift") &&
-					strncmp(data, "Shift", len) == 0) {
+					strncmp(m, "Shift", len) == 0) {
 				*modifier_state = *modifier_state | 
 						DOM_MOD_SHIFT;
 			}

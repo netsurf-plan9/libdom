@@ -332,14 +332,12 @@ dom_exception _dom_node_get_node_name(dom_node_internal *node,
 		dom_string **result)
 {
 	dom_string *node_name, *temp;
-	dom_document *doc;
 	dom_exception err;
 
-	doc = node->owner;
 	/* Document Node and DocumentType Node can have no owner */
 	assert(node->type == DOM_DOCUMENT_TYPE_NODE ||
 			node->type == DOM_DOCUMENT_NODE ||
-			doc != NULL);
+			node->owner != NULL);
 
 	assert(node->name != NULL);
 
@@ -1091,11 +1089,9 @@ dom_exception _dom_node_clone_node(dom_node_internal *node, bool deep,
 {
 	dom_node_internal *n, *child, *r;
 	dom_exception err;
-	dom_document *doc;
 	dom_user_data *ud;
 
-	doc = node->owner;
-	assert(doc != NULL);
+	assert(node->owner != NULL);
 
 	err = dom_node_copy(node, &n);
 	if (err != DOM_NO_ERR) {
@@ -1476,7 +1472,7 @@ dom_exception _dom_node_set_text_content(dom_node_internal *node,
 		/* Add the (void *) casting to avoid gcc warning:
 		 * dereferencing type-punned pointer will break 
 		 * strict-aliasing rules */
-		err = dom_node_remove_child(node, n, (void *) &r);
+		err = dom_node_remove_child(node, p, (void *) &r);
 		if (err != DOM_NO_ERR)
 			return err;
 	}

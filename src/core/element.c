@@ -541,9 +541,6 @@ dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 	attrs = _dom_hash_get(element->ns_attributes, namespace);
 	/* The element has no such namespace */
 	if (attrs == NULL) {
-		dom_document *doc;
-		doc = dom_node_get_owner(element);
-		assert(doc != NULL);
 		attrs = _dom_hash_create(CHAINS_NS_ATTRIBUTES,
 				&attributes_vtable, NULL);
 		if (attrs == NULL)
@@ -668,9 +665,6 @@ dom_exception _dom_element_set_attribute_node_ns(struct dom_element *element,
 	attrs = _dom_hash_get(element->ns_attributes, namespace);
 	/* The element has no such namespace */
 	if (attrs == NULL) {
-		dom_document *doc;
-		doc = dom_node_get_owner(element);
-		assert(doc != NULL);
 		attrs = _dom_hash_create(CHAINS_NS_ATTRIBUTES,
 				&attributes_vtable, NULL);
 		if (attrs == NULL)
@@ -713,9 +707,7 @@ dom_exception _dom_element_get_elements_by_tag_name_ns(
 		struct dom_element *element, dom_string *namespace,
 		dom_string *localname, struct dom_nodelist **result)
 {
-	dom_document *doc;
 	dom_exception err;
-	doc = element->base.owner;
 
 	/** \todo ensure XML feature is supported */
 
@@ -1705,10 +1697,6 @@ dom_exception _dom_element_get_id(struct dom_element *ele, dom_string **id)
 
 	if (ele->id_ns != NULL && ele->id_name != NULL) {
 		/* There is user specific ID attribute */
-		dom_document *doc;
-		doc = dom_node_get_owner(ele);
-		assert(doc != NULL);
-
 		err = _dom_element_get_attribute_ns(ele, ele->id_ns, 
 				ele->id_name, &ret);
 		if (err != DOM_NO_ERR) {
