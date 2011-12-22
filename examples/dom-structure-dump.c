@@ -130,16 +130,16 @@ dom_document *create_doc_dom_from_file(char *file)
 
 
 /**
- * Dump class attribute/value for an element node
+ * Dump attribute/value for an element node
  *
- * \param node  The element node to dump class for
+ * \param node  The element node to dump attribute details for
  * \return  true on success, or false on error
  */
-bool dump_dom_element_class(dom_node_internal *node)
+bool dump_dom_element_attribute(dom_node_internal *node, char *attribute)
 {
 	dom_exception exc;
-	dom_string *class = NULL;
-	dom_string *classvalue = NULL;
+	dom_string *attr = NULL;
+	dom_string *attr_value = NULL;
 	dom_node_type type;
 	const char *string;
 	size_t length;
@@ -152,32 +152,35 @@ bool dump_dom_element_class(dom_node_internal *node)
 	}
 	assert(type == DOM_ELEMENT_NODE);
 
-	/* Create a dom_string containing "class". */
-	exc = dom_string_create((uint8_t *)"class", 5, &class);
+	/* Create a dom_string containing required attribute name. */
+	exc = dom_string_create((uint8_t *)attribute, 5, &attr);
 	if (exc != DOM_NO_ERR) {
 		printf(" Exception raised for dom_string_create\n");
 		return false;
 	}
 
 	/* Get class attribute's value */
-	exc = dom_element_get_attribute(node, class, &classvalue);
+	exc = dom_element_get_attribute(node, attr, &attr_value);
 	if (exc != DOM_NO_ERR) {
 		printf(" Exception raised for element_get_attribute\n");
 		return false;
-	} else if (classvalue == NULL) {
-		/* Element has no class attribute */
+	} else if (attr_value == NULL) {
+		/* Element lacks required attribute */
 		return true;
 	}
 
-	/* Get attributes's string data */
-	string = dom_string_data(classvalue);
-	length = dom_string_byte_length(classvalue);
+	/* Finished with the attr dom_string */
+	dom_string_unref(attr);
 
-	/* Print class info */
-	printf(" class=\"%*s\"", (int)length, string);
+	/* Get attribute value's string data */
+	string = dom_string_data(attr_value);
+	length = dom_string_byte_length(attr_value);
 
-	/* Finished with the classvalue dom_string */
-	dom_string_unref(classvalue);
+	/* Print attribute info */
+	printf(" %s=\"%*s\"", attribute, (int)length, string);
+
+	/* Finished with the attr_value dom_string */
+	dom_string_unref(attr_value);
 
 	return true;
 }
@@ -236,7 +239,7 @@ bool dump_dom_element(dom_node_internal *node, int depth)
 	dom_string_unref(node_name);
 
 	/* Print the element's class, if it has one */
-	if (dump_dom_element_class(node) == false) {
+	if (dump_dom_element_attribute(node, "class") == false) {
 		printf("\n");
 		return false;
 	}
