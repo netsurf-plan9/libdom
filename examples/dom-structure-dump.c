@@ -41,6 +41,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <dom/dom.h>
 #include <dom/bindings/hubbub/parser.h>
@@ -153,7 +154,7 @@ bool dump_dom_element_attribute(dom_node_internal *node, char *attribute)
 	assert(type == DOM_ELEMENT_NODE);
 
 	/* Create a dom_string containing required attribute name. */
-	exc = dom_string_create((uint8_t *)attribute, 5, &attr);
+	exc = dom_string_create((uint8_t *)attribute, strlen(attribute), &attr);
 	if (exc != DOM_NO_ERR) {
 		printf(" Exception raised for dom_string_create\n");
 		return false;
@@ -238,8 +239,10 @@ bool dump_dom_element(dom_node_internal *node, int depth)
 	/* Finished with the node_name dom_string */
 	dom_string_unref(node_name);
 
-	/* Print the element's class, if it has one */
-	if (dump_dom_element_attribute(node, "class") == false) {
+	/* Print the element's id & class, if it has them */
+	if (dump_dom_element_attribute(node, "id") == false ||
+			dump_dom_element_attribute(node, "class") == false) {
+		/* Error occured */
 		printf("\n");
 		return false;
 	}
