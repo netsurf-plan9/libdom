@@ -3,7 +3,7 @@
  * Licensed under the MIT License,
  *                http://www.opensource.org/licenses/mit-license.php
  *
- * Copyright 2010 Michael Drake <tlsa@netsurf-browser.org>
+ * Copyright 2010 - 2011 Michael Drake <tlsa@netsurf-browser.org>
  */
 
 /*
@@ -39,6 +39,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -47,13 +48,6 @@
 #include <dom/bindings/hubbub/parser.h>
 
 #define UNUSED(x) ((x)=(x))
-
-void *test_realloc(void *ptr, size_t len, void *pw)
-{
-	UNUSED(pw);
-
-	return realloc(ptr, len);
-}
 
 void test_msg(uint32_t severity, void *ctx, const char *msg, ...)
 {
@@ -83,11 +77,10 @@ dom_document *create_doc_dom_from_file(char *file)
 	int chunk_length;
 	dom_hubbub_error error;
 	dom_document *doc;
-	char buffer[buffer_size];
+	unsigned char buffer[buffer_size];
 
 	/* Create Hubbub parser */
-	parser = dom_hubbub_parser_create(NULL, true, test_realloc, NULL,
-			test_msg, NULL);
+	parser = dom_hubbub_parser_create(NULL, true, test_msg, NULL);
 	if (parser == NULL) {
 		printf("Can't create Hubbub Parser\n");
 		return NULL;
@@ -147,12 +140,9 @@ dom_document *create_doc_dom_from_file(char *file)
 bool dump_dom_element_class(dom_node_internal *node)
 {
 	dom_exception exc;
-	lwc_error err;
 	dom_string *class = NULL;
 	dom_string *classvalue = NULL;
-	lwc_string *lwcstr = NULL;
 	dom_node_type type;
-	int i;
 	const char *string;
 	size_t length;
 
@@ -164,8 +154,8 @@ bool dump_dom_element_class(dom_node_internal *node)
 	}
 	assert(type == DOM_ELEMENT_NODE);
 
-	/* Create a dom_string constaining "class". */
-	exc = dom_string_create(test_realloc, NULL, "class", 5, &class);
+	/* Create a dom_string containing "class". */
+	exc = dom_string_create((uint8_t *)"class", 5, &class);
 	if (exc != DOM_NO_ERR) {
 		printf(" Exception raised for dom_string_create\n");
 		return false;
@@ -181,26 +171,16 @@ bool dump_dom_element_class(dom_node_internal *node)
 		return true;
 	}
 
-	/* Get attributes's lwc_string */
-	exc = dom_string_get_intern(classvalue, &lwcstr);
-	if (exc != DOM_NO_ERR) {
-		printf(" Exception raised for string_get_intern\n");
-		return false;
-	} else if (lwcstr == NULL) {
-		printf(" Broken: lwcstr == NULL\n");
-		return false;
-	}
+	/* Get attributes's string data */
+	string = dom_string_data(classvalue);
+	length = dom_string_byte_length(classvalue);
+
+	/* Print class info */
+	printf(" class=\"%*s\"", (int)length, string);
 
 	/* Finished with the classvalue dom_string */
 	dom_string_unref(classvalue);
 
-	/* Get string data and print class info */
-	string = lwc_string_data(lwcstr);
-	length = lwc_string_length(lwcstr);
-	printf(" class=\"%*s\"", length, string);
-
-	/* Print the element's class, if it has one */
-	dump_dom_element_class(node);
 	return true;
 }
 
@@ -215,9 +195,7 @@ bool dump_dom_element_class(dom_node_internal *node)
 bool dump_dom_element(dom_node_internal *node, int depth)
 {
 	dom_exception exc;
-	lwc_error err;
 	dom_string *node_name = NULL;
-	lwc_string *lwcstr = NULL;
 	dom_node_type type;
 	int i;
 	const char *string;
@@ -243,16 +221,6 @@ bool dump_dom_element(dom_node_internal *node, int depth)
  		return false;
 	}
 
-	/* Get element name's lwc_string */
-	exc = dom_string_get_intern(node_name, &lwcstr);
-	if (exc != DOM_NO_ERR) {
-		printf("Exception raised for string_get_intern\n");
-		return false;
-	}
-
-	/* Finished with the node_name dom_string */
-	dom_string_unref(node_name);
-
 	/* Print ASCII tree structure for current node */
 	if (depth > 0) {
 		for (i = 0; i < depth; i++) {
@@ -262,12 +230,16 @@ bool dump_dom_element(dom_node_internal *node, int depth)
 	}
 
 	/* Get string data and print element name */
-	string = lwc_string_data(lwcstr);
-	length = lwc_string_length(lwcstr);
-	printf("%*s", length, string);
+	string = dom_string_data(node_name);
+	length = dom_string_byte_length(node_name);
+	printf("%*s", (int)length, string);
 
-	/* PENDING FIX: Print the element's class, if it has one */
+	/* Finished with the node_name dom_string */
+	dom_string_unref(node_name);
+
+	/* Print the element's class, if it has one */
 	if (dump_dom_element_class(node) == false) {
+		printf("\n");
 		return false;
 	}
 
@@ -329,16 +301,8 @@ bool dump_dom_structure(dom_node_internal *node, int depth)
 int main(int argc, char **argv)
 {
 	dom_exception exc; /* returned by libdom functions */
-	lwc_error err; /* returned by libwapacplet functions */
 	dom_document *doc = NULL; /* document, loaded into libdom */
 	dom_node_internal *root = NULL; /* root element of document */
-
-	/* Initialise the DOM library */
-	exc = dom_initialise(test_realloc, NULL);
-	if (exc != DOM_NO_ERR) {
-		printf("Failed to initialise DOM library.\n");
-		return EXIT_FAILURE;
-	}
 
 	/* Load up the input HTML file */
 	doc = create_doc_dom_from_file("files/test.html");
@@ -360,13 +324,6 @@ int main(int argc, char **argv)
 	/* Dump DOM structure */
 	if (dump_dom_structure(root, 0) == false) {
 		printf("Failed to complete DOM structure dump.\n");
-		return EXIT_FAILURE;
-	}
-
-	/* Finalise the DOM library */
-	exc = dom_finalise();
-	if (exc != DOM_NO_ERR) {
-		printf("Failed to finalise DOM library.\n");
 		return EXIT_FAILURE;
 	}
 
