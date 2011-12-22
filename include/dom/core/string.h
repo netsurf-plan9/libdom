@@ -44,6 +44,16 @@ uint32_t dom_string_rindex(dom_string *str, uint32_t chr);
 /* Get the length, in characters, of a dom string */
 uint32_t dom_string_length(dom_string *str);
 
+/**
+ * Get the raw character data of the dom_string.
+ * @note: This function is just provided for the convenience of accessing the 
+ * raw C string character, no change on the result string is allowed.
+ */
+const char *dom_string_data(dom_string *str);
+
+/* Get the byte length of this dom_string */
+size_t dom_string_byte_length(dom_string *str);
+
 /* Get the UCS-4 character at position index, the index should be in 
  * [0, length), and length can be get by calling dom_string_length
  */

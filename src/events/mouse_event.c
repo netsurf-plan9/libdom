@@ -229,8 +229,8 @@ dom_exception _dom_mouse_event_get_modifier_state(dom_mouse_event *evt,
 		return DOM_NO_ERR;
 	}
 
-	const char *data = _dom_string_data(m);
-	size_t len = _dom_string_byte_length(m);
+	const char *data = dom_string_data(m);
+	size_t len = dom_string_byte_length(m);
 
 	if (len == SLEN("AltGraph") && strncmp(data, "AltGraph", len) == 0) {
 		*state = ((evt->modifier_state & DOM_MOD_ALT_GRAPH) != 0);

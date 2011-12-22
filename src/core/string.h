@@ -18,15 +18,5 @@ dom_exception _dom_string_create_from_lwcstring(struct lwc_string_s *str,
 /* Map the lwc_error to dom_exception */
 dom_exception _dom_exception_from_lwc_error(lwc_error err);
 
-/**
- * Get the raw character data of the dom_string.
- * @note: This function is just provided for the convenience of accessing the 
- * raw C string character, no change on the result string is allowed.
- */
-const char *_dom_string_data(dom_string *str);
-
-/* Get the byte length of this dom_string */
-size_t _dom_string_byte_length(dom_string *str);
-
 #endif
 

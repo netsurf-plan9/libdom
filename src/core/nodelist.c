@@ -87,8 +87,8 @@ dom_exception _dom_nodelist_create(dom_document *doc, nodelist_type type,
 	if (type == DOM_NODELIST_BY_NAME) {
 		assert(tagname != NULL);
 		l->data.n.any_name = false;
-		if (_dom_string_byte_length(tagname) == 1) {
-			const char *ch = _dom_string_data(tagname);
+		if (dom_string_byte_length(tagname) == 1) {
+			const char *ch = dom_string_data(tagname);
 			if (*ch == '*') {
 				l->data.n.any_name = true;
 			}
@@ -99,8 +99,8 @@ dom_exception _dom_nodelist_create(dom_document *doc, nodelist_type type,
 		l->data.ns.any_localname = false;
 		l->data.ns.any_namespace = false;
 		if (localname != NULL) {
-			if (_dom_string_byte_length(localname) == 1) {
-				const char *ch = _dom_string_data(localname);
+			if (dom_string_byte_length(localname) == 1) {
+				const char *ch = dom_string_data(localname);
 				if (*ch == '*') {
 				   l->data.ns.any_localname = true;
 				}
@@ -108,8 +108,8 @@ dom_exception _dom_nodelist_create(dom_document *doc, nodelist_type type,
 			dom_string_ref(localname);
 		}
 		if (namespace != NULL) {
-			if (_dom_string_byte_length(namespace) == 1) {
-				const char *ch = _dom_string_data(namespace);
+			if (dom_string_byte_length(namespace) == 1) {
+				const char *ch = dom_string_data(namespace);
 				if (*ch == '*') {
 					l->data.ns.any_namespace = true;
 				}

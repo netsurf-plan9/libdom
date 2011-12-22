@@ -177,8 +177,8 @@ dom_exception _dom_keyboard_event_get_modifier_state(dom_keyboard_event *evt,
 		return DOM_NO_ERR;
 	}
 
-	const char *data = _dom_string_data(m);
-	size_t len = _dom_string_byte_length(m);
+	const char *data = dom_string_data(m);
+	size_t len = dom_string_byte_length(m);
 
 	if (len == SLEN("AltGraph") && strncmp(data, "AltGraph", len) == 0) {
 		*state = ((evt->modifier_state & DOM_MOD_ALT_GRAPH) != 0);
@@ -291,7 +291,7 @@ dom_exception _dom_parse_modifier_list(dom_string *modifier_list,
 	if (modifier_list == NULL)
 		return DOM_NO_ERR;
 	
-	const char *data = _dom_string_data(modifier_list);
+	const char *data = dom_string_data(modifier_list);
 	const char *m = data;
 	size_t len = 0;
 

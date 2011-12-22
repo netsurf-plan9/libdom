@@ -308,8 +308,8 @@ uint32_t dom_string_index(dom_string *str, uint32_t chr)
 	uint32_t c, index;
 	parserutils_error err;
 
-	s = (const uint8_t *) _dom_string_data(str);
-	slen = _dom_string_byte_length(str);
+	s = (const uint8_t *) dom_string_data(str);
+	slen = dom_string_byte_length(str);
 
 	index = 0;
 
@@ -345,8 +345,8 @@ uint32_t dom_string_rindex(dom_string *str, uint32_t chr)
 	uint32_t c, coff, index;
 	parserutils_error err;
 
-	s = (const uint8_t *) _dom_string_data(str);
-	slen = _dom_string_byte_length(str);
+	s = (const uint8_t *) dom_string_data(str);
+	slen = dom_string_byte_length(str);
 
 	index = dom_string_length(str);
 
@@ -385,8 +385,8 @@ uint32_t dom_string_length(dom_string *str)
 	size_t slen, clen;
 	parserutils_error err;
 
-	s = (const uint8_t *) _dom_string_data(str);
-	slen = _dom_string_byte_length(str);
+	s = (const uint8_t *) dom_string_data(str);
+	slen = dom_string_byte_length(str);
 
 	err = parserutils_charset_utf8_length(s, slen, &clen);
 	if (err != PARSERUTILS_OK) {
@@ -411,8 +411,8 @@ dom_exception dom_string_at(dom_string *str, uint32_t index,
 	uint32_t c, i;
 	parserutils_error err;
 
-	s = (const uint8_t *) _dom_string_data(str);
-	slen = _dom_string_byte_length(str);
+	s = (const uint8_t *) dom_string_data(str);
+	slen = dom_string_byte_length(str);
 
 	i = 0;
 
@@ -464,10 +464,10 @@ dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 	assert(s1 != NULL);
 	assert(s2 != NULL);
 
-	s1ptr = (const uint8_t *) _dom_string_data(s1);
-	s2ptr = (const uint8_t *) _dom_string_data(s2);
-	s1len = _dom_string_byte_length(s1);
-	s2len = _dom_string_byte_length(s2);
+	s1ptr = (const uint8_t *) dom_string_data(s1);
+	s2ptr = (const uint8_t *) dom_string_data(s2);
+	s1len = dom_string_byte_length(s1);
+	s2len = dom_string_byte_length(s2);
 
 	concat = malloc(sizeof(dom_string));
 
@@ -512,8 +512,8 @@ dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 dom_exception dom_string_substr(dom_string *str, 
 		uint32_t i1, uint32_t i2, dom_string **result)
 {
-	const uint8_t *s = (const uint8_t *) _dom_string_data(str);
-	size_t slen = _dom_string_byte_length(str);
+	const uint8_t *s = (const uint8_t *) dom_string_data(str);
+	size_t slen = dom_string_byte_length(str);
 	uint32_t b1, b2;
 	parserutils_error err;
 
@@ -573,10 +573,10 @@ dom_exception dom_string_insert(dom_string *target,
 	uint32_t ins = 0;
 	parserutils_error err;
 
-	t = (const uint8_t *) _dom_string_data(target);
-	tlen = _dom_string_byte_length(target);
-	s = (const uint8_t *) _dom_string_data(source);
-	slen = _dom_string_byte_length(source);
+	t = (const uint8_t *) dom_string_data(target);
+	tlen = dom_string_byte_length(target);
+	s = (const uint8_t *) dom_string_data(source);
+	slen = dom_string_byte_length(source);
 
 	clen = dom_string_length(target);
 
@@ -661,10 +661,10 @@ dom_exception dom_string_replace(dom_string *target,
 	uint32_t b1, b2;
 	parserutils_error err;
 
-	t = (const uint8_t *) _dom_string_data(target);
-	tlen = _dom_string_byte_length(target);
-	s = (const uint8_t *) _dom_string_data(source);
-	slen = _dom_string_byte_length(source);
+	t = (const uint8_t *) dom_string_data(target);
+	tlen = dom_string_byte_length(target);
+	s = (const uint8_t *) dom_string_data(source);
+	slen = dom_string_byte_length(source);
 
 	/* Initialise the byte index of the start to 0 */
 	b1 = 0;
@@ -743,8 +743,8 @@ dom_exception dom_string_replace(dom_string *target,
  */
 uint32_t dom_string_hash(dom_string *str)
 {
-	const uint8_t *s = (const uint8_t *) _dom_string_data(str);
-	size_t slen = _dom_string_byte_length(str);
+	const uint8_t *s = (const uint8_t *) dom_string_data(str);
+	size_t slen = dom_string_byte_length(str);
 	uint32_t hash = 0x811c9dc5;
 
 	while (slen > 0) {
@@ -787,7 +787,7 @@ dom_exception _dom_exception_from_lwc_error(lwc_error err)
  * @note: This function is just provided for the convenience of accessing the 
  * raw C string character, no change on the result string is allowed.
  */
-const char *_dom_string_data(dom_string *str)
+const char *dom_string_data(dom_string *str)
 {
 	if (str->type == DOM_STRING_CDATA) {
 		return (const char *) str->data.cdata.ptr;
@@ -800,7 +800,7 @@ const char *_dom_string_data(dom_string *str)
  *
  * \param str	The dom_string object
  */
-size_t _dom_string_byte_length(dom_string *str)
+size_t dom_string_byte_length(dom_string *str)
 {
 	if (str->type == DOM_STRING_CDATA) {
 		return str->data.cdata.len;
