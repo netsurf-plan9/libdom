@@ -177,7 +177,7 @@ bool dump_dom_element_attribute(dom_node_internal *node, char *attribute)
 	length = dom_string_byte_length(attr_value);
 
 	/* Print attribute info */
-	printf(" %s=\"%*s\"", attribute, (int)length, string);
+	printf(" %s=\"%.*s\"", attribute, (int)length, string);
 
 	/* Finished with the attr_value dom_string */
 	dom_string_unref(attr_value);
@@ -233,7 +233,7 @@ bool dump_dom_element(dom_node_internal *node, int depth)
 	/* Get string data and print element name */
 	string = dom_string_data(node_name);
 	length = dom_string_byte_length(node_name);
-	printf("%*s", (int)length, string);
+	printf("%.*s", (int)length, string);
 
 	/* Finished with the node_name dom_string */
 	dom_string_unref(node_name);
