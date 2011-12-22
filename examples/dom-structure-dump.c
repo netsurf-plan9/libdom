@@ -35,14 +35,12 @@
  *
  */
 
-#define _GNU_SOURCE /* for strndup */
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 
 #include <dom/dom.h>
 #include <dom/bindings/hubbub/parser.h>
@@ -71,9 +69,9 @@ void test_msg(uint32_t severity, void *ctx, const char *msg, ...)
  */
 dom_document *create_doc_dom_from_file(char *file)
 {
-	const unsigned int buffer_size = 1024;
+	size_t buffer_size = 1024;
 	dom_hubbub_parser *parser = NULL;
-	int handle;
+	FILE *handle;
 	int chunk_length;
 	dom_hubbub_error error;
 	dom_document *doc;
@@ -87,8 +85,8 @@ dom_document *create_doc_dom_from_file(char *file)
 	}
 
 	/* Open input file */
-	handle = open(file, O_RDONLY);
-	if (handle == -1) {
+	handle = fopen(file, "rb");
+	if (handle == NULL) {
 		dom_hubbub_parser_destroy(parser);
 		printf("Can't open test input file: %s\n", file);
 		return NULL;
@@ -97,7 +95,7 @@ dom_document *create_doc_dom_from_file(char *file)
 	/* Parse input file in chunks */
 	chunk_length = buffer_size;
 	while(chunk_length == buffer_size) {
-		chunk_length = read(handle, buffer, buffer_size);
+		chunk_length = fread(buffer, 1, buffer_size, handle);
 		error = dom_hubbub_parser_parse_chunk(parser, buffer,
 				chunk_length);
 		if (error != DOM_HUBBUB_OK) {
@@ -122,7 +120,7 @@ dom_document *create_doc_dom_from_file(char *file)
 	dom_hubbub_parser_destroy(parser);
 
 	/* Close input file */
-	if (close(handle) == -1) {
+	if (fclose(handle) != 0) {
 		printf("Can't close test input file: %s\n", file);
 		return NULL;
 	}
