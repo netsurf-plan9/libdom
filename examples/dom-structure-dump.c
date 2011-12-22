@@ -133,7 +133,8 @@ dom_document *create_doc_dom_from_file(char *file)
 /**
  * Dump attribute/value for an element node
  *
- * \param node  The element node to dump attribute details for
+ * \param node       The element node to dump attribute details for
+ * \param attribute  The attribute to dump
  * \return  true on success, or false on error
  */
 bool dump_dom_element_attribute(dom_node_internal *node, char *attribute)

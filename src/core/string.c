@@ -214,6 +214,8 @@ dom_exception dom_string_intern(dom_string *str,
  */
 bool dom_string_isequal(const dom_string *s1, const dom_string *s2)
 {
+	size_t len;
+
 	if (s1 == NULL)
 		s1 = &empty_string;
 
@@ -229,11 +231,12 @@ bool dom_string_isequal(const dom_string *s1, const dom_string *s2)
 		return match;
 	}
 
-	if (s1->data.cdata.len != s2->data.cdata.len)
+	len = dom_string_byte_length(s1);
+
+	if (len != dom_string_byte_length(s2))
 		return false;
 
-	return 0 == memcmp(s1->data.cdata.ptr, s2->data.cdata.ptr, 
-			s1->data.cdata.len);
+	return 0 == memcmp(dom_string_data(s1), dom_string_data(s2), len);
 }
 
 /**
@@ -275,12 +278,13 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 		return match;
 	}
 
-	if (s1->data.cdata.len != s2->data.cdata.len)
+	len = dom_string_byte_length(s1);
+
+	if (len != dom_string_byte_length(s2))
 		return false;
 
-	d1 = s1->data.cdata.ptr;
-	d2 = s2->data.cdata.ptr;
-	len = s1->data.cdata.len;
+	d1 = (const uint8_t *) dom_string_data(s1);
+	d2 = (const uint8_t *) dom_string_data(s2);
 
 	while (len > 0) {
 		if (dolower(*d1) != dolower(*d2))
@@ -787,7 +791,7 @@ dom_exception _dom_exception_from_lwc_error(lwc_error err)
  * @note: This function is just provided for the convenience of accessing the 
  * raw C string character, no change on the result string is allowed.
  */
-const char *dom_string_data(dom_string *str)
+const char *dom_string_data(const dom_string *str)
 {
 	if (str->type == DOM_STRING_CDATA) {
 		return (const char *) str->data.cdata.ptr;
@@ -800,7 +804,7 @@ const char *dom_string_data(dom_string *str)
  *
  * \param str	The dom_string object
  */
-size_t dom_string_byte_length(dom_string *str)
+size_t dom_string_byte_length(const dom_string *str)
 {
 	if (str->type == DOM_STRING_CDATA) {
 		return str->data.cdata.len;
