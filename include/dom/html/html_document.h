@@ -40,12 +40,6 @@ dom_exception dom_html_document_create(
 		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
 		dom_html_document **doc);
 
-/* Parse a data chunk into the HTMLDocument */
-dom_exception dom_html_document_write_data(uint8_t *data, size_t len);
-
-/* Notify the HTMLDocument that it is completed */
-dom_exception dom_html_document_complete(void);
-
 /*-----------------------------------------------------------------------*/
 /* The DOM spec public API */
 
