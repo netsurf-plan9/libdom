@@ -16,27 +16,25 @@
 /* Create a HTMLDocument */
 dom_exception dom_html_document_create(dom_msg msg, void *msg_pw,
 		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
-		dom_parser_type pt, dom_html_document **doc)
+		dom_html_document **doc)
 {
 	*doc = malloc(sizeof(dom_html_document));
 	if (*doc == NULL)
 		return DOM_NO_MEM_ERR;
 	
-	return _dom_html_document_initialise(*doc, msg, msg_pw, daf, ui, pt);
+	return _dom_html_document_initialise(*doc, msg, msg_pw, daf, ui);
 }
 
 /* Initialise a HTMLDocument */
 dom_exception _dom_html_document_initialise(dom_html_document *doc,
 		dom_msg msg, void *msg_pw,
-		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
-		dom_parser_type pt)
+		dom_events_default_action_fetcher daf, dom_ui_handler *ui)
 {
 	UNUSED(doc);
 	UNUSED(msg);
 	UNUSED(msg_pw);
 	UNUSED(daf);
 	UNUSED(ui);
-	UNUSED(pt);
 
 	return DOM_NO_ERR;
 }

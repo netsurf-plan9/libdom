@@ -19,11 +19,6 @@ struct dom_nodelist;
 
 typedef struct dom_html_document dom_html_document;
 
-typedef enum {
-	DOM_HTML_PARSER = 0,
-	DOM_XML_PARSER  = 1
-} dom_parser_type;
-
 /**
  * Callbacks for UI related function calls
  */
@@ -43,7 +38,7 @@ typedef struct dom_ui_handler dom_ui_handler;
 /* Create a HTMLDocument */
 dom_exception dom_html_document_create(dom_msg msg, void *msg_pw,
 		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
-		dom_parser_type pt, dom_html_document **doc);
+		dom_html_document **doc);
 
 /* Parse a data chunk into the HTMLDocument */
 dom_exception dom_html_document_write_data(uint8_t *data, size_t len);
