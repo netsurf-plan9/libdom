@@ -94,20 +94,50 @@ void _dom_html_document_destroy(dom_html_document *doc)
 dom_exception dom_html_document_get_title(dom_html_document *doc,
 		dom_string **title)
 {
-	UNUSED(doc);
-	UNUSED(title);
+	if (doc->title != NULL) {
+		*title = dom_string_ref(doc->title);
+	} else {
+		/** \todo Search for title element */
+	}
 
 	return DOM_NO_ERR;
 }
 
 dom_exception dom_html_document_set_title(dom_html_document *doc,
-		dom_string *title);
+		dom_string *title)
+{
+	if (doc->title != NULL)
+		dom_string_unref(doc->title);
+
+	doc->title = dom_string_ref(title);
+
+	return DOM_NO_ERR;
+}
+
 dom_exception dom_html_document_get_referer(dom_html_document *doc,
-		dom_string **referer);
+		dom_string **referer)
+{
+	*referer = dom_string_ref(doc->referer);
+
+	return DOM_NO_ERR;
+}
+
 dom_exception dom_html_document_get_domain(dom_html_document *doc,
-		dom_string **domain);
+		dom_string **domain)
+{
+	*domain = dom_string_ref(doc->domain);
+
+	return DOM_NO_ERR;
+}
+
 dom_exception dom_html_document_get_url(dom_html_document *doc,
-		dom_string **url);
+		dom_string **url)
+{
+	*url = dom_string_ref(doc->url);
+
+	return DOM_NO_ERR;
+}
+
 dom_exception dom_html_document_get_body(dom_html_document *doc,
 		struct dom_html_element **body);
 dom_exception dom_html_document_set_body(dom_html_document *doc,
