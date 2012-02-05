@@ -10,7 +10,6 @@
 #include "html/html_body_element.h"
 
 #include "core/node.h"
-#include "core/document.h"
 #include "utils/utils.h"
 
 static struct dom_element_protected_vtable _protect_vtable = {
@@ -27,7 +26,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
  * \param ele  The returned element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_body_element_create(struct dom_document *doc,
+dom_exception _dom_html_body_element_create(struct dom_html_document *doc,
 		struct dom_html_body_element **ele)
 {
 	*ele = malloc(sizeof(dom_html_body_element));
@@ -49,7 +48,7 @@ dom_exception _dom_html_body_element_create(struct dom_document *doc,
  * \param ele  The dom_html_body_element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_body_element_initialise(struct dom_document *doc,
+dom_exception _dom_html_body_element_initialise(struct dom_html_document *doc,
 		struct dom_html_body_element *ele)
 {
 	dom_string *name = NULL;

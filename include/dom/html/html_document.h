@@ -8,6 +8,7 @@
 #ifndef dom_html_document_h_
 #define dom_html_document_h_
 
+#include <dom/core/document.h>
 #include <dom/core/exceptions.h>
 #include <dom/functypes.h>
 #include <dom/events/document_event.h>
@@ -19,28 +20,10 @@ struct dom_nodelist;
 
 typedef struct dom_html_document dom_html_document;
 
-/**
- * Callbacks for UI related function calls
- */
-struct dom_ui_handler {
-	dom_exception (*element_focus)(struct dom_element *element);
-			/* Callback for a focus DOM call */
-	dom_exception (*element_select)(struct dom_element *element);
-			/* Callback for a select DOM call */
-	dom_exception (*element_blur)(struct dom_element *element);
-			/* Callback for a blur DOM call */
-	dom_exception (*element_enable)(struct dom_element *element,
-			bool enable);
-			/* Callback for enable/disable an element */
-};
-typedef struct dom_ui_handler dom_ui_handler;
+typedef struct dom_html_document_vtable {
+	struct dom_document_vtable base;
+} dom_html_document_vtable;
 
-/* Create a HTMLDocument */
-dom_exception dom_html_document_create(
-		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
-		dom_html_document **doc);
-
-/*-----------------------------------------------------------------------*/
 /* The DOM spec public API */
 
 dom_exception dom_html_document_get_title(dom_html_document *doc,

@@ -22,12 +22,12 @@ struct dom_html_options_collection {
 			/**< The base class */
 };
 
-dom_exception _dom_html_options_collection_create(struct dom_document *doc,
+dom_exception _dom_html_options_collection_create(struct dom_html_document *doc,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic,
 		struct dom_html_options_collection **col);
 
-dom_exception _dom_html_options_collection_initialise(struct dom_document *doc,
+dom_exception _dom_html_options_collection_initialise(struct dom_html_document *doc,
 		struct dom_html_options_collection *col,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic);

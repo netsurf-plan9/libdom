@@ -172,6 +172,7 @@ dom_exception _dom_document_rename_node(dom_document *doc,
 	_dom_document_rename_node
 /* End of vtable */
 
+/** \todo Unused! */
 /**
  * The internal used vtable for document
  */

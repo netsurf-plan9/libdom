@@ -18,11 +18,11 @@ struct dom_html_link_element {
 };
 
 /* Create a dom_html_link_element object */
-dom_exception _dom_html_link_element_create(struct dom_document *doc,
+dom_exception _dom_html_link_element_create(struct dom_html_document *doc,
 		struct dom_html_link_element **ele);
 
 /* Initialise a dom_html_link_element object */
-dom_exception _dom_html_link_element_initialise(struct dom_document *doc,
+dom_exception _dom_html_link_element_initialise(struct dom_html_document *doc,
 		struct dom_html_link_element *ele);
 
 /* Finalise a dom_html_link_element object */

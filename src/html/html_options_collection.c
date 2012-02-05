@@ -13,7 +13,6 @@
 #include "html/html_options_collection.h"
 
 #include "core/node.h"
-#include "core/document.h"
 #include "core/element.h"
 #include "core/string.h"
 #include "utils/utils.h"
@@ -31,7 +30,7 @@
  * \param col   The result collection object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_options_collection_create(struct dom_document *doc,
+dom_exception _dom_html_options_collection_create(struct dom_html_document *doc,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic,
 		struct dom_html_options_collection **col)
@@ -53,7 +52,7 @@ dom_exception _dom_html_options_collection_create(struct dom_document *doc,
  *              belongs to the collection
  * \return DOM_NO_ERR on success.
  */
-dom_exception _dom_html_options_collection_initialise(struct dom_document *doc,
+dom_exception _dom_html_options_collection_initialise(struct dom_html_document *doc,
 		struct dom_html_options_collection *col,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic)

@@ -25,13 +25,23 @@ struct dom_html_document {
 	dom_string *cookie;	/**< HTML document cookie */
 };
 
+/* Create a HTMLDocument */
+dom_exception _dom_html_document_create(
+		dom_events_default_action_fetcher daf,
+		dom_html_document **doc);
 /* Initialise a HTMLDocument */
 dom_exception _dom_html_document_initialise(dom_html_document *doc,
-		dom_events_default_action_fetcher daf, dom_ui_handler *ui);
+		dom_events_default_action_fetcher daf);
 /* Finalise a HTMLDocument */
 void _dom_html_document_finalise(dom_html_document *doc);
-/* Destroy a HTMLDocument */
-void _dom_html_document_destroy(dom_html_document *doc);
+
+void _dom_html_document_destroy(dom_node_internal *node);
+dom_exception _dom_html_document_copy(dom_node_internal *old, 
+		dom_node_internal **copy);
+
+#define DOM_HTML_DOCUMENT_PROTECT_VTABLE \
+	_dom_html_document_destroy, \
+	_dom_html_document_copy
 
 #endif
 

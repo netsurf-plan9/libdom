@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "html/html_document.h"
 #include "html/html_element.h"
 
 #include "core/node.h"
@@ -15,13 +16,59 @@
 #include "core/document.h"
 #include "utils/utils.h"
 
-dom_exception _dom_html_element_initialise(struct dom_document *doc,
+static struct dom_html_element_vtable _dom_html_element_vtable = {
+	{
+		{
+			{
+				DOM_NODE_EVENT_TARGET_VTABLE
+			},
+			DOM_NODE_VTABLE_ELEMENT,
+		},
+		DOM_ELEMENT_VTABLE
+	},
+	DOM_HTML_ELEMENT_VTABLE
+};
+
+static struct dom_element_protected_vtable _dom_html_element_protect_vtable = {
+	{
+		DOM_HTML_ELEMENT_PROTECT_VTABLE
+	},
+	DOM_ELEMENT_PROTECT_VTABLE
+};
+
+dom_exception _dom_html_element_create(struct dom_html_document *doc,
+		dom_string *name, dom_string *namespace,
+		dom_string *prefix, struct dom_html_element **result)
+{
+	dom_exception error;
+	dom_html_element *el;
+
+	el = malloc(sizeof(struct dom_html_element));
+	if (el == NULL)
+		return DOM_NO_MEM_ERR;
+
+	el->base.base.base.vtable = &_dom_html_element_vtable;
+	el->base.base.vtable = &_dom_html_element_protect_vtable;
+
+	error = _dom_html_element_initialise(doc, el, name, namespace,
+			prefix);
+	if (error != DOM_NO_ERR) {
+		free(el);
+		return error;
+	}
+
+	*result = el;
+
+	return DOM_NO_ERR;
+}
+
+dom_exception _dom_html_element_initialise(struct dom_html_document *doc,
 		struct dom_html_element *el, dom_string *name, 
 		dom_string *namespace, dom_string *prefix)
 {
 	dom_exception err;
 
-	err = _dom_element_initialise(doc, &el->base, name, namespace, prefix);
+	err = _dom_element_initialise(&doc->base, &el->base, name, namespace, prefix);
 	if (err != DOM_NO_ERR)
 		return err;
 	
@@ -37,7 +84,7 @@ void _dom_html_element_finalise(struct dom_html_element *ele)
 /* The protected virtual functions */
 
 /* The virtual destroy function, see src/core/node.c for detail */
-void _dom_virtual_html_element_destroy(dom_node_internal *node)
+void _dom_html_element_destroy(dom_node_internal *node)
 {
 	UNUSED(node);
 	assert("Should never be here" == NULL);
@@ -86,6 +133,79 @@ dom_exception _dom_html_element_set_id(dom_html_element *element,
         
         return ret;
 }
+
+dom_exception _dom_html_element_get_title(dom_html_element *element,
+                                       dom_string **title)
+{
+	UNUSED(element);
+	UNUSED(title);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception _dom_html_element_set_title(dom_html_element *element,
+                                       dom_string *title)
+{
+	UNUSED(element);
+	UNUSED(title);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception _dom_html_element_get_lang(dom_html_element *element,
+                                       dom_string **lang)
+{
+	UNUSED(element);
+	UNUSED(lang);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception _dom_html_element_set_lang(dom_html_element *element,
+                                       dom_string *lang)
+{
+	UNUSED(element);
+	UNUSED(lang);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception _dom_html_element_get_dir(dom_html_element *element,
+                                       dom_string **dir)
+{
+	UNUSED(element);
+	UNUSED(dir);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception _dom_html_element_set_dir(dom_html_element *element,
+                                       dom_string *dir)
+{
+	UNUSED(element);
+	UNUSED(dir);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception _dom_html_element_get_classname(dom_html_element *element,
+                                       dom_string **classname)
+{
+	UNUSED(element);
+	UNUSED(classname);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception _dom_html_element_set_classname(dom_html_element *element,
+                                       dom_string *classname)
+{
+	UNUSED(element);
+	UNUSED(classname);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
 
 /*-----------------------------------------------------------------------*/
 /* Common functions */

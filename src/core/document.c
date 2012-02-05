@@ -1042,7 +1042,7 @@ dom_exception _dom_document_rename_node(dom_document *doc,
 
 /*-----------------------------------------------------------------------*/
 
-/* Overload protectd virtual functions */
+/* Overload protected virtual functions */
 
 /* The virtual destroy function of this class */
 void _dom_document_destroy(dom_node_internal *node)

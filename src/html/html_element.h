@@ -12,6 +12,8 @@
 
 #include "core/element.h"
 
+struct dom_html_document;
+
 /**
  * The dom_html_element class
  *
@@ -21,22 +23,59 @@ struct dom_html_element {
 			/**< The base class */
 };
 
-dom_exception _dom_html_element_initialise(struct dom_document *doc,
+dom_exception _dom_html_element_create(struct dom_html_document *doc,
+		dom_string *name, dom_string *namespace,
+		dom_string *prefix, dom_html_element **result);
+
+dom_exception _dom_html_element_initialise(struct dom_html_document *doc,
 		struct dom_html_element *el, dom_string *name, 
 		dom_string *namespace, dom_string *prefix);
 
 void _dom_html_element_finalise(struct dom_html_element *ele);
 
 /* The protected virtual functions */
-void _dom_virtual_html_element_destroy(dom_node_internal *node);
+void _dom_html_element_destroy(dom_node_internal *node);
 dom_exception _dom_html_element_copy(dom_node_internal *old,
 		dom_node_internal **copy);
+
+#define DOM_HTML_ELEMENT_PROTECT_VTABLE \
+	_dom_html_element_destroy, \
+	_dom_html_element_copy
+
 
 /* The API functions */
 dom_exception _dom_html_element_get_id(dom_html_element *element,
                                        dom_string **id);
 dom_exception _dom_html_element_set_id(dom_html_element *element,
                                        dom_string *id);
+dom_exception _dom_html_element_get_title(dom_html_element *element,
+                                       dom_string **title);
+dom_exception _dom_html_element_set_title(dom_html_element *element,
+                                       dom_string *title);
+dom_exception _dom_html_element_get_lang(dom_html_element *element,
+                                       dom_string **lang);
+dom_exception _dom_html_element_set_lang(dom_html_element *element,
+                                       dom_string *lang);
+dom_exception _dom_html_element_get_dir(dom_html_element *element,
+                                       dom_string **dir);
+dom_exception _dom_html_element_set_dir(dom_html_element *element,
+                                       dom_string *dir);
+dom_exception _dom_html_element_get_classname(dom_html_element *element,
+                                       dom_string **classname);
+dom_exception _dom_html_element_set_classname(dom_html_element *element,
+                                       dom_string *classname);
+
+#define DOM_HTML_ELEMENT_VTABLE \
+	_dom_html_element_get_id, \
+	_dom_html_element_set_id, \
+	_dom_html_element_get_title, \
+	_dom_html_element_set_title, \
+	_dom_html_element_get_lang, \
+	_dom_html_element_set_lang, \
+	_dom_html_element_get_dir, \
+	_dom_html_element_set_dir, \
+	_dom_html_element_get_classname, \
+	_dom_html_element_set_classname
 
 /* Some common functions used by all child classes */
 dom_exception dom_html_element_get_bool_property(dom_html_element *ele,

@@ -11,9 +11,9 @@
 #include "html/html_form_element.h"
 
 #include "html/html_collection.h"
+#include "html/html_document.h"
 
 #include "core/node.h"
-#include "core/document.h"
 #include "utils/utils.h"
 
 static struct dom_element_protected_vtable _protect_vtable = {
@@ -32,7 +32,7 @@ static bool _dom_is_form_control(struct dom_node_internal *node);
  * \param ele  The returned element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_form_element_create(struct dom_document *doc,
+dom_exception _dom_html_form_element_create(struct dom_html_document *doc,
 		struct dom_html_form_element **ele)
 {
 	*ele = malloc(sizeof(dom_html_form_element));
@@ -54,7 +54,7 @@ dom_exception _dom_html_form_element_create(struct dom_document *doc,
  * \param ele  The dom_html_form_element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_form_element_initialise(struct dom_document *doc,
+dom_exception _dom_html_form_element_initialise(struct dom_html_document *doc,
 		struct dom_html_form_element *ele)
 {
 	dom_string *name = NULL;
@@ -140,7 +140,7 @@ dom_exception dom_html_form_element_get_elements(dom_html_form_element *ele,
 	dom_exception err;
 
 	if (ele->col == NULL) {
-		dom_document *doc = dom_node_get_owner(ele);
+		dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
 		assert(doc != NULL);
 		err = _dom_html_collection_create(doc,
 				(dom_node_internal *) ele,
@@ -170,7 +170,7 @@ dom_exception dom_html_form_element_get_length(dom_html_form_element *ele,
 	dom_exception err;
 
 	if (ele->col == NULL) {
-		dom_document *doc = dom_node_get_owner(ele);
+		dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
 		assert(doc != NULL);
 		err = _dom_html_collection_create(doc,
 				(dom_node_internal *) ele,

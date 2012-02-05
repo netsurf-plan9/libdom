@@ -13,9 +13,25 @@
 #include "core/string.h"
 #include "utils/utils.h"
 
+static struct dom_html_document_vtable html_document_vtable = {
+	{
+		{
+			{
+				DOM_NODE_EVENT_TARGET_VTABLE
+			},
+			DOM_NODE_VTABLE,
+		},
+		DOM_DOCUMENT_VTABLE
+	}
+};
+
+static struct dom_node_protect_vtable html_document_protect_vtable = {
+	DOM_HTML_DOCUMENT_PROTECT_VTABLE
+};
+
 /* Create a HTMLDocument */
-dom_exception dom_html_document_create(
-		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
+dom_exception _dom_html_document_create(
+		dom_events_default_action_fetcher daf,
 		dom_html_document **doc)
 {
 	dom_exception error;
@@ -24,8 +40,11 @@ dom_exception dom_html_document_create(
 	result = malloc(sizeof(dom_html_document));
 	if (result == NULL)
 		return DOM_NO_MEM_ERR;
+
+	result->base.base.base.vtable = &html_document_vtable;
+	result->base.base.vtable = &html_document_protect_vtable;
 	
-	error = _dom_html_document_initialise(*doc, daf, ui);
+	error = _dom_html_document_initialise(*doc, daf);
 	if (error != DOM_NO_ERR) {
 		free(result);
 		return error;
@@ -37,11 +56,9 @@ dom_exception dom_html_document_create(
 
 /* Initialise a HTMLDocument */
 dom_exception _dom_html_document_initialise(dom_html_document *doc,
-		dom_events_default_action_fetcher daf, dom_ui_handler *ui)
+		dom_events_default_action_fetcher daf)
 {
 	dom_exception error;
-
-	UNUSED(ui);
 
 	error = _dom_document_initialise(&doc->base, daf);
 	if (error != DOM_NO_ERR)
@@ -69,11 +86,22 @@ void _dom_html_document_finalise(dom_html_document *doc)
 }
 
 /* Destroy a HTMLDocument */
-void _dom_html_document_destroy(dom_html_document *doc)
+void _dom_html_document_destroy(dom_node_internal *node)
 {
+	dom_html_document *doc = (dom_html_document *) node;
+
 	_dom_html_document_finalise(doc);
 
 	free(doc);
+}
+
+dom_exception _dom_html_document_copy(dom_node_internal *old,
+		dom_node_internal **copy)
+{
+	UNUSED(old);
+	UNUSED(copy);
+
+	return DOM_NOT_SUPPORTED_ERR;
 }
 
 /*-----------------------------------------------------------------------*/

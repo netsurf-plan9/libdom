@@ -23,7 +23,7 @@ struct dom_html_collection {
 			 * whether some node is an element of
 			 * this collection
 			 */
-	struct dom_document *doc;	/**< The document created this
+	struct dom_html_document *doc;	/**< The document created this
 					 * collection
 					 */
 	struct dom_node_internal *root;
@@ -32,12 +32,12 @@ struct dom_html_collection {
 			/**< Reference counting */
 };
 
-dom_exception _dom_html_collection_create(struct dom_document *doc,
+dom_exception _dom_html_collection_create(struct dom_html_document *doc,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic,
 		struct dom_html_collection **col);
 
-dom_exception _dom_html_collection_initialise(struct dom_document *doc,
+dom_exception _dom_html_collection_initialise(struct dom_html_document *doc,
 		struct dom_html_collection *col,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic);
