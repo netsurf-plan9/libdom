@@ -59,6 +59,8 @@ dom_exception _dom_html_isindex_element_initialise(struct dom_document *doc,
 	dom_string *name = NULL;
 	dom_exception err;
 
+	UNUSED(form);
+
 	err = dom_string_create((const uint8_t *) "ISINDEX", SLEN("ISINDEX"),
 			&name);
 	if (err != DOM_NO_ERR)
@@ -66,9 +68,6 @@ dom_exception _dom_html_isindex_element_initialise(struct dom_document *doc,
 	
 	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
 	dom_string_unref(name);
-
-	ele->base.form = form;
-	dom_node_ref(form);
 
 	return err;
 }
@@ -139,7 +138,8 @@ dom_exception _dom_html_isindex_element_copy(dom_node_internal *old,
 dom_exception dom_html_isindex_element_get_form(dom_html_isindex_element *ele,
 		struct dom_html_form_element **form)
 {
-	_dom_html_element_get_form(&ele->base, form);
+	UNUSED(ele);
+	UNUSED(form);
 
-	return DOM_NO_ERR;
+	return DOM_NOT_SUPPORTED_ERR;
 }

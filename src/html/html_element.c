@@ -25,15 +25,11 @@ dom_exception _dom_html_element_initialise(struct dom_document *doc,
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	el->form = NULL;
 	return err;
 }
 
 void _dom_html_element_finalise(struct dom_html_element *ele)
 {
-	dom_node_unref(ele->form);
-	ele->form = NULL;
-
 	_dom_element_finalise(&ele->base);
 }
 
@@ -189,33 +185,5 @@ cleanup1:
 
 fail:
 	return err;
-}
-
-/**
- * Get the form element if this element is a form control
- *
- * \param ele   The element object
- * \param form  The form object
- */
-void _dom_html_element_get_form(dom_html_element *ele,
-		struct dom_html_form_element **form)
-{
-	*form = ele->form;
-	dom_node_ref(*form);
-}
-
-/**
- * Set the form element if this element is a form control
- *
- * \param ele   The element object
- * \param form  The form object
- */
-void _dom_html_element_associate_form(dom_html_element *ele,
-		struct dom_html_form_element *form)
-{
-	/* Unref the form if there is any */
-	dom_node_unref(form);
-	ele->form = form;
-	dom_node_ref(form);
 }
 

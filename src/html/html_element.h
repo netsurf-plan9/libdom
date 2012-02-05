@@ -12,8 +12,6 @@
 
 #include "core/element.h"
 
-struct dom_html_form_element;
-
 /**
  * The dom_html_element class
  *
@@ -21,10 +19,6 @@ struct dom_html_form_element;
 struct dom_html_element {
 	struct dom_element base;
 			/**< The base class */
-	struct dom_html_form_element *form;
-			/**< The form element which contains this element if
-			 *   this element is a form control
-			 */
 };
 
 dom_exception _dom_html_element_initialise(struct dom_document *doc,
@@ -49,12 +43,6 @@ dom_exception dom_html_element_get_bool_property(dom_html_element *ele,
 		const char *name, unsigned long len, bool *has);
 dom_exception dom_html_element_set_bool_property(dom_html_element *ele,
 		const char *name, unsigned long len, bool has);
-void _dom_html_element_get_form(dom_html_element *ele,
-		struct dom_html_form_element **form);
-void _dom_html_element_associate_form(dom_html_element *ele,
-		struct dom_html_form_element *form);
-
-
 
 #endif
 

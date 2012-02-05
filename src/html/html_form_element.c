@@ -229,9 +229,11 @@ dom_exception dom_html_form_element_reset(dom_html_form_element *ele)
  * src/html/html_collection.h for detail. */
 static bool _dom_is_form_control(struct dom_node_internal *node)
 {
-	assert(node->type == DOM_ELEMENT_NODE);
-	dom_html_element *ele = (dom_html_element *) node;
+	UNUSED(node);
 
-	return ele->form != NULL;
+	assert(node->type == DOM_ELEMENT_NODE);
+
+	/** \todo: implement */
+	return false;
 }
 
