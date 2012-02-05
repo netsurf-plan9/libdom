@@ -36,7 +36,7 @@ struct dom_ui_handler {
 typedef struct dom_ui_handler dom_ui_handler;
 
 /* Create a HTMLDocument */
-dom_exception dom_html_document_create(dom_msg msg, void *msg_pw,
+dom_exception dom_html_document_create(
 		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
 		dom_html_document **doc);
 

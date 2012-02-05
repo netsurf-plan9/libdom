@@ -14,35 +14,67 @@
 #include "utils/utils.h"
 
 /* Create a HTMLDocument */
-dom_exception dom_html_document_create(dom_msg msg, void *msg_pw,
+dom_exception dom_html_document_create(
 		dom_events_default_action_fetcher daf, dom_ui_handler *ui,
 		dom_html_document **doc)
 {
-	*doc = malloc(sizeof(dom_html_document));
-	if (*doc == NULL)
+	dom_exception error;
+	dom_html_document *result;
+
+	result = malloc(sizeof(dom_html_document));
+	if (result == NULL)
 		return DOM_NO_MEM_ERR;
 	
-	return _dom_html_document_initialise(*doc, msg, msg_pw, daf, ui);
+	error = _dom_html_document_initialise(*doc, daf, ui);
+	if (error != DOM_NO_ERR) {
+		free(result);
+		return error;
+	}
+
+	*doc = result;
+	return DOM_NO_ERR;
 }
 
 /* Initialise a HTMLDocument */
 dom_exception _dom_html_document_initialise(dom_html_document *doc,
-		dom_msg msg, void *msg_pw,
 		dom_events_default_action_fetcher daf, dom_ui_handler *ui)
 {
-	UNUSED(doc);
-	UNUSED(msg);
-	UNUSED(msg_pw);
-	UNUSED(daf);
+	dom_exception error;
+
 	UNUSED(ui);
+
+	error = _dom_document_initialise(&doc->base, daf);
+	if (error != DOM_NO_ERR)
+		return error;
+
+	doc->title = NULL;
+	doc->referer = NULL;
+	doc->domain = NULL;
+	doc->url = NULL;
+	doc->cookie = NULL;
 
 	return DOM_NO_ERR;
 }
 
 /* Finalise a HTMLDocument */
-void _dom_html_document_finalise(dom_html_document *doc);
+void _dom_html_document_finalise(dom_html_document *doc)
+{
+	dom_string_unref(doc->cookie);
+	dom_string_unref(doc->url);
+	dom_string_unref(doc->domain);
+	dom_string_unref(doc->referer);
+	dom_string_unref(doc->title);
+
+	_dom_document_finalise(&doc->base);
+}
+
 /* Destroy a HTMLDocument */
-void _dom_html_document_destroy(dom_html_document *doc);
+void _dom_html_document_destroy(dom_html_document *doc)
+{
+	_dom_html_document_finalise(doc);
+
+	free(doc);
+}
 
 /* Parse a data chunk into the HTMLDocument */
 dom_exception dom_html_document_write_data(uint8_t *data, size_t len);

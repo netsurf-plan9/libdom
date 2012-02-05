@@ -27,7 +27,6 @@ struct dom_html_document {
 
 /* Initialise a HTMLDocument */
 dom_exception _dom_html_document_initialise(dom_html_document *doc,
-		dom_msg msg, void *msg_pw,
 		dom_events_default_action_fetcher daf, dom_ui_handler *ui);
 /* Finalise a HTMLDocument */
 void _dom_html_document_finalise(dom_html_document *doc);
