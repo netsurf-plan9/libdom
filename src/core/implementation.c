@@ -209,23 +209,13 @@ dom_exception dom_implementation_create_document(
 	}
 
 	/* Create document object that reflects the required APIs */
-	/** \todo Why do these have different APIs?
-	 *        Why is the html document constructor public? */
-	/** \todo Of course, none of the HTML stuff actually works, 
-	 * so enabling it results in total breakage of the testsuite */
-#ifdef WITH_NON_BROKEN_HTML_IMPLEMENTATION
  	if (impl_type == DOM_IMPLEMENTATION_HTML) {
 		dom_html_document *html_doc;
 
-		err = dom_html_document_create(NULL, NULL, 
-				daf, NULL, DOM_HTML_PARSER, &html_doc);
+		err = _dom_html_document_create(daf, &html_doc);
 
 		d = (dom_document *) html_doc;
-	} else 
-#else
-	UNUSED(impl_type);
-#endif
-	{
+	} else {
 		err = _dom_document_create(daf, &d);
 	}
 
