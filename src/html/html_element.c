@@ -86,8 +86,11 @@ void _dom_html_element_finalise(struct dom_html_element *ele)
 /* The virtual destroy function, see src/core/node.c for detail */
 void _dom_html_element_destroy(dom_node_internal *node)
 {
-	UNUSED(node);
-	assert("Should never be here" == NULL);
+	dom_html_element *html = (dom_html_element *) node;
+
+	_dom_html_element_finalise(html);
+
+	free(html);
 }
 
 /* The virtual copy function, see src/core/node.c for detail */
