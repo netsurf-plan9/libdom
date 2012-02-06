@@ -542,18 +542,17 @@ dom_exception _dom_attr_set_value(struct dom_attr *attr,
 	
 	dom_string *parsed = NULL;
 	err = dom_element_parse_attribute(a->parent, name, value, &parsed);
+	dom_string_unref(name);
 	if (err != DOM_NO_ERR) {
-		dom_string_unref(name);
 		return err;
 	}
 
 	/* Create text node containing new value */
 	err = dom_document_create_text_node(a->owner, parsed, &text);
+	dom_string_unref(parsed);
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	dom_string_unref(parsed);
-
 	/* Destroy children of this node */
 	for (c = a->first_child; c != NULL; c = d) {
 		d = c->next;
