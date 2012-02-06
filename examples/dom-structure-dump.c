@@ -95,7 +95,7 @@ dom_document *create_doc_dom_from_file(char *file)
 
 	/* Parse input file in chunks */
 	chunk_length = buffer_size;
-	while(chunk_length == buffer_size) {
+	while (chunk_length == buffer_size) {
 		chunk_length = fread(buffer, 1, buffer_size, handle);
 		error = dom_hubbub_parser_parse_chunk(parser, buffer,
 				chunk_length);
@@ -137,7 +137,7 @@ dom_document *create_doc_dom_from_file(char *file)
  * \param attribute  The attribute to dump
  * \return  true on success, or false on error
  */
-bool dump_dom_element_attribute(dom_node_internal *node, char *attribute)
+bool dump_dom_element_attribute(dom_node *node, char *attribute)
 {
 	dom_exception exc;
 	dom_string *attr = NULL;
@@ -165,9 +165,11 @@ bool dump_dom_element_attribute(dom_node_internal *node, char *attribute)
 	exc = dom_element_get_attribute(node, attr, &attr_value);
 	if (exc != DOM_NO_ERR) {
 		printf(" Exception raised for element_get_attribute\n");
+		dom_string_unref(attr);
 		return false;
 	} else if (attr_value == NULL) {
 		/* Element lacks required attribute */
+		dom_string_unref(attr);
 		return true;
 	}
 
@@ -195,7 +197,7 @@ bool dump_dom_element_attribute(dom_node_internal *node, char *attribute)
  * \param depth  The node's depth
  * \return  true on success, or false on error
  */
-bool dump_dom_element(dom_node_internal *node, int depth)
+bool dump_dom_element(dom_node *node, int depth)
 {
 	dom_exception exc;
 	dom_string *node_name = NULL;
@@ -259,10 +261,10 @@ bool dump_dom_element(dom_node_internal *node, int depth)
  * \param node   The root node to start from
  * \param depth  The depth of 'node' in the (sub)tree
  */
-bool dump_dom_structure(dom_node_internal *node, int depth)
+bool dump_dom_structure(dom_node *node, int depth)
 {
 	dom_exception exc;
-	dom_node_internal *child;
+	dom_node *child;
 
 	/* Print this node's entry */
 	if (dump_dom_element(node, depth) == false) {
@@ -281,21 +283,29 @@ bool dump_dom_structure(dom_node_internal *node, int depth)
 
 		/* Loop though all node's children */
 		do {
+			dom_node *next_child;
+
 			/* Visit node's descendents */
 			if (dump_dom_structure(child, depth) == false) {
 				/* There was an error; return */
+				dom_node_unref(child);
 				return false;
 			}
 
 			/* Go to next sibling */
-			exc = dom_node_get_next_sibling(child, &child);
+			exc = dom_node_get_next_sibling(child, &next_child);
 			if (exc != DOM_NO_ERR) {
 				printf("Exception raised for "
 						"node_get_next_sibling\n");
+				dom_node_unref(child);
 				return false;
 			}
+
+			dom_node_unref(child);
+			child = next_child;
 		} while (child != NULL); /* No more children */
 	}
+
 	return true;
 }
 
@@ -307,7 +317,7 @@ int main(int argc, char **argv)
 {
 	dom_exception exc; /* returned by libdom functions */
 	dom_document *doc = NULL; /* document, loaded into libdom */
-	dom_node_internal *root = NULL; /* root element of document */
+	dom_node *root = NULL; /* root element of document */
 
 	/* Load up the input HTML file */
 	doc = create_doc_dom_from_file("files/test.html");
@@ -320,17 +330,23 @@ int main(int argc, char **argv)
 	exc = dom_document_get_document_element(doc, &root);
 	if (exc != DOM_NO_ERR) {
 		printf("Exception raised for get_document_element\n");
+		dom_node_unref(doc);
  		return EXIT_FAILURE;
 	} else if (root == NULL) {
 		printf("Broken: root == NULL\n");
+		dom_node_unref(doc);
  		return EXIT_FAILURE;
 	}
 
 	/* Dump DOM structure */
 	if (dump_dom_structure(root, 0) == false) {
 		printf("Failed to complete DOM structure dump.\n");
+		dom_node_unref(root);
+		dom_node_unref(doc);
 		return EXIT_FAILURE;
 	}
+
+	dom_node_unref(root);
 
 	/* Finished with the dom_document */
 	dom_node_unref(doc);
