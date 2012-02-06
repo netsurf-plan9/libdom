@@ -11,10 +11,6 @@
 
 #include <dom/core/string.h>
 
-/* Create a DOM string from a lwc_string */
-dom_exception _dom_string_create_from_lwcstring(struct lwc_string_s *str, 
-		dom_string **ret);
-
 /* Map the lwc_error to dom_exception */
 dom_exception _dom_exception_from_lwc_error(lwc_error err);
 

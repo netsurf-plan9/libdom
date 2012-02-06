@@ -141,35 +141,46 @@ dom_exception dom_string_create(const uint8_t *ptr, size_t len,
 }
 
 /**
- * Create a dom_string from a lwc_string
- * 
- * \param str  The lwc_string
- * \param ret  The new dom_string
+ * Create an interned DOM string from a string of characters
+ *
+ * \param ptr    Pointer to string of characters
+ * \param len    Length, in bytes, of string of characters
+ * \param str    Pointer to location to receive result
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion
+ *
+ * The returned string will already be referenced, so there is no need
+ * to explicitly reference it.
+ *
+ * The string of characters passed in will be copied for use by the 
+ * returned DOM string.
  */
-dom_exception _dom_string_create_from_lwcstring(lwc_string *str, 
-		dom_string **ret)
+dom_exception dom_string_create_interned(const uint8_t *ptr, size_t len, 
+		dom_string **str)
 {
-	dom_string *r;
+	dom_string *ret;
 
-	if (str == NULL) {
-		*ret = NULL;
-		return DOM_NO_ERR;
+	if (ptr == NULL || len == 0) {
+		ptr = (const uint8_t *) "";
+		len = 0;
 	}
 
-	r = malloc(sizeof(dom_string));
-	if (r == NULL)
+	ret = malloc(sizeof(dom_string));
+	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
-	r->data.intern = lwc_string_ref(str);
+	if (lwc_intern_string((const char *) ptr, len, 
+			&ret->data.intern) != lwc_error_ok) {
+		free(ret);
+		return DOM_NO_MEM_ERR;
+	}
 
-	r->refcnt = 1;
+	ret->refcnt = 1;
 
-	r->type = DOM_STRING_INTERNED;
+	ret->type = DOM_STRING_INTERNED;
 
-	*ret = r;
+	*str = ret;
+
 	return DOM_NO_ERR;
-
 }
 
 /**

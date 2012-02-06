@@ -26,6 +26,8 @@ void dom_string_unref(dom_string *str);
 /* Create a DOM string from a string of characters */
 dom_exception dom_string_create(const uint8_t *ptr, size_t len, 
 		dom_string **str);
+dom_exception dom_string_create_interned(const uint8_t *ptr, size_t len,
+		dom_string **str);
 
 /* Obtain an interned representation of a dom string */
 dom_exception dom_string_intern(dom_string *str, 
