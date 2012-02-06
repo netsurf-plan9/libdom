@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <string.h>
 
 #include <libwapcaplet/libwapcaplet.h>
 
@@ -59,7 +60,7 @@ dom_exception _dom_document_event_internal_initialise(struct dom_document *doc,
 
 	for (i = 0; i < DOM_EVENT_COUNT; i++) {
 		err = lwc_intern_string(__event_types[i],
-				SLEN(__event_types[i]), &dei->event_types[i]);
+				strlen(__event_types[i]), &dei->event_types[i]);
 		if (err != lwc_error_ok)
 			return _dom_exception_from_lwc_error(err);
 	}
