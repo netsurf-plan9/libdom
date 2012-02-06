@@ -53,11 +53,11 @@ dom_exception _dom_document_event_internal_initialise(struct dom_document *doc,
 		dom_events_default_action_fetcher actions)
 {
 	lwc_error err;
-	int i = 0;
+	int i;
 
 	UNUSED(doc);
 
-	for (; i < DOM_EVENT_COUNT; i++) {
+	for (i = 0; i < DOM_EVENT_COUNT; i++) {
 		err = lwc_intern_string(__event_types[i],
 				SLEN(__event_types[i]), &dei->event_types[i]);
 		if (err != lwc_error_ok)
@@ -73,9 +73,15 @@ dom_exception _dom_document_event_internal_initialise(struct dom_document *doc,
 void _dom_document_event_internal_finalise(struct dom_document *doc,
 		dom_document_event_internal *dei)
 {
-	/* Nothing to do here */
+	int i;
+
 	UNUSED(doc);
-	UNUSED(dei);
+
+	for (i = 0; i < DOM_EVENT_COUNT; i++) {
+		if (dei->event_types[i] != NULL)
+			lwc_string_unref(dei->event_types[i]);
+	}
+
 	return;
 }
 
