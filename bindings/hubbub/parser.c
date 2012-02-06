@@ -394,29 +394,18 @@ static hubbub_error create_element(void *parser, const hubbub_tag *tag,
 {
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
 	dom_exception err;
-	lwc_string *iname;
 	dom_string *name;
 	struct dom_element *element = NULL;
 	hubbub_error herr;
 
 	*result = NULL;
 
-	if (lwc_intern_string((const char *) tag->name.ptr, 
-			tag->name.len, &iname) != lwc_error_ok) {
-		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
-				"Can't create element name");
-		goto fail;
-	}
-
-	err = _dom_string_create_from_lwcstring(iname, &name);
+	err = dom_string_create_interned(tag->name.ptr, tag->name.len, &name);
 	if (err != DOM_NO_ERR) {
-		lwc_string_unref(iname);
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't create element name");
 		goto fail;
 	}
-
-	lwc_string_unref(iname);
 
 	if (tag->ns == HUBBUB_NS_NULL) {
 		err = dom_document_create_element(dom_parser->doc, name,
@@ -707,26 +696,15 @@ static hubbub_error add_attributes(void *parser, void *node,
 	uint32_t i;
 
 	for (i = 0; i < n_attributes; i++) {
-		lwc_string *iname;
 		dom_string *name, *value;
 
-		if (lwc_intern_string((const char *) attributes[i].name.ptr,
-				attributes[i].name.len, &iname) != 
-				lwc_error_ok) {
-			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
-					"Can't create attribute name");
-			goto fail;
-		}
-
-		err = _dom_string_create_from_lwcstring(iname, &name);
+		err = dom_string_create_interned(attributes[i].name.ptr,
+				attributes[i].name.len, &name);
 		if (err != DOM_NO_ERR) {
-			lwc_string_unref(iname);
 			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 					"Can't create attribute name");
 			goto fail;
 		}
-
-		lwc_string_unref(iname);
 
 		err = dom_string_create(attributes[i].value.ptr,
 				attributes[i].value.len, &value);
