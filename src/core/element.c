@@ -883,6 +883,43 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 
 }
 
+/**
+ * Obtain a pre-parsed array of class names for an element
+ *
+ * \param element    Element containing classes
+ * \param classes    Pointer to location to receive allocated array
+ * \param n_classes  Pointer to location to receive number of classes
+ * \return DOM_NO_ERR on success,
+ *         DOM_NO_MEM_ERR on memory exhaustion
+ */
+dom_exception _dom_element_get_classes(struct dom_element *element,
+		lwc_string ***classes, uint32_t *n_classes)
+{
+	UNUSED(element);
+	UNUSED(classes);
+	UNUSED(n_classes);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+/**
+ * Determine if an element has an associated class
+ *
+ * \param element  Element to consider
+ * \param name     Class name to look for
+ * \param match    Pointer to location to receive result
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_element_has_class(struct dom_element *element,
+		lwc_string *name, bool *match)
+{
+	UNUSED(element);
+	UNUSED(name);
+	UNUSED(match);
+
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
 /*------------- The overload virtual functions ------------------------*/
 
 /* Overload function of Node, please refer src/core/node.c for detail */

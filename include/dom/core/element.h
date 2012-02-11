@@ -87,6 +87,14 @@ typedef struct dom_element_vtable {
 	dom_exception (*dom_element_set_id_attribute_node)(
 			struct dom_element *element,
 			struct dom_attr *id_attr, bool is_id);
+
+	/* These two are for the benefit of bindings to libcss */
+	dom_exception (*dom_element_get_classes)(
+			struct dom_element *element,
+			lwc_string ***classes, uint32_t *n_classes);
+	dom_exception (*dom_element_has_class)(
+			struct dom_element *element,
+			lwc_string *name, bool *match);
 } dom_element_vtable;
 
 static inline dom_exception dom_element_get_tag_name(
@@ -322,5 +330,26 @@ static inline dom_exception dom_element_set_id_attribute_node(
 #define dom_element_set_id_attribute_node(e, a, i) \
 		dom_element_set_id_attribute_node((dom_element *) (e), \
 		(struct dom_attr *) (a), (bool) (i))
+
+static inline dom_exception dom_element_get_classes(
+		struct dom_element *element,
+		lwc_string ***classes, uint32_t *n_classes)
+{
+	return ((dom_element_vtable *) ((dom_node *) element)->vtable)->
+			dom_element_get_classes(element, classes, n_classes);
+}
+#define dom_element_get_classes(e, c, n) \
+		dom_element_get_classes((dom_element *) (e), \
+		(lwc_string ***) (c), (uint32_t *) (n))
+
+static inline dom_exception dom_element_has_class(
+		struct dom_element *element, lwc_string *name, bool *match)
+{
+	return ((dom_element_vtable *) ((dom_node *) element)->vtable)->
+			dom_element_has_class(element, name, match);
+}
+#define dom_element_has_class(e, n, m) \
+		dom_element_has_class((dom_element *) (e), \
+		(lwc_string *) (n), (bool *) (m))
 
 #endif

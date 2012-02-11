@@ -101,6 +101,10 @@ dom_exception _dom_element_set_id_attribute_ns(struct dom_element *element,
 		bool is_id);
 dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 		struct dom_attr *id_attr, bool is_id);
+dom_exception _dom_element_get_classes(struct dom_element *element,
+		lwc_string ***classes, uint32_t *n_classes);
+dom_exception _dom_element_has_class(struct dom_element *element,
+		lwc_string *name, bool *match);
 
 #define DOM_ELEMENT_VTABLE \
 	_dom_element_get_tag_name, \
@@ -122,7 +126,9 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 	_dom_element_get_schema_type_info, \
 	_dom_element_set_id_attribute, \
 	_dom_element_set_id_attribute_ns, \
-	_dom_element_set_id_attribute_node
+	_dom_element_set_id_attribute_node, \
+	_dom_element_get_classes, \
+	_dom_element_has_class
 
 /* Overloading dom_node functions */
 dom_exception _dom_element_get_attributes(dom_node_internal *node,
