@@ -155,7 +155,8 @@ bool dump_dom_element_attribute(dom_node *node, char *attribute)
 	assert(type == DOM_ELEMENT_NODE);
 
 	/* Create a dom_string containing required attribute name. */
-	exc = dom_string_create_interned((uint8_t *)attribute, strlen(attribute), &attr);
+	exc = dom_string_create_interned((uint8_t *)attribute,
+			strlen(attribute), &attr);
 	if (exc != DOM_NO_ERR) {
 		printf(" Exception raised for dom_string_create\n");
 		return false;
