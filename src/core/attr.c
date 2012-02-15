@@ -31,12 +31,7 @@ struct dom_element;
 struct dom_attr {
 	struct dom_node_internal base;	/**< Base node */
 
-	bool specified;		/**< Whether the attribute is specified
-				 * or default */
-
 	struct dom_type_info *schema_type_info;	/**< Type information */
-
-	bool is_id;	/**< Whether this attribute is a ID attribute */
 
 	dom_attr_type type;	/**< The type of this attribute */
 	
@@ -45,6 +40,10 @@ struct dom_attr {
 		unsigned short svalue;
 		bool bvalue;
 	} value;	/**< The special type value of this attribute */
+
+	bool specified;	/**< Whether the attribute is specified or default */
+
+	bool is_id;	/**< Whether this attribute is a ID attribute */
 
 	bool read_only;	/**< Whether this attribute is readonly */
 };
