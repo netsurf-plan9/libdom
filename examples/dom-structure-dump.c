@@ -237,7 +237,7 @@ bool dump_dom_element(dom_node *node, int depth)
 	/* Get string data and print element name */
 	string = dom_string_data(node_name);
 	length = dom_string_byte_length(node_name);
-	printf("%.*s", (int)length, string);
+	printf("[%.*s]", (int)length, string);
 
 	/* Finished with the node_name dom_string */
 	dom_string_unref(node_name);
