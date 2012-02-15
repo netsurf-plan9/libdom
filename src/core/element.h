@@ -19,6 +19,7 @@ struct dom_element;
 struct dom_namednodemap;
 struct dom_node;
 struct dom_attr;
+struct dom_attr_list;
 struct dom_type_info;
 struct dom_hash_table;
 
@@ -28,10 +29,7 @@ struct dom_hash_table;
 struct dom_element {
 	struct dom_node_internal base;		/**< Base node */
 
-	struct dom_hash_table *attributes;	/**< Element attributes */
-
-	struct dom_hash_table *ns_attributes;
-			/**< Attributes with prefix */
+	struct dom_attr_list *attributes;	/**< Element attributes */
 
 	dom_string *id_ns;	/**< The id attribute's namespace */
 
@@ -72,7 +70,7 @@ dom_exception _dom_element_get_elements_by_tag_name(
 		struct dom_element *element, dom_string *name,
 		struct dom_nodelist **result);
 dom_exception _dom_element_get_attribute_ns(struct dom_element *element, 
-		dom_string *namespace,  dom_string *localname, 
+		dom_string *namespace, dom_string *localname, 
 		dom_string **value);
 dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *qname,

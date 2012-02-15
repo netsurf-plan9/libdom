@@ -28,13 +28,8 @@
 #include "utils/namespace.h"
 #include "utils/utils.h"
 #include "utils/hashtable.h"
+#include "utils/list.h"
 #include "events/mutation_event.h"
-
-/* The three numbers are just random ones, maybe we should change it after some
- * more consideration */
-#define CHAINS_ATTRIBUTES 31
-#define CHAINS_NAMESPACE  7
-#define CHAINS_NS_ATTRIBUTES 31
 
 struct dom_element_vtable _dom_element_vtable = {
 	{
@@ -53,28 +48,280 @@ static struct dom_element_protected_vtable element_protect_vtable = {
 	DOM_ELEMENT_PROTECT_VTABLE
 };
 
+
+typedef struct dom_attr_list {
+	struct list_entry list; /**< Linked list links to prev/next entries */
+	
+	struct dom_attr *attr;
+
+	struct dom_string *name;
+	struct dom_string *namespace;
+} dom_attr_list;
+
+/* Attribute linked list releated functions */
+
+/**
+ * Get the next attribute in the list
+ *
+ * \param n  The attribute list node
+ * \return The next attribute node
+ */
+static dom_attr_list * _dom_element_attr_list_next(const dom_attr_list *n)
+{
+	return (dom_attr_list *)(n->list.next);
+}
+
+/**
+ * Unlink an attribute list node from its linked list
+ *
+ * \param n  The attribute list node
+ */
+static void _dom_element_attr_list_node_unlink(dom_attr_list *n)
+{
+	if (n == NULL)
+		return;
+
+	list_del(&n->list);
+}
+
+/**
+ * Insert attribute list node into attribute list
+ *
+ * \param list      The list header
+ * \param new_attr  The attribute node to insert
+ */
+static void _dom_element_attr_list_insert(dom_attr_list *list,
+		dom_attr_list *new_attr)
+{
+	list_append(&list->list, &new_attr->list);
+}
+
+/**
+ * Get attribute from attribute list, which matches given name
+ *
+ * \param list  The attribute list to search
+ * \param name  The name of the attribute to search for
+ * \param name  The namespace of the attribute to search for (may be NULL)
+ * \return the matching attribute, or NULL if none found
+ */
+static dom_attr_list * _dom_element_attr_list_find_by_name(
+		dom_attr_list *list, dom_string *name, dom_string *namespace)
+{
+	dom_attr_list *attr = list;
+
+	if (list == NULL || name == NULL)
+		return NULL;
+
+	do {
+		if (((namespace == NULL && attr->namespace == NULL) ||
+				(namespace != NULL && attr->namespace != NULL &&
+						dom_string_isequal(namespace,
+						attr->namespace))) &&
+				dom_string_isequal(name, attr->name)) {
+			/* Both have NULL namespace or matching namespace,
+			 * and both have same name */
+			return attr;
+		}
+
+		attr = _dom_element_attr_list_next(attr);
+	} while (attr != list);
+
+	return NULL;
+}
+
+/**
+ * Get the number of elements in this attribute list
+ *
+ * \param list  The attribute list
+ * 
+ * \return the number attribute list node elements
+ */
+static unsigned int _dom_element_attr_list_length(dom_attr_list *list)
+{
+	dom_attr_list *attr = list;
+	unsigned int count = 0;
+
+	if (list == NULL)
+		return count;
+
+	do {
+		count++;
+
+		attr = _dom_element_attr_list_next(attr);
+	} while (attr != list);
+
+	return count;
+}
+
+/**
+ * Get the attribute list node at the given index
+ *
+ * \param list   The attribute list
+ * \param index  The index number
+ * 
+ * \return the number attribute list node elements
+ */
+static dom_attr_list * _dom_element_attr_list_get_by_index(dom_attr_list *list,
+		unsigned int index)
+{
+	dom_attr_list *attr = list;
+
+	if (list == NULL)
+		return NULL;
+
+	do {
+		if (--index == 0)
+			return attr;
+
+		attr = _dom_element_attr_list_next(attr);
+	} while (attr != list);
+
+	return NULL;
+}
+
+static dom_attr_list * _dom_element_attr_list_node_create(dom_attr *attr,
+		dom_string *name, dom_string *namespace)
+{
+	dom_attr_list *new_list_node;
+
+	if (attr == NULL || name == NULL)
+		return NULL;
+
+	new_list_node = malloc(sizeof(*new_list_node));
+	if (new_list_node == NULL)
+		return NULL;
+
+	list_init(&new_list_node->list);
+
+	new_list_node->attr = attr;
+	new_list_node->name = name;
+	new_list_node->namespace = namespace;
+
+	return new_list_node;
+}
+
+static void _dom_element_attr_list_node_destroy(dom_attr_list *n)
+{
+	dom_node_internal *a;
+
+	assert(n != NULL);
+	assert(n->attr != NULL);
+	assert(n->name != NULL);
+
+	dom_string_unref(n->name);
+
+	if (n->namespace != NULL)
+		dom_string_unref(n->namespace);
+
+	a = (dom_node_internal *) n->attr;
+	a->parent = NULL;
+	dom_node_try_destroy(a);
+
+	free(n);
+}
+
+static void _dom_element_attr_list_destroy(dom_attr_list *list)
+{
+	dom_attr_list *attr = list;
+	dom_attr_list *next = list;
+
+	if (list == NULL)
+		return;
+
+	do {
+		attr = next;
+		next = _dom_element_attr_list_next(attr);
+
+		_dom_element_attr_list_node_unlink(attr);
+		_dom_element_attr_list_node_destroy(attr);
+	} while (next != attr);
+
+	return;
+}
+
+static dom_attr_list * _dom_element_attr_list_node_clone(dom_attr_list *n)
+{
+	dom_attr_list *new_list_node;
+	dom_exception err;
+
+	assert(n != NULL);
+	assert(n->attr != NULL);
+	assert(n->name != NULL);
+
+	new_list_node = malloc(sizeof(*new_list_node));
+	if (new_list_node == NULL)
+		return NULL;
+
+	new_list_node->name = NULL;
+	new_list_node->namespace = NULL;
+
+	err = dom_node_clone_node(n->attr, true, &new_list_node);
+	if (err != DOM_NO_ERR) {
+		free(new_list_node);
+		return NULL;
+	}
+
+	if (n->name != NULL)
+		new_list_node->name = dom_string_ref(n->name);
+
+	if (n->namespace != NULL)
+		new_list_node->namespace = dom_string_ref(n->namespace);
+
+	return new_list_node;
+}
+
+static dom_attr_list * _dom_element_attr_list_clone(dom_attr_list *list)
+{
+	dom_attr_list *attr = list;
+
+	dom_attr_list *new_list = NULL;
+	dom_attr_list *new_list_node = NULL;
+	bool first = true;
+
+	if (list == NULL)
+		return NULL;
+
+	do {
+		new_list_node = _dom_element_attr_list_node_clone(attr);
+		if (new_list_node == NULL) {
+			if (new_list != NULL)
+				_dom_element_attr_list_destroy(new_list);
+			return NULL;
+		}
+
+		if (first) {
+			new_list = new_list_node;
+		} else {
+			_dom_element_attr_list_insert(new_list, new_list_node);
+		}
+
+		attr = _dom_element_attr_list_next(attr);
+	} while (attr != list);
+
+	return new_list;
+}
+
 static dom_exception _dom_element_get_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name, 
-		dom_string **value);
+		dom_string *namespace, dom_string *name, dom_string **value);
 static dom_exception _dom_element_set_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name, 
-		dom_string *value);
+		dom_string *namespace, dom_string *name, dom_string *value);
 static dom_exception _dom_element_remove_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name);
+		dom_string *namespace, dom_string *name);
+
 static dom_exception _dom_element_get_attr_node(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name, 
+		dom_string *namespace, dom_string *name,
 		struct dom_attr **result);
 static dom_exception _dom_element_set_attr_node(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_attr *attr, 
+		dom_string *namespace, struct dom_attr *attr,
 		struct dom_attr **result);
 static dom_exception _dom_element_remove_attr_node(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_attr *attr, 
+		dom_string *namespace, struct dom_attr *attr,
 		struct dom_attr **result);
+
 static dom_exception _dom_element_has_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name,
-		bool *result);
+		dom_string *namespace, dom_string *name, bool *result);
 static dom_exception _dom_element_set_id_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name, bool is_id);
+		dom_string *namespace, dom_string *name, bool is_id);
 
 
 /* The operation set for namednodemap */
@@ -112,33 +359,6 @@ static struct nnm_operation attributes_opt = {
 	attributes_remove_named_item_ns,
 	attributes_destroy,
 	attributes_equal
-};
-
-static uint32_t attributes_hash(void *key, void *pw);
-static void *attributes_clone_key(void *key, void *pw);
-static void attributes_destroy_key(void *key, void *pw);
-static void *attributes_clone_value(void *value, void *pw);
-static void attributes_destroy_value(void *value, void *pw);
-static void *attributes_ns_clone_value(void *value, void *pw);
-static void attributes_ns_destroy_value(void *value, void *pw);
-static bool attributes_key_isequal(void *key1, void *key2, void *pw);
-
-static const struct dom_hash_vtable attributes_vtable = {
-	attributes_hash,
-	attributes_clone_key,
-	attributes_destroy_key,
-	attributes_clone_value,
-	attributes_destroy_value,
-	attributes_key_isequal
-};
-
-static const struct dom_hash_vtable attributes_ns_vtable = {
-	attributes_hash,
-	attributes_clone_key,
-	attributes_destroy_key,
-	attributes_ns_clone_value,
-	attributes_ns_destroy_value,
-	attributes_key_isequal
 };
 
 /*----------------------------------------------------------------------*/
@@ -204,27 +424,12 @@ dom_exception _dom_element_initialise(struct dom_document *doc,
 
 	assert(doc != NULL);
 
-	el->attributes = _dom_hash_create(CHAINS_ATTRIBUTES, 
-			&attributes_vtable, NULL);
-	if (el->attributes == NULL) {
-		free(el);
-		return DOM_NO_MEM_ERR;;
-	}
-
-	el->ns_attributes = _dom_hash_create(CHAINS_NAMESPACE, 
-			&attributes_ns_vtable, NULL);
-	if (el->ns_attributes == NULL) {
-		free(el->attributes);
-		free(el);
-		return DOM_NO_MEM_ERR;
-	}
+	el->attributes = NULL;
 
 	/* Initialise the base class */
 	err = _dom_node_initialise(&el->base, doc, DOM_ELEMENT_NODE,
 			name, NULL, namespace, prefix);
 	if (err != DOM_NO_ERR) {
-		free(el->ns_attributes);
-		free(el->attributes);
 		free(el);
 		return err;
 	}
@@ -246,13 +451,8 @@ void _dom_element_finalise(struct dom_element *ele)
 {
 	/* Destroy attributes attached to this node */
 	if (ele->attributes != NULL) {
-		_dom_hash_destroy(ele->attributes);
+		_dom_element_attr_list_destroy(ele->attributes);
 		ele->attributes = NULL;
-	}
-
-	if (ele->ns_attributes != NULL) {
-		_dom_hash_destroy(ele->ns_attributes);
-		ele->ns_attributes = NULL;
 	}
 
 	if (ele->schema_type_info != NULL) {
@@ -316,7 +516,7 @@ dom_exception _dom_element_get_tag_name(struct dom_element *element,
 dom_exception _dom_element_get_attribute(struct dom_element *element,
 		dom_string *name, dom_string **value)
 {
-	return _dom_element_get_attr(element, element->attributes, name, value);
+	return _dom_element_get_attr(element, NULL, name, value);
 }
 
 /**
@@ -332,7 +532,7 @@ dom_exception _dom_element_get_attribute(struct dom_element *element,
 dom_exception _dom_element_set_attribute(struct dom_element *element,
 		dom_string *name, dom_string *value)
 {
-	return _dom_element_set_attr(element, element->attributes, name, value);
+	return _dom_element_set_attr(element, NULL, name, value);
 }
 
 /**
@@ -346,7 +546,7 @@ dom_exception _dom_element_set_attribute(struct dom_element *element,
 dom_exception _dom_element_remove_attribute(struct dom_element *element,
 		dom_string *name)
 {
-	return _dom_element_remove_attr(element, element->attributes, name);
+	return _dom_element_remove_attr(element, NULL, name);
 }
 
 /**
@@ -364,8 +564,7 @@ dom_exception _dom_element_remove_attribute(struct dom_element *element,
 dom_exception _dom_element_get_attribute_node(struct dom_element *element, 
 		dom_string *name, struct dom_attr **result)
 {
-	return _dom_element_get_attr_node(element, element->attributes, name, 
-			result);
+	return _dom_element_get_attr_node(element, NULL, name, result);
 }
 
 /**
@@ -388,8 +587,7 @@ dom_exception _dom_element_get_attribute_node(struct dom_element *element,
 dom_exception _dom_element_set_attribute_node(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
-	return _dom_element_set_attr_node(element, element->attributes, attr, 
-			result);
+	return _dom_element_set_attr_node(element, NULL, attr, result);
 }
 
 /**
@@ -410,8 +608,7 @@ dom_exception _dom_element_set_attribute_node(struct dom_element *element,
 dom_exception _dom_element_remove_attribute_node(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
-	return _dom_element_remove_attr_node(element, element->attributes,
-			attr, result);
+	return _dom_element_remove_attr_node(element, NULL, attr, result);
 }
 
 /**
@@ -464,19 +661,7 @@ dom_exception _dom_element_get_attribute_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *localname,
 		dom_string **value)
 {
-	struct dom_hash_table *attrs;
-
-	if (namespace == NULL)
-		return _dom_element_get_attribute(element, localname, value);
-
-	attrs = _dom_hash_get(element->ns_attributes, namespace);
-	/* The element has no such namespace */
-	if (attrs == NULL) {
-		*value = NULL;
-		return DOM_NO_ERR;
-	}
-
-	return _dom_element_get_attr(element, attrs, localname, value);
+	return _dom_element_get_attr(element, namespace, localname, value);
 }
 
 /**
@@ -513,8 +698,8 @@ dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 		dom_string *value)
 {
 	dom_exception err;
-	struct dom_hash_table *attrs;
-	bool added;
+	dom_string *localname;
+	dom_string *prefix;
 
 	if (_dom_validate_name(qname) == false)
 		return DOM_INVALID_CHARACTER_ERR;
@@ -523,37 +708,23 @@ dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return DOM_NAMESPACE_ERR;
 
-	dom_string *localname;
-	dom_string *prefix;
 	err = _dom_namespace_split_qname(qname, &prefix, &localname);
 	if (err != DOM_NO_ERR)
 		return err;
 
-	/* If there is no namespace, redirect to set_attribute */
-	if (namespace == NULL) {
-		if (prefix != NULL)
-			return DOM_NAMESPACE_ERR;
-		err = _dom_element_set_attribute(element, localname, value);
+	/* If there is no namespace, must have a prefix */
+	if (namespace == NULL && prefix != NULL) {
+		dom_string_unref(prefix);
 		dom_string_unref(localname);
-		return err;
+		return DOM_NAMESPACE_ERR;
 	}
 
-	attrs = _dom_hash_get(element->ns_attributes, namespace);
-	/* The element has no such namespace */
-	if (attrs == NULL) {
-		attrs = _dom_hash_create(CHAINS_NS_ATTRIBUTES,
-				&attributes_vtable, NULL);
-		if (attrs == NULL)
-			return DOM_NO_MEM_ERR;
+	err = _dom_element_set_attr(element, namespace, localname, value);
 
-		added = _dom_hash_add(element->ns_attributes, namespace, attrs,
-				false);
-		if (added == false)
-			return DOM_NO_MEM_ERR;
-		dom_string_ref(namespace);
-	}
+	dom_string_unref(prefix);
+	dom_string_unref(localname);
 
-	return _dom_element_set_attr(element, attrs, localname, value);
+	return err;
 }
 
 /**
@@ -573,18 +744,7 @@ dom_exception _dom_element_set_attribute_ns(struct dom_element *element,
 dom_exception _dom_element_remove_attribute_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *localname)
 {
-	struct dom_hash_table *attrs;
-
-	if (namespace != NULL)
-		return _dom_element_remove_attribute(element, localname);
-
-	attrs = _dom_hash_get(element->ns_attributes, namespace);
-	/* The element has no such namespace */
-	if (attrs == NULL) {
-		return DOM_NO_ERR;
-	}
-
-	return _dom_element_remove_attr(element, attrs, localname);
+	return _dom_element_remove_attr(element, namespace, localname);
 }
 
 /**
@@ -608,21 +768,8 @@ dom_exception _dom_element_get_attribute_node_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *localname,
 		struct dom_attr **result)
 {
-	struct dom_hash_table *attrs;
-
-	if (namespace == NULL) {
-		return _dom_element_get_attribute_node(element, localname,
-				result);
-	}
-
-	attrs = _dom_hash_get(element->ns_attributes, namespace);
-	/* The element has no such namespace */
-	if (attrs == NULL) {
-		*result = NULL;
-		return DOM_NO_ERR;
-	}
-
-	return _dom_element_get_attr_node(element, attrs, localname, result);
+	return _dom_element_get_attr_node(element, namespace, localname,
+			result);
 }
 
 /**
@@ -651,38 +798,18 @@ dom_exception _dom_element_set_attribute_node_ns(struct dom_element *element,
 		struct dom_attr *attr, struct dom_attr **result)
 {
 	dom_exception err;
-	struct dom_hash_table *attrs;
-	bool added;
 	dom_string *namespace;
 
 	err = dom_node_get_namespace(attr, (void *) &namespace);
 	if (err != DOM_NO_ERR)
 		return err;
 
-	if (namespace == NULL)
-		return _dom_element_set_attribute_node(element, attr, result);
+	err = _dom_element_set_attr_node(element, namespace, attr, result);
 
-	attrs = _dom_hash_get(element->ns_attributes, namespace);
-	/* The element has no such namespace */
-	if (attrs == NULL) {
-		attrs = _dom_hash_create(CHAINS_NS_ATTRIBUTES,
-				&attributes_vtable, NULL);
-		if (attrs == NULL)
-			return DOM_NO_MEM_ERR;
+	if (namespace != NULL)
+		dom_string_unref(namespace);
 
-		added = _dom_hash_add(element->ns_attributes, namespace, attrs,
-				false);
-		if (added == false)
-			return DOM_NO_MEM_ERR;
-		dom_string_ref(namespace);
-	}
-
-	dom_string *localname;
-	err = dom_node_get_local_name(attr, (void *) &localname);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	return _dom_element_set_attr_node(element, attrs, attr, result);
+	return err;
 }
 
 /**
@@ -731,8 +858,7 @@ dom_exception _dom_element_get_elements_by_tag_name_ns(
 dom_exception _dom_element_has_attribute(struct dom_element *element,
 		dom_string *name, bool *result)
 {
-	return _dom_element_has_attr(element, element->attributes, name,
-			result);
+	return _dom_element_has_attr(element, NULL, name, result);
 }
 
 /**
@@ -753,19 +879,7 @@ dom_exception _dom_element_has_attribute_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *localname,
 		bool *result)
 {
-	struct dom_hash_table *attrs;
-
-	if (namespace == NULL)
-		return _dom_element_has_attribute(element, localname, result);
-
-	attrs = _dom_hash_get(element->ns_attributes, namespace);
-	/* The element has no such namespace */
-	if (attrs == NULL) {
-		*result = false;
-		return DOM_NO_ERR;
-	}
-
-	return _dom_element_has_attr(element, attrs, localname, result);
+	return _dom_element_has_attr(element, namespace, localname, result);
 }
 
 /**
@@ -806,8 +920,7 @@ dom_exception _dom_element_get_schema_type_info(struct dom_element *element,
 dom_exception _dom_element_set_id_attribute(struct dom_element *element,
 		dom_string *name, bool is_id)
 {
-	return _dom_element_set_id_attr(element, element->attributes, name, 
-			is_id);
+	return _dom_element_set_id_attr(element, NULL, name, is_id);
 }
 
 /**
@@ -826,22 +939,13 @@ dom_exception _dom_element_set_id_attribute_ns(struct dom_element *element,
 		dom_string *namespace, dom_string *localname,
 		bool is_id)
 {
-	struct dom_hash_table *hs;
 	dom_exception err;
 
-	if (namespace == NULL)
-		return _dom_element_set_id_attribute(element, localname, is_id);
-
-	hs = _dom_hash_get(element->ns_attributes, namespace);
-	assert(hs != NULL);
-
-	err = _dom_element_set_id_attr(element, hs, localname, is_id);
-	if (err != DOM_NO_ERR)
-		return err;
+	err = _dom_element_set_id_attr(element, namespace, localname, is_id);
 	
 	element->id_ns = dom_string_ref(namespace);
 
-	return DOM_NO_ERR;
+	return err;
 }
 
 /**
@@ -858,7 +962,6 @@ dom_exception _dom_element_set_id_attribute_ns(struct dom_element *element,
 dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 		struct dom_attr *id_attr, bool is_id)
 {
-	struct dom_hash_table *hs;
 	dom_exception err;
 	dom_string *namespace;
 	dom_string *localname;
@@ -870,10 +973,7 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	hs = _dom_hash_get(element->ns_attributes, namespace);
-	assert(hs != NULL);
-
-	err = _dom_element_set_id_attr(element, hs, localname, is_id);
+	err = _dom_element_set_id_attr(element, namespace, localname, is_id);
 	if (err != DOM_NO_ERR)
 		return err;
 	
@@ -1123,7 +1223,6 @@ dom_exception _dom_element_copy(dom_node_internal *old,
 {
 	dom_element *olde = (dom_element *) old;
 	dom_element *e;
-	struct dom_hash_table *ht;
 	dom_exception err;
 	
 	e = malloc(sizeof(dom_element));
@@ -1135,17 +1234,13 @@ dom_exception _dom_element_copy(dom_node_internal *old,
 		free(e);
 		return err;
 	}
-	
-	/* Copy the hash tables */
-	ht = _dom_hash_clone(olde->attributes);
-	if (ht == NULL)
-		return DOM_NO_MEM_ERR;
-	e->attributes = ht;
 
-	ht = _dom_hash_clone(olde->ns_attributes);
-	if (ht == NULL)
-		return DOM_NO_MEM_ERR;
-	e->ns_attributes = ht;
+	if (olde->attributes != NULL) {
+		/* Copy the attribute list */
+		e->attributes = _dom_element_attr_list_clone(olde->attributes);
+	} else {
+		e->attributes = NULL;
+	}
 
 	e->id_ns = NULL;
 	e->id_name = NULL;
@@ -1173,21 +1268,19 @@ dom_exception _dom_element_copy(dom_node_internal *old,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_get_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name, 
-		dom_string **value)
+		dom_string *namespace, dom_string *name, dom_string **value)
 {
-	void *a;
+	dom_attr_list *match;
 	dom_exception err = DOM_NO_ERR;
 
-	UNUSED(element);
-
-	a = _dom_hash_get(hs, name);
+	match = _dom_element_attr_list_find_by_name(element->attributes,
+			name, namespace);
 
 	/* Fill in value */
-	if (a == NULL) {
+	if (match == NULL) {
 		*value = NULL;
 	} else {
-		err = dom_attr_get_value(((struct dom_attr *) a), value);
+		err = dom_attr_get_value(match->attr, value);
 	}
 
 	return err;
@@ -1203,12 +1296,11 @@ dom_exception _dom_element_get_attr(struct dom_element *element,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_set_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name, 
-		dom_string *value)
+		dom_string *namespace, dom_string *name, dom_string *value)
 {
-	void *a;
-	bool added;
+	dom_attr_list *match;
 	dom_node_internal *e = (dom_node_internal *) element;
+	dom_exception err;
 
 	if (_dom_validate_name(name) == false)
 		return DOM_INVALID_CHARACTER_ERR;
@@ -1217,24 +1309,25 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 	if (_dom_node_readonly(e))
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
-	a = _dom_hash_get(hs, name);
+	match = _dom_element_attr_list_find_by_name(element->attributes,
+			name, namespace);
 
-	if (a != NULL) {
+	if (match != NULL) {
 		/* Found an existing attribute, so replace its value */
-		dom_exception err;
 
 		/* Dispatch a DOMAttrModified event */
 		dom_string *old = NULL;
 		struct dom_document *doc = dom_node_get_owner(element);
 		bool success = true;
-		err = dom_attr_get_value(a, &old);
+		err = dom_attr_get_value(match->attr, &old);
 		/* TODO: We did not support some node type such as entity
 		 * reference, in that case, we should ignore the error to
 		 * make sure the event model work as excepted. */
 		if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR)
 			return err;
-		err = _dom_dispatch_attr_modified_event(doc, e, old, value, a,
-				name, DOM_MUTATION_MODIFICATION, &success);
+		err = _dom_dispatch_attr_modified_event(doc, e, old, value,
+				match->attr, name, DOM_MUTATION_MODIFICATION,
+				&success);
 		dom_string_unref(old);
 		if (err != DOM_NO_ERR)
 			return err;
@@ -1245,15 +1338,16 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		if (err != DOM_NO_ERR)
 			return err;
 
-		err = dom_attr_set_value((struct dom_attr *) a, value);
+		err = dom_attr_set_value(match->attr, value);
 		if (err != DOM_NO_ERR)
 			return err;
 	} else {
 		/* No existing attribute, so create one */
-		dom_exception err;
 		struct dom_attr *attr;
+		struct dom_attr_list *list_node;
 
-		err = _dom_attr_create(e->owner, name, NULL, NULL, true, &attr);
+		err = _dom_attr_create(e->owner, name, namespace, NULL,
+				true, &attr);
 		if (err != DOM_NO_ERR)
 			return err;
 
@@ -1288,14 +1382,24 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 			return err;
 		}
 
-		added = _dom_hash_add(hs, name, attr, false);
-		if (added == false) {
+		/* Create attribute list node */
+		list_node = _dom_element_attr_list_node_create(attr, name,
+				namespace);
+		if (list_node == NULL) {
 			/* If we failed at this step, there must be no memory */
 			dom_node_set_parent(attr, NULL);
 			dom_node_unref(attr);
 			return DOM_NO_MEM_ERR;
 		}
 		dom_string_ref(name);
+		dom_string_ref(namespace);
+
+		/* Link into element's attribute list */
+		if (element->attributes == NULL)
+			element->attributes = list_node;
+		else
+			_dom_element_attr_list_insert(element->attributes,
+					list_node);
 
 		dom_node_unref(attr);
 		dom_node_remove_pending(attr);
@@ -1319,9 +1423,9 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly.
  */
 dom_exception _dom_element_remove_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name)
+		dom_string *namespace, dom_string *name)
 {
-	void *a;
+	dom_attr_list *match;
 	dom_exception err;
 	dom_node_internal *e = (dom_node_internal *) element;
 
@@ -1329,26 +1433,36 @@ dom_exception _dom_element_remove_attr(struct dom_element *element,
 	if (_dom_node_readonly(e))
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
-	a = _dom_hash_get(hs, name);
+	match = _dom_element_attr_list_find_by_name(element->attributes,
+			name, namespace);
 
 	/* Detach attr node from list */
-	if (a != NULL) {
+	if (match != NULL) {
 		/* Disptach DOMNodeRemoval event */
 		bool success = true;
+		dom_attr *a = match->attr;
 		struct dom_document *doc = dom_node_get_owner(element);
-		err = dom_node_dispatch_node_change_event(doc,
-				a, element, DOM_MUTATION_REMOVAL, &success);
+
+		err = dom_node_dispatch_node_change_event(doc, match->attr,
+				element, DOM_MUTATION_REMOVAL, &success);
 		if (err != DOM_NO_ERR)
 			return err;
 
-		/* Delete the attribute node */
-		_dom_hash_del(hs, name);
 		/* Claim a reference for later event dispatch */
 		dom_node_ref(a);
 
-		/* And destroy attr */
-		dom_node_set_parent(a, NULL);
-		dom_node_try_destroy(a);
+
+		/* Delete the attribute node */
+		if (element->attributes == match) {
+			element->attributes =
+					_dom_element_attr_list_next(match);
+		}
+		if (element->attributes == match) {
+			/* match must be sole attribute */
+			element->attributes = NULL;
+		}
+		_dom_element_attr_list_node_unlink(match);
+		_dom_element_attr_list_node_destroy(match);
 
 		/* Dispatch a DOMAttrModified event */
 		success = true;
@@ -1392,20 +1506,19 @@ dom_exception _dom_element_remove_attr(struct dom_element *element,
  * finished with it.
  */
 dom_exception _dom_element_get_attr_node(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name, 
+		dom_string *namespace, dom_string *name,
 		struct dom_attr **result)
 {
-	void *a;
+	dom_attr_list *match;
 
-	UNUSED(element);
-
-	a = _dom_hash_get(hs, name);
+	match = _dom_element_attr_list_find_by_name(element->attributes,
+			name, namespace);
 
 	/* Fill in value */
-	if (a == NULL) {
+	if (match == NULL) {
 		*result = NULL;
 	} else {
-		*result = (dom_attr *) a;
+		*result = match->attr;
 		dom_node_ref(*result);
 	}
 
@@ -1430,19 +1543,20 @@ dom_exception _dom_element_get_attr_node(struct dom_element *element,
  * finished with it.
  */
 dom_exception _dom_element_set_attr_node(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_attr *attr, 
+		dom_string *namespace, struct dom_attr *attr,
 		struct dom_attr **result)
 {
+	dom_attr_list *match;
 	dom_exception err;
 	dom_string *name = NULL;
-	bool added;
 	dom_node_internal *e = (dom_node_internal *) element;
-	dom_node_internal *a = (dom_node_internal *) attr;
+	dom_node_internal *attr_node = (dom_node_internal *) attr;
+	dom_attr *a;
 
 	/** \todo validate name */
 
 	/* Ensure element and attribute belong to the same document */
-	if (e->owner != a->owner)
+	if (e->owner != attr_node->owner)
 		return DOM_WRONG_DOCUMENT_ERR;
 
 	/* Ensure element can be written to */
@@ -1450,32 +1564,34 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
 	/* Ensure attribute isn't attached to another element */
-	if (a->parent != NULL && a->parent != e)
+	if (attr_node->parent != NULL && attr_node->parent != e)
 		return DOM_INUSE_ATTRIBUTE_ERR;
 
 	err = dom_node_get_local_name(attr, &name);
 	if (err != DOM_NO_ERR)
 		return err;
 
-	a = _dom_hash_get(hs, name);
+	match = _dom_element_attr_list_find_by_name(element->attributes,
+			name, namespace);
 
 	*result = NULL;
-	if (a != NULL) {
+	if (match != NULL) {
 		/* Disptach DOMNodeRemoval event */
 		bool success = true;
 		struct dom_document *doc = dom_node_get_owner(element);
-		err = dom_node_dispatch_node_change_event(doc,
-				a, element, DOM_MUTATION_REMOVAL, &success);
+		a = match->attr;
+
+		err = dom_node_dispatch_node_change_event(doc, a, element,
+				DOM_MUTATION_REMOVAL, &success);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(name);
 			return err;
 		}
 
-		_dom_hash_del(hs, name);
 		dom_node_ref(a);
-		*result = (dom_attr *) a;
-		dom_node_set_parent(a, NULL);
-		dom_node_mark_pending(a);
+
+		_dom_element_attr_list_node_unlink(match);
+		_dom_element_attr_list_node_destroy(match);
 
 		/* Dispatch a DOMAttrModified event */
 		dom_string *old = NULL;
@@ -1493,6 +1609,7 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 				(dom_event_target *) a, name, 
 				DOM_MUTATION_REMOVAL, &success);
 		dom_string_unref(old);
+		dom_node_unref(a);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(name);
 			return err;
@@ -1505,14 +1622,16 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 			dom_string_unref(name);
 			return err;
 		}
-	}	
+	}
 
-	added = _dom_hash_add(hs, name, attr, false);
-	if (added == false) {
+
+	match = _dom_element_attr_list_node_create(attr, name, namespace);
+	if (match == NULL) {
 		dom_string_unref(name);
 		/* If we failed at this step, there must be no memory */
 		return DOM_NO_MEM_ERR;
 	}
+
 	dom_string_ref(name);
 	dom_node_set_parent(attr, element);
 	dom_node_remove_pending(attr);
@@ -1548,6 +1667,12 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return err;
 
+	/* Link into element's attribute list */
+	if (element->attributes == NULL)
+		element->attributes = match;
+	else
+		_dom_element_attr_list_insert(element->attributes, match);
+
 	return DOM_NO_ERR;
 }
 
@@ -1567,13 +1692,14 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
  * finished with it.
  */
 dom_exception _dom_element_remove_attr_node(struct dom_element *element,
-		struct dom_hash_table *hs, struct dom_attr *attr, 
+		dom_string *namespace, struct dom_attr *attr,
 		struct dom_attr **result)
 {
-	void *a;
+	dom_attr_list *match;
 	dom_exception err;
 	dom_string *name;
 	dom_node_internal *e = (dom_node_internal *) element;
+	dom_attr *a;
 	
 	/* Ensure element can be written to */
 	if (_dom_node_readonly(e))
@@ -1583,14 +1709,17 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	a = _dom_hash_get(hs, name);
+	match = _dom_element_attr_list_find_by_name(element->attributes,
+			name, namespace);
 
 	/** \todo defaulted attribute handling */
 
-	if (a == NULL || a != (void *) attr) {
+	if (match == NULL || match->attr != attr) {
 		dom_string_unref(name);
 		return DOM_NOT_FOUND_ERR;
 	}
+
+	a = match->attr;
 
 	/* Dispatch a DOMNodeRemoved event */
 	bool success = true;
@@ -1602,9 +1731,18 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 		return err;
 	}
 
-	/* Delete the attribute node */
-	_dom_hash_del(hs, name);
 	dom_node_ref(a);
+
+	/* Delete the attribute node */
+	if (element->attributes == match) {
+		element->attributes = _dom_element_attr_list_next(match);
+	}
+	if (element->attributes == match) {
+		/* match must be sole attribute */
+		element->attributes = NULL;
+	}
+	_dom_element_attr_list_node_unlink(match);
+	_dom_element_attr_list_node_destroy(match);
 
 	/* Now, cleaup the dom_string */
 	dom_string_unref(name);
@@ -1633,12 +1771,10 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 	 * should remain to be the document.
 	 */
 	*result = (dom_attr *) a;
-	dom_node_set_parent(a, NULL);
-	dom_node_mark_pending(a);
 
 	success = true;
-	err = _dom_dispatch_subtree_modified_event(doc, (dom_event_target *) e,
-			&success);
+	err = _dom_dispatch_subtree_modified_event(doc,
+			(dom_event_target *) e, &success);
 	if (err != DOM_NO_ERR)
 		return err;
 
@@ -1655,17 +1791,15 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_has_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name,
-		bool *result)
+		dom_string *namespace, dom_string *name, bool *result)
 {
-	void *a;
+	dom_attr_list *match;
 
-	UNUSED(element);
+	match = _dom_element_attr_list_find_by_name(element->attributes,
+			name, namespace);
 
-	a = _dom_hash_get(hs, name);
-
-	/* Fill in value */
-	if (a == NULL) {
+	/* Fill in result */
+	if (match == NULL) {
 		*result = false;
 	} else {
 		*result = true;
@@ -1677,43 +1811,39 @@ dom_exception _dom_element_has_attr(struct dom_element *element,
 /**
  * (Un)set an attribute Node as a ID.
  *
- * \param element  The element contains the attribute
- * \param hs       The hash table which contains the attribute node
- * \param name     The name of the attribute
- * \param is_id    true for set the node as a ID attribute, false unset it
+ * \param element    The element contains the attribute
+ * \param namespace  The namespace of the attribute node
+ * \param name       The name of the attribute
+ * \param is_id      true for set the node as a ID attribute, false unset it
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_set_id_attr(struct dom_element *element,
-		struct dom_hash_table *hs, dom_string *name, bool is_id)
+		dom_string *namespace, dom_string *name, bool is_id)
 {
-	dom_attr *attr;
-	struct dom_hash_table *oh;
+	
+	dom_attr_list *match;
 
-	attr = _dom_hash_get(hs, name);
-	if (attr == NULL)
+	match = _dom_element_attr_list_find_by_name(element->attributes,
+			name, namespace);
+	if (match == NULL)
 		return DOM_NOT_FOUND_ERR;
 	
 	if (is_id == true) {
-		/* Firstly, clear the previous id attribute if there is one */
-		if (element->id_ns != NULL) {
-			assert(element->id_name != NULL);
-			oh = _dom_hash_get(element->ns_attributes, 
-					element->id_ns);
-		} else {
-			oh = element->attributes;
-		}
-		assert(oh != NULL);
+		/* Clear the previous id attribute if there is one */
+		dom_attr_list *old = _dom_element_attr_list_find_by_name(
+				element->attributes, element->id_name,
+				element->id_ns);
 
-		if (element->id_name != NULL) {
-			attr = _dom_hash_get(oh, element->id_name);
-			assert(attr != NULL);
-			_dom_attr_set_isid(attr, false);
+		if (old != NULL) {
+			_dom_attr_set_isid(old->attr, false);
 		}
+
+		/* Set up the new id attr stuff */
+		element->id_name = dom_string_ref(name);
+		element->id_ns = dom_string_ref(namespace);
 	}
 
-	_dom_attr_set_isid(attr, is_id);
-
-	element->id_name = dom_string_ref(name);
+	_dom_attr_set_isid(match->attr, is_id);
 
 	return DOM_NO_ERR;
 }
@@ -1781,22 +1911,12 @@ dom_exception _dom_element_get_id(struct dom_element *ele, dom_string **id)
 
 /* Implementation function for NamedNodeMap, see core/namednodemap.h for 
  * details */
-dom_exception attributes_get_length(void *priv,
-		unsigned long *length)
+dom_exception attributes_get_length(void *priv, unsigned long *length)
 {
 	unsigned int ret = 0;
-	uintptr_t c1, *c2 = NULL;
-	void *key, *value;
 	dom_element *e = (dom_element *) priv;
 
-	ret += _dom_hash_get_length(e->attributes);
-	while( (key = _dom_hash_iterate(e->ns_attributes, &c1, &c2)) != NULL) {
-		value = _dom_hash_get(e->ns_attributes, key);
-		if (value != NULL) {
-			ret += _dom_hash_get_length(
-					(struct dom_hash_table *) value);
-		}
-	}
+	ret += _dom_element_attr_list_length(e->attributes);
 
 	*length = ret;
 	return DOM_NO_ERR;
@@ -1852,49 +1972,18 @@ dom_exception attributes_remove_named_item(
 dom_exception attributes_item(void *priv,
 		unsigned long index, struct dom_node **node)
 {
-	struct dom_hash_table *ht = NULL;
+	dom_attr_list * match = NULL;
 	unsigned int num = index + 1;
-	unsigned int len;
 	dom_element *e = (dom_element *) priv;
-	void *key, *value;
-	uintptr_t c1, *c2 = NULL;
 
-	len = _dom_hash_get_length(e->attributes);
-	if (num <= len) {
-		ht = e->attributes;
-	} else {
-		num -= len;
-	}
+	match = _dom_element_attr_list_get_by_index(e->attributes, num);
 
-	while( (key = _dom_hash_iterate(e->ns_attributes, &c1, &c2)) != NULL) {
-		value = _dom_hash_get(e->ns_attributes, key);
-		if (value != NULL) {
-			len = _dom_hash_get_length(
-					(struct dom_hash_table *) value);
-			if (num <= len) {
-				ht = (struct dom_hash_table *) value;
-				break;
-			} else {
-				num -= len;
-			}
-		}
-	}
-
-	*node = NULL;
-	c2 = NULL;
-	if (ht != NULL)
-	{
-		while( (key = _dom_hash_iterate(ht, &c1, &c2)) != NULL) {
-			value = _dom_hash_get(ht, key);
-			if (--num == 0) {
-				*node = (dom_node *) value;
-				break;
-			}
-		}
-	}
-
-	if (*node != NULL)
+	if (match != NULL) {
+		*node = (dom_node *) match->attr;
 		dom_node_ref(*node);
+	} else {
+		*node = NULL;
+	}
 
 	return DOM_NO_ERR;
 }
@@ -1969,80 +2058,3 @@ bool attributes_equal(void *p1, void *p2)
 }
 /*------------------ End of namednodemap functions -----------------------*/
 
-uint32_t attributes_hash(void *key, void *pw)
-{
-	UNUSED(pw);
-
-	return dom_string_hash(key);
-}
-
-void *attributes_clone_key(void *key, void *pw)
-{
-	UNUSED(pw);
-
-	assert(key != NULL);
-
-	return dom_string_ref(key);
-}
-
-void attributes_destroy_key(void *key, void *pw)
-{
-	UNUSED(pw);
-
-	assert(key != NULL);
-
-	dom_string_unref(key);
-}
-
-void *attributes_clone_value(void *value, void *pw)
-{
-	dom_exception err;
-	dom_node *node;
-
-	UNUSED(pw);
-
-	assert(value != NULL);
-
-	err = dom_node_clone_node(value, true, &node);
-	if (err != DOM_NO_ERR)
-		return NULL;
-
-	return node;
-}
-
-void attributes_destroy_value(void *value, void *pw)
-{
-	dom_node_internal *a = (dom_node_internal *) value;
-
-	UNUSED(pw);
-
-	assert(value != NULL);
-
-	a->parent = NULL;
-	dom_node_try_destroy(a);
-}
-
-void *attributes_ns_clone_value(void *value, void *pw)
-{
-	UNUSED(pw);
-
-	assert(value != NULL);
-
-	return _dom_hash_clone(value);
-}
-
-void attributes_ns_destroy_value(void *value, void *pw)
-{
-	UNUSED(pw);
-
-	assert(value != NULL);
-
-	_dom_hash_destroy(value);
-}
-
-bool attributes_key_isequal(void *key1, void *key2, void *pw)
-{
-	UNUSED(pw);
-
-	return dom_string_isequal(key1, key2);
-}
