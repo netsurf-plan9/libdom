@@ -133,7 +133,6 @@ static dom_attr_list * _dom_element_attr_list_find_by_name(
  * Get the number of elements in this attribute list
  *
  * \param list  The attribute list
- * 
  * \return the number attribute list node elements
  */
 static unsigned int _dom_element_attr_list_length(dom_attr_list *list)
@@ -158,8 +157,7 @@ static unsigned int _dom_element_attr_list_length(dom_attr_list *list)
  *
  * \param list   The attribute list
  * \param index  The index number
- * 
- * \return the number attribute list node elements
+ * \return the attribute list node at given index
  */
 static dom_attr_list * _dom_element_attr_list_get_by_index(dom_attr_list *list,
 		unsigned int index)
@@ -179,6 +177,14 @@ static dom_attr_list * _dom_element_attr_list_get_by_index(dom_attr_list *list,
 	return NULL;
 }
 
+/**
+ * Create an attribute list node
+ *
+ * \param attr       The attribute to create a list node for
+ * \param name       The attribute name
+ * \param namespace  The attribute namespace (may be NULL)
+ * \return the new attribute list node, or NULL on failure
+ */
 static dom_attr_list * _dom_element_attr_list_node_create(dom_attr *attr,
 		dom_string *name, dom_string *namespace)
 {
@@ -200,6 +206,11 @@ static dom_attr_list * _dom_element_attr_list_node_create(dom_attr *attr,
 	return new_list_node;
 }
 
+/**
+ * Destroy an attribute list node, and its attribute
+ *
+ * \param n  The attribute list node to destroy
+ */
 static void _dom_element_attr_list_node_destroy(dom_attr_list *n)
 {
 	dom_node_internal *a;
@@ -220,6 +231,11 @@ static void _dom_element_attr_list_node_destroy(dom_attr_list *n)
 	free(n);
 }
 
+/**
+ * Destroy an entire attribute list, and its attributes
+ *
+ * \param list  The attribute list to destroy
+ */
 static void _dom_element_attr_list_destroy(dom_attr_list *list)
 {
 	dom_attr_list *attr = list;
@@ -239,6 +255,12 @@ static void _dom_element_attr_list_destroy(dom_attr_list *list)
 	return;
 }
 
+/**
+ * Clone an attribute list node, and its attribute
+ *
+ * \param n  The attribute list node to clone
+ * \return the new attribute list node, or NULL on failure
+ */
 static dom_attr_list * _dom_element_attr_list_node_clone(dom_attr_list *n)
 {
 	dom_attr_list *new_list_node;
@@ -270,6 +292,12 @@ static dom_attr_list * _dom_element_attr_list_node_clone(dom_attr_list *n)
 	return new_list_node;
 }
 
+/**
+ * Clone an entire attribute list, and its attributes
+ *
+ * \param list  The attribute list to clone
+ * \return the new attribute list, or NULL on failure
+ */
 static dom_attr_list * _dom_element_attr_list_clone(dom_attr_list *list)
 {
 	dom_attr_list *attr = list;
