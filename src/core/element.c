@@ -1664,6 +1664,7 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	}
 
 	dom_string_ref(name);
+	dom_string_ref(namespace);
 	dom_node_set_parent(attr, element);
 	dom_node_remove_pending(attr);
 
