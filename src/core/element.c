@@ -263,6 +263,7 @@ static void _dom_element_attr_list_destroy(dom_attr_list *list)
  */
 static dom_attr_list * _dom_element_attr_list_node_clone(dom_attr_list *n)
 {
+	dom_attr *clone = NULL;
 	dom_attr_list *new_list_node;
 	dom_exception err;
 
@@ -277,11 +278,13 @@ static dom_attr_list * _dom_element_attr_list_node_clone(dom_attr_list *n)
 	new_list_node->name = NULL;
 	new_list_node->namespace = NULL;
 
-	err = dom_node_clone_node(n->attr, true, &new_list_node);
+	err = dom_node_clone_node(n->attr, true, (void *) &clone);
 	if (err != DOM_NO_ERR) {
 		free(new_list_node);
 		return NULL;
 	}
+
+	new_list_node->attr = clone;
 
 	if (n->name != NULL)
 		new_list_node->name = dom_string_ref(n->name);
