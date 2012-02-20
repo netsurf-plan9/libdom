@@ -40,7 +40,8 @@ static inline void list_append(struct list_entry *head, struct list_entry *new)
 {
 	new->next = head;
 	new->prev = head->prev;
-	head->prev->next = new;
+	if (head->prev != NULL)
+		head->prev->next = new;
 	head->prev = new;
 }
 
@@ -51,8 +52,10 @@ static inline void list_append(struct list_entry *head, struct list_entry *new)
  */
 static inline void list_del(struct list_entry *ent)
 {
-	ent->prev->next = ent->next;
-	ent->next->prev = ent->prev;
+	if (ent->prev != NULL)
+		ent->prev->next = ent->next;
+	if (ent->next != NULL)
+		ent->next->prev = ent->prev;
 
 	ent->prev = ent;
 	ent->next = ent;
