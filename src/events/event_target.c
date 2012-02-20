@@ -21,7 +21,9 @@
 
 static void event_target_destroy_listeners(struct listener_entry *list)
 {
-	while (list != NULL) {
+	const struct listener_entry *head = list;
+
+	do {
 		struct listener_entry *next = 
 				(struct listener_entry *) list->list.next;
 
@@ -31,7 +33,7 @@ static void event_target_destroy_listeners(struct listener_entry *list)
 		free(list);
 
 		list = next;
-	}
+	} while (list != head);
 }
 
 /* Initialise this EventTarget */
@@ -46,7 +48,8 @@ dom_exception _dom_event_target_internal_initialise(
 /* Finalise this EventTarget */
 void _dom_event_target_internal_finalise(dom_event_target_internal *eti)
 {
-	event_target_destroy_listeners(eti->listeners);
+	if (eti->listeners != NULL)
+		event_target_destroy_listeners(eti->listeners);
 }
 
 /*-------------------------------------------------------------------------*/
