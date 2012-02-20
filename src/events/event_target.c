@@ -21,13 +21,10 @@
 
 static void event_target_destroy_listeners(struct listener_entry *list)
 {
-	struct listener_entry *next = NULL;
-
 	if (list == NULL)
 		return;
 
 	while (list != (struct listener_entry *) list->list.next) {
-		next = (struct listener_entry *) list->list.next;
 		list_del(list->list.next);
 		dom_event_listener_unref(list->listener);
 		dom_string_unref(list->type);
