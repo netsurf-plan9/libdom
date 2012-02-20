@@ -17,7 +17,6 @@
 #include "events/dispatch.h"
 
 #include "utils/list.h"
-#include "utils/hashtable.h"
 
 /**
  * Listener Entry
@@ -26,6 +25,7 @@ struct listener_entry {
 	struct list_entry list;	
 		/**< The listener list registered at the same
 		 * EventTarget */
+	dom_string *type; /**< Event type */
 	dom_event_listener *listener;	/**< The EventListener */
 	bool capture;	/**< Whether this listener is in capture phase */
 };
@@ -34,13 +34,8 @@ struct listener_entry {
  * EventTarget internal class
  */
 struct dom_event_target_internal {
-	struct dom_hash_table *listeners;	
-			/**< The listeners of this EventTarget.
-			 * The listeners are organized by the 
-			 * type of events they listen for
-			 */
-	struct dom_hash_table *ns_listeners;
-			/**< The listeners with namespace of thie EventTarget */
+	struct listener_entry *listeners;	
+			/**< The listeners of this EventTarget. */
 };
 
 typedef struct dom_event_target_internal dom_event_target_internal;
