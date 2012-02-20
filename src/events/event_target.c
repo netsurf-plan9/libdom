@@ -21,19 +21,17 @@
 
 static void event_target_destroy_listeners(struct listener_entry *list)
 {
-	if (list == NULL)
-		return;
+	while (list != NULL) {
+		struct listener_entry *next = 
+				(struct listener_entry *) list->list.next;
 
-	while (list != (struct listener_entry *) list->list.next) {
-		list_del(list->list.next);
+		list_del(&list->list);
 		dom_event_listener_unref(list->listener);
 		dom_string_unref(list->type);
 		free(list);
-	}
 
-	dom_event_listener_unref(list->listener);
-	dom_string_unref(list->type);
-	free(list);
+		list = next;
+	}
 }
 
 /* Initialise this EventTarget */
