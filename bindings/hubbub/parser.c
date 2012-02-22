@@ -128,7 +128,7 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 	hubbub_error error;
 	dom_exception err;
 
-	parser = dom_hubbub_alloc(NULL, sizeof(dom_hubbub_parser), NULL);
+	parser = malloc(sizeof(dom_hubbub_parser));
 	if (parser == NULL) {
 		msg(DOM_MSG_CRITICAL, mctx, "No memory for parsing context");
 		return NULL;
@@ -147,7 +147,7 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 	error = hubbub_parser_create(enc, fix_enc, dom_hubbub_alloc, NULL, 
 			&parser->parser);
 	if (error != HUBBUB_OK)	 {
-		dom_hubbub_alloc(parser, 0, NULL);
+		free(parser);
 		msg(DOM_MSG_CRITICAL, mctx, "Can't create parser");
 		return NULL;
 	}
@@ -160,7 +160,7 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 			NULL, &parser->doc);
 	if (err != DOM_NO_ERR) {
 		hubbub_parser_destroy(parser->parser);
-		dom_hubbub_alloc(parser, 0, NULL);
+		free(parser);
 		msg(DOM_MSG_ERROR, mctx, "Can't create DOM document");
 		return NULL;
 	}
@@ -195,7 +195,7 @@ void dom_hubbub_parser_destroy(dom_hubbub_parser *parser)
 		parser->doc = NULL;
 	}
 
-	dom_hubbub_alloc(parser, 0, NULL);
+	free(parser);
 }
 
 /**
@@ -242,7 +242,8 @@ dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
 
 	parser->complete = true;
 
-	derr = dom_string_create((const uint8_t *) "id", SLEN("id"), &name);
+	derr = dom_string_create_interned((const uint8_t *) "id", SLEN("id"), 
+			&name);
 	if (derr != DOM_NO_ERR)
 		return HUBBUB_UNKNOWN;
 	
@@ -425,15 +426,14 @@ static hubbub_error create_element(void *parser, const hubbub_tag *tag,
 		}
 	}
 
-	*result = element;
-	if (element != NULL) {
-		if (tag->n_attributes != 0) {
-			herr = add_attributes(parser, element, tag->attributes,
-					tag->n_attributes);
-			if (herr != HUBBUB_OK)
-				return herr;
-		}
+	if (element != NULL && tag->n_attributes > 0) {
+		herr = add_attributes(parser, element, tag->attributes,
+				tag->n_attributes);
+		if (herr != HUBBUB_OK)
+			goto clean1;
 	}
+
+	*result = element;
 
 clean1:
 	dom_string_unref(name);
@@ -773,7 +773,7 @@ static hubbub_error change_encoding(void *parser, const char *charset)
 
 	if (source == HUBBUB_CHARSET_CONFIDENT) {
 		dom_parser->encoding_source = ENCODING_SOURCE_DETECTED;
-		dom_parser->encoding = (char *) charset;
+		dom_parser->encoding = charset;
 		return HUBBUB_OK;
 	}
 
