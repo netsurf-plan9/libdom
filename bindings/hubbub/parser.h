@@ -15,8 +15,6 @@
 
 #include "errors.h"
 
-struct dom_document;
-
 typedef struct dom_hubbub_parser dom_hubbub_parser;
 
 /* The encoding source of the document */
@@ -63,7 +61,7 @@ dom_hubbub_error dom_hubbub_parser_parse_chunk(dom_hubbub_parser *parser,
 dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser);
 
 /* Retrieve the created DOM Document */
-struct dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser);
+dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser);
 
 /* Retrieve the document's encoding */
 const char *dom_hubbub_parser_get_encoding(dom_hubbub_parser *parser, 

@@ -259,9 +259,9 @@ dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
  * \param parser  The parser object
  * \return the created document on success, NULL on failure
  */
-struct dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser)
+dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser)
 {
-	struct dom_document *doc = NULL; 
+	dom_document *doc = NULL; 
 
 	if (parser->complete) {
 		doc = parser->doc; 
