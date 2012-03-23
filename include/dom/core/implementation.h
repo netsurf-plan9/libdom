@@ -17,7 +17,7 @@
 struct dom_document;
 struct dom_document_type;
 
-typedef const char *dom_implementation;
+typedef const char dom_implementation;
 
 typedef enum dom_implementation_type {
 	DOM_IMPLEMENTATION_CORE = 0,
