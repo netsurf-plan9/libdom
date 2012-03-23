@@ -20,10 +20,10 @@ struct dom_document;
 typedef struct dom_hubbub_parser dom_hubbub_parser;
 
 /* The encoding source of the document */
-typedef enum dom_hubub_encoding_source { 
-	ENCODING_SOURCE_HEADER, 
-	ENCODING_SOURCE_DETECTED,
-	ENCODING_SOURCE_META 
+typedef enum dom_hubbub_encoding_source { 
+	DOM_HUBBUB_ENCODING_SOURCE_HEADER, 
+	DOM_HUBBUB_ENCODING_SOURCE_DETECTED,
+	DOM_HUBBUB_ENCODING_SOURCE_META 
 } dom_hubbub_encoding_source;
 
 /* The recommended way to use the parser is:

@@ -137,8 +137,8 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 	parser->parser = NULL;
 	parser->doc = NULL;
 	parser->encoding = enc;
-	parser->encoding_source = enc != NULL ? ENCODING_SOURCE_HEADER
-					      : ENCODING_SOURCE_DETECTED;
+	parser->encoding_source = enc != NULL ? DOM_HUBBUB_ENCODING_SOURCE_HEADER
+					      : DOM_HUBBUB_ENCODING_SOURCE_DETECTED;
 	parser->complete = false;
 
 	parser->msg = msg;
@@ -772,7 +772,7 @@ static hubbub_error change_encoding(void *parser, const char *charset)
 	name = hubbub_parser_read_charset(dom_parser->parser, &source);
 
 	if (source == HUBBUB_CHARSET_CONFIDENT) {
-		dom_parser->encoding_source = ENCODING_SOURCE_DETECTED;
+		dom_parser->encoding_source = DOM_HUBBUB_ENCODING_SOURCE_DETECTED;
 		dom_parser->encoding = charset;
 		return HUBBUB_OK;
 	}
@@ -788,7 +788,7 @@ static hubbub_error change_encoding(void *parser, const char *charset)
 	 * reprocessing with a different charset, or for confirming that the
 	 * charset is in fact correct */
 	dom_parser->encoding = charset;
-	dom_parser->encoding_source = ENCODING_SOURCE_META;
+	dom_parser->encoding_source = DOM_HUBBUB_ENCODING_SOURCE_META;
 
 	/* Equal encodings will have the same string pointers */
 	return (charset == name) ? HUBBUB_OK : HUBBUB_ENCODINGCHANGE;
