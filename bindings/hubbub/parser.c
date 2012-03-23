@@ -212,7 +212,7 @@ dom_hubbub_error dom_hubbub_parser_parse_chunk(dom_hubbub_parser *parser,
 {
 	hubbub_error err;
 
-	err = hubbub_parser_parse_chunk(parser->parser, (uint8_t *) data, len);
+	err = hubbub_parser_parse_chunk(parser->parser, data, len);
 	if (err != HUBBUB_OK)
 		return DOM_HUBBUB_HUBBUB_ERR | err;
 
