@@ -408,7 +408,7 @@ sub generate_var {
 		print " = $ats->{'value'};\n";
 	} else {
 		if ($type =~ m/\*/) {
-			print " = NULL;";
+			print " = NULL;\n";
 		} else {
 			print ";\n";
 		}
@@ -474,18 +474,18 @@ sub generate_load {
 	# define the test file path, use HTML if there is, otherwise using XML
 	# Attention: I intend to copy the test files to the program excuting dir
 	print "\tconst char *test$test_index = \"$ats{'href'}.html\";\n\n";
-	print "$doc = load_html(test$test_index, $ats{'willBeModified'});";
-	print "if ($doc == NULL) {";
+	print "\t$doc = load_html(test$test_index, $ats{'willBeModified'});";
+	print "\tif ($doc == NULL) {\n";
 	$test_index ++;
-	print "	 const char *test$test_index = \"$ats{'href'}.xml\";\n\n";
-	print "	 $doc = load_xml(test$test_index, $ats{'willBeModified'});";
-	print "	 if ($doc == NULL)";
-	print "			return 1;";
-	print "}";
+	print "\t\tconst char *test$test_index = \"$ats{'href'}.xml\";\n\n";
+	print "\t\t$doc = load_xml(test$test_index, $ats{'willBeModified'});\n";
+	print "\t\tif ($doc == NULL)\n";
+	print "\t\t\treturn 1;\n";
+	print "\t\t}\n";
 	print << "__EOF__";
-exp = dom_document_get_implementation($doc, &doc_impl);
-if (exp != DOM_NO_ERR)
-	return exp;
+	exp = dom_document_get_implementation($doc, &doc_impl);
+	if (exp != DOM_NO_ERR)
+		return exp;
 __EOF__
 
 	$self->addto_cleanup($doc);
@@ -562,20 +562,20 @@ sub generate_framework_statement {
 			if (not exists $ats->{"obj"}) {
 				my $var = $ats->{"var"};
 				my $dstring = generate_domstring($self, $dom_feature);
-				print "exp = dom_implregistry_get_dom_implementation($dstring, \&$var);";
-				print "if (exp != DOM_NO_ERR) {";
+				print "exp = dom_implregistry_get_dom_implementation($dstring, \&$var);\n";
+				print "\tif (exp != DOM_NO_ERR) {\n";
 				$self->cleanup_fail("\t\t");
-				print "return exp;}";
+				print "\t\treturn exp;\n\t}\n";
 				last;
 			}
 
 			my $obj = $ats->{"obj"};
 			my $var = $ats->{"var"};
 			# Here we directly output the libDOM's get_implementation API
-			print "exp = dom_document_get_implementation($obj, \&$var);";
-			print "if (exp != DOM_NO_ERR) {";
+			print "exp = dom_document_get_implementation($obj, \&$var);\n";
+			print "\tif (exp != DOM_NO_ERR) {\n";
 			$self->cleanup_fail("\t\t");
-			print "return exp;}";
+			print "\t\treturn exp;\n\t}\n";
 		}
 
 		# We deal with hasFeaturn and implementationAttribute in the generate_condition
@@ -732,18 +732,18 @@ sub generate_method {
 		}
 	}
 
-	print "exp = $method($params);";
+	print "\texp = $method($params);\n";
 
 	if ($self->{'exception'} eq 0) {
 		print << "__EOF__";
-		if (exp != DOM_NO_ERR) {
-			fprintf(stderr, "Exception raised from %s\\n", "$method");
+	if (exp != DOM_NO_ERR) {
+	fprintf(stderr, "Exception raised from %s\\n", "$method");
 __EOF__
 
 		$self->cleanup_fail("\t\t");
 		print << "__EOF__";
-			return exp;
-		}
+		return exp;
+	}
 __EOF__
 	}
 
@@ -806,27 +806,27 @@ sub generate_attribute_fetcher {
 	if ($ats{'obj'} eq $ats{'var'}) {
 		my $t = type_to_ctype($self->{'var'}->{$ats{'var'}});
 		$tnode_index ++;
-		print "$t tnode$tnode_index = NULL;";
-		print "exp = $fetcher($ats{'obj'}, \&tnode$tnode_index);";
+		print "\t$t tnode$tnode_index = NULL;\n";
+		print "\texp = $fetcher($ats{'obj'}, \&tnode$tnode_index);\n";
 		# The ats{'obj'} must have been added to cleanup stack 
 		$unref = 1;
 		# Indicate that we have created a temp node
 		$temp_node = 1;
 	} else {
 		$unref = $self->param_unref($ats{'var'});
-		print "exp = $fetcher($ats{'obj'}, \&$ats{'var'});";
+		print "\texp = $fetcher($ats{'obj'}, \&$ats{'var'});\n";
 	}
 
 
 	if ($self->{'exception'} eq 0) {
 		print << "__EOF__";
-		if (exp != DOM_NO_ERR) {
-			fprintf(stderr, "Exception raised when fetch attribute %s", "$en");
+	if (exp != DOM_NO_ERR) {
+		fprintf(stderr, "Exception raised when fetch attribute %s", "$en");
 __EOF__
 		$self->cleanup_fail("\t\t");
 		print << "__EOF__";
-			return exp;
-		}
+		return exp;
+	}
 __EOF__
 	}
 
@@ -1211,11 +1211,11 @@ sub generate_control_statement {
 				if ($conversion eq 1) {
 					print "\&tstring$temp_index)) {\n";
 					print "exp = dom_string_create((const uint8_t *)tstring$temp_index,";
-					print "strlen(tstring$temp_index), &$member);";
-					print "if (exp != DOM_NO_ERR) {";
-					print "fprintf(stderr, \"Can't create DOMString\\n\");";
+					print "strlen(tstring$temp_index), &$member);\n";
+					print "if (exp != DOM_NO_ERR) {\n";
+					print "\t\tfprintf(stderr, \"Can't create DOMString\\n\");";
 					$self->cleanup_fail("\t\t");
-					print "return exp; }";
+					print "\t\treturn exp;\n\t}\n";
 					$temp_index ++;
 				} else {
 					print "\&$member)) {\n";
@@ -1520,10 +1520,10 @@ sub param_unref {
 		if (exists $unref_prefix{$type}) {
 			$prefix = $unref_prefix{$type};
 		}
-		print "if ($var != NULL) {";
-		print $prefix."_unref(".$var.");\n";
-		print "$var = NULL;";
-		print "}";
+		print "\tif ($var != NULL) {\n";
+		print "\t\t" . $prefix."_unref(".$var.");\n";
+		print "\t\t$var = NULL;\n";
+		print "\t}\n";
 	}
 
 	foreach my $item (@{$self->{unref}}) {
