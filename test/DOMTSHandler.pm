@@ -572,7 +572,7 @@ sub generate_framework_statement {
 			my $obj = $ats->{"obj"};
 			my $var = $ats->{"var"};
 			# Here we directly output the libDOM's get_implementation API
-			print "exp = dom_document_get_implementation($obj, \&$var);\n";
+			print "\texp = dom_document_get_implementation($obj, \&$var);\n";
 			print "\tif (exp != DOM_NO_ERR) {\n";
 			$self->cleanup_fail("\t\t");
 			print "\t\treturn exp;\n\t}\n";
