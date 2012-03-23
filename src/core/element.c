@@ -1640,7 +1640,7 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 				(dom_event_target *) old_attr, name, 
 				DOM_MUTATION_REMOVAL, &success);
 		dom_string_unref(old);
-		dom_node_unref(old_attr);
+		*result = old_attr;
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(name);
 			return err;
