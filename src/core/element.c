@@ -1582,7 +1582,7 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	dom_string *name = NULL;
 	dom_node_internal *e = (dom_node_internal *) element;
 	dom_node_internal *attr_node = (dom_node_internal *) attr;
-	dom_attr *a;
+	dom_attr *old_attr;
 
 	/** \todo validate name */
 
@@ -1610,16 +1610,16 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 		/* Disptach DOMNodeRemoval event */
 		bool success = true;
 		struct dom_document *doc = dom_node_get_owner(element);
-		a = match->attr;
+		old_attr = match->attr;
 
-		err = dom_node_dispatch_node_change_event(doc, a, element,
-				DOM_MUTATION_REMOVAL, &success);
+		err = dom_node_dispatch_node_change_event(doc, old_attr, 
+				element, DOM_MUTATION_REMOVAL, &success);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(name);
 			return err;
 		}
 
-		dom_node_ref(a);
+		dom_node_ref(old_attr);
 
 		_dom_element_attr_list_node_unlink(match);
 		_dom_element_attr_list_node_destroy(match);
@@ -1627,20 +1627,20 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 		/* Dispatch a DOMAttrModified event */
 		dom_string *old = NULL;
 		success = true;
-		err = dom_attr_get_value(a, &old);
+		err = dom_attr_get_value(old_attr, &old);
 		/* TODO: We did not support some node type such as entity
 		 * reference, in that case, we should ignore the error to
 		 * make sure the event model work as excepted. */
 		if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR) {
-			dom_node_unref(a);
+			dom_node_unref(old_attr);
 			dom_string_unref(name);
 			return err;
 		}
 		err = _dom_dispatch_attr_modified_event(doc, e, old, NULL, 
-				(dom_event_target *) a, name, 
+				(dom_event_target *) old_attr, name, 
 				DOM_MUTATION_REMOVAL, &success);
 		dom_string_unref(old);
-		dom_node_unref(a);
+		dom_node_unref(old_attr);
 		if (err != DOM_NO_ERR) {
 			dom_string_unref(name);
 			return err;
