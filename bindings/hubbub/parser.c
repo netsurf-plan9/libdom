@@ -208,11 +208,11 @@ void dom_hubbub_parser_destroy(dom_hubbub_parser *parser)
  *         DOM_HUBBUB_HUBBUB_ERR | <hubbub_error> on failure
  */
 dom_hubbub_error dom_hubbub_parser_parse_chunk(dom_hubbub_parser *parser,
-		uint8_t *data, size_t len)
+		const uint8_t *data, size_t len)
 {
 	hubbub_error err;
 
-	err = hubbub_parser_parse_chunk(parser->parser, data, len);
+	err = hubbub_parser_parse_chunk(parser->parser, (uint8_t *) data, len);
 	if (err != HUBBUB_OK)
 		return DOM_HUBBUB_HUBBUB_ERR | err;
 

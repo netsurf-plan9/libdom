@@ -57,7 +57,7 @@ void dom_hubbub_parser_destroy(dom_hubbub_parser *parser);
 
 /* Parse a chunk of data */
 dom_hubbub_error dom_hubbub_parser_parse_chunk(dom_hubbub_parser *parser,
-		uint8_t *data, size_t len);
+		const uint8_t *data, size_t len);
 
 /* Notify parser that datastream is empty */
 dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser);
