@@ -12,7 +12,11 @@ TESTRUNNER := $(PERL) build/testtools/testrunner.pl
 # Toolchain flags
 WARNFLAGS := -Wall -W -Wundef -Wpointer-arith -Wcast-align \
 	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes \
-	-Wmissing-declarations -Wnested-externs -Werror -pedantic
+	-Wmissing-declarations -Wnested-externs -pedantic
+# BeOS/Haiku standard library headers create warnings
+ifneq ($(TARGET),beos)
+  WARNFLAGS := $(WARNFLAGS) -Werror
+endif
 CFLAGS := -std=c99 -D_BSD_SOURCE -D_GNU_SOURCE -I$(CURDIR)/include/ \
 	-I$(CURDIR)/src -I$(CURDIR)/binding $(WARNFLAGS) $(CFLAGS)
 
