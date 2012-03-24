@@ -73,6 +73,7 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 	doc->domain = NULL;
 	doc->url = NULL;
 	doc->cookie = NULL;
+	doc->quirks = false;
 
 	return DOM_NO_ERR;
 }
@@ -347,3 +348,19 @@ dom_exception _dom_html_document_get_elements_by_name(dom_html_document *doc,
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
+/*-----------------------------------------------------------------------*/
+/* Semi-internal API extensions for NetSurf */
+
+dom_exception _dom_html_document_get_quirks_mode(dom_html_document *doc,
+						 bool *result)
+{
+	*result = doc->quirks;
+	return DOM_NO_ERR;
+}
+
+dom_exception _dom_html_document_set_quirks_mode(dom_html_document *doc,
+						 bool quirks)
+{
+	doc->quirks = quirks;
+	return DOM_NO_ERR;
+}

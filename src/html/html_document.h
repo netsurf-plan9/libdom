@@ -23,6 +23,7 @@ struct dom_html_document {
 	dom_string *domain;	/**< HTML document domain */
 	dom_string *url;	/**< HTML document URL */
 	dom_string *cookie;	/**< HTML document cookie */
+	bool quirks;		/**< HTML document is in quirks mode */
 };
 
 /* Create a HTMLDocument */
@@ -80,6 +81,11 @@ dom_exception _dom_html_document_writeln(dom_html_document *doc,
 		dom_string *text);
 dom_exception _dom_html_document_get_elements_by_name(dom_html_document *doc,
 		dom_string *name, struct dom_nodelist **list);
+dom_exception _dom_html_document_get_quirks_mode(dom_html_document *doc,
+                                                 bool *result);
+dom_exception _dom_html_document_set_quirks_mode(dom_html_document *doc,
+                                                 bool result);
+
 
 #define DOM_HTML_DOCUMENT_VTABLE \
 	_dom_html_document_get_title, \
@@ -100,7 +106,9 @@ dom_exception _dom_html_document_get_elements_by_name(dom_html_document *doc,
 	_dom_html_document_close, \
 	_dom_html_document_write, \
 	_dom_html_document_writeln, \
-	_dom_html_document_get_elements_by_name
+	_dom_html_document_get_elements_by_name, \
+	_dom_html_document_get_quirks_mode, \
+	_dom_html_document_set_quirks_mode
 
 dom_exception _dom_html_document_create_element(dom_document *doc,
 		dom_string *tag_name, dom_element **result);
