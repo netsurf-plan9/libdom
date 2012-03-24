@@ -52,7 +52,7 @@ struct dom_document {
 
 	dom_string *id_name;		/**< The ID attribute's name */
 
-	lwc_string *class_string;	/**< The string "class". */
+	dom_string *class_string;	/**< The string "class". */
 
 	dom_document_event_internal dei;
 			/**< The DocumentEVent interface */
