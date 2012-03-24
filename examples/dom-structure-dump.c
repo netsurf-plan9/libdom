@@ -239,6 +239,17 @@ bool dump_dom_element(dom_node *node, int depth)
 	string = dom_string_data(node_name);
 	length = dom_string_byte_length(node_name);
 	printf("[%.*s]", (int)length, string);
+	
+	if (length == 5 && strncmp(string, "title", 5) == 0) {
+		/* Title tag, gather the title */
+		dom_string *str;
+		exc = dom_node_get_text_content(node, &str);
+		if (exc == DOM_NO_ERR && str != NULL) {
+			printf(" $%.*s$", (int)dom_string_byte_length(str),
+			       dom_string_data(str));
+			dom_string_unref(str);
+		}
+	}
 
 	/* Finished with the node_name dom_string */
 	dom_string_unref(node_name);
