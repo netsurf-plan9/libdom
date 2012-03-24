@@ -30,7 +30,7 @@ dom_exception _dom_text_event_init(dom_text_event *evt,
 		(dom_string *) (d))
 
 dom_exception _dom_text_event_init_ns(dom_text_event *evt, 
-		dom_string *namespace, dom_string *type,
+		dom_string *namespace_name, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view,
 		dom_string *data);
 #define dom_text_event_init_ns(e, n, t, b, c, v, d) _dom_text_event_init_ns( \

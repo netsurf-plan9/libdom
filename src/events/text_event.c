@@ -112,14 +112,14 @@ dom_exception _dom_text_event_init(dom_text_event *evt,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_text_event_init_ns(dom_text_event *evt, 
-		dom_string *namespace, dom_string *type,
+		dom_string *namespace_name, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view, 
 		dom_string *data)
 {
 	evt->data = data;
 	dom_string_ref(data);
 
-	return _dom_ui_event_init_ns(&evt->base, namespace, type, bubble,
+	return _dom_ui_event_init_ns(&evt->base, namespace_name, type, bubble,
 			cancelable, view, 0);
 }
 
