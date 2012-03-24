@@ -37,6 +37,9 @@
 #include <dom/core/typeinfo.h>
 #include <dom/core/comment.h>
 
+/* DOM HTML headers */
+#include <dom/html/html_element.h>
+
 /* DOM Events header */
 #include <dom/events/events.h>
 
