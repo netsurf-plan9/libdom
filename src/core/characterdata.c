@@ -26,7 +26,7 @@ struct dom_characterdata_vtable characterdata_vtable = {
 		{
 			DOM_NODE_EVENT_TARGET_VTABLE
 		},
-		DOM_NODE_VTABLE
+		DOM_NODE_VTABLE_CHARACTERDATA
 	},
 	DOM_CHARACTERDATA_VTABLE
 };
@@ -452,7 +452,21 @@ dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 	return _dom_dispatch_subtree_modified_event(doc, c->parent, &success);
 }
 
+dom_exception _dom_characterdata_get_text_content(dom_node_internal *node,
+						  dom_string **result)
+{
+	dom_characterdata *cdata = (dom_characterdata *)node;
+	
+	return dom_characterdata_get_data(cdata, result);
+}
 
+dom_exception _dom_characterdata_set_text_content(dom_node_internal *node,
+						  dom_string *content)
+{
+	dom_characterdata *cdata = (dom_characterdata *)node;
+	
+	return dom_characterdata_set_data(cdata, content);
+}
 
 /*----------------------------------------------------------------------*/
 

@@ -26,7 +26,7 @@ struct dom_text_vtable text_vtable = {
 			{
 				DOM_NODE_EVENT_TARGET_VTABLE,
 			},
-			DOM_NODE_VTABLE
+			DOM_NODE_VTABLE_CHARACTERDATA
 		},
 		DOM_CHARACTERDATA_VTABLE
 	},
