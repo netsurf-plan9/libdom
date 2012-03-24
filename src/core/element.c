@@ -59,6 +59,95 @@ typedef struct dom_attr_list {
 	struct dom_string *namespace;
 } dom_attr_list;
 
+
+/**
+ * Destroy element's class cache
+ *
+ * \param ele  The element
+ */
+static void _dom_element_destroy_classes(struct dom_element *ele)
+{
+	/* Destroy the pre-separated class names */
+	if (ele->classes != NULL) {
+		unsigned int class;
+		for (class = 0; class < ele->n_classes; class++) {
+			lwc_string_unref(ele->classes[class]);
+		}
+		free(ele->classes);
+	}
+
+	ele->n_classes = 0;
+	ele->classes = NULL;
+}
+
+
+/**
+ * Create element's class cache from class attribute value
+ *
+ * \param ele    The element
+ * \param value  The class attribute value
+ *
+ * Destroys any existing cached classes.
+ */
+static dom_exception _dom_element_create_classes(struct dom_element *ele,
+		const char *value)
+{
+	const char *pos;
+	lwc_string **classes = NULL;
+	uint32_t n_classes = 0;
+
+	/* Any existing cached classes are replaced; destroy them */
+	_dom_element_destroy_classes(ele);
+
+	/* Count number of classes */
+	for (pos = value; *pos != '\0'; ) {
+		if (*pos != ' ') {
+			while (*pos != ' ' && *pos != '\0')
+				pos++;
+			n_classes++;
+		} else {
+			while (*pos == ' ')
+				pos++;
+		}
+	}
+
+	/* If there are some, unpack them */
+	if (n_classes > 0) {
+		classes = malloc(n_classes * sizeof(lwc_string *));
+		if (classes == NULL)
+			return DOM_NO_MEM_ERR;
+
+		for (pos = value, n_classes = 0;
+				*pos != '\0'; ) {
+			if (*pos != ' ') {
+				const char *s = pos;
+				while (*pos != ' ' && *pos != '\0')
+					pos++;
+				if (lwc_intern_string(s, pos - s, 
+						&classes[n_classes]) !=
+						lwc_error_ok)
+					goto error;
+				n_classes++;
+			} else {
+				while (*pos == ' ')
+					pos++;
+			}
+		}
+	}
+
+	ele->classes = classes;
+	ele->n_classes = n_classes;
+
+	return DOM_NO_ERR;
+error:
+	while (n_classes > 0)
+		lwc_string_unref(classes[--n_classes]);
+
+	free(classes);
+		
+	return DOM_NO_MEM_ERR;
+}
+
 /* Attribute linked list releated functions */
 
 /**
@@ -179,6 +268,42 @@ static dom_attr_list * _dom_element_attr_list_get_by_index(dom_attr_list *list,
 }
 
 /**
+ * Destroy an attribute list node, and its attribute
+ *
+ * \param n  The attribute list node to destroy
+ */
+static void _dom_element_attr_list_node_destroy(dom_attr_list *n)
+{
+	dom_node_internal *a;
+	dom_document *doc;
+
+	assert(n != NULL);
+	assert(n->attr != NULL);
+	assert(n->name != NULL);
+
+	a = (dom_node_internal *) n->attr;
+
+	/* Need to destroy classes cache, when removing class attribute */
+	doc = a->owner;
+	if (n->namespace == NULL &&
+			dom_string_isequal(n->name, doc->class_string)) {
+		dom_node_internal *a = (dom_node_internal *)(n->attr);
+		_dom_element_destroy_classes((dom_element *)(a->parent));
+	}
+
+	/* Destroy rest of list node */
+	dom_string_unref(n->name);
+
+	if (n->namespace != NULL)
+		dom_string_unref(n->namespace);
+
+	a->parent = NULL;
+	dom_node_try_destroy(a);
+
+	free(n);
+}
+
+/**
  * Create an attribute list node
  *
  * \param attr       The attribute to create a list node for
@@ -204,32 +329,27 @@ static dom_attr_list * _dom_element_attr_list_node_create(dom_attr *attr,
 	new_list_node->name = name;
 	new_list_node->namespace = namespace;
 
+	if (namespace == NULL) {
+		dom_node_internal *a = (dom_node_internal *) attr;
+		dom_string *value;
+
+		if (DOM_NO_ERR != _dom_attr_get_value(attr, &value)) {
+			_dom_element_attr_list_node_destroy(new_list_node);
+			return NULL;
+		}
+
+		if (DOM_NO_ERR != _dom_element_create_classes(
+				(dom_element *)(a->parent),
+				dom_string_data(value))) {
+			_dom_element_attr_list_node_destroy(new_list_node);
+			dom_string_unref(value);
+			return NULL;
+		}
+
+		dom_string_unref(value);
+	}
+
 	return new_list_node;
-}
-
-/**
- * Destroy an attribute list node, and its attribute
- *
- * \param n  The attribute list node to destroy
- */
-static void _dom_element_attr_list_node_destroy(dom_attr_list *n)
-{
-	dom_node_internal *a;
-
-	assert(n != NULL);
-	assert(n->attr != NULL);
-	assert(n->name != NULL);
-
-	dom_string_unref(n->name);
-
-	if (n->namespace != NULL)
-		dom_string_unref(n->namespace);
-
-	a = (dom_node_internal *) n->attr;
-	a->parent = NULL;
-	dom_node_try_destroy(a);
-
-	free(n);
 }
 
 /**
@@ -331,27 +451,6 @@ static dom_attr_list * _dom_element_attr_list_clone(dom_attr_list *list)
 	} while (attr != list);
 
 	return new_list;
-}
-
-
-/**
- * Destroy element's class cache
- *
- * \param ele  The element
- */
-static void _dom_element_destroy_classes(struct dom_element *ele)
-{
-	/* Destroy the pre-separated class names */
-	if (ele->classes != NULL) {
-		unsigned int class;
-		for (class = 0; class < ele->n_classes; class++) {
-			lwc_string_unref(ele->classes[class]);
-		}
-		free(ele->classes);
-	}
-
-	ele->n_classes = 0;
-	ele->classes = NULL;
 }
 
 static dom_exception _dom_element_get_attr(struct dom_element *element,

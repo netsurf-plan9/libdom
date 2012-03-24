@@ -72,6 +72,7 @@ dom_exception _dom_element_remove_attribute_node(struct dom_element *element,
 dom_exception _dom_element_get_elements_by_tag_name(
 		struct dom_element *element, dom_string *name,
 		struct dom_nodelist **result);
+
 dom_exception _dom_element_get_attribute_ns(struct dom_element *element, 
 		dom_string *namespace, dom_string *localname, 
 		dom_string **value);
