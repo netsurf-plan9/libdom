@@ -20,6 +20,16 @@ struct dom_nodelist;
 
 typedef struct dom_html_document dom_html_document;
 
+/**
+ * Quirks mode flag
+ */
+typedef enum dom_html_document_quirks_mode {
+	DOM_HTML_DOCUMENT_QUIRKS_MODE_NONE,
+	DOM_HTML_DOCUMENT_QUIRKS_MODE_LIMITED,
+	DOM_HTML_DOCUMENT_QUIRKS_MODE_FULL
+} dom_html_document_quirks_mode;
+
+
 typedef struct dom_html_document_vtable {
 	struct dom_document_vtable base;
 
@@ -61,9 +71,9 @@ typedef struct dom_html_document_vtable {
 	dom_exception (*get_elements_by_name)(dom_html_document *doc,
 			dom_string *name, struct dom_nodelist **list);
 	dom_exception (*get_quirks_mode)(dom_html_document *doc,
-					 bool *result);
+					 dom_html_document_quirks_mode *result);
 	dom_exception (*set_quirks_mode)(dom_html_document *doc,
-					 bool quirks);
+					 dom_html_document_quirks_mode quirks);
 } dom_html_document_vtable;
 
 static inline dom_exception dom_html_document_get_title(
@@ -255,7 +265,7 @@ static inline dom_exception dom_html_document_get_elements_by_name(dom_html_docu
 			(dom_string *) (n), (struct dom_nodelist **) (l))
 
 static inline dom_exception dom_html_document_get_quirks_mode(
-	dom_html_document *doc, bool *result)
+	dom_html_document *doc, dom_html_document_quirks_mode *result)
 {
 	return ((dom_html_document_vtable *) ((dom_node *) doc)->vtable)->
 		get_quirks_mode(doc, result);
@@ -264,7 +274,7 @@ static inline dom_exception dom_html_document_get_quirks_mode(
 	dom_html_document_get_quirks_mode((dom_html_document *) (d), (r))
 
 static inline dom_exception dom_html_document_set_quirks_mode(
-	dom_html_document *doc, bool quirks)
+	dom_html_document *doc, dom_html_document_quirks_mode quirks)
 {
 	return ((dom_html_document_vtable *) ((dom_node *) doc)->vtable)->
 		set_quirks_mode(doc, quirks);

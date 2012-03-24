@@ -352,14 +352,14 @@ dom_exception _dom_html_document_get_elements_by_name(dom_html_document *doc,
 /* Semi-internal API extensions for NetSurf */
 
 dom_exception _dom_html_document_get_quirks_mode(dom_html_document *doc,
-						 bool *result)
+		dom_html_document_quirks_mode *result)
 {
 	*result = doc->quirks;
 	return DOM_NO_ERR;
 }
 
 dom_exception _dom_html_document_set_quirks_mode(dom_html_document *doc,
-						 bool quirks)
+		dom_html_document_quirks_mode quirks)
 {
 	doc->quirks = quirks;
 	return DOM_NO_ERR;
