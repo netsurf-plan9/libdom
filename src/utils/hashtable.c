@@ -31,7 +31,7 @@ struct dom_hash_table {
 	void *pw;			/**< Client data */
 	unsigned int nchains;		/**< Number of chains */
 	struct _dom_hash_entry **chain;	/**< The chain head */
-	unsigned int nentries;		/**< The entries in this table */
+	uint32_t nentries;		/**< The entries in this table */
 };
 
 
@@ -292,7 +292,7 @@ void *_dom_hash_iterate(struct dom_hash_table *ht, uintptr_t *c1,
  * 
  * \return the number of elements
  */
-unsigned int _dom_hash_get_length(struct dom_hash_table *ht)
+uint32_t _dom_hash_get_length(struct dom_hash_table *ht)
 {
 	return ht->nentries;
 }
