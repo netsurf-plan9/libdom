@@ -315,6 +315,8 @@ static dom_attr_list * _dom_element_attr_list_node_create(dom_attr *attr,
 		dom_element *ele, dom_string *name, dom_string *namespace)
 {
 	dom_attr_list *new_list_node;
+	dom_node_internal *a;
+	dom_document *doc;
 
 	if (attr == NULL || name == NULL)
 		return NULL;
@@ -329,7 +331,10 @@ static dom_attr_list * _dom_element_attr_list_node_create(dom_attr *attr,
 	new_list_node->name = name;
 	new_list_node->namespace = namespace;
 
-	if (namespace == NULL) {
+	a = (dom_node_internal *) attr;
+	doc = a->owner;
+	if (namespace == NULL &&
+			dom_string_isequal(name, doc->class_string)) {
 		dom_string *value;
 
 		if (DOM_NO_ERR != _dom_attr_get_value(attr, &value)) {
