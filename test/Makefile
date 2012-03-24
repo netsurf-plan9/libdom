@@ -53,7 +53,7 @@ $(DIR)INDEX: test/Makefile
 TEST_PREREQS := $(TEST_PREREQS) $(DIR)INDEX
 
 # Include the level 1 core tests
-#$(eval $(call do_xml_suite,level1/core,dom1-interfaces.xml))
+$(eval $(call do_xml_suite,level1/core,dom1-interfaces.xml))
 # Include level 1 html tests
 $(eval $(call do_xml_suite,level1/html,dom1-interfaces.xml))
 
