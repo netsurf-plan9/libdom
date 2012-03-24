@@ -101,8 +101,8 @@ dom_exception _dom_mouse_wheel_event_init_ns(
 		dom_string *modifier_list, long wheel_delta)
 {
 	dom_exception err;
-	evt->delta = wheel_delta;
 	dom_mouse_event *e = (dom_mouse_event *) evt;
+	evt->delta = wheel_delta;
 
 	err = _dom_parse_modifier_list(modifier_list, &e->modifier_state);
 	if (err != DOM_NO_ERR)

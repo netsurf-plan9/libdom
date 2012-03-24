@@ -916,6 +916,8 @@ dom_exception _dom_document_adopt_node(dom_document *doc,
 {
 	dom_node_internal *n = (dom_node_internal *) node;
 	dom_exception err;
+	dom_node_internal *parent;
+	dom_node_internal *tmp;
 	
 	*result = NULL;
 
@@ -945,8 +947,7 @@ dom_exception _dom_document_adopt_node(dom_document *doc,
 		return err;
 	}
 
-	dom_node_internal *parent = n->parent;
-	dom_node_internal *tmp;
+	parent = n->parent;
 	if (parent != NULL) {
 		err = dom_node_remove_child(parent, node, (void *) &tmp);
 		if (err != DOM_NO_ERR) {
@@ -1243,6 +1244,8 @@ dom_exception dom_document_dup_node(dom_document *doc, dom_node *node,
 	dom_node_internal *n = (dom_node_internal *) node;
 	dom_node_internal *ret;
 	dom_exception err;
+	dom_node_internal *child, *r;
+	dom_user_data *ud;
 
 	if (opt == DOM_NODE_ADOPTED && _dom_node_readonly(n))
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
@@ -1276,7 +1279,6 @@ dom_exception dom_document_dup_node(dom_document *doc, dom_node *node,
 		return DOM_NOT_SUPPORTED_ERR;
 	}
 
-	dom_node_internal *child, *r;
 	if (deep == true) {
 		child = ((dom_node_internal *) node)->first_child;
 		while (child != NULL) {
@@ -1300,7 +1302,6 @@ dom_exception dom_document_dup_node(dom_document *doc, dom_node *node,
 	}
 
 	/* Call the dom_user_data_handlers */
-	dom_user_data *ud;
 	ud = n->user_data;
 	while (ud != NULL) {
 		if (ud->handler != NULL) {

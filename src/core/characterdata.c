@@ -125,15 +125,16 @@ dom_exception _dom_characterdata_set_data(struct dom_characterdata *cdata,
 		dom_string *data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
+	dom_exception err;
+	struct dom_document *doc;
+	bool success = true;
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 	}
 
 	/* Dispatch a DOMCharacterDataModified event */
-	dom_exception err;
-	struct dom_document *doc = dom_node_get_owner(cdata);
-	bool success = true;
+	doc = dom_node_get_owner(cdata);
 	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value,
 			data, &success);
 	if (err != DOM_NO_ERR)
@@ -230,6 +231,8 @@ dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	dom_string *temp;
 	dom_exception err;
+	struct dom_document *doc;
+	bool success = true;
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
@@ -241,8 +244,7 @@ dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
 	}
 
 	/* Dispatch a DOMCharacterDataModified event */
-	struct dom_document *doc = dom_node_get_owner(cdata);
-	bool success = true;
+	doc = dom_node_get_owner(cdata);
 	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value,
 			temp, &success);
 	if (err != DOM_NO_ERR)
@@ -277,6 +279,8 @@ dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
 	dom_string *temp;
 	uint32_t len;
 	dom_exception err;
+	struct dom_document *doc;
+	bool success = true;
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
@@ -302,8 +306,7 @@ dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
 	}
 
 	/* Dispatch a DOMCharacterDataModified event */
-	struct dom_document *doc = dom_node_get_owner(cdata);
-	bool success = true;
+	doc = dom_node_get_owner(cdata);
 	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value,
 			temp, &success);
 	if (err != DOM_NO_ERR)
@@ -338,6 +341,8 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 	dom_string *temp;
 	uint32_t len, end;
 	dom_exception err;
+	struct dom_document *doc;
+	bool success = true;
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
@@ -365,8 +370,7 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 	}
 
 	/* Dispatch a DOMCharacterDataModified event */
-	struct dom_document *doc = dom_node_get_owner(cdata);
-	bool success = true;
+	doc = dom_node_get_owner(cdata);
 	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value,
 			temp, &success);
 	if (err != DOM_NO_ERR)
@@ -403,6 +407,8 @@ dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 	dom_string *temp;
 	uint32_t len, end;
 	dom_exception err;
+	struct dom_document *doc;
+	bool success = true;
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
@@ -430,8 +436,7 @@ dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 	}
 
 	/* Dispatch a DOMCharacterDataModified event */
-	struct dom_document *doc = dom_node_get_owner(cdata);
-	bool success = true;
+	doc = dom_node_get_owner(cdata);
 	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value, temp,
 			&success);
 	if (err != DOM_NO_ERR)

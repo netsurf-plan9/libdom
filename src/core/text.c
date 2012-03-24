@@ -350,6 +350,10 @@ dom_exception walk_logic_adjacent_text_in_order(
 		dom_node_internal *node, walk_operation opt,
 		walk_order order, dom_string **ret, bool *cont)
 {
+	dom_exception err;
+	dom_string *data, *tmp;
+	dom_node_internal *parent;
+
 	/* If we reach the leaf of the DOM tree, just return to continue
 	 * to next sibling of our parent */
 	if (node == NULL) {
@@ -357,11 +361,11 @@ dom_exception walk_logic_adjacent_text_in_order(
 		return DOM_NO_ERR;
 	}
 
-	dom_exception err;
-	dom_string *data, *tmp;
-	dom_node_internal *parent = dom_node_get_parent(node);
+	parent = dom_node_get_parent(node);
 
 	while (node != NULL) {
+		dom_node_internal *p;
+
 		/* If we reach the boundary of logical-adjacent text, we stop */
 		if (node->type == DOM_ELEMENT_NODE || 
 				node->type == DOM_COMMENT_NODE ||
@@ -411,7 +415,7 @@ dom_exception walk_logic_adjacent_text_in_order(
 			}
 		}
 
-		dom_node_internal *p = dom_node_get_parent(node);
+		p = dom_node_get_parent(node);
 		if (order == LEFT) {
 			if (node->last_child != NULL) {
 				node = node->last_child;

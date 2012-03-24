@@ -1125,14 +1125,15 @@ dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
 	struct dom_element *ele = (struct dom_element *) node;
 	dom_string *value;
 	dom_exception err;
+	bool has;
+	dom_string *xmlns;
 
 	if (node->prefix == NULL) {
 		*result = dom_string_isequal(node->namespace, namespace);
 		return DOM_NO_ERR;
 	}
 
-	bool has;
-	dom_string *xmlns = _dom_namespace_get_xmlns_prefix();
+	xmlns = _dom_namespace_get_xmlns_prefix();
 	err = dom_element_has_attribute(ele, xmlns, &has);
 	if (err != DOM_NO_ERR)
 		return err;
@@ -1164,6 +1165,8 @@ dom_exception _dom_element_lookup_namespace(dom_node_internal *node,
 		dom_string *prefix, dom_string **result)
 {
 	dom_exception err;
+	bool has;
+	dom_string *xmlns;
 
 	if (node->namespace != NULL && 
 			dom_string_isequal(node->prefix, prefix)) {
@@ -1171,8 +1174,7 @@ dom_exception _dom_element_lookup_namespace(dom_node_internal *node,
 		return DOM_NO_ERR;
 	}
 	
-	bool has;
-	dom_string *xmlns = _dom_namespace_get_xmlns_prefix();
+	xmlns = _dom_namespace_get_xmlns_prefix();
 	err = dom_element_has_attribute_ns(node, xmlns, prefix, &has);
 	if (err != DOM_NO_ERR)
 		return err;
@@ -1376,6 +1378,8 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		/* No existing attribute, so create one */
 		struct dom_attr *attr;
 		struct dom_attr_list *list_node;
+		struct dom_document *doc;
+		bool success = true;
 
 		err = _dom_attr_create(e->owner, name, namespace, NULL,
 				true, &attr);
@@ -1394,8 +1398,7 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		}
 
 		/* Dispatch a DOMAttrModified event */
-		struct dom_document *doc = dom_node_get_owner(element);
-		bool success = true;
+		doc = dom_node_get_owner(element);
 		err = _dom_dispatch_attr_modified_event(doc, e, NULL, value,
 				(dom_event_target *) attr, name, 
 				DOM_MUTATION_ADDITION, &success);
@@ -1473,6 +1476,7 @@ dom_exception _dom_element_remove_attr(struct dom_element *element,
 		bool success = true;
 		dom_attr *a = match->attr;
 		struct dom_document *doc = dom_node_get_owner(element);
+		dom_string *old = NULL;
 
 		err = dom_node_dispatch_node_change_event(doc, match->attr,
 				element, DOM_MUTATION_REMOVAL, &success);
@@ -1497,7 +1501,6 @@ dom_exception _dom_element_remove_attr(struct dom_element *element,
 
 		/* Dispatch a DOMAttrModified event */
 		success = true;
-		dom_string *old = NULL;
 		err = dom_attr_get_value(a, &old);
 		/* TODO: We did not support some node type such as entity
 		 * reference, in that case, we should ignore the error to
@@ -1583,6 +1586,9 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	dom_node_internal *e = (dom_node_internal *) element;
 	dom_node_internal *attr_node = (dom_node_internal *) attr;
 	dom_attr *old_attr;
+	dom_string *new = NULL;
+	struct dom_document *doc;
+	bool success = true;
 
 	/** \todo validate name */
 
@@ -1608,8 +1614,8 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	*result = NULL;
 	if (match != NULL) {
 		/* Disptach DOMNodeRemoval event */
-		bool success = true;
-		struct dom_document *doc = dom_node_get_owner(element);
+		dom_string *old = NULL;
+		doc = dom_node_get_owner(element);
 		old_attr = match->attr;
 
 		err = dom_node_dispatch_node_change_event(doc, old_attr, 
@@ -1625,7 +1631,6 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 		_dom_element_attr_list_node_destroy(match);
 
 		/* Dispatch a DOMAttrModified event */
-		dom_string *old = NULL;
 		success = true;
 		err = dom_attr_get_value(old_attr, &old);
 		/* TODO: We did not support some node type such as entity
@@ -1669,9 +1674,8 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	dom_node_remove_pending(attr);
 
 	/* Dispatch a DOMAttrModified event */
-	dom_string *new = NULL;
-	struct dom_document *doc = dom_node_get_owner(element);
-	bool success = true;
+	doc = dom_node_get_owner(element);
+	success = true;
 	err = dom_attr_get_value(attr, &new);
 	/* TODO: We did not support some node type such as entity reference, in
 	 * that case, we should ignore the error to make sure the event model
@@ -1732,6 +1736,9 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 	dom_string *name;
 	dom_node_internal *e = (dom_node_internal *) element;
 	dom_attr *a;
+	bool success = true;
+	struct dom_document *doc;
+	dom_string *old = NULL;
 	
 	/* Ensure element can be written to */
 	if (_dom_node_readonly(e))
@@ -1754,8 +1761,7 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 	a = match->attr;
 
 	/* Dispatch a DOMNodeRemoved event */
-	bool success = true;
-	struct dom_document *doc = dom_node_get_owner(element);
+	doc = dom_node_get_owner(element);
 	err = dom_node_dispatch_node_change_event(doc, a, element, 
 			DOM_MUTATION_REMOVAL, &success);
 	if (err != DOM_NO_ERR) {
@@ -1780,7 +1786,6 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 	dom_string_unref(name);
 
 	/* Dispatch a DOMAttrModified event */
-	dom_string *old = NULL;
 	success = true;
 	err = dom_attr_get_value(a, &old);
 	/* TODO: We did not support some node type such as entity reference, in
@@ -1891,6 +1896,8 @@ dom_exception _dom_element_get_id(struct dom_element *ele, dom_string **id)
 {
 	dom_exception err;
 	dom_string *ret = NULL;
+	dom_document *doc;
+	dom_string *name;
 
 	*id = NULL;
 
@@ -1906,10 +1913,8 @@ dom_exception _dom_element_get_id(struct dom_element *ele, dom_string **id)
 		return err;
 	}
 
-	dom_document *doc;
 	doc = dom_node_get_owner(ele);
 	assert(doc != NULL);
-	dom_string *name;
 
 	if (ele->id_name != NULL) {
 		name = ele->id_name;

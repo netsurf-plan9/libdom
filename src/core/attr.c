@@ -225,6 +225,11 @@ dom_exception dom_attr_get_integer(dom_attr *a, unsigned long *value)
  */
 dom_exception dom_attr_set_integer(dom_attr *a, unsigned long value)
 {
+	struct dom_document *doc;
+	struct dom_node_internal *ele;
+	bool success = true;
+	dom_exception err;
+
 	/* If this is the first set method, we should fix this attribute
 	 * type */
 	if (a->type == DOM_ATTR_UNSET)
@@ -238,10 +243,8 @@ dom_exception dom_attr_set_integer(dom_attr *a, unsigned long value)
 	
 	a->value.lvalue = value;
 
-	struct dom_document *doc = dom_node_get_owner(a);
-	struct dom_node_internal *ele = dom_node_get_parent(a);
-	bool success = true;
-	dom_exception err;
+	doc = dom_node_get_owner(a);
+	ele = dom_node_get_parent(a);
 	err = _dom_dispatch_attr_modified_event(doc, ele, NULL, NULL,
 			(dom_event_target *) a, NULL,
 			DOM_MUTATION_MODIFICATION, &success);
@@ -284,6 +287,11 @@ dom_exception dom_attr_get_short(dom_attr *a, unsigned short *value)
  */
 dom_exception dom_attr_set_short(dom_attr *a, unsigned short value)
 {
+	struct dom_document *doc;
+	struct dom_node_internal *ele;
+	bool success = true;
+	dom_exception err;
+
 	/* If this is the first set method, we should fix this attribute
 	 * type */
 	if (a->type == DOM_ATTR_UNSET)
@@ -297,10 +305,8 @@ dom_exception dom_attr_set_short(dom_attr *a, unsigned short value)
 	
 	a->value.svalue = value;
 
-	struct dom_document *doc = dom_node_get_owner(a);
-	struct dom_node_internal *ele = dom_node_get_parent(a);
-	bool success = true;
-	dom_exception err;
+	doc = dom_node_get_owner(a);
+	ele = dom_node_get_parent(a);
 	err = _dom_dispatch_attr_modified_event(doc, ele, NULL, NULL,
 			(dom_event_target *) a, NULL,
 			DOM_MUTATION_MODIFICATION, &success);
@@ -343,6 +349,11 @@ dom_exception dom_attr_get_bool(dom_attr *a, bool *value)
  */
 dom_exception dom_attr_set_bool(dom_attr *a, bool value)
 {
+	struct dom_document *doc;
+	struct dom_node_internal *ele;
+	bool success = true;
+	dom_exception err;
+
 	/* If this is the first set method, we should fix this attribute
 	 * type */
 	if (a->type == DOM_ATTR_UNSET)
@@ -356,10 +367,8 @@ dom_exception dom_attr_set_bool(dom_attr *a, bool value)
 	
 	a->value.bvalue = value;
 
-	struct dom_document *doc = dom_node_get_owner(a);
-	struct dom_node_internal *ele = dom_node_get_parent(a);
-	bool success = true;
-	dom_exception err;
+	doc = dom_node_get_owner(a);
+	ele = dom_node_get_parent(a);
 	err = _dom_dispatch_attr_modified_event(doc, ele, NULL, NULL,
 			(dom_event_target *) a, NULL,
 			DOM_MUTATION_MODIFICATION, &success);
@@ -520,6 +529,8 @@ dom_exception _dom_attr_set_value(struct dom_attr *attr,
 	struct dom_node_internal *c, *d;
 	struct dom_text *text;
 	dom_exception err;
+	dom_string *name = NULL;
+	dom_string *parsed = NULL;
 
 	/* Ensure attribute is writable */
 	if (_dom_node_readonly(a))
@@ -533,13 +544,10 @@ dom_exception _dom_attr_set_value(struct dom_attr *attr,
 	if (attr->type != DOM_ATTR_STRING)
 		return DOM_ATTR_WRONG_TYPE_ERR;
 	
-	dom_string *name = NULL;
-
 	err = _dom_attr_get_name(attr, &name);
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	dom_string *parsed = NULL;
 	err = dom_element_parse_attribute(a->parent, name, value, &parsed);
 	dom_string_unref(name);
 	if (err != DOM_NO_ERR) {

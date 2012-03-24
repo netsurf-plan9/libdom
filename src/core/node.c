@@ -220,6 +220,8 @@ dom_exception _dom_node_initialise(dom_node_internal *node,
 void _dom_node_finalise(dom_node_internal *node)
 {
 	struct dom_user_data *u, *v;
+	struct dom_node_internal *p;
+	struct dom_node_internal *n = NULL;
 
 	/* Destroy user data */
 	for (u = node->user_data; u != NULL; u = v) {
@@ -236,8 +238,7 @@ void _dom_node_finalise(dom_node_internal *node)
 		dom_string_unref(node->namespace);
 
 	/* Destroy all the child nodes of this node */
-	struct dom_node_internal *p = node->first_child;
-	struct dom_node_internal *n = NULL;
+	p = node->first_child;
 	while (p != NULL) {
 		n = p->next;
 		p->parent = NULL;
@@ -716,6 +717,7 @@ dom_exception _dom_node_insert_before(dom_node_internal *node,
 		dom_node_internal **result)
 {
 	dom_exception err;
+	dom_node_internal *n;
 
 	/* Ensure that new_child and node are owned by the same document */
 	if ((new_child->type == DOM_DOCUMENT_TYPE_NODE && 
@@ -734,7 +736,7 @@ dom_exception _dom_node_insert_before(dom_node_internal *node,
 		return DOM_NOT_FOUND_ERR;
 
 	/* Ensure that new_child is not an ancestor of node, nor node itself */
-	for (dom_node_internal *n = node; n != NULL; n = n->parent) {
+	for (n = node; n != NULL; n = n->parent) {
 		if (n == new_child)
 			return DOM_HIERARCHY_REQUEST_ERR;
 	}
@@ -855,6 +857,8 @@ dom_exception _dom_node_replace_child(dom_node_internal *node,
 		dom_node_internal *new_child, dom_node_internal *old_child,
 		dom_node_internal **result)
 {
+	dom_node_internal *n;
+
 	/* We don't support replacement of DocumentType or root Elements */
 	if (node->type == DOM_DOCUMENT_NODE && 
 			(new_child->type == DOM_DOCUMENT_TYPE_NODE || 
@@ -874,7 +878,7 @@ dom_exception _dom_node_replace_child(dom_node_internal *node,
 		return DOM_NOT_FOUND_ERR;
 
 	/* Ensure that new_child is not an ancestor of node, nor node itself */
-	for (dom_node_internal *n = node; n != NULL; n = n->parent) {
+	for (n = node; n != NULL; n = n->parent) {
 		if (n == new_child)
 			return DOM_HIERARCHY_REQUEST_ERR;
 	}
@@ -951,6 +955,9 @@ dom_exception _dom_node_remove_child(dom_node_internal *node,
 		dom_node_internal *old_child,
 		dom_node_internal **result)
 {
+	dom_exception err;
+	bool success = true;
+
 	/* We don't support removal of DocumentType or root Element nodes */
 	if (node->type == DOM_DOCUMENT_NODE &&
 			(old_child->type == DOM_DOCUMENT_TYPE_NODE ||
@@ -966,8 +973,6 @@ dom_exception _dom_node_remove_child(dom_node_internal *node,
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 
 	/* Dispatch a DOMNodeRemoval event */
-	dom_exception err;
-	bool success = true;
 	err = dom_node_dispatch_node_change_event(node->owner, old_child, node,
 			DOM_MUTATION_REMOVAL, &success);
 	if (err != DOM_NO_ERR)
@@ -1929,7 +1934,8 @@ bool _dom_node_permitted_child(const dom_node_internal *parent,
 		/* Ensure that the document doesn't already 
 		 * have a root element */
 		if (child->type == DOM_ELEMENT_NODE) {
-			for (dom_node_internal *n = parent->first_child; 
+			dom_node_internal *n;
+			for (n = parent->first_child; 
 					n != NULL; n = n->next) {
 				if (n->type == DOM_ELEMENT_NODE)
 					valid = false;
@@ -1939,7 +1945,8 @@ bool _dom_node_permitted_child(const dom_node_internal *parent,
 		/* Ensure that the document doesn't already 
 		 * have a document type */
 		if (child->type == DOM_DOCUMENT_TYPE_NODE) {
-			for (dom_node_internal *n = parent->first_child;
+			dom_node_internal *n;
+			for (n = parent->first_child;
 					n != NULL; n = n->next) {
 				if (n->type == DOM_DOCUMENT_TYPE_NODE)
 					valid = false;
@@ -2030,6 +2037,10 @@ dom_exception _dom_node_attach_range(dom_node_internal *first,
 		dom_node_internal *previous, 
 		dom_node_internal *next)
 {
+	dom_exception err;
+	bool success = true;
+	dom_node_internal *n;
+
 	first->previous = previous;
 	last->next = next;
 
@@ -2043,9 +2054,7 @@ dom_exception _dom_node_attach_range(dom_node_internal *first,
 	else
 		parent->last_child = last;
 
-	dom_exception err;
-	bool success = true;
-	for (dom_node_internal *n = first; n != last->next; n = n->next) {
+	for (n = first; n != last->next; n = n->next) {
 		n->parent = parent;
 		/* Dispatch a DOMNodeInserted event */
 		err = dom_node_dispatch_node_change_event(parent->owner, 
@@ -2074,6 +2083,10 @@ dom_exception _dom_node_attach_range(dom_node_internal *first,
 void _dom_node_detach_range(dom_node_internal *first, 
 		dom_node_internal *last)
 {
+	bool success = true;
+	dom_node_internal *parent;
+	dom_node_internal *n;
+
 	if (first->previous != NULL)
 		first->previous->next = last->next;
 	else
@@ -2084,9 +2097,8 @@ void _dom_node_detach_range(dom_node_internal *first,
 	else
 		last->parent->last_child = first->previous;
 
-	bool success = true;
-	dom_node_internal *parent = first->parent;
-	for (dom_node_internal *n = first; n != last->next; n = n->next) {
+	parent = first->parent;
+	for (n = first; n != last->next; n = n->next) {
 		/* Dispatch a DOMNodeRemoval event */
 		dom_node_dispatch_node_change_event(n->owner, n, n->parent, 
 				DOM_MUTATION_REMOVAL, &success);
@@ -2116,6 +2128,7 @@ void _dom_node_replace(dom_node_internal *old,
 		dom_node_internal *replacement)
 {
 	dom_node_internal *first, *last;
+	dom_node_internal *n;
 
 	if (replacement->type == DOM_DOCUMENT_FRAGMENT_NODE) {
 		first = replacement->first_child;
@@ -2140,7 +2153,7 @@ void _dom_node_replace(dom_node_internal *old,
 	else
 		old->parent->last_child = last;
 
-	for (dom_node_internal *n = first; n != last->next; n = n->next) {
+	for (n = first; n != last->next; n = n->next) {
 		n->parent = old->parent;
 	}
 
@@ -2157,11 +2170,11 @@ void _dom_node_replace(dom_node_internal *old,
 dom_exception _dom_merge_adjacent_text(dom_node_internal *p,
 		dom_node_internal *n)
 {
-	assert(p->type = DOM_TEXT_NODE);
-	assert(n->type = DOM_TEXT_NODE);
-
 	dom_string *str;
 	dom_exception err;
+
+	assert(p->type = DOM_TEXT_NODE);
+	assert(n->type = DOM_TEXT_NODE);
 
 	err = dom_text_get_whole_text(n, &str);
 	if (err != DOM_NO_ERR)
@@ -2310,6 +2323,12 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 		struct dom_event *evt, bool *success)
 {
 	dom_exception err, ret = DOM_NO_ERR;
+	dom_event_target_entry list;
+	dom_node_internal *target = (dom_node_internal *) et;
+	dom_document *doc;
+	dom_document_event_internal *dei;
+	void *pw = NULL;
+	struct list_entry *e;
 
 	assert(et != NULL);
 	assert(evt != NULL);
@@ -2328,7 +2347,7 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	if (evt->doc == NULL)
 		return DOM_NOT_SUPPORTED_ERR;
 	
-	dom_document *doc = dom_node_get_owner(et);
+	doc = dom_node_get_owner(et);
 	if (doc == NULL) {
 		/* TODO: In the progress of parsing, many Nodes in the DTD has
 		 * no document at all, do nothing for this kind of node */
@@ -2338,9 +2357,6 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	if (_dom_validate_ncname(evt->type) == false) {
 		return DOM_INVALID_CHARACTER_ERR;
 	}
-
-	dom_event_target_entry list;
-	dom_node_internal *target = (dom_node_internal *) et;
 
 	*success = true;
 
@@ -2368,8 +2384,7 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	evt->phase = DOM_CAPTURING_PHASE;
 
 	/* The started callback of default action */
-	dom_document_event_internal *dei = &doc->dei;
-	void *pw = NULL; 
+	dei = &doc->dei;
 	if (dei->actions != NULL) {
 		dom_default_action_callback cb = dei->actions(evt->type,
 				DOM_DEFAULT_ACTION_STARTED, &pw);
@@ -2379,7 +2394,7 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	}
 
 	/* The capture phase */
-	struct list_entry *e = list.entry.prev;
+	e = list.entry.prev;
 	for (; e != &list.entry; e = e->prev) {
 		dom_event_target_entry *l = (dom_event_target_entry *) e;
 		dom_node_internal *node = (dom_node_internal *) l->et;

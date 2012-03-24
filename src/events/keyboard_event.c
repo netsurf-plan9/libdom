@@ -172,13 +172,16 @@ dom_exception _dom_keyboard_event_get_meta_key(dom_keyboard_event *evt,
 dom_exception _dom_keyboard_event_get_modifier_state(dom_keyboard_event *evt,
 		dom_string *m, bool *state)
 {
+	const char *data;
+	size_t len;
+
 	if (m == NULL) {
 		*state = false;
 		return DOM_NO_ERR;
 	}
 
-	const char *data = dom_string_data(m);
-	size_t len = dom_string_byte_length(m);
+	data = dom_string_data(m);
+	len = dom_string_byte_length(m);
 
 	if (len == SLEN("AltGraph") && strncmp(data, "AltGraph", len) == 0) {
 		*state = ((evt->modifier_state & DOM_MOD_ALT_GRAPH) != 0);
@@ -286,14 +289,17 @@ dom_exception _dom_keyboard_event_init_ns(dom_keyboard_event *evt,
 dom_exception _dom_parse_modifier_list(dom_string *modifier_list,
 		uint32_t *modifier_state)
 {
+	const char *data;
+	const char *m;
+	size_t len = 0;
+
 	*modifier_state = 0;
 
 	if (modifier_list == NULL)
 		return DOM_NO_ERR;
 	
-	const char *data = dom_string_data(modifier_list);
-	const char *m = data;
-	size_t len = 0;
+	data = dom_string_data(modifier_list);
+	m = data;
 
 	while (true) {
 		/* If we reach a space or end of the string, we should parse

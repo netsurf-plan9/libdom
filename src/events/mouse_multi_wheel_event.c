@@ -136,11 +136,11 @@ dom_exception _dom_mouse_multi_wheel_event_init_ns(
 		long wheel_delta_y, long wheel_delta_z)
 {
 	dom_exception err;
+	dom_mouse_event *e = (dom_mouse_event *) evt;
+
 	evt->x = wheel_delta_x;
 	evt->y = wheel_delta_y;
 	evt->z = wheel_delta_z;
-
-	dom_mouse_event *e = (dom_mouse_event *) evt;
 
 	err = _dom_parse_modifier_list(modifier_list, &e->modifier_state);
 	if (err != DOM_NO_ERR)

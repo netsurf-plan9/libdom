@@ -103,6 +103,8 @@ dom_exception _dom_document_event_create_event(dom_document_event *de,
 	lwc_string *t = NULL;
 	dom_exception err;
 	struct dom_document *doc = de;
+	int i, et = 0;
+	dom_document_event_internal *dei;
 
 	err = dom_string_intern(type, &t);
 	if (err != DOM_NO_ERR)
@@ -110,8 +112,7 @@ dom_exception _dom_document_event_create_event(dom_document_event *de,
 
 	assert(t != NULL);
 	
-	int i, et = 0;
-	dom_document_event_internal *dei = &de->dei;
+	dei = &de->dei;
 	for (i = 0; i < DOM_EVENT_COUNT; i++) {
 		if (dei->event_types[i] == t) {
 			et = i;

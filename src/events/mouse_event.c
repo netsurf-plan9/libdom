@@ -224,13 +224,16 @@ dom_exception _dom_mouse_event_get_related_target(dom_mouse_event *evt,
 dom_exception _dom_mouse_event_get_modifier_state(dom_mouse_event *evt,
 		dom_string *m, bool *state)
 {
+	const char *data;
+	size_t len;
+
 	if (m == NULL) {
 		*state = false;
 		return DOM_NO_ERR;
 	}
 
-	const char *data = dom_string_data(m);
-	size_t len = dom_string_byte_length(m);
+	data = dom_string_data(m);
+	len = dom_string_byte_length(m);
 
 	if (len == SLEN("AltGraph") && strncmp(data, "AltGraph", len) == 0) {
 		*state = ((evt->modifier_state & DOM_MOD_ALT_GRAPH) != 0);

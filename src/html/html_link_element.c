@@ -31,12 +31,14 @@ static struct dom_element_protected_vtable _protect_vtable = {
 dom_exception _dom_html_link_element_create(struct dom_html_document *doc,
 		struct dom_html_link_element **ele)
 {
+	struct dom_node_internal *node;
+
 	*ele = malloc(sizeof(dom_html_link_element));
 	if (*ele == NULL)
 		return DOM_NO_MEM_ERR;
 	
 	/* Set up vtables */
-	struct dom_node_internal *node = (struct dom_node_internal *) *ele;
+	node = (struct dom_node_internal *) *ele;
 	node->base.vtable = &_dom_element_vtable;
 	node->vtable = &_protect_vtable;
 
