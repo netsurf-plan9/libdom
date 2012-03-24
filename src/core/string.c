@@ -121,7 +121,7 @@ dom_exception dom_string_create(const uint8_t *ptr, size_t len,
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
-	ret->data.cdata.ptr = malloc(len);
+	ret->data.cdata.ptr = malloc((len > 0) ? len : 1);
 	if (ret->data.cdata.ptr == NULL) {
 		free(ret);
 		return DOM_NO_MEM_ERR;
