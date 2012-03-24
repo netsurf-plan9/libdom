@@ -1172,14 +1172,17 @@ dom_exception _dom_element_get_classes(struct dom_element *element,
 dom_exception _dom_element_has_class(struct dom_element *element,
 		lwc_string *name, bool *match)
 {
+	dom_exception err;
 	unsigned int class;
 	struct dom_node_internal *node = (struct dom_node_internal *)element;
-	struct dom_document *doc = node->owner;
+	dom_document_quirks_mode quirks_mode =
+			DOM_DOCUMENT_QUIRKS_MODE_NONE;
 
-	/* TODO: Get quirks mode setting out of document */
-	UNUSED(doc);
+	err = dom_document_get_quirks_mode(node->owner, &quirks_mode);
+	if (err != DOM_NO_ERR)
+		return err;
 
-	if (true) {
+	if (quirks_mode != DOM_DOCUMENT_QUIRKS_MODE_NONE) {
 		/* Quirks mode: case insensitively match */
 		for (class = 0; class < element->n_classes; class++) {
 			if (true == lwc_string_caseless_isequal(name,
@@ -1187,7 +1190,7 @@ dom_exception _dom_element_has_class(struct dom_element *element,
 				return DOM_NO_ERR;
 		}
 	} else {
-		/* Quirks mode: case sensitively match */
+		/* Standards mode: case sensitively match */
 		for (class = 0; class < element->n_classes; class++) {
 			if (true == lwc_string_isequal(name,
 					element->classes[class], match))
