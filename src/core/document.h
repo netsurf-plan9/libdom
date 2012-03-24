@@ -50,7 +50,9 @@ struct dom_document {
 	struct list_entry pending_nodes;
 			/**< The deletion pending list */
 
-	dom_string *id_name;	/**< The ID attribute's name */
+	dom_string *id_name;		/**< The ID attribute's name */
+
+	lwc_string *class_string;	/**< The string "class". */
 
 	dom_document_event_internal dei;
 			/**< The DocumentEVent interface */

@@ -132,6 +132,11 @@ dom_exception _dom_document_initialise(dom_document *doc,
 
 	doc->id_name = NULL;
 
+	if (lwc_intern_string("class", SLEN("class"), 
+			&doc->class_string) != lwc_error_ok) {
+		return DOM_NO_MEM_ERR;
+	}
+
 	/* We should not pass a NULL when all things hook up */
 	return _dom_document_event_internal_initialise(doc, &doc->dei, daf);
 }
@@ -164,6 +169,8 @@ bool _dom_document_finalise(dom_document *doc)
 
 	if (doc->id_name != NULL)
 		dom_string_unref(doc->id_name);
+
+	lwc_string_unref(doc->class_string);
 	
 	_dom_document_event_internal_finalise(doc, &doc->dei);
 
