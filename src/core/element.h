@@ -36,6 +36,9 @@ struct dom_element {
 	dom_string *id_name; 	/**< The id attribute's name */
 
 	struct dom_type_info *schema_type_info;	/**< Type information */
+
+	lwc_string **classes;
+	uint32_t n_classes;
 };
 
 dom_exception _dom_element_create(struct dom_document *doc,

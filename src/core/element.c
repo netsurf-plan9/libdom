@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <libwapcaplet/libwapcaplet.h>
+
 #include <dom/dom.h>
 #include <dom/core/attr.h>
 #include <dom/core/element.h>
@@ -469,6 +471,9 @@ dom_exception _dom_element_initialise(struct dom_document *doc,
 	el->id_name = NULL;
 	el->schema_type_info = NULL;
 
+	el->n_classes = 0;
+	el->classes = NULL;
+
 	return DOM_NO_ERR;
 }
 
@@ -487,6 +492,15 @@ void _dom_element_finalise(struct dom_element *ele)
 
 	if (ele->schema_type_info != NULL) {
 		/** \todo destroy schema type info */
+	}
+
+	/* Destroy the pre-separated class names */
+	if (ele->classes != NULL) {
+		unsigned int class;
+		for (class = 0; class < ele->n_classes; class++) {
+			lwc_string_unref(ele->classes[class]);
+		}
+		free(ele->classes);
 	}
 
 	/* Finalise base class */
@@ -1025,11 +1039,10 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 dom_exception _dom_element_get_classes(struct dom_element *element,
 		lwc_string ***classes, uint32_t *n_classes)
 {
-	UNUSED(element);
-	UNUSED(classes);
-	UNUSED(n_classes);
+	*classes = element->classes;
+	*n_classes = element->n_classes;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return DOM_NO_ERR;
 }
 
 /**
@@ -1043,11 +1056,30 @@ dom_exception _dom_element_get_classes(struct dom_element *element,
 dom_exception _dom_element_has_class(struct dom_element *element,
 		lwc_string *name, bool *match)
 {
-	UNUSED(element);
-	UNUSED(name);
-	UNUSED(match);
+	unsigned int class;
+	struct dom_node_internal *node = (struct dom_node_internal *)element;
+	struct dom_document *doc = node->owner;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	/* TODO: Get quirks mode setting out of document */
+	UNUSED(doc);
+
+	if (true) {
+		/* Quirks mode: case insensitively match */
+		for (class = 0; class < element->n_classes; class++) {
+			if (true == lwc_string_caseless_isequal(name,
+					element->classes[class], match))
+				return DOM_NO_ERR;
+		}
+	} else {
+		/* Quirks mode: case sensitively match */
+		for (class = 0; class < element->n_classes; class++) {
+			if (true == lwc_string_isequal(name,
+					element->classes[class], match))
+				return DOM_NO_ERR;
+		}
+	}
+
+	return DOM_NO_ERR;
 }
 
 /*------------- The overload virtual functions ------------------------*/
