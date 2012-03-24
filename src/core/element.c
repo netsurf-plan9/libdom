@@ -124,10 +124,9 @@ static dom_exception _dom_element_create_classes(struct dom_element *ele,
 				while (*pos != ' ' && *pos != '\0')
 					pos++;
 				if (lwc_intern_string(s, pos - s, 
-						&classes[n_classes]) !=
+						&classes[n_classes++]) !=
 						lwc_error_ok)
 					goto error;
-				n_classes++;
 			} else {
 				while (*pos == ' ')
 					pos++;
@@ -135,8 +134,8 @@ static dom_exception _dom_element_create_classes(struct dom_element *ele,
 		}
 	}
 
-	ele->classes = classes;
 	ele->n_classes = n_classes;
+	ele->classes = classes;
 
 	return DOM_NO_ERR;
 error:
