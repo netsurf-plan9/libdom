@@ -13,7 +13,7 @@ typedef enum {
 
 	DOM_XML_NOMEM           = 1,
 
-	DOM_XML_LIBXML_ERR      = (1<<16),
+	DOM_XML_EXTERNAL_ERR      = (1<<16),
 } dom_xml_error;
 
 #endif

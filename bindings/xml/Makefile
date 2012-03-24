@@ -1,7 +1,5 @@
 ifeq ($(WITH_LIBXML_BINDING),yes)
-  DIR_SOURCES := xmlparser.c
-
-  DIR_INSTALL_ITEMS := /include/dom/bindings/libxml:xmlerror.h;xmlparser.h
+  DIR_SOURCES := libxml_xmlparser.c
 
   # LibXML2
   ifneq ($(PKGCONFIG),)
@@ -15,6 +13,20 @@ ifeq ($(WITH_LIBXML_BINDING),yes)
   # LibXML 2.6.26 has a bug in its headers that expects _POSIX_C_SOURCE to be 
   # defined. Define it here, even though we don't need it.
   CFLAGS := $(CFLAGS) -D_POSIX_C_SOURCE
+
+  DO_XML_INSTALL := yes
+endif
+
+ifeq ($(WITH_EXPAT_BINDING),yes)
+  DIR_SOURCES := expat_xmlparser.c
+
+  LDFLAGS := $(LDFLAGS) -lexpat
+
+  DO_XML_INSTALL := yes
+endif
+
+ifeq ($(DO_XML_INSTALL),yes)
+  DIR_INSTALL_ITEMS := /include/dom/bindings/libxml:xmlerror.h;xmlparser.h
 endif
 
 include build/makefiles/Makefile.subdir
