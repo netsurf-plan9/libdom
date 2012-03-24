@@ -1429,6 +1429,8 @@ dom_exception _dom_node_compare_document_position(dom_node_internal *node,
  * the responsibility of the caller to unref the string once it has
  * finished with it.
  *
+ * If there is no text content in the code, NULL will returned in \a result.
+ *
  * DOM3Core states that this can raise DOMSTRING_SIZE_ERR. It will not in
  * this implementation; dom_strings are unbounded.
  */
@@ -1436,17 +1438,22 @@ dom_exception _dom_node_get_text_content(dom_node_internal *node,
 		dom_string **result)
 {
 	dom_node_internal *n;
-	dom_string *str;
-	dom_string *ret;
+	dom_string *str = NULL;
+	dom_string *ret = NULL;
 
 	assert(node->owner != NULL);
-
+	
 	for (n = node->first_child; n != NULL; n = n->next) {
-		dom_node_get_text_content(n, &ret);
-		dom_string_concat(str, ret, &str);
+		dom_node_get_text_content(n, (str == NULL) ? &str : &ret);
+		if (ret != NULL) {
+			dom_string *new_str;
+			dom_string_concat(str, ret, &new_str);
+			dom_string_unref(str);
+			dom_string_unref(ret);
+			str = new_str;
+		}
 	}
-
-	dom_string_ref(str);
+	
 	*result = str;
 
 	return DOM_NO_ERR;
