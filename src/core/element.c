@@ -1996,12 +1996,10 @@ dom_exception _dom_element_get_id(struct dom_element *ele, dom_string **id)
  * details */
 dom_exception attributes_get_length(void *priv, unsigned long *length)
 {
-	unsigned int ret = 0;
 	dom_element *e = (dom_element *) priv;
 
-	ret += _dom_element_attr_list_length(e->attributes);
+	*length = _dom_element_attr_list_length(e->attributes);
 
-	*length = ret;
 	return DOM_NO_ERR;
 }
 
