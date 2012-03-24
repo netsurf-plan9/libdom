@@ -755,16 +755,16 @@ static hubbub_error set_quirks_mode(void *parser, hubbub_quirks_mode mode)
 	
 	switch (mode) {
 	case HUBBUB_QUIRKS_MODE_NONE:
-		dom_html_document_set_quirks_mode(dom_parser->doc, 
-				DOM_HTML_DOCUMENT_QUIRKS_MODE_NONE);
+		dom_document_set_quirks_mode(dom_parser->doc, 
+                                             DOM_DOCUMENT_QUIRKS_MODE_NONE);
 		break;
 	case HUBBUB_QUIRKS_MODE_LIMITED:
-		dom_html_document_set_quirks_mode(dom_parser->doc, 
-				DOM_HTML_DOCUMENT_QUIRKS_MODE_LIMITED);
+		dom_document_set_quirks_mode(dom_parser->doc, 
+                                             DOM_DOCUMENT_QUIRKS_MODE_LIMITED);
 		break;
 	case HUBBUB_QUIRKS_MODE_FULL:
-		dom_html_document_set_quirks_mode(dom_parser->doc, 
-				DOM_HTML_DOCUMENT_QUIRKS_MODE_FULL);
+		dom_document_set_quirks_mode(dom_parser->doc, 
+                                             DOM_DOCUMENT_QUIRKS_MODE_FULL);
 		break;
 	}
 	

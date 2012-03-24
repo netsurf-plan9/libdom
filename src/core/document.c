@@ -131,6 +131,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	list_init(&doc->pending_nodes);
 
 	doc->id_name = NULL;
+	doc->quirks = DOM_DOCUMENT_QUIRKS_MODE_NONE;
 
 	err = dom_string_create_interned((const uint8_t *) "class",
 			SLEN("class"), &doc->class_string);
@@ -1374,3 +1375,19 @@ void _dom_document_set_id_name(dom_document *doc, dom_string *name)
 	doc->id_name = dom_string_ref(name);
 }
 
+/*-----------------------------------------------------------------------*/
+/* Semi-internal API extensions for NetSurf */
+
+dom_exception _dom_document_get_quirks_mode(dom_document *doc,
+		dom_document_quirks_mode *result)
+{
+	*result = doc->quirks;
+	return DOM_NO_ERR;
+}
+
+dom_exception _dom_document_set_quirks_mode(dom_document *doc,
+		dom_document_quirks_mode quirks)
+{
+	doc->quirks = quirks;
+	return DOM_NO_ERR;
+}

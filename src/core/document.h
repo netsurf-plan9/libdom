@@ -55,7 +55,9 @@ struct dom_document {
 	dom_string *class_string;	/**< The string "class". */
 
 	dom_document_event_internal dei;
-			/**< The DocumentEVent interface */
+			/**< The DocumentEvent interface */
+	dom_document_quirks_mode quirks;
+				/**< Document is in quirks mode */
 };
 
 /* Create a DOM document */
@@ -139,6 +141,11 @@ dom_exception _dom_document_rename_node(dom_document *doc,
 		dom_node *node,
 		dom_string *namespace, dom_string *qname,
 		dom_node **result);
+dom_exception _dom_document_get_quirks_mode(dom_document *doc,
+		dom_document_quirks_mode *result);
+dom_exception _dom_document_set_quirks_mode(dom_document *doc,
+		dom_document_quirks_mode result);
+
 
 dom_exception _dom_document_get_text_content(dom_node_internal *node,
 					     dom_string **result);
@@ -176,7 +183,10 @@ dom_exception _dom_document_set_text_content(dom_node_internal *node,
 	_dom_document_adopt_node, \
 	_dom_document_get_dom_config, \
 	_dom_document_normalize, \
-	_dom_document_rename_node
+	_dom_document_rename_node, \
+	_dom_document_get_quirks_mode, \
+	_dom_document_set_quirks_mode
+
 /* End of vtable */
 
 #define DOM_NODE_VTABLE_DOCUMENT \

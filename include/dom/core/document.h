@@ -34,6 +34,16 @@ struct lwc_string_s;
 
 typedef struct dom_document dom_document;
 
+/**
+ * Quirks mode flag
+ */
+typedef enum dom_document_quirks_mode {
+	DOM_DOCUMENT_QUIRKS_MODE_NONE,
+	DOM_DOCUMENT_QUIRKS_MODE_LIMITED,
+	DOM_DOCUMENT_QUIRKS_MODE_FULL
+} dom_document_quirks_mode;
+
+
 /* DOM Document vtable */
 typedef struct dom_document_vtable {
 	struct dom_node_vtable base;
@@ -114,6 +124,10 @@ typedef struct dom_document_vtable {
 	dom_exception (*dom_document_rename_node)(struct dom_document *doc,
 			struct dom_node *node, dom_string *namespace, 
 			dom_string *qname, struct dom_node **result);
+	dom_exception (*get_quirks_mode)(dom_document *doc,
+					 dom_document_quirks_mode *result);
+	dom_exception (*set_quirks_mode)(dom_document *doc,
+					 dom_document_quirks_mode quirks);
 } dom_document_vtable;
 
 static inline dom_exception dom_document_get_doctype(struct dom_document *doc,
@@ -439,5 +453,23 @@ static inline dom_exception dom_document_rename_node(struct dom_document *doc,
 #define dom_document_rename_node(d, n, ns, q, r) dom_document_rename_node( \
 		(dom_document *) (d), (dom_string *) (ns), \
 		(dom_string *) (q), (dom_node **) (r))
+
+static inline dom_exception dom_document_get_quirks_mode(
+	dom_document *doc, dom_document_quirks_mode *result)
+{
+	return ((dom_document_vtable *) ((dom_node *) doc)->vtable)->
+		get_quirks_mode(doc, result);
+}
+#define dom_document_get_quirks_mode(d, r) \
+	dom_document_get_quirks_mode((dom_document *) (d), (r))
+
+static inline dom_exception dom_document_set_quirks_mode(
+	dom_document *doc, dom_document_quirks_mode quirks)
+{
+	return ((dom_document_vtable *) ((dom_node *) doc)->vtable)->
+		set_quirks_mode(doc, quirks);
+}
+#define dom_document_set_quirks_mode(d, q) \
+	dom_document_set_quirks_mode((dom_document *) (d), (q))
 
 #endif
