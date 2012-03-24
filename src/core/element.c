@@ -333,6 +333,27 @@ static dom_attr_list * _dom_element_attr_list_clone(dom_attr_list *list)
 	return new_list;
 }
 
+
+/**
+ * Destroy element's class cache
+ *
+ * \param ele  The element
+ */
+static void _dom_element_destroy_classes(struct dom_element *ele)
+{
+	/* Destroy the pre-separated class names */
+	if (ele->classes != NULL) {
+		unsigned int class;
+		for (class = 0; class < ele->n_classes; class++) {
+			lwc_string_unref(ele->classes[class]);
+		}
+		free(ele->classes);
+	}
+
+	ele->n_classes = 0;
+	ele->classes = NULL;
+}
+
 static dom_exception _dom_element_get_attr(struct dom_element *element,
 		dom_string *namespace, dom_string *name, dom_string **value);
 static dom_exception _dom_element_set_attr(struct dom_element *element,
@@ -495,13 +516,7 @@ void _dom_element_finalise(struct dom_element *ele)
 	}
 
 	/* Destroy the pre-separated class names */
-	if (ele->classes != NULL) {
-		unsigned int class;
-		for (class = 0; class < ele->n_classes; class++) {
-			lwc_string_unref(ele->classes[class]);
-		}
-		free(ele->classes);
-	}
+	_dom_element_destroy_classes(ele);
 
 	/* Finalise base class */
 	_dom_node_finalise(&ele->base);
