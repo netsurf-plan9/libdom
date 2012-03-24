@@ -1444,6 +1444,9 @@ dom_exception _dom_node_get_text_content(dom_node_internal *node,
 	assert(node->owner != NULL);
 	
 	for (n = node->first_child; n != NULL; n = n->next) {
+		if (n->type == DOM_COMMENT_NODE ||
+		    n->type == DOM_PROCESSING_INSTRUCTION_NODE)
+			continue;
 		dom_node_get_text_content(n, (str == NULL) ? &str : &ret);
 		if (ret != NULL) {
 			dom_string *new_str;
