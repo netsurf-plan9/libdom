@@ -312,7 +312,7 @@ static void _dom_element_attr_list_node_destroy(dom_attr_list *n)
  * \return the new attribute list node, or NULL on failure
  */
 static dom_attr_list * _dom_element_attr_list_node_create(dom_attr *attr,
-		dom_string *name, dom_string *namespace)
+		dom_element *ele, dom_string *name, dom_string *namespace)
 {
 	dom_attr_list *new_list_node;
 
@@ -330,7 +330,6 @@ static dom_attr_list * _dom_element_attr_list_node_create(dom_attr *attr,
 	new_list_node->namespace = namespace;
 
 	if (namespace == NULL) {
-		dom_node_internal *a = (dom_node_internal *) attr;
 		dom_string *value;
 
 		if (DOM_NO_ERR != _dom_attr_get_value(attr, &value)) {
@@ -338,8 +337,7 @@ static dom_attr_list * _dom_element_attr_list_node_create(dom_attr *attr,
 			return NULL;
 		}
 
-		if (DOM_NO_ERR != _dom_element_create_classes(
-				(dom_element *)(a->parent),
+		if (DOM_NO_ERR != _dom_element_create_classes(ele,
 				dom_string_data(value))) {
 			_dom_element_attr_list_node_destroy(new_list_node);
 			dom_string_unref(value);
@@ -1562,8 +1560,8 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		}
 
 		/* Create attribute list node */
-		list_node = _dom_element_attr_list_node_create(attr, name,
-				namespace);
+		list_node = _dom_element_attr_list_node_create(attr, element,
+				name, namespace);
 		if (list_node == NULL) {
 			/* If we failed at this step, there must be no memory */
 			dom_node_set_parent(attr, NULL);
@@ -1806,7 +1804,8 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	}
 
 
-	match = _dom_element_attr_list_node_create(attr, name, namespace);
+	match = _dom_element_attr_list_node_create(attr, element,
+			name, namespace);
 	if (match == NULL) {
 		dom_string_unref(name);
 		/* If we failed at this step, there must be no memory */
