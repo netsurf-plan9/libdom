@@ -38,6 +38,11 @@ bool dom_string_isequal(const dom_string *s1, const dom_string *s2);
 /* Case insensitively compare two DOM strings */
 bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2);
 
+/* Case sensitively compare DOM string and lwc_string */
+bool dom_string_lwc_isequal(const dom_string *s1, lwc_string *s2);
+/* Case insensitively compare DOM string and lwc_string */
+bool dom_string_caseless_lwc_isequal(const dom_string *s1, lwc_string *s2);
+
 /* Get the index of the first occurrence of a character in a dom string */
 uint32_t dom_string_index(dom_string *str, uint32_t chr);
 /* Get the index of the last occurrence of a character in a dom string */

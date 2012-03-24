@@ -309,6 +309,60 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 	return true;
 }
 
+
+/**
+ * Case sensitively compare DOM string with lwc_string
+ *
+ * \param s1  The first string to compare
+ * \param s2  The second string to compare
+ * \return true if strings match, false otherwise
+ *
+ * Returns false if either are NULL.
+ */
+bool dom_string_lwc_isequal(const dom_string *s1, lwc_string *s2)
+{
+	size_t len;
+
+	if (s1 == NULL || s2 == NULL)
+		return false;
+
+	if (s1->type == DOM_STRING_INTERNED) {
+		bool match;
+
+		lwc_string_caseless_isequal(s1->data.intern, s2, &match);
+
+		return match;
+	}
+
+	/* Handle non-interend case */
+	len = dom_string_byte_length(s1);
+
+	if (len != lwc_string_length(s2))
+		return false;
+
+	return 0 == memcmp(dom_string_data(s1), lwc_string_data(s2), len);
+}
+
+
+/**
+ * Case insensitively compare DOM string with lwc_string
+ *
+ * \param s1  The first string to compare
+ * \param s2  The second string to compare
+ * \return true if strings match, false otherwise
+ */
+bool dom_string_caseless_lwc_isequal(const dom_string *s1, lwc_string *s2)
+{
+//	size_t len;
+
+	if (s1 == NULL || s2 == NULL)
+		return false;
+
+	/* TODO: rest of this */
+	return false;
+}
+
+
 /**
  * Get the index of the first occurrence of a character in a dom string 
  * 
