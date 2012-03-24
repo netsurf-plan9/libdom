@@ -39,6 +39,7 @@
 
 /* DOM HTML headers */
 #include <dom/html/html_element.h>
+#include <dom/html/html_document.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
