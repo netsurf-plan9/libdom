@@ -1294,10 +1294,10 @@ dom_exception _dom_element_copy(dom_node_internal *old,
 /**
  * The internal helper function for getAttribute/getAttributeNS.
  *
- * \param element  The element
- * \param hs       The hash table contains the attributes
- * \param name     The name of the attribute
- * \param value    The value of the attribute
+ * \param element    The element
+ * \param namespace  The namespace to look for attribute in.  May be NULL.
+ * \param name       The name of the attribute
+ * \param value      The value of the attribute
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_get_attr(struct dom_element *element,
@@ -1322,10 +1322,10 @@ dom_exception _dom_element_get_attr(struct dom_element *element,
 /**
  * The internal helper function for setAttribute and setAttributeNS.
  *
- * \param element  The element
- * \param hs       The attributes' hash table
- * \param name     The name of the new attribute
- * \param value    The value of the new attribute
+ * \param element    The element
+ * \param namespace  The namespace to set attribute for.  May be NULL.
+ * \param name       The name of the new attribute
+ * \param value      The value of the new attribute
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_set_attr(struct dom_element *element,
@@ -1819,12 +1819,12 @@ dom_exception _dom_element_remove_attr_node(struct dom_element *element,
 }
 
 /**
- * Test whether certain attribute is inside the hash table
+ * Test whether certain attribute exists on the element
  *
- * \param element  The element
- * \param hs       The hash table contains the attributes
- * \param name     The attribute's name
- * \param result   The return value
+ * \param element    The element
+ * \param namespace  The namespace to look for attribute in.  May be NULL.
+ * \param name       The attribute's name
+ * \param result     The return value
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_element_has_attr(struct dom_element *element,
