@@ -431,6 +431,8 @@ dom_exception _dom_document_create_processing_instruction(
  * \return DOM_NO_ERR                on success,
  *         DOM_INVALID_CHARACTER_ERR if ::name is invalid.
  *
+ * The constructed attribute will always be classified as 'specified'.
+ *
  * The returned node will have its reference count increased. It is
  * the responsibility of the caller to unref the node once it has
  * finished with it.
