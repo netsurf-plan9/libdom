@@ -172,7 +172,7 @@ typedef struct dom_node_vtable {
 } dom_node_vtable;
 
 /* The ref/unref methods define */
-void _dom_node_ref(dom_node_internal *node);
+struct dom_node *_dom_node_ref(dom_node_internal *node);
 #define dom_node_ref(n) _dom_node_ref((dom_node_internal *) (n))
 void _dom_node_unref(dom_node_internal *node);
 #define dom_node_unref(n) _dom_node_unref((dom_node_internal *) (n))

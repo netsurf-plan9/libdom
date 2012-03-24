@@ -284,10 +284,12 @@ void _dom_node_finalise(dom_node_internal *node)
  *
  * \param node  The node to claim a reference on
  */
-void _dom_node_ref(dom_node_internal *node)
+struct dom_node *_dom_node_ref(dom_node_internal *node)
 {
 	if (node != NULL)
 		node->refcnt++;
+
+	return (struct dom_node *)node;
 }
 
 
