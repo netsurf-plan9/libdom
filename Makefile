@@ -67,6 +67,10 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/mutation_name_event.h;$(Is)/events.
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/event_listener.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/document_event.h
 
+Is := include/dom/html
+I := /include/dom/html
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_element.h
+
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib:$(OUTPUT)
 
