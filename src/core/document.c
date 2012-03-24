@@ -47,7 +47,7 @@ static struct dom_document_vtable document_vtable = {
 		{
 			DOM_NODE_EVENT_TARGET_VTABLE
 		},
-		DOM_NODE_VTABLE
+		DOM_NODE_VTABLE_DOCUMENT
 	},
 	DOM_DOCUMENT_VTABLE
 };
@@ -1041,6 +1041,25 @@ dom_exception _dom_document_rename_node(dom_document *doc,
 	UNUSED(result);
 
 	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception _dom_document_get_text_content(dom_node_internal *node,
+					     dom_string **result)
+{
+	UNUSED(node);
+	
+	*result = NULL;
+	
+	return DOM_NO_ERR;
+}
+
+dom_exception _dom_document_set_text_content(dom_node_internal *node,
+					     dom_string *content)
+{
+	UNUSED(node);
+	UNUSED(content);
+	
+	return DOM_NO_ERR;
 }
 
 /*-----------------------------------------------------------------------*/

@@ -32,7 +32,7 @@ static struct dom_document_type_vtable document_type_vtable = {
 		{
 			DOM_NODE_EVENT_TARGET_VTABLE
 		},
-		DOM_NODE_VTABLE	
+		DOM_NODE_VTABLE_DOCUMENT_TYPE
 	},
 	DOM_DOCUMENT_TYPE_VTABLE
 };
@@ -303,6 +303,25 @@ dom_exception _dom_document_type_get_internal_subset(
 	UNUSED(result);
 
 	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception _dom_document_type_get_text_content(dom_node_internal *node,
+                                                  dom_string **result)
+{
+	UNUSED(node);
+	
+	*result = NULL;
+	
+	return DOM_NO_ERR;
+}
+
+dom_exception _dom_document_type_set_text_content(dom_node_internal *node,
+                                                  dom_string *content)
+{
+	UNUSED(node);
+	UNUSED(content);
+	
+	return DOM_NO_ERR;
 }
 
 /*-----------------------------------------------------------------------*/
