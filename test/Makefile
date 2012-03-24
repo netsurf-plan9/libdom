@@ -48,7 +48,7 @@ endef
 $(DIR)INDEX: test/Makefile
 	$(VQ)$(ECHO) "   INDEX: Making test index"
 	$(Q)$(ECHO) "#test	desc	dir" > $@
-	$(foreach XMLTEST,$(ALL_XML_TESTS),$(call write_index,$(XMLTEST)))
+	$(foreach XMLTEST,$(sort $(ALL_XML_TESTS)),$(call write_index,$(XMLTEST)))
 
 TEST_PREREQS := $(TEST_PREREQS) $(DIR)INDEX
 
