@@ -245,7 +245,7 @@ dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
 	derr = dom_string_create_interned((const uint8_t *) "id", SLEN("id"), 
 			&name);
 	if (derr != DOM_NO_ERR)
-		return HUBBUB_UNKNOWN;
+		return DOM_HUBBUB_HUBBUB_ERR | HUBBUB_UNKNOWN;
 	
 	_dom_document_set_id_name(parser->doc, name);
 	dom_string_unref(name);
