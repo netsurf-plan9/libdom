@@ -142,10 +142,12 @@ static bool binary_search(unsigned int ch, int left, int right,
 bool binary_search(unsigned int ch, int left, int right, 
 		const struct xml_char_range *range)
 {
+	int mid;
+
 	if (left > right)
 		return false;
 
-	int mid = (left + right) / 2;
+	mid = (left + right) / 2;
 	if (ch >= range[mid].start && ch <= range[mid].end)
 		return true;
 
