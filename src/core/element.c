@@ -27,7 +27,6 @@
 #include "utils/validate.h"
 #include "utils/namespace.h"
 #include "utils/utils.h"
-#include "utils/hashtable.h"
 #include "utils/list.h"
 #include "events/mutation_event.h"
 
