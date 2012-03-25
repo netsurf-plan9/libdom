@@ -150,12 +150,11 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 	parser->complete = false;
 
 	if (msg == NULL) {
-		parser->msg = dom_hubbub_parser_default_msg;
-		parser->mctx = NULL;
-	} else {
-		parser->msg = msg;
-		parser->mctx = mctx;
+		msg = dom_hubbub_parser_default_msg;
+		mctx = NULL;
 	}
+	parser->msg = msg;
+	parser->mctx = mctx;
 
 	error = hubbub_parser_create(enc, fix_enc, dom_hubbub_alloc, NULL, 
 			&parser->parser);
