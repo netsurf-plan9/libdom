@@ -1147,7 +1147,7 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
  * Obtain a pre-parsed array of class names for an element
  *
  * \param element    Element containing classes
- * \param classes    Pointer to location to receive allocated array
+ * \param classes    Pointer to location to receive client-owned allocated array
  * \param n_classes  Pointer to location to receive number of classes
  * \return DOM_NO_ERR on success,
  *         DOM_NO_MEM_ERR on memory exhaustion
