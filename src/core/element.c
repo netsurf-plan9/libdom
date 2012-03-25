@@ -1178,6 +1178,8 @@ dom_exception _dom_element_has_class(struct dom_element *element,
 	dom_document_quirks_mode quirks_mode =
 			DOM_DOCUMENT_QUIRKS_MODE_NONE;
 
+	*match = false;
+
 	err = dom_document_get_quirks_mode(node->owner, &quirks_mode);
 	if (err != DOM_NO_ERR)
 		return err;
