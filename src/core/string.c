@@ -121,13 +121,14 @@ dom_exception dom_string_create(const uint8_t *ptr, size_t len,
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
-	ret->data.cdata.ptr = malloc((len > 0) ? len : 1);
+	ret->data.cdata.ptr = malloc(len + 1);
 	if (ret->data.cdata.ptr == NULL) {
 		free(ret);
 		return DOM_NO_MEM_ERR;
 	}
 
 	memcpy(ret->data.cdata.ptr, ptr, len);
+	ret->data.cdata.ptr[len] = '\0';
 
 	ret->data.cdata.len = len;
 
@@ -335,7 +336,7 @@ bool dom_string_lwc_isequal(const dom_string *s1, lwc_string *s2)
 		return match;
 	}
 
-	/* Handle non-interend case */
+	/* Handle non-interned case */
 	len = dom_string_byte_length(s1);
 
 	if (len != lwc_string_length(s2))
@@ -540,12 +541,11 @@ dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 	s2len = dom_string_byte_length(s2);
 
 	concat = malloc(sizeof(dom_string));
-
 	if (concat == NULL) {
 		return DOM_NO_MEM_ERR;
 	}
 
-	concat->data.cdata.ptr = malloc(s1len + s2len);
+	concat->data.cdata.ptr = malloc(s1len + s2len + 1);
 	if (concat->data.cdata.ptr == NULL) {
 		free(concat);
 
@@ -555,6 +555,8 @@ dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 	memcpy(concat->data.cdata.ptr, s1ptr, s1len);
 
 	memcpy(concat->data.cdata.ptr + s1len, s2ptr, s2len);
+
+	concat->data.cdata.ptr[s1len + s2len] = '\0';
 
 	concat->data.cdata.len = s1len + s2len;
 
@@ -678,7 +680,7 @@ dom_exception dom_string_insert(dom_string *target,
 	}
 
 	/* Allocate data buffer for result contents */
-	res->data.cdata.ptr = malloc(tlen + slen);
+	res->data.cdata.ptr = malloc(tlen + slen + 1);
 	if (res->data.cdata.ptr == NULL) {
 		free(res);
 		return DOM_NO_MEM_ERR;
@@ -696,6 +698,8 @@ dom_exception dom_string_insert(dom_string *target,
 	if (tlen - ins > 0) {
 		memcpy(res->data.cdata.ptr + ins + slen, t + ins, tlen - ins);
 	}
+
+	res->data.cdata.ptr[tlen + slen] = '\0';
 
 	res->data.cdata.len = tlen + slen;
 
@@ -773,7 +777,7 @@ dom_exception dom_string_replace(dom_string *target,
 	}
 
 	/* Allocate data buffer for result contents */
-	res->data.cdata.ptr = malloc(tlen + slen - (b2 - b1));
+	res->data.cdata.ptr = malloc(tlen + slen - (b2 - b1) + 1);
 	if (res->data.cdata.ptr == NULL) {
 		free(res);
 		return DOM_NO_MEM_ERR;
@@ -793,6 +797,8 @@ dom_exception dom_string_replace(dom_string *target,
 	if (tlen - b2 > 0) {
 		memcpy(res->data.cdata.ptr + b1 + slen, t + b2, tlen - b2);
 	}
+
+	res->data.cdata.ptr[tlen + slen - (b2 - b1)] = '\0';
 
 	res->data.cdata.len = tlen + slen - (b2 - b1);
 
