@@ -1154,14 +1154,22 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
  */
 dom_exception _dom_element_get_classes(struct dom_element *element,
 		lwc_string ***classes, uint32_t *n_classes)
-{
+{	
 	if (element->n_classes > 0) {
+		lwc_string **classes_copy = NULL;
 		uint32_t classnr;
-		*n_classes = element->n_classes;
-		*classes = malloc(sizeof(lwc_string *) * element->n_classes);
+
+		classes_copy = malloc(sizeof(lwc_string *) * 
+				element->n_classes);
+		if (classes_copy == NULL)
+			return DOM_NO_MEM_ERR;
+
 		for (classnr = 0; classnr < element->n_classes; ++classnr)
-			*classes[classnr] = lwc_string_ref(
+			classes_copy[classnr] = lwc_string_ref(
 					element->classes[classnr]);
+
+		*classes = classes_copy;
+		*n_classes = element->n_classes;
 	} else {
 		*n_classes = 0;
 		*classes = NULL;
