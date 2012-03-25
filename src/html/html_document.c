@@ -180,13 +180,54 @@ dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 dom_exception _dom_html_document_get_title(dom_html_document *doc,
 		dom_string **title)
 {
+	dom_exception exc = DOM_NO_ERR;
+	*title = NULL;
+	
 	if (doc->title != NULL) {
 		*title = dom_string_ref(doc->title);
 	} else {
-		/** \todo Search for title element */
+		dom_element *node;
+		dom_string *title_str;
+		dom_nodelist *nodes;
+		unsigned long len;
+		
+		exc = dom_string_create_interned((uint8_t*)"title", 
+						 5, &title_str);
+		if (exc != DOM_NO_ERR) {
+			dom_node_unref(node);
+			return exc;
+		}
+		
+		exc = dom_document_get_elements_by_tag_name(doc,
+							    title_str,
+							    &nodes);
+		dom_string_unref(title_str);
+		if (exc != DOM_NO_ERR) {
+			return exc;
+		}
+		
+		exc = dom_nodelist_get_length(nodes, &len);
+		if (exc != DOM_NO_ERR) {
+			dom_nodelist_unref(nodes);
+			return exc;
+		}
+		
+		if (len == 0) {
+			dom_nodelist_unref(nodes);
+			return DOM_NO_ERR;
+		}
+		
+		exc = dom_nodelist_item(nodes, 0, &node);
+		dom_nodelist_unref(nodes);
+		if (exc != DOM_NO_ERR) {
+			return exc;
+		}
+		
+		exc = dom_node_get_text_content(node, title);
+		dom_node_unref(node);
 	}
 
-	return DOM_NO_ERR;
+	return exc;
 }
 
 dom_exception _dom_html_document_set_title(dom_html_document *doc,
