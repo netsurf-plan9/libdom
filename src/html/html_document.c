@@ -194,7 +194,6 @@ dom_exception _dom_html_document_get_title(dom_html_document *doc,
 		exc = dom_string_create_interned((uint8_t*)"title", 
 						 5, &title_str);
 		if (exc != DOM_NO_ERR) {
-			dom_node_unref(node);
 			return exc;
 		}
 		
