@@ -10,6 +10,7 @@
 
 #include "html/html_document.h"
 #include "html/html_element.h"
+#include "html/html_collection.h"
 
 #include "core/string.h"
 #include "utils/namespace.h"
@@ -309,13 +310,48 @@ dom_exception _dom_html_document_get_links(dom_html_document *doc,
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
+static bool __dom_html_document_node_is_form(dom_node_internal *node)
+{
+	dom_string *form;
+	dom_exception err;
+
+	err = dom_string_create_interned((const uint8_t *) "form",
+			SLEN("form"), &form);
+	if (err == DOM_NO_ERR) {
+		if (dom_string_caseless_isequal(node->name, form)) {
+			dom_string_unref(form);
+			return true;
+		}
+
+		dom_string_unref(form);
+	}
+
+	return false;
+}
+
 dom_exception _dom_html_document_get_forms(dom_html_document *doc,
 		struct dom_html_collection **col)
 {
-	UNUSED(doc);
-	UNUSED(col);
+	dom_html_collection *result;
+	dom_element *root;
+	dom_exception err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	err = dom_document_get_document_element(doc, &root);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = _dom_html_collection_create(doc, (dom_node_internal *) root, 
+			__dom_html_document_node_is_form, &result);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref(root);
+		return err;
+	}
+
+	dom_node_unref(root);
+
+	*col = result;
+
+	return DOM_NO_ERR;
 }
 
 dom_exception _dom_html_document_get_anchors(dom_html_document *doc,
