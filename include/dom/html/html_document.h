@@ -27,8 +27,8 @@ typedef struct dom_html_document_vtable {
 			dom_string **title);
 	dom_exception (*set_title)(dom_html_document *doc,
 			dom_string *title);
-	dom_exception (*get_referer)(dom_html_document *doc,
-			dom_string **referer);
+	dom_exception (*get_referrer)(dom_html_document *doc,
+			dom_string **referrer);
 	dom_exception (*get_domain)(dom_html_document *doc,
 			dom_string **domain);
 	dom_exception (*get_url)(dom_html_document *doc,
@@ -82,14 +82,14 @@ static inline dom_exception dom_html_document_set_title(dom_html_document *doc,
 		dom_html_document_set_title((dom_html_document *) (d), \
 				(dom_string **) (t))
 
-static inline dom_exception dom_html_document_get_referer(dom_html_document *doc,
-		dom_string **referer)
+static inline dom_exception dom_html_document_get_referrer(dom_html_document *doc,
+		dom_string **referrer)
 {
 	return ((dom_html_document_vtable *) ((dom_node *) doc)->vtable)->
-		get_referer(doc, referer);
+		get_referrer(doc, referrer);
 }
-#define dom_html_document_get_referer(d, r) \
-		dom_html_document_get_referer((dom_html_document *) (d), \
+#define dom_html_document_get_referrer(d, r) \
+		dom_html_document_get_referrer((dom_html_document *) (d), \
 				(dom_string **) (r))
 
 static inline dom_exception dom_html_document_get_domain(dom_html_document *doc,

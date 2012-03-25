@@ -69,7 +69,7 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 		return error;
 
 	doc->title = NULL;
-	doc->referer = NULL;
+	doc->referrer = NULL;
 	doc->domain = NULL;
 	doc->url = NULL;
 	doc->cookie = NULL;
@@ -83,7 +83,7 @@ void _dom_html_document_finalise(dom_html_document *doc)
 	dom_string_unref(doc->cookie);
 	dom_string_unref(doc->url);
 	dom_string_unref(doc->domain);
-	dom_string_unref(doc->referer);
+	dom_string_unref(doc->referrer);
 	dom_string_unref(doc->title);
 
 	_dom_document_finalise(&doc->base);
@@ -241,10 +241,10 @@ dom_exception _dom_html_document_set_title(dom_html_document *doc,
 	return DOM_NO_ERR;
 }
 
-dom_exception _dom_html_document_get_referer(dom_html_document *doc,
-		dom_string **referer)
+dom_exception _dom_html_document_get_referrer(dom_html_document *doc,
+		dom_string **referrer)
 {
-	*referer = dom_string_ref(doc->referer);
+	*referrer = dom_string_ref(doc->referrer);
 
 	return DOM_NO_ERR;
 }

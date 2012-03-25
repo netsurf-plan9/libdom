@@ -19,7 +19,7 @@ struct dom_html_document {
 	struct dom_document base;	/**< The base class */
 	
 	dom_string *title;	/**< HTML document title */
-	dom_string *referer;	/**< HTML document referer */
+	dom_string *referrer;	/**< HTML document referrer */
 	dom_string *domain;	/**< HTML document domain */
 	dom_string *url;	/**< HTML document URL */
 	dom_string *cookie;	/**< HTML document cookie */
@@ -47,8 +47,8 @@ dom_exception _dom_html_document_get_title(dom_html_document *doc,
 		dom_string **title);
 dom_exception _dom_html_document_set_title(dom_html_document *doc,
 		dom_string *title);
-dom_exception _dom_html_document_get_referer(dom_html_document *doc,
-		dom_string **referer);
+dom_exception _dom_html_document_get_referrer(dom_html_document *doc,
+		dom_string **referrer);
 dom_exception _dom_html_document_get_domain(dom_html_document *doc,
 		dom_string **domain);
 dom_exception _dom_html_document_get_url(dom_html_document *doc,
@@ -85,7 +85,7 @@ dom_exception _dom_html_document_get_elements_by_name(dom_html_document *doc,
 #define DOM_HTML_DOCUMENT_VTABLE \
 	_dom_html_document_get_title, \
 	_dom_html_document_set_title, \
-	_dom_html_document_get_referer, \
+	_dom_html_document_get_referrer, \
 	_dom_html_document_get_domain, \
 	_dom_html_document_get_url, \
 	_dom_html_document_get_body, \
