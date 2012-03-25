@@ -331,7 +331,7 @@ bool dom_string_lwc_isequal(const dom_string *s1, lwc_string *s2)
 	if (s1->type == DOM_STRING_INTERNED) {
 		bool match;
 
-		lwc_string_isequal(s1->data.intern, s2, &match);
+		(void) lwc_string_isequal(s1->data.intern, s2, &match);
 
 		return match;
 	}
