@@ -720,7 +720,9 @@ dom_exception _dom_node_insert_before(dom_node_internal *node,
 {
 	dom_exception err;
 	dom_node_internal *n;
-
+	
+	assert(node != NULL);
+	
 	/* Ensure that new_child and node are owned by the same document */
 	if ((new_child->type == DOM_DOCUMENT_TYPE_NODE && 
 			new_child->owner != NULL && 
@@ -736,7 +738,7 @@ dom_exception _dom_node_insert_before(dom_node_internal *node,
 	/* Ensure that ref_child (if any) is a child of node */
 	if (ref_child != NULL && ref_child->parent != node)
 		return DOM_NOT_FOUND_ERR;
-
+	
 	/* Ensure that new_child is not an ancestor of node, nor node itself */
 	for (n = node; n != NULL; n = n->parent) {
 		if (n == new_child)
@@ -2428,6 +2430,10 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	evt->current = et;
 	err = _dom_event_target_dispatch(et, &((dom_node_internal *) et)->eti,
 			evt, DOM_AT_TARGET, success);
+	if (err != DOM_NO_ERR) {
+		ret = err;
+		goto cleanup;
+	}
 	if (evt->stop_now == true || evt->stop == true)
 		goto cleanup;
 

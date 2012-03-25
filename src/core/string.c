@@ -440,7 +440,7 @@ uint32_t dom_string_index(dom_string *str, uint32_t chr)
 uint32_t dom_string_rindex(dom_string *str, uint32_t chr)
 {
 	const uint8_t *s;
-	size_t clen, slen;
+	size_t clen = 0, slen;
 	uint32_t c, coff, index;
 	parserutils_error err;
 
@@ -686,7 +686,6 @@ dom_exception dom_string_insert(dom_string *target,
 	/* Calculate the byte index of the insertion point */
 	if (offset == clen) {
 		/* Optimisation for append */
-		offset = 0;
 		ins = tlen;
 	} else {
 		while (offset > 0) {

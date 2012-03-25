@@ -127,6 +127,8 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	err = _dom_node_initialise(&doc->base, doc, DOM_DOCUMENT_NODE,
 			name, NULL, NULL, NULL);
 	dom_string_unref(name);
+        if (err != DOM_NO_ERR)
+          return err;
 
 	list_init(&doc->pending_nodes);
 
@@ -963,9 +965,8 @@ dom_exception _dom_document_adopt_node(dom_document *doc,
 			*result = NULL;
 			return err;
 		}
+                dom_node_unref(tmp);
 	}
-
-	dom_node_unref(tmp);
 
 	return DOM_NO_ERR;
 }
