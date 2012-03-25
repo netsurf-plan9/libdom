@@ -1155,8 +1155,17 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
 dom_exception _dom_element_get_classes(struct dom_element *element,
 		lwc_string ***classes, uint32_t *n_classes)
 {
-	*classes = element->classes;
-	*n_classes = element->n_classes;
+	if (element->n_classes > 0) {
+		uint32_t classnr;
+		*n_classes = element->n_classes;
+		*classes = malloc(sizeof(lwc_string *) * element->n_classes);
+		for (classnr = 0; classnr < element->n_classes; ++classnr)
+			*classes[classnr] = lwc_string_ref(
+					element->classes[classnr]);
+	} else {
+		*n_classes = 0;
+		*classes = NULL;
+	}
 
 	return DOM_NO_ERR;
 }
