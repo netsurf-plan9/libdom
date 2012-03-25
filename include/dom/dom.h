@@ -40,6 +40,7 @@
 /* DOM HTML headers */
 #include <dom/html/html_element.h>
 #include <dom/html/html_document.h>
+#include <dom/html/html_form_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
