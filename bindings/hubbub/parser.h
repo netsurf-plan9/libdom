@@ -11,6 +11,8 @@
 #include <stddef.h>
 #include <inttypes.h>
 
+#include <hubbub/errors.h>
+
 #include <dom/dom.h>
 
 #include "errors.h"
