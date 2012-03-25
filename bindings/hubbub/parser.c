@@ -110,6 +110,14 @@ static void *dom_hubbub_alloc(void *ptr, size_t len, void *pw)
 	return realloc(ptr, len);
 }
 
+static void dom_hubbub_parser_default_msg(uint32_t severity, void *ctx,
+		const char *msg, ...)
+{
+	UNUSED(severity);
+	UNUSED(ctx);
+	UNUSED(msg);
+}
+
 /**
  * Create a Hubbub parser instance
  *
@@ -141,8 +149,13 @@ dom_hubbub_parser *dom_hubbub_parser_create(
 					      : DOM_HUBBUB_ENCODING_SOURCE_DETECTED;
 	parser->complete = false;
 
-	parser->msg = msg;
-	parser->mctx = mctx;
+	if (msg == NULL) {
+		parser->msg = dom_hubbub_parser_default_msg;
+		parser->mctx = NULL;
+	} else {
+		parser->msg = msg;
+		parser->mctx = mctx;
+	}
 
 	error = hubbub_parser_create(enc, fix_enc, dom_hubbub_alloc, NULL, 
 			&parser->parser);
@@ -725,7 +738,6 @@ static hubbub_error add_attributes(void *parser, void *node,
 				dom_parser->msg(DOM_MSG_CRITICAL, 
 						dom_parser->mctx,
 						"Can't add attribute");
-				goto fail;
 			}
 		} else {
 			err = dom_element_set_attribute_ns(
@@ -738,7 +750,6 @@ static hubbub_error add_attributes(void *parser, void *node,
 				dom_parser->msg(DOM_MSG_CRITICAL, 
 						dom_parser->mctx,
 						"Can't add attribute ns");
-				goto fail;
 			}
 		}
 	}
