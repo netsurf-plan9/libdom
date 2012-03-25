@@ -331,7 +331,7 @@ bool dom_string_lwc_isequal(const dom_string *s1, lwc_string *s2)
 	if (s1->type == DOM_STRING_INTERNED) {
 		bool match;
 
-		lwc_string_caseless_isequal(s1->data.intern, s2, &match);
+		lwc_string_isequal(s1->data.intern, s2, &match);
 
 		return match;
 	}
@@ -352,16 +352,44 @@ bool dom_string_lwc_isequal(const dom_string *s1, lwc_string *s2)
  * \param s1  The first string to compare
  * \param s2  The second string to compare
  * \return true if strings match, false otherwise
+ *
+ * Returns false if either are NULL.
  */
 bool dom_string_caseless_lwc_isequal(const dom_string *s1, lwc_string *s2)
 {
-//	size_t len;
+	size_t len;
+	const uint8_t *d1 = NULL;
+	const uint8_t *d2 = NULL;
 
 	if (s1 == NULL || s2 == NULL)
 		return false;
 
-	/* TODO: rest of this */
-	return false;
+	if (s1->type == DOM_STRING_INTERNED) {
+		bool match;
+
+		lwc_string_caseless_isequal(s1->data.intern, s2, &match);
+
+		return match;
+	}
+
+	len = dom_string_byte_length(s1);
+
+	if (len != lwc_string_length(s2))
+		return false;
+
+	d1 = (const uint8_t *) dom_string_data(s1);
+	d2 = (const uint8_t *) lwc_string_data(s2);
+
+	while (len > 0) {
+		if (dolower(*d1) != dolower(*d2))
+			return false;
+
+		d1++;
+		d2++;
+		len--;
+	}
+
+	return true;
 }
 
 
