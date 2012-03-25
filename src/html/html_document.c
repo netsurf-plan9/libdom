@@ -216,7 +216,7 @@ dom_exception _dom_html_document_get_title(dom_html_document *doc,
 			return DOM_NO_ERR;
 		}
 		
-		exc = dom_nodelist_item(nodes, 0, &node);
+		exc = dom_nodelist_item(nodes, 0, (void *) &node);
 		dom_nodelist_unref(nodes);
 		if (exc != DOM_NO_ERR) {
 			return exc;
