@@ -1164,7 +1164,7 @@ dom_exception _dom_element_get_classes(struct dom_element *element,
 		if (classes_copy == NULL)
 			return DOM_NO_MEM_ERR;
 
-		for (classnr = 0; classnr < element->n_classes; ++classnr)
+		for (classnr = 0; classnr < element->n_classes; classnr++)
 			classes_copy[classnr] = lwc_string_ref(
 					element->classes[classnr]);
 
@@ -1204,15 +1204,17 @@ dom_exception _dom_element_has_class(struct dom_element *element,
 	if (quirks_mode != DOM_DOCUMENT_QUIRKS_MODE_NONE) {
 		/* Quirks mode: case insensitively match */
 		for (class = 0; class < element->n_classes; class++) {
-			if (true == lwc_string_caseless_isequal(name,
-					element->classes[class], match))
+			if (lwc_error_ok == lwc_string_caseless_isequal(name,
+					element->classes[class], match) &&
+					*match == true)
 				return DOM_NO_ERR;
 		}
 	} else {
 		/* Standards mode: case sensitively match */
 		for (class = 0; class < element->n_classes; class++) {
-			if (true == lwc_string_isequal(name,
-					element->classes[class], match))
+			if (lwc_error_ok == lwc_string_isequal(name,
+					element->classes[class], match) &&
+					*match == true)
 				return DOM_NO_ERR;
 		}
 	}
