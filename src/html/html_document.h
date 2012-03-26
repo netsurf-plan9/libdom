@@ -23,6 +23,9 @@ struct dom_html_document {
 	dom_string *domain;	/**< HTML document domain */
 	dom_string *url;	/**< HTML document URL */
 	dom_string *cookie;	/**< HTML document cookie */
+	
+	/* Cached strings for html objects to use */
+	dom_string *_memo_id;	/**< Memoised 'id' */
 };
 
 /* Create a HTMLDocument */

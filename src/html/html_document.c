@@ -75,7 +75,9 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 	doc->url = NULL;
 	doc->cookie = NULL;
 
-	return DOM_NO_ERR;
+	error = dom_string_create_interned((const uint8_t *) "id", SLEN("id"), 
+					   &doc->_memo_id);
+	return error;
 }
 
 /* Finalise a HTMLDocument */
@@ -86,7 +88,9 @@ void _dom_html_document_finalise(dom_html_document *doc)
 	dom_string_unref(doc->domain);
 	dom_string_unref(doc->referrer);
 	dom_string_unref(doc->title);
-
+	
+	dom_string_unref(doc->_memo_id);
+	
 	_dom_document_finalise(&doc->base);
 }
 
