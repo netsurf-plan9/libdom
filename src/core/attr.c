@@ -445,7 +445,16 @@ dom_exception _dom_attr_get_value(struct dom_attr *attr,
 	struct dom_node_internal *c;
 	dom_string *value, *temp;
 	dom_exception err;
-
+        
+	/* Attempt to shortcut for a single text node child with value */
+	if ((a->first_child != NULL) && 
+	    (a->first_child == a->last_child) &&
+	    (a->first_child->type == DOM_TEXT_NODE) &&
+	    (a->first_child->value != NULL)) {
+		*result = dom_string_ref(a->first_child->value);
+		return DOM_NO_ERR;
+	}
+	
 	err = dom_string_create(NULL, 0, &value);
 	if (err != DOM_NO_ERR) {
 		return err;
