@@ -17,6 +17,10 @@ WARNFLAGS := -Wall -W -Wundef -Wpointer-arith -Wcast-align \
 ifneq ($(TARGET),beos)
   WARNFLAGS := $(WARNFLAGS) -Werror
 endif
+# AmigaOS needs this to avoid warnings
+ifeq ($(TARGET),amiga)
+  CFLAGS := -U__STRICT_ANSI__ $(CFLAGS)
+endif
 CFLAGS := -std=c99 -D_BSD_SOURCE -D_GNU_SOURCE -I$(CURDIR)/include/ \
 	-I$(CURDIR)/src -I$(CURDIR)/binding $(WARNFLAGS) $(CFLAGS)
 
