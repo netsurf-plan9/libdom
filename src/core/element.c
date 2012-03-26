@@ -1192,10 +1192,13 @@ dom_exception _dom_element_has_class(struct dom_element *element,
 	dom_exception err;
 	unsigned int class;
 	struct dom_node_internal *node = (struct dom_node_internal *)element;
-	dom_document_quirks_mode quirks_mode =
-			DOM_DOCUMENT_QUIRKS_MODE_NONE;
-
-	*match = false;
+	dom_document_quirks_mode quirks_mode;
+	
+	/* Short-circuit case where we have no classes */
+	if (element->n_classes == 0) {
+		*match = false;
+		return DOM_NO_ERR;
+	}
 
 	err = dom_document_get_quirks_mode(node->owner, &quirks_mode);
 	if (err != DOM_NO_ERR)
