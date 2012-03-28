@@ -56,8 +56,7 @@ static inline dom_exception dom_text_get_whole_text(struct dom_text *text,
 	return ((dom_text_vtable *) ((dom_node *) text)->vtable)->
 			dom_text_get_whole_text(text, result);
 }
-#define dom_text_get_whole_text(t, r) dom_text_get_whole_text((dom_text *) (t),\
-		(dom_string **) (r))
+#define dom_text_get_whole_text(t, r) dom_text_get_whole_text((dom_text *) (t), (r))
 
 static inline dom_exception dom_text_replace_whole_text(struct dom_text *text,
 		dom_string *content, struct dom_text **result)
@@ -66,6 +65,6 @@ static inline dom_exception dom_text_replace_whole_text(struct dom_text *text,
 			dom_text_replace_whole_text(text, content, result);
 }
 #define dom_text_replace_whole_text(t, c, r) dom_text_replace_whole_text( \
-		(dom_text *) (t), (dom_string *) (c), (dom_text **) (r))
+		(dom_text *) (t), (c), (dom_text **) (r))
 
 #endif

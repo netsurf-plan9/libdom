@@ -104,7 +104,7 @@ static inline dom_exception dom_element_get_tag_name(
 			dom_element_get_tag_name(element, name);
 }
 #define dom_element_get_tag_name(e, n) dom_element_get_tag_name( \
-		(dom_element *) (e), (dom_string **) (n))
+		(dom_element *) (e), (n))
 
 static inline dom_exception dom_element_get_attribute(
 		struct dom_element *element, dom_string *name, 
@@ -114,8 +114,7 @@ static inline dom_exception dom_element_get_attribute(
 			dom_element_get_attribute(element, name, value);
 }
 #define dom_element_get_attribute(e, n, v) dom_element_get_attribute( \
-		(dom_element *) (e), (dom_string *) (n), \
-		(dom_string **) (v))
+		(dom_element *) (e), (n), (v))
 
 static inline dom_exception dom_element_set_attribute(
 		struct dom_element *element, dom_string *name, 
@@ -125,8 +124,7 @@ static inline dom_exception dom_element_set_attribute(
 			dom_element_set_attribute(element, name, value);
 }
 #define dom_element_set_attribute(e, n, v) dom_element_set_attribute( \
-		(dom_element *) (e), (dom_string *) (n), \
-		(dom_string *) (v))
+		(dom_element *) (e), (n), (v))
 
 static inline dom_exception dom_element_remove_attribute(
 		struct dom_element *element, dom_string *name)
@@ -135,7 +133,7 @@ static inline dom_exception dom_element_remove_attribute(
 			dom_element_remove_attribute(element, name);
 }
 #define dom_element_remove_attribute(e, n) dom_element_remove_attribute( \
-		(dom_element *) (e), (dom_string *) (n))
+		(dom_element *) (e), (n))
 
 static inline dom_exception dom_element_get_attribute_node(
 		struct dom_element *element, dom_string *name, 
@@ -146,7 +144,7 @@ static inline dom_exception dom_element_get_attribute_node(
 }
 #define dom_element_get_attribute_node(e, n, r)  \
 		dom_element_get_attribute_node((dom_element *) (e), \
-		(dom_string *) (n), (struct dom_attr **) (r))
+		(n), (struct dom_attr **) (r))
 
 static inline dom_exception dom_element_set_attribute_node(
 		struct dom_element *element, struct dom_attr *attr, 
@@ -182,7 +180,7 @@ static inline dom_exception dom_element_get_elements_by_tag_name(
 }
 #define dom_element_get_elements_by_tag_name(e, n, r) \
 		dom_element_get_elements_by_tag_name((dom_element *) (e), \
-		(dom_string *) (n), (struct dom_nodelist **) (r))
+		(n), (struct dom_nodelist **) (r))
 
 static inline dom_exception dom_element_get_attribute_ns(
 		struct dom_element *element, dom_string *namespace, 
@@ -194,8 +192,7 @@ static inline dom_exception dom_element_get_attribute_ns(
 }
 #define dom_element_get_attribute_ns(e, n, l, v) \
 		dom_element_get_attribute_ns((dom_element *) (e), \
-		(dom_string *) (n), (dom_string *) (l), \
-		(dom_string **) (v))
+		(n), (l), (v))
 
 static inline dom_exception dom_element_set_attribute_ns(
 		struct dom_element *element, dom_string *namespace, 
@@ -207,8 +204,7 @@ static inline dom_exception dom_element_set_attribute_ns(
 }
 #define dom_element_set_attribute_ns(e, n, l, v) \
 		dom_element_set_attribute_ns((dom_element *) (e), \
-		(dom_string *) (n), (dom_string *) (l), \
-		(dom_string *) (v))
+		(n), (l), (v))
 
 
 static inline dom_exception dom_element_remove_attribute_ns(
@@ -221,7 +217,7 @@ static inline dom_exception dom_element_remove_attribute_ns(
 }
 #define dom_element_remove_attribute_ns(e, n, l) \
 		dom_element_remove_attribute_ns((dom_element *) (e), \
-		(dom_string *) (n), (dom_string *) (l))
+		(n), (l))
 
 
 static inline dom_exception dom_element_get_attribute_node_ns(
@@ -234,7 +230,7 @@ static inline dom_exception dom_element_get_attribute_node_ns(
 }
 #define dom_element_get_attribute_node_ns(e, n, l, r) \
 		dom_element_get_attribute_node_ns((dom_element *) (e), \
-		(dom_string *) (n), (dom_string *) (l), \
+		(n), (l), \
 		(struct dom_attr **) (r))
 
 static inline dom_exception dom_element_set_attribute_node_ns(
@@ -259,8 +255,7 @@ static inline dom_exception dom_element_get_elements_by_tag_name_ns(
 }
 #define dom_element_get_elements_by_tag_name_ns(e, n, l, r) \
 		dom_element_get_elements_by_tag_name_ns((dom_element *) (e), \
-		(dom_string *) (n), (dom_string *) (l), \
-		(struct dom_nodelist **) (r))
+		(n), (l), (struct dom_nodelist **) (r))
 
 static inline dom_exception dom_element_has_attribute(
 		struct dom_element *element, dom_string *name, 
@@ -270,8 +265,7 @@ static inline dom_exception dom_element_has_attribute(
 			dom_element_has_attribute(element, name, result);
 }
 #define dom_element_has_attribute(e, n, r) dom_element_has_attribute( \
-		(dom_element *) (e), (dom_string *) (n), \
-		(bool *) (r))
+		(dom_element *) (e), (n), (bool *) (r))
 
 static inline dom_exception dom_element_has_attribute_ns(
 		struct dom_element *element, dom_string *namespace, 
@@ -282,8 +276,7 @@ static inline dom_exception dom_element_has_attribute_ns(
 			localname, result);
 }
 #define dom_element_has_attribute_ns(e, n, l, r) dom_element_has_attribute_ns(\
-		(dom_element *) (e), (dom_string *) (n), \
-		(dom_string *) (l), (bool *) (r))
+		(dom_element *) (e), (n), (l), (bool *) (r))
 
 static inline dom_exception dom_element_get_schema_type_info(
 		struct dom_element *element, struct dom_type_info **result)
@@ -304,7 +297,7 @@ static inline dom_exception dom_element_set_id_attribute(
 }
 #define dom_element_set_id_attribute(e, n, i) \
 		dom_element_set_id_attribute((dom_element *) (e), \
-		(dom_string *) (n), (bool) (i))
+		(n), (bool) (i))
 
 static inline dom_exception dom_element_set_id_attribute_ns(
 		struct dom_element *element, dom_string *namespace, 
@@ -316,8 +309,7 @@ static inline dom_exception dom_element_set_id_attribute_ns(
 }
 #define dom_element_set_id_attribute_ns(e, n, l, i) \
 		dom_element_set_id_attribute_ns((dom_element *) (e), \
-		(dom_string *) (n), (dom_string *) (l), \
-		(bool) (i))
+		(n), (l), (bool) (i))
 
 static inline dom_exception dom_element_set_id_attribute_node(
 		struct dom_element *element, struct dom_attr *id_attr, 

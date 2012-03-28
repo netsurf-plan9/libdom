@@ -56,8 +56,7 @@ static inline dom_exception dom_attr_get_name(struct dom_attr *attr,
 	return ((dom_attr_vtable *) ((dom_node *) attr)->vtable)->
 			dom_attr_get_name(attr, result);
 }
-#define dom_attr_get_name(a, r) dom_attr_get_name((struct dom_attr *) (a), \
-		(dom_string **) (r))
+#define dom_attr_get_name(a, r) dom_attr_get_name((struct dom_attr *) (a), (r))
 
 static inline dom_exception dom_attr_get_specified(struct dom_attr *attr,
 		bool *result)
@@ -74,8 +73,7 @@ static inline dom_exception dom_attr_get_value(struct dom_attr *attr,
 	return ((dom_attr_vtable *) ((dom_node *) attr)->vtable)->
 			dom_attr_get_value(attr, result);
 }
-#define dom_attr_get_value(a, r) dom_attr_get_value((struct dom_attr *) (a), \
-		(dom_string **) (r))
+#define dom_attr_get_value(a, r) dom_attr_get_value((struct dom_attr *) (a), (r))
 
 static inline dom_exception dom_attr_set_value(struct dom_attr *attr,
 		dom_string *value)
@@ -83,8 +81,7 @@ static inline dom_exception dom_attr_set_value(struct dom_attr *attr,
 	return ((dom_attr_vtable *) ((dom_node *) attr)->vtable)->
 			dom_attr_set_value(attr, value);
 }
-#define dom_attr_set_value(a, v) dom_attr_set_value((struct dom_attr *) (a), \
-		(dom_string *) (v))
+#define dom_attr_set_value(a, v) dom_attr_set_value((struct dom_attr *) (a), (v))
 
 static inline dom_exception dom_attr_get_owner_element(struct dom_attr *attr,
 		struct dom_element **result)

@@ -46,7 +46,7 @@ static inline dom_exception dom_document_type_get_name(
 			->dom_document_type_get_name(doc_type, result);
 }
 #define dom_document_type_get_name(dt, r) dom_document_type_get_name( \
-		(dom_document_type *) (dt), (dom_string **) (r))
+		(dom_document_type *) (dt), (r))
 
 static inline dom_exception dom_document_type_get_entities(
 		struct dom_document_type *doc_type,
@@ -77,7 +77,7 @@ static inline dom_exception dom_document_type_get_public_id(
 }
 #define dom_document_type_get_public_id(dt, r) \
 		dom_document_type_get_public_id((dom_document_type *) (dt), \
-		(dom_string **) (r))
+		(r))
 
 static inline dom_exception dom_document_type_get_system_id(
 		struct dom_document_type *doc_type,
@@ -88,7 +88,7 @@ static inline dom_exception dom_document_type_get_system_id(
 }
 #define dom_document_type_get_system_id(dt, r) \
 		dom_document_type_get_system_id((dom_document_type *) (dt), \
-		(dom_string **) (r))
+		(r))
 
 static inline dom_exception dom_document_type_get_internal_subset(
 		struct dom_document_type *doc_type,
@@ -100,7 +100,7 @@ static inline dom_exception dom_document_type_get_internal_subset(
 }
 #define dom_document_type_get_internal_subset(dt, r) \
 		dom_document_type_get_internal_subset( \
-		(dom_document_type *) (dt), (dom_string **) (r))
+		(dom_document_type *) (dt), (r))
 
 
 #endif

@@ -25,22 +25,20 @@ typedef enum {
 dom_exception _dom_type_info_get_type_name(dom_type_info *ti, 
 		dom_string **ret);
 #define dom_type_info_get_type_name(t, r) _dom_type_info_get_type_name( \
-		(dom_type_info *) (t), (dom_string **) (r))
+		(dom_type_info *) (t), (r))
 
 
 dom_exception _dom_type_info_get_type_namespace(dom_type_info *ti,
 		dom_string **ret);
 #define dom_type_info_get_type_namespace(t, r) \
-		_dom_type_info_get_type_namespace((dom_type_info *) (t),\
-		(dom_string **) (r))
+		_dom_type_info_get_type_namespace((dom_type_info *) (t), (r))
 
 
 dom_exception _dom_type_info_is_derived(dom_type_info *ti,
 		dom_string *namespace, dom_string *name, 
 		dom_type_info_derivation_method method, bool *ret);
 #define dom_type_info_is_derived(t, s, n, m, r)  _dom_type_info_is_derived(\
-		(dom_type_info *) (t), (dom_string *) (s), \
-		(dom_string *) (n), \
+		(dom_type_info *) (t), (s), (n), \
 		(dom_type_info_derivation_method) (m), (bool *) (r))
 
 

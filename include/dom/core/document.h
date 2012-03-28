@@ -166,7 +166,7 @@ static inline dom_exception dom_document_create_element(
 			dom_document_create_element(doc, tag_name, result);
 }
 #define dom_document_create_element(d, t, r) dom_document_create_element( \
-		(dom_document *) (d), (dom_string *) (t), \
+		(dom_document *) (d), (t), \
 		(struct dom_element **) (r))
 
 static inline dom_exception dom_document_create_document_fragment(
@@ -189,7 +189,7 @@ static inline dom_exception dom_document_create_text_node(
 }
 #define dom_document_create_text_node(d, data, r) \
 		dom_document_create_text_node((dom_document *) (d), \
-		(dom_string *) (data), (struct dom_text **) (r))
+		 (data), (struct dom_text **) (r))
 
 static inline dom_exception dom_document_create_comment(
 		struct dom_document *doc, dom_string *data, 
@@ -199,7 +199,7 @@ static inline dom_exception dom_document_create_comment(
 			dom_document_create_comment(doc, data, result);
 }
 #define dom_document_create_comment(d, data, r) dom_document_create_comment( \
-		(dom_document *) (d), (dom_string *) (data), \
+		(dom_document *) (d), (data), \
 		(struct dom_comment **) (r))
 
 static inline dom_exception dom_document_create_cdata_section(
@@ -211,8 +211,7 @@ static inline dom_exception dom_document_create_cdata_section(
 }
 #define dom_document_create_cdata_section(d, data, r) \
 		dom_document_create_cdata_section((dom_document *) (d), \
-		(dom_string *) (data), \
-		(struct dom_cdata_section **) (r))
+		(data), (struct dom_cdata_section **) (r))
 
 static inline dom_exception dom_document_create_processing_instruction(
 		struct dom_document *doc, dom_string *target,
@@ -225,8 +224,7 @@ static inline dom_exception dom_document_create_processing_instruction(
 }
 #define dom_document_create_processing_instruction(d, t, data, r) \
 		dom_document_create_processing_instruction( \
-		(dom_document *) (d), (dom_string *) (t), \
-		(dom_string *) (data), \
+		(dom_document *) (d), (t), (data), \
 		(struct dom_processing_instruction **) (r))
 
 static inline dom_exception dom_document_create_attribute(
@@ -237,7 +235,7 @@ static inline dom_exception dom_document_create_attribute(
 			dom_document_create_attribute(doc, name, result);
 }
 #define dom_document_create_attribute(d, n, r) dom_document_create_attribute( \
-		(dom_document *) (d), (dom_string *) (n), \
+		(dom_document *) (d), (n), \
 		(struct dom_attr **) (r))
 
 static inline dom_exception dom_document_create_entity_reference(
@@ -250,7 +248,7 @@ static inline dom_exception dom_document_create_entity_reference(
 }
 #define dom_document_create_entity_reference(d, n, r) \
 		dom_document_create_entity_reference((dom_document *) (d), \
-		(dom_string *) (n), (struct dom_entity_reference **) (r))
+		(n), (struct dom_entity_reference **) (r))
 
 static inline dom_exception dom_document_get_elements_by_tag_name(
 		struct dom_document *doc, dom_string *tagname, 
@@ -262,7 +260,7 @@ static inline dom_exception dom_document_get_elements_by_tag_name(
 }
 #define dom_document_get_elements_by_tag_name(d, t, r) \
 		dom_document_get_elements_by_tag_name((dom_document *) (d), \
-		(dom_string *) (t), (struct dom_nodelist **) (r))
+		(t), (struct dom_nodelist **) (r))
 
 static inline dom_exception dom_document_import_node(struct dom_document *doc,
 		struct dom_node *node, bool deep, struct dom_node **result)
@@ -284,7 +282,7 @@ static inline dom_exception dom_document_create_element_ns(
 }
 #define dom_document_create_element_ns(d, n, q, r) \
 		dom_document_create_element_ns((dom_document *) (d), \
-		(dom_string *) (n), (dom_string *) (q), \
+		(n), (q), \
 		(struct dom_element **) (r))
 
 static inline dom_exception dom_document_create_attribute_ns
@@ -297,8 +295,7 @@ static inline dom_exception dom_document_create_attribute_ns
 }
 #define dom_document_create_attribute_ns(d, n, q, r) \
 		dom_document_create_attribute_ns((dom_document *) (d), \
-		(dom_string *) (n), (dom_string *) (q), \
-		(struct dom_attr **) (r))
+		(n), (q), (struct dom_attr **) (r))
 
 static inline dom_exception dom_document_get_elements_by_tag_name_ns(
 		struct dom_document *doc, dom_string *namespace,
@@ -310,8 +307,7 @@ static inline dom_exception dom_document_get_elements_by_tag_name_ns(
 }
 #define dom_document_get_elements_by_tag_name_ns(d, n, l, r) \
 		dom_document_get_elements_by_tag_name_ns((dom_document *) (d),\
-		(dom_string *) (n), (dom_string *) (l), \
-		(struct dom_nodelist **) (r))
+		(n), (l), (struct dom_nodelist **) (r))
 
 static inline dom_exception dom_document_get_element_by_id(
 		struct dom_document *doc, dom_string *id, 
@@ -322,7 +318,7 @@ static inline dom_exception dom_document_get_element_by_id(
 }
 #define dom_document_get_element_by_id(d, i, r) \
 		dom_document_get_element_by_id((dom_document *) (d), \
-		(dom_string *) (i), (struct dom_element **) (r))
+		(i), (struct dom_element **) (r))
 
 static inline dom_exception dom_document_get_input_encoding(
 		struct dom_document *doc, dom_string **result)
@@ -331,7 +327,7 @@ static inline dom_exception dom_document_get_input_encoding(
 			dom_document_get_input_encoding(doc, result);
 }
 #define dom_document_get_input_encoding(d, r) dom_document_get_input_encoding(\
-		(dom_document *) (d), (dom_string **) (r))
+		(dom_document *) (d), (r))
 
 static inline dom_exception dom_document_get_xml_encoding(
 		struct dom_document *doc, dom_string **result)
@@ -340,7 +336,7 @@ static inline dom_exception dom_document_get_xml_encoding(
 			dom_document_get_xml_encoding(doc, result);
 }
 #define dom_document_get_xml_encoding(d, r) dom_document_get_xml_encoding( \
-		(dom_document *) (d), (dom_string **) (r))
+		(dom_document *) (d), (r))
 
 static inline dom_exception dom_document_get_xml_standalone(
 		struct dom_document *doc, bool *result)
@@ -367,7 +363,7 @@ static inline dom_exception dom_document_get_xml_version(
 			dom_document_get_xml_version(doc, result);
 }
 #define dom_document_get_xml_version(d, r) dom_document_get_xml_version( \
-		(dom_document *) (d), (dom_string **) (r))
+		(dom_document *) (d), (r))
 
 static inline dom_exception dom_document_set_xml_version(
 		struct dom_document *doc, dom_string *version)
@@ -376,7 +372,7 @@ static inline dom_exception dom_document_set_xml_version(
 			dom_document_set_xml_version(doc, version);
 }
 #define dom_document_set_xml_version(d, v) dom_document_set_xml_version( \
-		(dom_document *) (d), (dom_string *) (v))
+		(dom_document *) (d), (v))
 
 static inline dom_exception dom_document_get_strict_error_checking(
 		struct dom_document *doc, bool *result)
@@ -405,7 +401,7 @@ static inline dom_exception dom_document_get_uri(struct dom_document *doc,
 			dom_document_get_uri(doc, result);
 }
 #define dom_document_get_uri(d, r) dom_document_get_uri((dom_document *) (d), \
-		(dom_string **) (r))
+		(r))
 
 static inline dom_exception dom_document_set_uri(struct dom_document *doc,
 		dom_string *uri)
@@ -414,7 +410,7 @@ static inline dom_exception dom_document_set_uri(struct dom_document *doc,
 			dom_document_set_uri(doc, uri);
 }
 #define dom_document_set_uri(d, u) dom_document_set_uri((dom_document *) (d), \
-		(dom_string *) (u))
+		(u))
 
 static inline dom_exception dom_document_adopt_node(struct dom_document *doc,
 		struct dom_node *node, struct dom_node **result)
@@ -451,8 +447,8 @@ static inline dom_exception dom_document_rename_node(struct dom_document *doc,
 			result);
 }
 #define dom_document_rename_node(d, n, ns, q, r) dom_document_rename_node( \
-		(dom_document *) (d), (dom_string *) (ns), \
-		(dom_string *) (q), (dom_node **) (r))
+		(dom_document *) (d), (ns), \
+		(q), (dom_node **) (r))
 
 static inline dom_exception dom_document_get_quirks_mode(
 	dom_document *doc, dom_document_quirks_mode *result)
