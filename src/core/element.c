@@ -1225,6 +1225,92 @@ dom_exception _dom_element_has_class(struct dom_element *element,
 	return DOM_NO_ERR;
 }
 
+/**
+ * Get a named ancestor node
+ *
+ * \param element   Element to consider
+ * \param name      Node name to look for
+ * \param ancestor  Pointer to location to receive node pointer
+ * \return DOM_NO_ERR.
+ */
+dom_exception dom_element_named_ancestor_node(dom_element *element,
+		lwc_string *name, dom_element **ancestor)
+{
+	dom_node_internal *node = (dom_node_internal *)element;
+
+	*ancestor = NULL;
+
+	for (node = node->parent; node != NULL; node = node->parent) {
+		if (node->type != DOM_ELEMENT_NODE)
+			continue;
+
+		assert(node->name != NULL);
+
+		if (dom_string_caseless_lwc_isequal(node->name, name)) {
+			*ancestor = (dom_element *)node;
+			break;
+		}
+	}
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Get a named parent node
+ *
+ * \param element  Element to consider
+ * \param name     Node name to look for
+ * \param parent   Pointer to location to receive node pointer
+ * \return DOM_NO_ERR.
+ */
+dom_exception dom_element_named_parent_node(dom_element *element,
+		lwc_string *name, dom_element **parent)
+{
+	dom_node_internal *node = (dom_node_internal *)element;
+
+	*parent = NULL;
+
+	for (node = node->parent; node != NULL; node = node->parent) {
+		if (node->type != DOM_ELEMENT_NODE)
+			continue;
+
+		assert(node->name != NULL);
+
+		if (dom_string_caseless_lwc_isequal(node->name, name)) {
+			*parent = (dom_element *)node;
+		}
+		break;
+	}
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Get a named parent node
+ *
+ * \param element  Element to consider
+ * \param name     Node name to look for
+ * \param parent   Pointer to location to receive node pointer
+ * \return DOM_NO_ERR.
+ */
+dom_exception dom_element_parent_node(dom_element *element,
+		dom_element **parent)
+{
+	dom_node_internal *node = (dom_node_internal *)element;
+
+	*parent = NULL;
+
+	for (node = node->parent; node != NULL; node = node->parent) {
+		if (node->type != DOM_ELEMENT_NODE)
+			continue;
+
+		*parent = (dom_element *)node;
+		break;
+	}
+
+	return DOM_NO_ERR;
+}
+
 /*------------- The overload virtual functions ------------------------*/
 
 /* Overload function of Node, please refer src/core/node.c for detail */

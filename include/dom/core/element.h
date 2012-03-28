@@ -352,4 +352,16 @@ static inline dom_exception dom_element_has_class(
 		dom_element_has_class((dom_element *) (e), \
 		(lwc_string *) (n), (bool *) (m))
 
+
+/* Functions for implementing some libcss selection callbacks.
+ * Note that they don't take a reference to the returned element, as such they
+ * are UNSAFE if you require the returned element to live beyond the next time
+ * the DOM gets a chance to change. */
+dom_exception dom_element_named_ancestor_node(dom_element *element,
+		lwc_string *name, dom_element **ancestor);
+dom_exception dom_element_named_parent_node(dom_element *element,
+		lwc_string *name, dom_element **parent);
+dom_exception dom_element_parent_node(dom_element *element,
+		dom_element **parent);
+
 #endif
