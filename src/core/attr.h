@@ -62,6 +62,7 @@ dom_exception _dom_attr_is_default_namespace(dom_node_internal *node,
 dom_exception _dom_attr_lookup_namespace(dom_node_internal *node,
 		dom_string *prefix, dom_string **result);
 #define DOM_NODE_VTABLE_ATTR \
+	_dom_node_try_destroy, \
 	_dom_node_get_node_name, \
 	_dom_attr_get_node_value, /*overload*/\
 	_dom_node_set_node_value, \

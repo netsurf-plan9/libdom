@@ -78,12 +78,14 @@ typedef struct dom_node_internal dom_node_internal;
  */
 typedef struct dom_node {
 	void *vtable;
+	uint32_t refcnt;
 } dom_node;
 
 /* DOM node vtable */
 typedef struct dom_node_vtable {
 	dom_event_target_vtable base;
-
+	/* pre-destruction hook */
+	dom_exception (*dom_node_try_destroy)(dom_node_internal *node);
 	/* The DOM level 3 node's oprations */
 	dom_exception (*dom_node_get_node_name)(dom_node_internal *node,
 			dom_string **result);
@@ -172,10 +174,33 @@ typedef struct dom_node_vtable {
 } dom_node_vtable;
 
 /* The ref/unref methods define */
-struct dom_node *_dom_node_ref(dom_node_internal *node);
-#define dom_node_ref(n) _dom_node_ref((dom_node_internal *) (n))
-void _dom_node_unref(dom_node_internal *node);
-#define dom_node_unref(n) _dom_node_unref((dom_node_internal *) (n))
+
+static inline dom_node *dom_node_ref(dom_node *node)
+{
+	if (node != NULL)
+		node->refcnt++;
+	
+	return node;
+}
+
+#define dom_node_ref(n) dom_node_ref((dom_node *) (n))
+
+static inline dom_exception dom_node_try_destroy(dom_node *node)
+{
+	return ((dom_node_vtable *) node->vtable)->dom_node_try_destroy(
+			(dom_node_internal *) node);
+}
+#define dom_node_try_destroy(n) dom_node_try_destroy((dom_node *) (n))
+
+static inline void dom_node_unref(dom_node *node)
+{
+	if (node != NULL) {
+		if (--node->refcnt == 0)
+			dom_node_try_destroy(node);
+	}
+		
+}
+#define dom_node_unref(n) dom_node_unref((dom_node *) (n))
 
 static inline dom_exception dom_node_get_node_name(struct dom_node *node,
 		dom_string **result)

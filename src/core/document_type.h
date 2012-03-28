@@ -57,6 +57,7 @@ dom_exception _dom_document_type_set_text_content(dom_node_internal *node,
 	_dom_document_type_get_internal_subset
 
 #define DOM_NODE_VTABLE_DOCUMENT_TYPE \
+	_dom_node_try_destroy, \
 	_dom_node_get_node_name, \
 	_dom_node_get_node_value, \
 	_dom_node_set_node_value, \

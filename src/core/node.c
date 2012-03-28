@@ -198,7 +198,7 @@ dom_exception _dom_node_initialise(dom_node_internal *node,
 
 	node->user_data = NULL;
 
-	node->refcnt = 1;
+	node->base.refcnt = 1;
 
 	list_init(&node->pending_list);
 	if (node->type != DOM_DOCUMENT_NODE) {
@@ -279,46 +279,10 @@ void _dom_node_finalise(dom_node_internal *node)
 	}
 }
 
-/**
- * Claim a reference on a DOM node
- *
- * \param node  The node to claim a reference on
- */
-struct dom_node *_dom_node_ref(dom_node_internal *node)
-{
-	if (node != NULL)
-		node->refcnt++;
-
-	return (struct dom_node *)node;
-}
-
 
 /* ---------------------------------------------------------------------*/
 
 /* The public virtual function of this interface Node */
-
-/**
- * Release a reference on a DOM node
- *
- * \param node  The node to release the reference from
- *
- * If the reference count reaches zero and the node is not part of any
- * document, any memory claimed by the node will be released.
- *
- * If the parent of the node is NULL but the reference count does not reach
- * zero, this means we should put this node to the document's deletion pending
- * list. When the refcnt reach zero, we delete it.
- */
-void _dom_node_unref(dom_node_internal *node)
-{
-	if (node == NULL)
-		return;
-
-	if (node->refcnt > 0)
-		node->refcnt--;
-
-	dom_node_try_destroy(node);
-}
 
 /**
  * Retrieve the name of a DOM node
@@ -1872,7 +1836,7 @@ dom_exception _dom_node_copy_internal(dom_node_internal *old,
 		new->prefix = NULL;
 
 	new->user_data = NULL;
-	new->refcnt = 1;
+	new->base.refcnt = 1;
 
 	list_init(&new->pending_list);
 
@@ -2214,13 +2178,13 @@ dom_exception _dom_merge_adjacent_text(dom_node_internal *p,
  *
  * @note: Owning a node does not means this node's refcnt is above zero.
  */
-void _dom_node_try_destroy(dom_node_internal *node)
+dom_exception _dom_node_try_destroy(dom_node_internal *node)
 {
 	if (node == NULL)
-		return;
+		return DOM_NO_ERR;
 
 	if (node->parent == NULL) {
-		if (node->refcnt == 0) {
+		if (node->base.refcnt == 0) {
 			dom_node_destroy(node);
 		} else if (node->pending_list.prev == &node->pending_list){
 			assert (node->pending_list.next == &node->pending_list);
@@ -2228,6 +2192,8 @@ void _dom_node_try_destroy(dom_node_internal *node)
 					&node->pending_list);
 		}
 	}
+        
+        return DOM_NO_ERR;
 }
 
 /**

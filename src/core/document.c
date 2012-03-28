@@ -1345,7 +1345,7 @@ dom_exception dom_document_dup_node(dom_document *doc, dom_node *node,
 }
 
 /**
- * Try to destory the document. 
+ * Try to destroy the document. 
  *
  * \param doc  The instance of Document
  *
@@ -1357,7 +1357,7 @@ dom_exception dom_document_dup_node(dom_document *doc, dom_node *node,
  */
 void _dom_document_try_destroy(dom_document *doc)
 {
-	if (doc->base.refcnt != 0 || doc->base.parent != NULL)
+	if (doc->base.base.refcnt != 0 || doc->base.parent != NULL)
 		return;
 
 	_dom_document_destroy((dom_node_internal *) doc);

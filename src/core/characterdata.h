@@ -65,6 +65,7 @@ dom_exception _dom_characterdata_set_text_content(
 	_dom_characterdata_replace_data 
 
 #define DOM_NODE_VTABLE_CHARACTERDATA \
+	_dom_node_try_destroy, \
 	_dom_node_get_node_name, \
 	_dom_node_get_node_value, \
 	_dom_node_set_node_value, \

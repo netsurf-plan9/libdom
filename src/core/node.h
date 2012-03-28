@@ -73,8 +73,6 @@ struct dom_node_internal {
 
 	struct dom_user_data *user_data;	/**< User data list */
 
-	uint32_t refcnt;		/**< Reference count */
-
 	struct list_entry pending_list; /**< The document delete pending list */
 
 	dom_event_target_internal eti;	/**< The EventTarget interface */
@@ -195,7 +193,8 @@ dom_exception _dom_node_get_user_data(dom_node_internal *node,
 	_dom_node_remove_event_listener_ns
 
 #define DOM_NODE_VTABLE \
-	_dom_node_get_node_name, \
+	_dom_node_try_destroy, \
+	_dom_node_get_node_name,	  \
 	_dom_node_get_node_value, \
 	_dom_node_set_node_value, \
 	_dom_node_get_node_type, \
@@ -283,8 +282,7 @@ dom_exception _dom_merge_adjacent_text(dom_node_internal *p,
 
 /* Try to destroy the node, if its refcnt is not zero, then append it to the
  * owner document's pending list */
-void _dom_node_try_destroy(dom_node_internal *node);
-#define dom_node_try_destroy(n) _dom_node_try_destroy((dom_node_internal *) (n))
+dom_exception _dom_node_try_destroy(dom_node_internal *node);
 
 /* To add some node to the pending list */
 void _dom_node_mark_pending(dom_node_internal *node);
