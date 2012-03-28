@@ -31,7 +31,9 @@ enum dom_string_type {
  *
  * Strings are reference counted so destruction is performed correctly.
  */
-struct dom_string {
+typedef struct dom_string_internal {
+	uint32_t refcnt;
+	
 	union {
 		struct {
 			uint8_t *ptr;	/**< Pointer to string data */
@@ -40,52 +42,31 @@ struct dom_string {
 		lwc_string *intern;	/**< Interned string */
 	} data;
 
-	unsigned int refcnt : 31,	/**< Reference count */
-		     type   :  1;	/**< String type */
-};
+	enum dom_string_type type;	/**< String type */
+} dom_string_internal;
 
 /**
  * Empty string, for comparisons against NULL
  */
-static const dom_string empty_string = {
-	{ { (uint8_t *) "", 0 } },
+static const dom_string_internal empty_string = {
 	0,
+	{ { (uint8_t *) "", 0 } },
 	DOM_STRING_CDATA
 };
 
-/**
- * Claim a reference on a DOM string
- *
- * \param str  The string to claim a reference on
- * \return \a str
- */
-dom_string *dom_string_ref(dom_string *str)
+void dom_string_destroy(dom_string *str)
 {
-	if (str != NULL)
-		str->refcnt++;
-
-	return str;
-}
-
-/**
- * Release a reference on a DOM string
- *
- * \param str  The string to release the reference from
- *
- * If the reference count reaches zero, any memory claimed by the
- * string will be released
- */
-void dom_string_unref(dom_string *str)
-{
-	if (str != NULL && --str->refcnt == 0) {
-		switch (str->type) {
+	dom_string_internal *istr = (dom_string_internal *)str;
+	if (str != NULL) {
+		assert(str->refcnt == 0);
+		switch (istr->type) {
 		case DOM_STRING_INTERNED:
-			if (str->data.intern != NULL) {
-				lwc_string_unref(str->data.intern);
+			if (istr->data.intern != NULL) {
+				lwc_string_unref(istr->data.intern);
 			}
 			break;
 		case DOM_STRING_CDATA:
-			free(str->data.cdata.ptr);
+			free(istr->data.cdata.ptr);
 			break;
 		}
 
@@ -110,14 +91,14 @@ void dom_string_unref(dom_string *str)
 dom_exception dom_string_create(const uint8_t *ptr, size_t len, 
 		dom_string **str)
 {
-	dom_string *ret;
+	dom_string_internal *ret;
 
 	if (ptr == NULL || len == 0) {
 		ptr = (const uint8_t *) "";
 		len = 0;
 	}
 
-	ret = malloc(sizeof(dom_string));
+	ret = malloc(sizeof(*ret));
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
@@ -136,7 +117,7 @@ dom_exception dom_string_create(const uint8_t *ptr, size_t len,
 
 	ret->type = DOM_STRING_CDATA;
 
-	*str = ret;
+	*str = (dom_string *)ret;
 
 	return DOM_NO_ERR;
 }
@@ -158,14 +139,14 @@ dom_exception dom_string_create(const uint8_t *ptr, size_t len,
 dom_exception dom_string_create_interned(const uint8_t *ptr, size_t len, 
 		dom_string **str)
 {
-	dom_string *ret;
+	dom_string_internal *ret;
 
 	if (ptr == NULL || len == 0) {
 		ptr = (const uint8_t *) "";
 		len = 0;
 	}
 
-	ret = malloc(sizeof(dom_string));
+	ret = malloc(sizeof(*ret));
 	if (ret == NULL)
 		return DOM_NO_MEM_ERR;
 
@@ -179,7 +160,7 @@ dom_exception dom_string_create_interned(const uint8_t *ptr, size_t len,
 
 	ret->type = DOM_STRING_INTERNED;
 
-	*str = ret;
+	*str = (dom_string *)ret;
 
 	return DOM_NO_ERR;
 }
@@ -194,25 +175,26 @@ dom_exception dom_string_create_interned(const uint8_t *ptr, size_t len,
 dom_exception dom_string_intern(dom_string *str, 
 		struct lwc_string_s **lwcstr)
 {
+	dom_string_internal *istr = (dom_string_internal *) str;
 	/* If this string is already interned, do nothing */
-	if (str->type != DOM_STRING_INTERNED) {
+	if (istr->type != DOM_STRING_INTERNED) {
 		lwc_string *ret;
 		lwc_error lerr;
 
-		lerr = lwc_intern_string((const char *) str->data.cdata.ptr, 
-				str->data.cdata.len, &ret);
+		lerr = lwc_intern_string((const char *) istr->data.cdata.ptr, 
+				istr->data.cdata.len, &ret);
 		if (lerr != lwc_error_ok) {
 			return _dom_exception_from_lwc_error(lerr);
 		}
 
-		free(str->data.cdata.ptr);
+		free(istr->data.cdata.ptr);
 
-		str->data.intern = ret;
+		istr->data.intern = ret;
 
-		str->type = DOM_STRING_INTERNED;
+		istr->type = DOM_STRING_INTERNED;
 	}
 
-	*lwcstr = lwc_string_ref(str->data.intern);
+	*lwcstr = lwc_string_ref(istr->data.intern);
 
 	return DOM_NO_ERR;
 }
@@ -227,18 +209,20 @@ dom_exception dom_string_intern(dom_string *str,
 bool dom_string_isequal(const dom_string *s1, const dom_string *s2)
 {
 	size_t len;
+	const dom_string_internal *is1 = (dom_string_internal *) s1;
+	const dom_string_internal *is2 = (dom_string_internal *) s2;
 
 	if (s1 == NULL)
-		s1 = &empty_string;
+		is1 = &empty_string;
 
 	if (s2 == NULL)
-		s2 = &empty_string;
+		is2 = &empty_string;
 
-	if (s1->type == DOM_STRING_INTERNED && 
-			s2->type == DOM_STRING_INTERNED) {
+	if (is1->type == DOM_STRING_INTERNED && 
+			is2->type == DOM_STRING_INTERNED) {
 		bool match;
 
-		(void) lwc_string_isequal(s1->data.intern, s2->data.intern,
+		(void) lwc_string_isequal(is1->data.intern, is2->data.intern,
 			&match);
 
 		return match;
@@ -246,10 +230,10 @@ bool dom_string_isequal(const dom_string *s1, const dom_string *s2)
 
 	len = dom_string_byte_length(s1);
 
-	if (len != dom_string_byte_length(s2))
+	if (len != dom_string_byte_length((dom_string *)is2))
 		return false;
 
-	return 0 == memcmp(dom_string_data(s1), dom_string_data(s2), len);
+	return 0 == memcmp(dom_string_data(s1), dom_string_data((dom_string *)is2), len);
 }
 
 /**
@@ -274,18 +258,20 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 	const uint8_t *d1 = NULL;
 	const uint8_t *d2 = NULL;
 	size_t len;
+	const dom_string_internal *is1 = (dom_string_internal *) s1;
+	const dom_string_internal *is2 = (dom_string_internal *) s2;
 
 	if (s1 == NULL)
-		s1 = &empty_string;
+		is1 = &empty_string;
 
 	if (s2 == NULL)
-		s2 = &empty_string;
+		is2 = &empty_string;
 
-	if (s1->type == DOM_STRING_INTERNED && 
-			s2->type == DOM_STRING_INTERNED) {
+	if (is1->type == DOM_STRING_INTERNED && 
+			is2->type == DOM_STRING_INTERNED) {
 		bool match;
 
-		lwc_string_caseless_isequal(s1->data.intern, s2->data.intern, 
+		lwc_string_caseless_isequal(is1->data.intern, is2->data.intern, 
 				&match);
 
 		return match;
@@ -293,11 +279,11 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 
 	len = dom_string_byte_length(s1);
 
-	if (len != dom_string_byte_length(s2))
+	if (len != dom_string_byte_length((dom_string *)is2))
 		return false;
 
 	d1 = (const uint8_t *) dom_string_data(s1);
-	d2 = (const uint8_t *) dom_string_data(s2);
+	d2 = (const uint8_t *) dom_string_data((dom_string *)is2);
 
 	while (len > 0) {
 		if (dolower(*d1) != dolower(*d2))
@@ -324,14 +310,15 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 bool dom_string_lwc_isequal(const dom_string *s1, lwc_string *s2)
 {
 	size_t len;
+	dom_string_internal *is1 = (dom_string_internal *) s1;
 
 	if (s1 == NULL || s2 == NULL)
 		return false;
 
-	if (s1->type == DOM_STRING_INTERNED) {
+	if (is1->type == DOM_STRING_INTERNED) {
 		bool match;
 
-		(void) lwc_string_isequal(s1->data.intern, s2, &match);
+		(void) lwc_string_isequal(is1->data.intern, s2, &match);
 
 		return match;
 	}
@@ -360,14 +347,15 @@ bool dom_string_caseless_lwc_isequal(const dom_string *s1, lwc_string *s2)
 	size_t len;
 	const uint8_t *d1 = NULL;
 	const uint8_t *d2 = NULL;
+	dom_string_internal *is1 = (dom_string_internal *) s1;
 
 	if (s1 == NULL || s2 == NULL)
 		return false;
 
-	if (s1->type == DOM_STRING_INTERNED) {
+	if (is1->type == DOM_STRING_INTERNED) {
 		bool match;
 
-		lwc_string_caseless_isequal(s1->data.intern, s2, &match);
+		lwc_string_caseless_isequal(is1->data.intern, s2, &match);
 
 		return match;
 	}
@@ -556,7 +544,7 @@ dom_exception dom_string_at(dom_string *str, uint32_t index,
 dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 		dom_string **result)
 {
-	dom_string *concat;
+	dom_string_internal *concat;
 	const uint8_t *s1ptr, *s2ptr;
 	size_t s1len, s2len;
 
@@ -568,7 +556,7 @@ dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 	s1len = dom_string_byte_length(s1);
 	s2len = dom_string_byte_length(s2);
 
-	concat = malloc(sizeof(dom_string));
+	concat = malloc(sizeof(*concat));
 	if (concat == NULL) {
 		return DOM_NO_MEM_ERR;
 	}
@@ -592,7 +580,7 @@ dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 
 	concat->type = DOM_STRING_CDATA;
 
-	*result = concat;
+	*result = (dom_string *)concat;
 
 	return DOM_NO_ERR;
 }
@@ -667,7 +655,7 @@ dom_exception dom_string_insert(dom_string *target,
 		dom_string *source, uint32_t offset,
 		dom_string **result)
 {
-	dom_string *res;
+	dom_string_internal *res;
 	const uint8_t *t, *s;
 	uint32_t tlen, slen, clen;
 	uint32_t ins = 0;
@@ -701,7 +689,7 @@ dom_exception dom_string_insert(dom_string *target,
 	}
 
 	/* Allocate result string */
-	res = malloc(sizeof(dom_string));
+	res = malloc(sizeof(*res));
 	if (res == NULL) {
 		return DOM_NO_MEM_ERR;
 	}
@@ -734,7 +722,7 @@ dom_exception dom_string_insert(dom_string *target,
 
 	res->type = DOM_STRING_CDATA;
 
-	*result = res;
+	*result = (dom_string *)res;
 
 	return DOM_NO_ERR;
 }
@@ -756,7 +744,7 @@ dom_exception dom_string_replace(dom_string *target,
 		dom_string *source, uint32_t i1, uint32_t i2,
 		dom_string **result)
 {
-	dom_string *res;
+	dom_string_internal *res;
 	const uint8_t *t, *s;
 	uint32_t tlen, slen;
 	uint32_t b1, b2;
@@ -798,7 +786,7 @@ dom_exception dom_string_replace(dom_string *target,
 	}
 
 	/* Allocate result string */
-	res = malloc(sizeof(dom_string));
+	res = malloc(sizeof(*res));
 	if (res == NULL) {
 		return DOM_NO_MEM_ERR;
 	}
@@ -833,7 +821,7 @@ dom_exception dom_string_replace(dom_string *target,
 
 	res->type = DOM_STRING_CDATA;
 
-	*result = res;
+	*result = (dom_string *)res;
 
 	return DOM_NO_ERR;
 }
@@ -892,10 +880,11 @@ dom_exception _dom_exception_from_lwc_error(lwc_error err)
  */
 const char *dom_string_data(const dom_string *str)
 {
-	if (str->type == DOM_STRING_CDATA) {
-		return (const char *) str->data.cdata.ptr;
+	dom_string_internal *istr = (dom_string_internal *) str;
+	if (istr->type == DOM_STRING_CDATA) {
+		return (const char *) istr->data.cdata.ptr;
 	} else {
-		return lwc_string_data(str->data.intern);
+		return lwc_string_data(istr->data.intern);
 	}
 }
 
@@ -905,10 +894,11 @@ const char *dom_string_data(const dom_string *str)
  */
 size_t dom_string_byte_length(const dom_string *str)
 {
-	if (str->type == DOM_STRING_CDATA) {
-		return str->data.cdata.len;
+	dom_string_internal *istr = (dom_string_internal *) str;
+	if (istr->type == DOM_STRING_CDATA) {
+		return istr->data.cdata.len;
 	} else {
-		return lwc_string_length(str->data.intern);
+		return lwc_string_length(istr->data.intern);
 	}
 }
 

@@ -16,12 +16,29 @@
 #include <dom/core/exceptions.h>
 
 
-typedef struct dom_string dom_string;
+typedef struct dom_string {
+	uint32_t refcnt;
+} dom_string;
+
 
 /* Claim a reference on a DOM string */
-dom_string *dom_string_ref(dom_string *str);
+static inline dom_string *dom_string_ref(dom_string *str)
+{
+	if (str != NULL)
+		str->refcnt++;
+	return str;
+}
+
+/* Destroy a DOM string */
+void dom_string_destroy(dom_string *str);
+
 /* Release a reference on a DOM string */
-void dom_string_unref(dom_string *str);
+static inline void dom_string_unref(dom_string *str) 
+{
+	if ((str != NULL) && (--(str->refcnt) == 0)) {
+		dom_string_destroy(str);
+	}
+}
 
 /* Create a DOM string from a string of characters */
 dom_exception dom_string_create(const uint8_t *ptr, size_t len, 
