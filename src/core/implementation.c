@@ -248,7 +248,7 @@ dom_exception dom_implementation_create_document(
 		struct dom_element *e;
 		struct dom_node *inserted;
 
-		err = dom_document_create_element_ns(d, namespace, qname, &e);
+		err = dom_document_create_element_ns(d, namespace_s, qname_s, &e);
 		if (err != DOM_NO_ERR) {
 			dom_node_unref((struct dom_node *) d);
 			dom_string_unref(qname_s);
