@@ -16,6 +16,8 @@
 #include "utils/namespace.h"
 #include "utils/utils.h"
 
+#include <parserutils/charset/utf8.h>
+
 /* An combination of various tests */
 static bool is_first_char(uint32_t ch);
 static bool is_name_char(uint32_t ch);
@@ -101,32 +103,43 @@ static bool is_name_char(uint32_t ch)
  */
 bool _dom_validate_name(dom_string *name)
 {
-	uint32_t ch, len, i;
-	dom_exception err;
+	uint32_t ch;
+	size_t clen, slen;
+	parserutils_error err;
+	const uint8_t *s;
 
 	if (name == NULL)
 		return false;
 
-	len = dom_string_length(name);
-	if (len == 0)
+	slen = dom_string_length(name);
+	if (slen == 0)
 		return false;
 
-	/* Test the first character of this string */
-	err = dom_string_at(name, 0, &ch);
-	if (err != DOM_NO_ERR)
+	s = (const uint8_t *) dom_string_data(name);
+	slen = dom_string_byte_length(name);
+	
+	err = parserutils_charset_utf8_to_ucs4(s, slen, &ch, &clen);
+	if (err != PARSERUTILS_OK) {
 		return false;
-
+	}
+	
 	if (is_first_char(ch) == false)
 		return false;
+	
+	s += clen;
+	slen -= clen;
+	
+	while (slen > 0) {
+		err = parserutils_charset_utf8_to_ucs4(s, slen, &ch, &clen);
+		if (err != PARSERUTILS_OK) {
+			return false;
+		}
 
-	/* Test all remain characters in this string */
-	for(i = 1; i < len; i++) {
-		err = dom_string_at(name, i, &ch);
-		if (err != DOM_NO_ERR)
+		if (is_name_char(ch) == false)
 			return false;
 
-		if (is_name_char(ch) != true)
-			return false;
+		s += clen;
+		slen -= clen;
 	}
 
 	return true;
@@ -141,35 +154,46 @@ bool _dom_validate_name(dom_string *name)
  */
 bool _dom_validate_ncname(dom_string *name)
 {
-	uint32_t ch, len, i;
-	dom_exception err;
+	uint32_t ch;
+	size_t clen, slen;
+	parserutils_error err;
+	const uint8_t *s;
 
 	if (name == NULL)
 		return false;
 
-	len = dom_string_length(name);
-	if (len == 0)
+	slen = dom_string_length(name);
+	if (slen == 0)
 		return false;
 
-	/* Test the first character of this string */
-	err = dom_string_at(name, 0, &ch);
-	if (err != DOM_NO_ERR)
+	s = (const uint8_t *) dom_string_data(name);
+	slen = dom_string_byte_length(name);
+	
+	err = parserutils_charset_utf8_to_ucs4(s, slen, &ch, &clen);
+	if (err != PARSERUTILS_OK) {
 		return false;
-
+	}
+	
 	if (is_letter(ch) == false && ch != (uint32_t) '_')
 		return false;
 	
-	/* Test all remain characters in this string */
-	for(i = 1; i < len; i++) {
-		err = dom_string_at(name, i, &ch);
-		if (err != DOM_NO_ERR)
+	s += clen;
+	slen -= clen;
+	
+	while (slen > 0) {
+		err = parserutils_charset_utf8_to_ucs4(s, slen, &ch, &clen);
+		if (err != PARSERUTILS_OK) {
 			return false;
+		}
 
 		if (is_name_char(ch) == false)
 			return false;
 
 		if (ch == (uint32_t) ':')
 			return false;
+
+		s += clen;
+		slen -= clen;
 	}
 
 	return true;
