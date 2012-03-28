@@ -69,8 +69,7 @@ static inline dom_exception dom_html_document_get_title(
 		get_title(doc, title);
 }
 #define dom_html_document_get_title(d, t) \
-		dom_html_document_get_title((dom_html_document *) (d), \
-				(dom_string **) (t))
+		dom_html_document_get_title((dom_html_document *) (d), (t))
 
 static inline dom_exception dom_html_document_set_title(dom_html_document *doc,
 		dom_string *title)
@@ -79,8 +78,7 @@ static inline dom_exception dom_html_document_set_title(dom_html_document *doc,
 		set_title(doc, title);
 }
 #define dom_html_document_set_title(d, t) \
-		dom_html_document_set_title((dom_html_document *) (d), \
-				(dom_string **) (t))
+		dom_html_document_set_title((dom_html_document *) (d), (t))
 
 static inline dom_exception dom_html_document_get_referrer(dom_html_document *doc,
 		dom_string **referrer)
@@ -89,8 +87,7 @@ static inline dom_exception dom_html_document_get_referrer(dom_html_document *do
 		get_referrer(doc, referrer);
 }
 #define dom_html_document_get_referrer(d, r) \
-		dom_html_document_get_referrer((dom_html_document *) (d), \
-				(dom_string **) (r))
+		dom_html_document_get_referrer((dom_html_document *) (d), (r))
 
 static inline dom_exception dom_html_document_get_domain(dom_html_document *doc,
 		dom_string **domain)
@@ -99,8 +96,7 @@ static inline dom_exception dom_html_document_get_domain(dom_html_document *doc,
 		get_domain(doc, domain);
 }
 #define dom_html_document_get_domain(d, t) \
-		dom_html_document_get_domain((dom_html_document *) (d), \
-				(dom_string **) (t))
+		dom_html_document_get_domain((dom_html_document *) (d), (t))
 
 static inline dom_exception dom_html_document_get_url(dom_html_document *doc,
 		dom_string **url)
@@ -109,8 +105,7 @@ static inline dom_exception dom_html_document_get_url(dom_html_document *doc,
 		get_url(doc, url);
 }
 #define dom_html_document_get_url(d, u) \
-		dom_html_document_get_url((dom_html_document *) (d), \
-				(dom_string **) (u))
+		dom_html_document_get_url((dom_html_document *) (d), (u))
 
 static inline dom_exception dom_html_document_get_body(dom_html_document *doc,
 		struct dom_html_element **body)
@@ -189,8 +184,7 @@ static inline dom_exception dom_html_document_get_cookie(dom_html_document *doc,
 		get_cookie(doc, cookie);
 }
 #define dom_html_document_get_cookie(d, c) \
-		dom_html_document_get_title((dom_html_document *) (d), \
-				(dom_string **) (c))
+		dom_html_document_get_title((dom_html_document *) (d), (c))
 
 static inline dom_exception dom_html_document_set_cookie(dom_html_document *doc,
 		dom_string *cookie)
@@ -199,8 +193,7 @@ static inline dom_exception dom_html_document_set_cookie(dom_html_document *doc,
 		set_cookie(doc, cookie);
 }
 #define dom_html_document_set_cookie(d, c) \
-		dom_html_document_set_cookie((dom_html_document *) (d), \
-				(dom_string **) (c))
+		dom_html_document_set_cookie((dom_html_document *) (d), (c))
 
 
 static inline dom_exception dom_html_document_open(dom_html_document *doc)
@@ -227,8 +220,7 @@ static inline dom_exception dom_html_document_write(dom_html_document *doc,
 		write(doc, text);
 }
 #define dom_html_document_write(d, t) \
-		dom_html_document_write((dom_html_document *) (d), \
-			(dom_string *) (t))
+		dom_html_document_write((dom_html_document *) (d), (t))
 
 static inline dom_exception dom_html_document_writeln(dom_html_document *doc,
 		dom_string *text)
@@ -237,8 +229,7 @@ static inline dom_exception dom_html_document_writeln(dom_html_document *doc,
 		writeln(doc, text);
 }
 #define dom_html_document_writeln(d, t) \
-		dom_html_document_writeln((dom_html_document *) (d), \
-			(dom_string *) (t))
+		dom_html_document_writeln((dom_html_document *) (d), (t))
 
 static inline dom_exception dom_html_document_get_elements_by_name(dom_html_document *doc,
 		dom_string *name, struct dom_nodelist **list)
@@ -248,7 +239,7 @@ static inline dom_exception dom_html_document_get_elements_by_name(dom_html_docu
 }
 #define dom_html_document_get_elements_by_name(d, n, l) \
 		dom_html_document_get_element_by_name((dom_html_document *) (d), \
-			(dom_string *) (n), (struct dom_nodelist **) (l))
+			(n), (struct dom_nodelist **) (l))
 
 #endif
 

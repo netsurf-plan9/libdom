@@ -44,7 +44,7 @@ static inline dom_exception dom_html_element_get_id(struct dom_html_element *ele
                 dom_html_element_get_id(element, id);
 }
 #define dom_html_element_get_id(e, id) dom_html_element_get_id( \
-		(dom_html_element *) (e), (dom_string **) (id))
+		(dom_html_element *) (e), (id))
 
 static inline dom_exception dom_html_element_set_id(struct dom_html_element *element,
                                                     dom_string *id)
@@ -53,7 +53,7 @@ static inline dom_exception dom_html_element_set_id(struct dom_html_element *ele
                 dom_html_element_set_id(element, id);
 }
 #define dom_html_element_set_id(e, id) dom_html_element_set_id( \
-		(dom_html_element *) (e), (dom_string *) (id))
+		(dom_html_element *) (e), (id))
 
 static inline dom_exception dom_html_element_get_title(struct dom_html_element *element,
                                                     dom_string **title)
@@ -62,7 +62,7 @@ static inline dom_exception dom_html_element_get_title(struct dom_html_element *
                 dom_html_element_get_title(element, title);
 }
 #define dom_html_element_get_title(e, title) dom_html_element_get_title( \
-		(dom_html_element *) (e), (dom_string **) (title))
+		(dom_html_element *) (e), (title))
 
 static inline dom_exception dom_html_element_set_title(struct dom_html_element *element,
                                                     dom_string *title)
@@ -71,7 +71,7 @@ static inline dom_exception dom_html_element_set_title(struct dom_html_element *
                 dom_html_element_set_title(element, title);
 }
 #define dom_html_element_set_title(e, title) dom_html_element_set_title( \
-		(dom_html_element *) (e), (dom_string *) (title))
+		(dom_html_element *) (e), (title))
 
 static inline dom_exception dom_html_element_get_lang(struct dom_html_element *element,
                                                     dom_string **lang)
@@ -80,7 +80,7 @@ static inline dom_exception dom_html_element_get_lang(struct dom_html_element *e
                 dom_html_element_get_lang(element, lang);
 }
 #define dom_html_element_get_lang(e, lang) dom_html_element_get_lang( \
-		(dom_html_element *) (e), (dom_string **) (lang))
+		(dom_html_element *) (e), (lang))
 
 static inline dom_exception dom_html_element_set_lang(struct dom_html_element *element,
                                                     dom_string *lang)
@@ -89,7 +89,7 @@ static inline dom_exception dom_html_element_set_lang(struct dom_html_element *e
                 dom_html_element_set_lang(element, lang);
 }
 #define dom_html_element_set_lang(e, lang) dom_html_element_set_lang( \
-		(dom_html_element *) (e), (dom_string *) (lang))
+		(dom_html_element *) (e), (lang))
 
 static inline dom_exception dom_html_element_get_dir(struct dom_html_element *element,
                                                     dom_string **dir)
@@ -98,7 +98,7 @@ static inline dom_exception dom_html_element_get_dir(struct dom_html_element *el
                 dom_html_element_get_dir(element, dir);
 }
 #define dom_html_element_get_dir(e, dir) dom_html_element_get_dir( \
-		(dom_html_element *) (e), (dom_string **) (dir))
+		(dom_html_element *) (e), (dir))
 
 static inline dom_exception dom_html_element_set_dir(struct dom_html_element *element,
                                                     dom_string *dir)
@@ -107,7 +107,7 @@ static inline dom_exception dom_html_element_set_dir(struct dom_html_element *el
                 dom_html_element_set_dir(element, dir);
 }
 #define dom_html_element_set_dir(e, dir) dom_html_element_set_dir( \
-		(dom_html_element *) (e), (dom_string *) (dir))
+		(dom_html_element *) (e), (dir))
 
 static inline dom_exception dom_html_element_get_classname(struct dom_html_element *element,
                                                     dom_string **classname)
@@ -116,7 +116,7 @@ static inline dom_exception dom_html_element_get_classname(struct dom_html_eleme
                 dom_html_element_get_classname(element, classname);
 }
 #define dom_html_element_get_classname(e, classname) dom_html_element_get_classname( \
-		(dom_html_element *) (e), (dom_string **) (classname))
+		(dom_html_element *) (e), (classname))
 
 static inline dom_exception dom_html_element_set_classname(struct dom_html_element *element,
                                                     dom_string *classname)
@@ -125,7 +125,7 @@ static inline dom_exception dom_html_element_set_classname(struct dom_html_eleme
                 dom_html_element_set_classname(element, classname);
 }
 #define dom_html_element_set_classname(e, classname) dom_html_element_set_classname( \
-		(dom_html_element *) (e), (dom_string *) (classname))
+		(dom_html_element *) (e), (classname))
 
 #endif
 
