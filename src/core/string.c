@@ -271,8 +271,9 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 			is2->type == DOM_STRING_INTERNED) {
 		bool match;
 
-		lwc_string_caseless_isequal(is1->data.intern, is2->data.intern, 
-				&match);
+		if (lwc_string_caseless_isequal(is1->data.intern, is2->data.intern, 
+                                                &match) != lwc_error_ok) 
+			return false;
 
 		return match;
 	}
@@ -355,7 +356,8 @@ bool dom_string_caseless_lwc_isequal(const dom_string *s1, lwc_string *s2)
 	if (is1->type == DOM_STRING_INTERNED) {
 		bool match;
 
-		lwc_string_caseless_isequal(is1->data.intern, s2, &match);
+		if (lwc_string_caseless_isequal(is1->data.intern, s2, &match) != lwc_error_ok)
+			return false;
 
 		return match;
 	}
