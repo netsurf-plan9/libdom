@@ -21,7 +21,7 @@ endif
 ifeq ($(TARGET),amiga)
   CFLAGS := -U__STRICT_ANSI__ $(CFLAGS)
 endif
-CFLAGS := -std=c99 -D_BSD_SOURCE -D_GNU_SOURCE -I$(CURDIR)/include/ \
+CFLAGS := -std=c99 -D_BSD_SOURCE -I$(CURDIR)/include/ \
 	-I$(CURDIR)/src -I$(CURDIR)/binding $(WARNFLAGS) $(CFLAGS)
 
 # Parserutils & wapcaplet
