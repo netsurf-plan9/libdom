@@ -334,6 +334,23 @@ static hubbub_error create_comment(void *parser, const hubbub_string *data,
 	return HUBBUB_OK;
 }
 
+static char *parser_strndup(const char *s, size_t n)
+{
+	size_t len;
+	char *s2;
+
+	for (len = 0; len != n && s[len] != '\0'; len++)
+		continue;
+
+	s2 = malloc(len + 1);
+	if (s2 == NULL)
+		return NULL;
+
+	memcpy(s2, s, len);
+	s2[len] = '\0';
+	return s2;
+}
+
 static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 		void **result)
 {
@@ -344,7 +361,7 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 
 	*result = NULL;
 
-	qname = strndup((const char *) doctype->name.ptr, 
+	qname = parser_strndup((const char *) doctype->name.ptr, 
 			(size_t) doctype->name.len);
 	if (qname == NULL) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
@@ -353,7 +370,8 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 	}
 
 	if (doctype->public_missing == false) {
-		public_id = strndup((const char *) doctype->public_id.ptr, 
+		public_id = parser_strndup(
+				(const char *) doctype->public_id.ptr, 
 				(size_t) doctype->public_id.len);
 	} else {
 		public_id = strdup("");
@@ -365,7 +383,8 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 	}
 
 	if (doctype->system_missing == false) {
-		system_id = strndup((const char *) doctype->system_id.ptr,
+		system_id = parser_strndup(
+				(const char *) doctype->system_id.ptr,
 				(size_t) doctype->system_id.len);
 	} else {
 		system_id = strdup("");
