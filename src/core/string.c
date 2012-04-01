@@ -32,8 +32,8 @@ enum dom_string_type {
  * Strings are reference counted so destruction is performed correctly.
  */
 typedef struct dom_string_internal {
-	uint32_t refcnt;
-	
+	dom_string base;
+
 	union {
 		struct {
 			uint8_t *ptr;	/**< Pointer to string data */
@@ -49,7 +49,7 @@ typedef struct dom_string_internal {
  * Empty string, for comparisons against NULL
  */
 static const dom_string_internal empty_string = {
-	0,
+	{ 0 },
 	{ { (uint8_t *) "", 0 } },
 	DOM_STRING_CDATA
 };
@@ -58,7 +58,7 @@ void dom_string_destroy(dom_string *str)
 {
 	dom_string_internal *istr = (dom_string_internal *)str;
 	if (str != NULL) {
-		assert(str->refcnt == 0);
+		assert(istr->base.refcnt == 0);
 		switch (istr->type) {
 		case DOM_STRING_INTERNED:
 			if (istr->data.intern != NULL) {
@@ -113,7 +113,7 @@ dom_exception dom_string_create(const uint8_t *ptr, size_t len,
 
 	ret->data.cdata.len = len;
 
-	ret->refcnt = 1;
+	ret->base.refcnt = 1;
 
 	ret->type = DOM_STRING_CDATA;
 
@@ -156,7 +156,7 @@ dom_exception dom_string_create_interned(const uint8_t *ptr, size_t len,
 		return DOM_NO_MEM_ERR;
 	}
 
-	ret->refcnt = 1;
+	ret->base.refcnt = 1;
 
 	ret->type = DOM_STRING_INTERNED;
 
@@ -578,7 +578,7 @@ dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 
 	concat->data.cdata.len = s1len + s2len;
 
-	concat->refcnt = 1;
+	concat->base.refcnt = 1;
 
 	concat->type = DOM_STRING_CDATA;
 
@@ -720,7 +720,7 @@ dom_exception dom_string_insert(dom_string *target,
 
 	res->data.cdata.len = tlen + slen;
 
-	res->refcnt = 1;
+	res->base.refcnt = 1;
 
 	res->type = DOM_STRING_CDATA;
 
@@ -819,7 +819,7 @@ dom_exception dom_string_replace(dom_string *target,
 
 	res->data.cdata.len = tlen + slen - (b2 - b1);
 
-	res->refcnt = 1;
+	res->base.refcnt = 1;
 
 	res->type = DOM_STRING_CDATA;
 
