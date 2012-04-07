@@ -182,6 +182,8 @@ static void _dom_element_attr_list_node_unlink(dom_attr_list *n)
 static void _dom_element_attr_list_insert(dom_attr_list *list,
 		dom_attr_list *new_attr)
 {
+	assert(list != NULL);
+	assert(new_attr != NULL);
 	list_append(&list->list, &new_attr->list);
 }
 
@@ -213,6 +215,7 @@ static dom_attr_list * _dom_element_attr_list_find_by_name(
 		}
 
 		attr = _dom_element_attr_list_next(attr);
+		assert(attr != NULL);
 	} while (attr != list);
 
 	return NULL;
@@ -397,6 +400,8 @@ static dom_attr_list * _dom_element_attr_list_node_clone(dom_attr_list *n)
 	new_list_node = malloc(sizeof(*new_list_node));
 	if (new_list_node == NULL)
 		return NULL;
+
+	list_init(&new_list_node->list);
 
 	new_list_node->name = NULL;
 	new_list_node->namespace = NULL;
