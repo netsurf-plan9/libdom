@@ -13,7 +13,7 @@ TESTRUNNER := $(PERL) build/testtools/testrunner.pl
 WARNFLAGS := -Wall -W -Wundef -Wpointer-arith -Wcast-align \
 	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes \
 	-Wmissing-declarations -Wnested-externs
-# BeOS/Haiku standard library headers create warnings
+# BeOS/Haiku standard library headers generate warnings
 ifneq ($(TARGET),beos)
   WARNFLAGS := $(WARNFLAGS) -Werror
 endif
@@ -21,8 +21,12 @@ endif
 ifeq ($(TARGET),amiga)
   CFLAGS := -U__STRICT_ANSI__ $(CFLAGS)
 endif
-CFLAGS := -std=c99 -D_BSD_SOURCE -I$(CURDIR)/include/ \
+CFLAGS := -D_BSD_SOURCE -I$(CURDIR)/include/ \
 	-I$(CURDIR)/src -I$(CURDIR)/binding $(WARNFLAGS) $(CFLAGS)
+# Some gcc2 versions choke on -std=c99, and it doesn't know about it anyway
+ifneq ($(GCCVER),2)
+  CFLAGS := -std=c99 $(CFLAGS)
+endif
 
 # Parserutils & wapcaplet
 ifneq ($(findstring clean,$(MAKECMDGOALS)),clean)
