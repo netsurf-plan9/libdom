@@ -29,5 +29,5 @@ ifeq ($(DO_XML_INSTALL),yes)
   DIR_INSTALL_ITEMS := /include/dom/bindings/libxml:xmlerror.h;xmlparser.h
 endif
 
-include build/makefiles/Makefile.subdir
+include $(NSBUILD)/Makefile.subdir
 

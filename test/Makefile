@@ -59,5 +59,5 @@ $(eval $(call do_xml_suite,level1/html,dom1-interfaces.xml))
 
 DISTCLEAN_ITEMS := $(DISTCLEAN_ITEMS) $(DIR)INDEX
 
-include build/makefiles/Makefile.subdir
+include $(NSBUILD)/Makefile.subdir
 

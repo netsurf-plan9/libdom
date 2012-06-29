@@ -8,4 +8,4 @@ DIR_SOURCES := \
 	cdatasection.c document_type.c entity_ref.c pi.c \
 	doc_fragment.c document.c 
 
-include build/makefiles/Makefile.subdir
+include $(NSBUILD)/Makefile.subdir

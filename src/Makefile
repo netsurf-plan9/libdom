@@ -1,1 +1,3 @@
-include build/makefiles/Makefile.subdir
+# Src 
+
+include $(NSBUILD)/Makefile.subdir

@@ -13,5 +13,5 @@ ifeq ($(WITH_HUBBUB_BINDING),yes)
   endif
 endif
 
-include build/makefiles/Makefile.subdir
+include $(NSBUILD)/Makefile.subdir
 

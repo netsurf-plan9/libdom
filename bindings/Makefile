@@ -1,1 +1,3 @@
-include build/makefiles/Makefile.subdir
+# Bindings
+
+include $(NSBUILD)/Makefile.subdir

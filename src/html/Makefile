@@ -22,4 +22,4 @@ UNINMPLEMENTED_SOURCES := html_optgroup_element.c \
 	html_tablecell_element.c html_frameset_element.c html_frame_element.c \
 	html_iframe_element.c
 
-include build/makefiles/Makefile.subdir
+include $(NSBUILD)/Makefile.subdir
