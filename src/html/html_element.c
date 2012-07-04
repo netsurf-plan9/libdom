@@ -124,19 +124,19 @@ dom_exception _dom_html_element_get_id(dom_html_element *element,
 dom_exception _dom_html_element_set_id(dom_html_element *element,
                                        dom_string *id)
 {
-        dom_exception ret;
-        dom_string *idstr;
+	dom_exception ret;
+	dom_string *_memo_id;
+
+	/* Because we're an HTML element, our document is always
+	 * an HTML document, so we can get its memoised id string
+	 */
+	_memo_id = 
+		((struct dom_html_document *)
+		 ((struct dom_node_internal *)element)->owner)->_memo_id;
+
+	ret = dom_element_set_attribute(element, _memo_id, id);
         
-        ret = dom_string_create_interned((const uint8_t *) "id", SLEN("id"), 
-			&idstr);
-        if (ret != DOM_NO_ERR)
-                return ret;
-        
-        ret = dom_element_set_attribute(element, idstr, id);
-        
-        dom_string_unref(idstr);
-        
-        return ret;
+	return ret;
 }
 
 dom_exception _dom_html_element_get_title(dom_html_element *element,
