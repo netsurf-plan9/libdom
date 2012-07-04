@@ -74,9 +74,31 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 	doc->domain = NULL;
 	doc->url = NULL;
 	doc->cookie = NULL;
-
-	error = dom_string_create_interned((const uint8_t *) "id", SLEN("id"), 
-					   &doc->_memo_id);
+	
+	doc->_memo_id = doc->_memo_title = doc->_memo_lang = 
+		doc->_memo_dir = doc->_memo_class = NULL;
+	
+#define MEMOISE(attr)							\
+	error = dom_string_create_interned((const uint8_t *) #attr,	\
+					   SLEN(#attr), &doc->_memo_##attr); \
+	if (error != DOM_NO_ERR) {					\
+		if (doc->_memo_id != NULL)				\
+			dom_string_unref(doc->_memo_id);		\
+		if (doc->_memo_title != NULL)				\
+			dom_string_unref(doc->_memo_title);		\
+		if (doc->_memo_lang != NULL)				\
+			dom_string_unref(doc->_memo_lang);		\
+		if (doc->_memo_dir != NULL)				\
+			dom_string_unref(doc->_memo_dir);		\
+		return error;						\
+	}
+	
+	MEMOISE(id)
+	MEMOISE(title)
+	MEMOISE(lang)
+	MEMOISE(dir)
+	MEMOISE(class)
+	
 	return error;
 }
 
@@ -90,6 +112,10 @@ void _dom_html_document_finalise(dom_html_document *doc)
 	dom_string_unref(doc->title);
 	
 	dom_string_unref(doc->_memo_id);
+	dom_string_unref(doc->_memo_title);
+	dom_string_unref(doc->_memo_lang);
+	dom_string_unref(doc->_memo_dir);
+	dom_string_unref(doc->_memo_class);
 	
 	_dom_document_finalise(&doc->base);
 }

@@ -26,6 +26,10 @@ struct dom_html_document {
 	
 	/* Cached strings for html objects to use */
 	dom_string *_memo_id;	/**< Memoised 'id' */
+	dom_string *_memo_title;/**< Memoised 'title' */
+	dom_string *_memo_lang; /**< Memoised 'lang' */
+	dom_string *_memo_dir;  /**< Memoised 'dir' */
+	dom_string *_memo_class;/**< Memoised 'class' */
 };
 
 /* Create a HTMLDocument */
