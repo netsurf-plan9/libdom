@@ -103,41 +103,38 @@ dom_exception _dom_html_element_copy(dom_node_internal *old,
 /*-----------------------------------------------------------------------*/
 /* API functions */
 
-dom_exception _dom_html_element_get_id(dom_html_element *element,
-                                       dom_string **id)
-{
-	dom_exception ret;
-	dom_string *_memo_id;
-	
-	/* Because we're an HTML element, our document is always
-	 * an HTML document, so we can get its memoised id string
-	 */
-	_memo_id = 
-		((struct dom_html_document *)
-		 ((struct dom_node_internal *)element)->owner)->_memo_id;
-	
-	ret = dom_element_get_attribute(element, _memo_id, id);
-	
-	return ret;
+#define SIMPLE_GET_SET(attr)					      \
+dom_exception _dom_html_element_get_##attr(dom_html_element *element, \
+					   dom_string **attr)		\
+{									\
+	dom_exception ret;						\
+	dom_string *_memo_##attr;					\
+									\
+	_memo_##attr =							\
+		((struct dom_html_document *)				\
+		 ((struct dom_node_internal *)element)->owner)->_memo_##attr; \
+									\
+	ret = dom_element_get_attribute(element, _memo_##attr, attr);	\
+									\
+	return ret;							\
+}									\
+									\
+dom_exception _dom_html_element_set_##attr(dom_html_element *element,	\
+					   dom_string *attr)		\
+{									\
+	dom_exception ret;						\
+	dom_string *_memo_##attr;					\
+									\
+	_memo_##attr =							\
+		((struct dom_html_document *)				\
+		 ((struct dom_node_internal *)element)->owner)->_memo_##attr; \
+									\
+	ret = dom_element_set_attribute(element, _memo_##attr, attr);	\
+									\
+	return ret;							\
 }
 
-dom_exception _dom_html_element_set_id(dom_html_element *element,
-                                       dom_string *id)
-{
-	dom_exception ret;
-	dom_string *_memo_id;
-
-	/* Because we're an HTML element, our document is always
-	 * an HTML document, so we can get its memoised id string
-	 */
-	_memo_id = 
-		((struct dom_html_document *)
-		 ((struct dom_node_internal *)element)->owner)->_memo_id;
-
-	ret = dom_element_set_attribute(element, _memo_id, id);
-        
-	return ret;
-}
+SIMPLE_GET_SET(id)
 
 dom_exception _dom_html_element_get_title(dom_html_element *element,
                                        dom_string **title)
