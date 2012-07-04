@@ -136,24 +136,7 @@ dom_exception _dom_html_element_set_##attr(dom_html_element *element,	\
 
 SIMPLE_GET_SET(id)
 SIMPLE_GET_SET(title)
-
-dom_exception _dom_html_element_get_lang(dom_html_element *element,
-                                       dom_string **lang)
-{
-	UNUSED(element);
-	UNUSED(lang);
-
-	return DOM_NOT_SUPPORTED_ERR;
-}
-
-dom_exception _dom_html_element_set_lang(dom_html_element *element,
-                                       dom_string *lang)
-{
-	UNUSED(element);
-	UNUSED(lang);
-
-	return DOM_NOT_SUPPORTED_ERR;
-}
+SIMPLE_GET_SET(lang)
 
 dom_exception _dom_html_element_get_dir(dom_html_element *element,
                                        dom_string **dir)
