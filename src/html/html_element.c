@@ -103,9 +103,9 @@ dom_exception _dom_html_element_copy(dom_node_internal *old,
 /*-----------------------------------------------------------------------*/
 /* API functions */
 
-#define SIMPLE_GET_SET(attr)					      \
-dom_exception _dom_html_element_get_##attr(dom_html_element *element, \
-					   dom_string **attr)		\
+#define SIMPLE_GET_SET(fattr,attr)                                    \
+dom_exception _dom_html_element_get_##fattr(dom_html_element *element, \
+					   dom_string **fattr)		\
 {									\
 	dom_exception ret;						\
 	dom_string *_memo_##attr;					\
@@ -114,13 +114,13 @@ dom_exception _dom_html_element_get_##attr(dom_html_element *element, \
 		((struct dom_html_document *)				\
 		 ((struct dom_node_internal *)element)->owner)->_memo_##attr; \
 									\
-	ret = dom_element_get_attribute(element, _memo_##attr, attr);	\
+	ret = dom_element_get_attribute(element, _memo_##attr, fattr);	\
 									\
 	return ret;							\
 }									\
 									\
-dom_exception _dom_html_element_set_##attr(dom_html_element *element,	\
-					   dom_string *attr)		\
+dom_exception _dom_html_element_set_##fattr(dom_html_element *element,	\
+					   dom_string *fattr)		\
 {									\
 	dom_exception ret;						\
 	dom_string *_memo_##attr;					\
@@ -129,34 +129,16 @@ dom_exception _dom_html_element_set_##attr(dom_html_element *element,	\
 		((struct dom_html_document *)				\
 		 ((struct dom_node_internal *)element)->owner)->_memo_##attr; \
 									\
-	ret = dom_element_set_attribute(element, _memo_##attr, attr);	\
+	ret = dom_element_set_attribute(element, _memo_##attr, fattr);	\
 									\
 	return ret;							\
 }
 
-SIMPLE_GET_SET(id)
-SIMPLE_GET_SET(title)
-SIMPLE_GET_SET(lang)
-SIMPLE_GET_SET(dir)
-
-dom_exception _dom_html_element_get_classname(dom_html_element *element,
-                                       dom_string **classname)
-{
-	UNUSED(element);
-	UNUSED(classname);
-
-	return DOM_NOT_SUPPORTED_ERR;
-}
-
-dom_exception _dom_html_element_set_classname(dom_html_element *element,
-                                       dom_string *classname)
-{
-	UNUSED(element);
-	UNUSED(classname);
-
-	return DOM_NOT_SUPPORTED_ERR;
-}
-
+SIMPLE_GET_SET(id,id)
+SIMPLE_GET_SET(title,title)
+SIMPLE_GET_SET(lang,lang)
+SIMPLE_GET_SET(dir,dir)
+SIMPLE_GET_SET(class_name,class)
 
 /*-----------------------------------------------------------------------*/
 /* Common functions */

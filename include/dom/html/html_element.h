@@ -31,10 +31,10 @@ typedef struct dom_html_element_vtable {
                                                  dom_string **dir);
         dom_exception (*dom_html_element_set_dir)(struct dom_html_element *element,
                                                  dom_string *dir);
-        dom_exception (*dom_html_element_get_classname)(struct dom_html_element *element,
-                                                 dom_string **classname);
-        dom_exception (*dom_html_element_set_classname)(struct dom_html_element *element,
-                                                 dom_string *classname);
+        dom_exception (*dom_html_element_get_class_name)(struct dom_html_element *element,
+                                                 dom_string **class_name);
+        dom_exception (*dom_html_element_set_class_name)(struct dom_html_element *element,
+                                                 dom_string *class_name);
 } dom_html_element_vtable;
 
 static inline dom_exception dom_html_element_get_id(struct dom_html_element *element,
@@ -109,23 +109,23 @@ static inline dom_exception dom_html_element_set_dir(struct dom_html_element *el
 #define dom_html_element_set_dir(e, dir) dom_html_element_set_dir( \
 		(dom_html_element *) (e), (dir))
 
-static inline dom_exception dom_html_element_get_classname(struct dom_html_element *element,
-                                                    dom_string **classname)
+static inline dom_exception dom_html_element_get_class_name(struct dom_html_element *element,
+                                                    dom_string **class_name)
 {
         return ((dom_html_element_vtable *) ((dom_node *) element)->vtable)->
-                dom_html_element_get_classname(element, classname);
+                dom_html_element_get_class_name(element, class_name);
 }
-#define dom_html_element_get_classname(e, classname) dom_html_element_get_classname( \
-		(dom_html_element *) (e), (classname))
+#define dom_html_element_get_class_name(e, class_name) dom_html_element_get_class_name( \
+		(dom_html_element *) (e), (class_name))
 
-static inline dom_exception dom_html_element_set_classname(struct dom_html_element *element,
-                                                    dom_string *classname)
+static inline dom_exception dom_html_element_set_class_name(struct dom_html_element *element,
+                                                    dom_string *class_name)
 {
         return ((dom_html_element_vtable *) ((dom_node *) element)->vtable)->
-                dom_html_element_set_classname(element, classname);
+                dom_html_element_set_class_name(element, class_name);
 }
-#define dom_html_element_set_classname(e, classname) dom_html_element_set_classname( \
-		(dom_html_element *) (e), (classname))
+#define dom_html_element_set_class_name(e, class_name) dom_html_element_set_class_name( \
+		(dom_html_element *) (e), (class_name))
 
 #endif
 
