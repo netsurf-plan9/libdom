@@ -764,7 +764,7 @@ dom_exception dom_string_replace(dom_string *target,
 
 	/* Calculate the byte index of the start */
 	while (i1 > 0) {
-		err = parserutils_charset_utf8_next(s, slen, b1, &b1);
+		err = parserutils_charset_utf8_next(t, tlen, b1, &b1);
 
 		if (err != PARSERUTILS_OK) {
 			return DOM_NO_MEM_ERR;
@@ -778,7 +778,7 @@ dom_exception dom_string_replace(dom_string *target,
 
 	/* Calculate the byte index of the end */
 	while (i2 > 0) {
-		err = parserutils_charset_utf8_next(s, slen, b2, &b2);
+		err = parserutils_charset_utf8_next(t, tlen, b2, &b2);
 
 		if (err != PARSERUTILS_OK) {
 			return DOM_NO_MEM_ERR;
