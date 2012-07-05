@@ -343,6 +343,7 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 	dom_exception err;
 	struct dom_document *doc;
 	bool success = true;
+	dom_string *empty;
 
 	if (_dom_node_readonly(c)) {
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
@@ -364,7 +365,10 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 
 	end = (offset + count) >= len ? len : offset + count;
 
-	err = dom_string_replace(c->value, NULL, offset, end, &temp);
+	empty = ((struct dom_document *)
+		 ((struct dom_node_internal *)c)->owner)->_memo_empty;
+
+	err = dom_string_replace(c->value, empty, offset, end, &temp);
 	if (err != DOM_NO_ERR) {
 		return err;
 	}
