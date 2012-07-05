@@ -58,6 +58,7 @@ struct dom_document {
 			/**< The DocumentEvent interface */
 	dom_document_quirks_mode quirks;
 				/**< Document is in quirks mode */
+	dom_string *_memo_empty;	/**< The string ''. */
 };
 
 /* Create a DOM document */
