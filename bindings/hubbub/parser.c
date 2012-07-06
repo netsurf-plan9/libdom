@@ -304,18 +304,6 @@ static hubbub_error append_child(void *parser, void *parent, void *child,
 		return HUBBUB_UNKNOWN;
 	}
 
-	{
-		dom_string *name;
-
-		err = dom_node_get_node_name((struct dom_node *)child, &name);
-		if (err == DOM_NO_ERR) {
-
-			if (strcmp(dom_string_data(name), "script") == 0) {
-
-				hubbub_parser_insert_chunk(dom_parser->parser, (const uint8_t *)"<p>mooooo</p>", SLEN("<p>mooooo</p>"));
-			}
-		}
-	}
 	return HUBBUB_OK;
 }
 
@@ -612,20 +600,6 @@ static hubbub_error complete_script(void *parser, void *script)
 		return HUBBUB_UNKNOWN;
 	}
 
-/*
-	dom_string *name;
-
-	err = dom_node_get_node_name((struct dom_node *)script, &name);
-	if (err == DOM_NO_ERR) {
-
-		if (strcmp(dom_string_data(name), "script") == 0) {
-
-			hubbub_parser_insert_chunk(dom_parser->parser, (const uint8_t *)"cript><p>mooooo</p>", SLEN("cript><p>mooooo</p>"));
-		} else {
-			fprintf(stderr, "OMG WTF BBQ\n");
-		}
-	}
-*/
 	return HUBBUB_OK;
 }
 
