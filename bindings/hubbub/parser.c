@@ -40,264 +40,17 @@ struct dom_hubbub_parser {
 	bool complete;			/**< Indicate stream completion */
 
 	dom_msg msg;		/**< Informational messaging function */
+
+	dom_script script;      /**< Script callback function */
+
 	void *mctx;		/**< Pointer to client data */
 };
 
+/* Forward declaration to break reference loop */
+static hubbub_error add_attributes(void *parser, void *node, const hubbub_attribute *attributes, uint32_t n_attributes);
 
-/* The callbacks declarations */
-static hubbub_error create_comment(void *parser, const hubbub_string *data, 
-		void **result);
-static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
-		void **result);
-static hubbub_error create_element(void *parser, const hubbub_tag *tag, 
-		void **result);
-static hubbub_error create_text(void *parser, const hubbub_string *data, 
-		void **result);
-static hubbub_error ref_node(void *parser, void *node);
-static hubbub_error unref_node(void *parser, void *node);
-static hubbub_error append_child(void *parser, void *parent, void *child, 
-		void **result);
-static hubbub_error insert_before(void *parser, void *parent, void *child, 
-		void *ref_child, void **result);
-static hubbub_error remove_child(void *parser, void *parent, void *child, 
-		void **result);
-static hubbub_error clone_node(void *parser, void *node, bool deep, 
-		void **result);
-static hubbub_error reparent_children(void *parser, void *node, 
-		void *new_parent);
-static hubbub_error get_parent(void *parser, void *node, bool element_only,
-		void **result);
-static hubbub_error has_children(void *parser, void *node, bool *result);
-static hubbub_error form_associate(void *parser, void *form, void *node);
-static hubbub_error add_attributes(void *parser, void *node,
-		const hubbub_attribute *attributes, uint32_t n_attributes);
-static hubbub_error set_quirks_mode(void *parser, hubbub_quirks_mode mode);
-static hubbub_error change_encoding(void *parser, const char *charset);
 
-static hubbub_tree_handler tree_handler = {
-	create_comment,
-	create_doctype,
-	create_element,
-	create_text,
-	ref_node,
-	unref_node,
-	append_child,
-	insert_before,
-	remove_child,
-	clone_node,
-	reparent_children,
-	get_parent,
-	has_children,
-	form_associate,
-	add_attributes,
-	set_quirks_mode,
-	change_encoding,
-	NULL
-};
 
-static void *dom_hubbub_alloc(void *ptr, size_t len, void *pw)
-{
-	UNUSED(pw);
-
-	if (ptr == NULL)
-		return len > 0 ? malloc(len) : NULL;
-
-	if (len == 0) {
-		free(ptr);
-		return NULL;
-	}
-
-	return realloc(ptr, len);
-}
-
-static void dom_hubbub_parser_default_msg(uint32_t severity, void *ctx,
-		const char *msg, ...)
-{
-	UNUSED(severity);
-	UNUSED(ctx);
-	UNUSED(msg);
-}
-
-/**
- * Create a Hubbub parser instance
- *
- * \param enc      Source charset, or NULL
- * \param fix_enc  Whether fix the encoding
- * \param msg      Informational message function
- * \param mctx     Pointer to client-specific private data
- * \return Pointer to instance, or NULL on memory exhaustion
- */
-dom_hubbub_parser *dom_hubbub_parser_create(
-		const char *enc, bool fix_enc,
-		dom_msg msg, void *mctx)
-{
-	dom_hubbub_parser *parser;
-	hubbub_parser_optparams params;
-	hubbub_error error;
-	dom_exception err;
-
-	parser = malloc(sizeof(dom_hubbub_parser));
-	if (parser == NULL) {
-		msg(DOM_MSG_CRITICAL, mctx, "No memory for parsing context");
-		return NULL;
-	}
-
-	parser->parser = NULL;
-	parser->doc = NULL;
-	parser->encoding = enc;
-	parser->encoding_source = enc != NULL ? DOM_HUBBUB_ENCODING_SOURCE_HEADER
-					      : DOM_HUBBUB_ENCODING_SOURCE_DETECTED;
-	parser->complete = false;
-
-	if (msg == NULL) {
-		msg = dom_hubbub_parser_default_msg;
-		mctx = NULL;
-	}
-	parser->msg = msg;
-	parser->mctx = mctx;
-
-	error = hubbub_parser_create(enc, fix_enc, dom_hubbub_alloc, NULL, 
-			&parser->parser);
-	if (error != HUBBUB_OK)	 {
-		free(parser);
-		msg(DOM_MSG_CRITICAL, mctx, "Can't create parser");
-		return NULL;
-	}
-
-	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
-	 * we should pass the real function when we integrate libDOM with
-	 * Netsurf */
-	err = dom_implementation_create_document(DOM_IMPLEMENTATION_HTML,
-			NULL, NULL, NULL,
-			NULL, &parser->doc);
-	if (err != DOM_NO_ERR) {
-		hubbub_parser_destroy(parser->parser);
-		free(parser);
-		msg(DOM_MSG_ERROR, mctx, "Can't create DOM document");
-		return NULL;
-	}
-
-	parser->tree_handler = tree_handler;
-	parser->tree_handler.ctx = (void *) parser;
-
-	params.tree_handler = &parser->tree_handler;
-	hubbub_parser_setopt(parser->parser, HUBBUB_PARSER_TREE_HANDLER,
-			&params);
-
-	dom_node_ref((struct dom_node *) parser->doc);
-	params.document_node = parser->doc;
-	hubbub_parser_setopt(parser->parser, HUBBUB_PARSER_DOCUMENT_NODE,
-			&params);
-
-	return parser;
-}
-
-/**
- * Destroy a Hubbub parser instance
- *
- * \param parser  The Hubbub parser object
- */
-void dom_hubbub_parser_destroy(dom_hubbub_parser *parser)
-{
-	hubbub_parser_destroy(parser->parser);
-	parser->parser = NULL;
-
-	if (parser->doc != NULL) {
-		dom_node_unref((struct dom_node *) parser->doc);
-		parser->doc = NULL;
-	}
-
-	free(parser);
-}
-
-/**
- * Parse data with Hubbub parser
- *
- * \param parser  The parser object
- * \param data    The data to be parsed
- * \param len     The length of the data to be parsed
- * \return DOM_HUBBUB_OK on success,
- *         DOM_HUBBUB_HUBBUB_ERR | <hubbub_error> on failure
- */
-dom_hubbub_error dom_hubbub_parser_parse_chunk(dom_hubbub_parser *parser,
-		const uint8_t *data, size_t len)
-{
-	hubbub_error err;
-
-	err = hubbub_parser_parse_chunk(parser->parser, data, len);
-	if (err != HUBBUB_OK)
-		return DOM_HUBBUB_HUBBUB_ERR | err;
-
-	return DOM_HUBBUB_OK;
-}
-
-/**
- * Notify the parser to complete parsing
- *
- * \param parser  The parser object
- * \return DOM_HUBBUB_OK                          on success, 
- *         DOM_HUBBUB_HUBBUB_ERR | <hubbub_error> on underlaying parser failure
- *         DOMHUBBUB_UNKNOWN | <lwc_error>        on libwapcaplet failure
- */
-dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
-{
-	dom_exception derr;
-	hubbub_error err;
-	dom_string *name = NULL;
-
-	err = hubbub_parser_completed(parser->parser);
-	if (err != HUBBUB_OK) {
-		parser->msg(DOM_MSG_ERROR, parser->mctx,
-				"hubbub_parser_completed failed: %d", err);
-		return DOM_HUBBUB_HUBBUB_ERR | err;
-	}
-
-	parser->complete = true;
-
-	derr = dom_string_create_interned((const uint8_t *) "id", SLEN("id"), 
-			&name);
-	if (derr != DOM_NO_ERR)
-		return DOM_HUBBUB_HUBBUB_ERR | HUBBUB_UNKNOWN;
-	
-	_dom_document_set_id_name(parser->doc, name);
-	dom_string_unref(name);
-
-	return DOM_HUBBUB_OK;
-}
-
-/**
- * Fetch the Document object from the parser
- *
- * \param parser  The parser object
- * \return the created document on success, NULL on failure
- */
-dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser)
-{
-	dom_document *doc = NULL; 
-
-	if (parser->complete) {
-		doc = parser->doc; 
-		parser->doc = NULL; 
-	}
-
-	return doc;
-}
-
-/**
- * Retrieve the encoding
- *
- * \param parser  The parser object
- * \param source  The encoding_source
- * \return the encoding name
- */
-const char *dom_hubbub_parser_get_encoding(dom_hubbub_parser *parser, 
-		dom_hubbub_encoding_source *source)
-{
-	*source = parser->encoding_source;
-
-	return parser->encoding != NULL ? parser->encoding
-					: "Windows-1252";
-}
 
 
 /*--------------------- The callbacks definitions --------------------*/
@@ -361,7 +114,7 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 
 	*result = NULL;
 
-	qname = parser_strndup((const char *) doctype->name.ptr, 
+	qname = parser_strndup((const char *) doctype->name.ptr,
 			(size_t) doctype->name.len);
 	if (qname == NULL) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
@@ -371,7 +124,7 @@ static hubbub_error create_doctype(void *parser, const hubbub_doctype *doctype,
 
 	if (doctype->public_missing == false) {
 		public_id = parser_strndup(
-				(const char *) doctype->public_id.ptr, 
+				(const char *) doctype->public_id.ptr,
 				(size_t) doctype->public_id.len);
 	} else {
 		public_id = strdup("");
@@ -489,7 +242,7 @@ static hubbub_error create_text(void *parser, const hubbub_string *data,
 	err = dom_string_create(data->ptr, data->len, &str);
 	if (err != DOM_NO_ERR) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
-				"Can't create text '%.*s'", data->len, 
+				"Can't create text '%.*s'", data->len,
 				data->ptr);
 		goto fail;
 	}
@@ -541,9 +294,9 @@ static hubbub_error append_child(void *parser, void *parent, void *child,
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
 	dom_exception err;
 
-	err = dom_node_append_child((struct dom_node *) parent, 
-			(struct dom_node *) child,
-			(struct dom_node **) result);
+	err = dom_node_append_child((struct dom_node *) parent,
+				    (struct dom_node *) child,
+				    (struct dom_node **) result);
 	if (err != DOM_NO_ERR) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 				"Can't append child '%p' for parent '%p'",
@@ -551,17 +304,29 @@ static hubbub_error append_child(void *parser, void *parent, void *child,
 		return HUBBUB_UNKNOWN;
 	}
 
+	{
+		dom_string *name;
+
+		err = dom_node_get_node_name((struct dom_node *)child, &name);
+		if (err == DOM_NO_ERR) {
+
+			if (strcmp(dom_string_data(name), "script") == 0) {
+
+				hubbub_parser_insert_chunk(dom_parser->parser, (const uint8_t *)"<p>mooooo</p>", SLEN("<p>mooooo</p>"));
+			}
+		}
+	}
 	return HUBBUB_OK;
 }
 
-static hubbub_error insert_before(void *parser, void *parent, void *child, 
+static hubbub_error insert_before(void *parser, void *parent, void *child,
 		void *ref_child, void **result)
 {
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
 	dom_exception err;
 
 	err = dom_node_insert_before((struct dom_node *) parent,
-			(struct dom_node *) child, 
+			(struct dom_node *) child,
 			(struct dom_node *) ref_child,
 			(struct dom_node **) result);
 	if (err != DOM_NO_ERR) {
@@ -581,7 +346,7 @@ static hubbub_error remove_child(void *parser, void *parent, void *child,
 	dom_exception err;
 
 	err = dom_node_remove_child((struct dom_node *) parent,
-			(struct dom_node *) child, 
+			(struct dom_node *) child,
 			(struct dom_node **) result);
 	if (err != DOM_NO_ERR) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
@@ -636,7 +401,7 @@ static hubbub_error reparent_children(void *parser, void *node,
 		}
 		dom_node_unref(result);
 
-		err = dom_node_append_child((struct dom_node *) new_parent, 
+		err = dom_node_append_child((struct dom_node *) new_parent,
 				(struct dom_node *) child, &result);
 		if (err != DOM_NO_ERR) {
 			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
@@ -653,7 +418,7 @@ fail:
 	return HUBBUB_UNKNOWN;
 }
 
-static hubbub_error get_parent(void *parser, void *node, bool element_only, 
+static hubbub_error get_parent(void *parser, void *node, bool element_only,
 		void **result)
 {
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
@@ -753,19 +518,19 @@ static hubbub_error add_attributes(void *parser, void *node,
 			dom_string_unref(name);
 			dom_string_unref(value);
 			if (err != DOM_NO_ERR) {
-				dom_parser->msg(DOM_MSG_CRITICAL, 
+				dom_parser->msg(DOM_MSG_CRITICAL,
 						dom_parser->mctx,
 						"Can't add attribute");
 			}
 		} else {
 			err = dom_element_set_attribute_ns(
-					(struct dom_element *) node, 
+					(struct dom_element *) node,
 					dom_namespaces[attributes[i].ns], name,
 					value);
 			dom_string_unref(name);
 			dom_string_unref(value);
 			if (err != DOM_NO_ERR) {
-				dom_parser->msg(DOM_MSG_CRITICAL, 
+				dom_parser->msg(DOM_MSG_CRITICAL,
 						dom_parser->mctx,
 						"Can't add attribute ns");
 			}
@@ -781,22 +546,22 @@ fail:
 static hubbub_error set_quirks_mode(void *parser, hubbub_quirks_mode mode)
 {
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
-	
+
 	switch (mode) {
 	case HUBBUB_QUIRKS_MODE_NONE:
-		dom_document_set_quirks_mode(dom_parser->doc, 
-                                             DOM_DOCUMENT_QUIRKS_MODE_NONE);
+		dom_document_set_quirks_mode(dom_parser->doc,
+					     DOM_DOCUMENT_QUIRKS_MODE_NONE);
 		break;
 	case HUBBUB_QUIRKS_MODE_LIMITED:
-		dom_document_set_quirks_mode(dom_parser->doc, 
-                                             DOM_DOCUMENT_QUIRKS_MODE_LIMITED);
+		dom_document_set_quirks_mode(dom_parser->doc,
+					     DOM_DOCUMENT_QUIRKS_MODE_LIMITED);
 		break;
 	case HUBBUB_QUIRKS_MODE_FULL:
-		dom_document_set_quirks_mode(dom_parser->doc, 
-                                             DOM_DOCUMENT_QUIRKS_MODE_FULL);
+		dom_document_set_quirks_mode(dom_parser->doc,
+					     DOM_DOCUMENT_QUIRKS_MODE_FULL);
 		break;
 	}
-	
+
 	return HUBBUB_OK;
 }
 
@@ -837,3 +602,301 @@ static hubbub_error change_encoding(void *parser, const char *charset)
 	return (charset == name) ? HUBBUB_OK : HUBBUB_ENCODINGCHANGE;
 }
 
+static hubbub_error complete_script(void *parser, void *script)
+{
+	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
+	dom_hubbub_error err;
+
+	err = dom_parser->script(dom_parser->mctx, (struct dom_node *)script);
+	if (err != DOM_HUBBUB_OK) {
+		return HUBBUB_UNKNOWN;
+	}
+
+/*
+	dom_string *name;
+
+	err = dom_node_get_node_name((struct dom_node *)script, &name);
+	if (err == DOM_NO_ERR) {
+
+		if (strcmp(dom_string_data(name), "script") == 0) {
+
+			hubbub_parser_insert_chunk(dom_parser->parser, (const uint8_t *)"cript><p>mooooo</p>", SLEN("cript><p>mooooo</p>"));
+		} else {
+			fprintf(stderr, "OMG WTF BBQ\n");
+		}
+	}
+*/
+	return HUBBUB_OK;
+}
+
+static hubbub_tree_handler tree_handler = {
+	create_comment,
+	create_doctype,
+	create_element,
+	create_text,
+	ref_node,
+	unref_node,
+	append_child,
+	insert_before,
+	remove_child,
+	clone_node,
+	reparent_children,
+	get_parent,
+	has_children,
+	form_associate,
+	add_attributes,
+	set_quirks_mode,
+	change_encoding,
+	complete_script,
+	NULL
+};
+
+/**
+ * Memory allocator
+ */
+static void *dom_hubbub_alloc(void *ptr, size_t len, void *pw)
+{
+	UNUSED(pw);
+
+	if (ptr == NULL)
+		return len > 0 ? malloc(len) : NULL;
+
+	if (len == 0) {
+		free(ptr);
+		return NULL;
+	}
+
+	return realloc(ptr, len);
+}
+
+/**
+ * Default message callback
+ */
+static void dom_hubbub_parser_default_msg(uint32_t severity, void *ctx,
+		const char *msg, ...)
+{
+	UNUSED(severity);
+	UNUSED(ctx);
+	UNUSED(msg);
+}
+
+/**
+ * Default script callback.
+ */
+static dom_hubbub_error
+dom_hubbub_parser_default_script(void *ctx, struct dom_node *node)
+{
+	UNUSED(ctx);
+	UNUSED(node);
+	return DOM_HUBBUB_OK;
+}
+
+/**
+ * Create a Hubbub parser instance
+ *
+ * \param enc      Source charset, or NULL
+ * \param fix_enc  Whether fix the encoding
+ * \param enable_script Whether scripting should be enabled.
+ * \param msg      Informational message function
+ * \param script   Script callback function
+ * \param mctx     Pointer to client-specific private data
+ * \return Pointer to instance, or NULL on memory exhaustion
+ */
+dom_hubbub_parser *
+dom_hubbub_parser_create(const char *enc,
+			 bool fix_enc,
+			 bool enable_script,
+			 dom_msg msg,
+			 dom_script script,
+			 void *mctx)
+{
+	dom_hubbub_parser *parser;
+	hubbub_parser_optparams params;
+	hubbub_error error;
+	dom_exception err;
+
+	parser = malloc(sizeof(dom_hubbub_parser));
+	if (parser == NULL) {
+		msg(DOM_MSG_CRITICAL, mctx, "No memory for parsing context");
+		return NULL;
+	}
+
+	parser->parser = NULL;
+	parser->doc = NULL;
+	parser->encoding = enc;
+	parser->encoding_source = enc != NULL ? DOM_HUBBUB_ENCODING_SOURCE_HEADER
+					      : DOM_HUBBUB_ENCODING_SOURCE_DETECTED;
+	parser->complete = false;
+
+	if (msg == NULL) {
+		msg = dom_hubbub_parser_default_msg;
+	}
+	parser->msg = msg;
+	parser->mctx = mctx;
+
+	/* ensure script function is valid or use the default */
+	if (script == NULL) {
+		script = dom_hubbub_parser_default_script;
+	}
+	parser->script = script;
+
+
+	error = hubbub_parser_create(enc, fix_enc, dom_hubbub_alloc, NULL,
+			&parser->parser);
+	if (error != HUBBUB_OK)	 {
+		free(parser);
+		msg(DOM_MSG_CRITICAL, mctx, "Can't create parser");
+		return NULL;
+	}
+
+	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
+	 * we should pass the real function when we integrate libDOM with
+	 * Netsurf */
+	err = dom_implementation_create_document(DOM_IMPLEMENTATION_HTML,
+			NULL, NULL, NULL,
+			NULL, &parser->doc);
+	if (err != DOM_NO_ERR) {
+		hubbub_parser_destroy(parser->parser);
+		free(parser);
+		msg(DOM_MSG_ERROR, mctx, "Can't create DOM document");
+		return NULL;
+	}
+
+	parser->tree_handler = tree_handler;
+	parser->tree_handler.ctx = (void *) parser;
+
+	params.tree_handler = &parser->tree_handler;
+	hubbub_parser_setopt(parser->parser, HUBBUB_PARSER_TREE_HANDLER,
+			&params);
+
+	dom_node_ref((struct dom_node *) parser->doc);
+	params.document_node = parser->doc;
+	hubbub_parser_setopt(parser->parser, HUBBUB_PARSER_DOCUMENT_NODE,
+			&params);
+
+	params.enable_scripting = enable_script;
+	hubbub_parser_setopt(parser->parser,
+			     HUBBUB_PARSER_ENABLE_SCRIPTING,
+			     &params);
+
+	return parser;
+}
+
+
+dom_hubbub_error
+dom_hubbub_parser_insert_chunk(dom_hubbub_parser *parser,
+			       const uint8_t *data,
+			       size_t length)
+{
+	hubbub_parser_insert_chunk(parser->parser, data, length);
+
+	return DOM_HUBBUB_OK;
+}
+
+
+/**
+ * Destroy a Hubbub parser instance
+ *
+ * \param parser  The Hubbub parser object
+ */
+void dom_hubbub_parser_destroy(dom_hubbub_parser *parser)
+{
+	hubbub_parser_destroy(parser->parser);
+	parser->parser = NULL;
+
+	if (parser->doc != NULL) {
+		dom_node_unref((struct dom_node *) parser->doc);
+		parser->doc = NULL;
+	}
+
+	free(parser);
+}
+
+/**
+ * Parse data with Hubbub parser
+ *
+ * \param parser  The parser object
+ * \param data    The data to be parsed
+ * \param len     The length of the data to be parsed
+ * \return DOM_HUBBUB_OK on success,
+ *         DOM_HUBBUB_HUBBUB_ERR | <hubbub_error> on failure
+ */
+dom_hubbub_error dom_hubbub_parser_parse_chunk(dom_hubbub_parser *parser,
+		const uint8_t *data, size_t len)
+{
+	hubbub_error err;
+
+	err = hubbub_parser_parse_chunk(parser->parser, data, len);
+	if (err != HUBBUB_OK)
+		return DOM_HUBBUB_HUBBUB_ERR | err;
+
+	return DOM_HUBBUB_OK;
+}
+
+/**
+ * Notify the parser to complete parsing
+ *
+ * \param parser  The parser object
+ * \return DOM_HUBBUB_OK                          on success,
+ *         DOM_HUBBUB_HUBBUB_ERR | <hubbub_error> on underlaying parser failure
+ *         DOMHUBBUB_UNKNOWN | <lwc_error>        on libwapcaplet failure
+ */
+dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
+{
+	dom_exception derr;
+	hubbub_error err;
+	dom_string *name = NULL;
+
+	err = hubbub_parser_completed(parser->parser);
+	if (err != HUBBUB_OK) {
+		parser->msg(DOM_MSG_ERROR, parser->mctx,
+				"hubbub_parser_completed failed: %d", err);
+		return DOM_HUBBUB_HUBBUB_ERR | err;
+	}
+
+	parser->complete = true;
+
+	derr = dom_string_create_interned((const uint8_t *) "id", SLEN("id"),
+			&name);
+	if (derr != DOM_NO_ERR)
+		return DOM_HUBBUB_HUBBUB_ERR | HUBBUB_UNKNOWN;
+
+	_dom_document_set_id_name(parser->doc, name);
+	dom_string_unref(name);
+
+	return DOM_HUBBUB_OK;
+}
+
+/**
+ * Fetch the Document object from the parser
+ *
+ * \param parser  The parser object
+ * \return the created document on success, NULL on failure
+ */
+dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser)
+{
+	dom_document *doc = NULL;
+
+	if (parser->complete) {
+		doc = parser->doc;
+		parser->doc = NULL;
+	}
+
+	return doc;
+}
+
+/**
+ * Retrieve the encoding
+ *
+ * \param parser  The parser object
+ * \param source  The encoding_source
+ * \return the encoding name
+ */
+const char *dom_hubbub_parser_get_encoding(dom_hubbub_parser *parser,
+		dom_hubbub_encoding_source *source)
+{
+	*source = parser->encoding_source;
+
+	return parser->encoding != NULL ? parser->encoding
+					: "Windows-1252";
+}

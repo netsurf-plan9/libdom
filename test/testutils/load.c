@@ -103,7 +103,7 @@ dom_document *load_html(const char *file, bool willBeModified)
 
 	UNUSED(willBeModified);
 
-	parser = dom_hubbub_parser_create(NULL, true, mymsg, NULL);
+	parser = dom_hubbub_parser_create(NULL, true, false, mymsg, NULL, NULL);
 	if (parser == NULL) {
 		fprintf(stderr, "Can't create Hubbub Parser\n");
 		return NULL;
