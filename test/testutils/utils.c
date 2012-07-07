@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "utils.h"
 
@@ -31,4 +32,10 @@ void mymsg(uint32_t severity, void *ctx, const char *msg, ...)
 	fprintf(stderr, "\n");
 }
 
-
+char *domts_strndup(const char *s, size_t len)
+{
+	size_t retlen = min(strlen(s), len);
+	char *ret = calloc(retlen + 1, 1);
+	memcpy(ret, s, retlen);
+	return ret;
+}

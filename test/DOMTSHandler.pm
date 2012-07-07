@@ -1116,7 +1116,7 @@ sub generate_assertion {
 		
 		case "assertURIEquals" {
 			my $actual = $ats->{actual};
-			my ($scheme, $path, $host, $file, $query, $fragment, $isAbsolute) = qw(NULL NULL NULL NULL NULL NULL NULL);
+			my ($scheme, $path, $host, $file, $name, $query, $fragment, $isAbsolute) = qw(NULL NULL NULL NULL NULL NULL NULL NULL);
 			if (exists $ats->{scheme}) {
 				$scheme = $ats->{scheme};
 			}
@@ -1129,6 +1129,9 @@ sub generate_assertion {
 			if (exists $ats->{file}) {
 				$file = $ats->{file};
 			}
+			if (exists $ats->{name}) {
+				$name = $ats->{name};
+			}
 			if (exists $ats->{query}) {
 				$query = $ats->{query};
 			}
@@ -1139,7 +1142,7 @@ sub generate_assertion {
 				$isAbsolute = $ats->{isAbsolute};
 			}
 
-			print "is_uri_equals($scheme, $path, $host, $file, $query, $fragment, $isAbsolute, $actual)"
+			print "is_uri_equals($scheme, $path, $host, $file, $name, $query, $fragment, $isAbsolute, $actual)"
 		}
 	}
 
