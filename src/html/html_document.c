@@ -11,6 +11,7 @@
 #include "html/html_document.h"
 #include "html/html_element.h"
 #include "html/html_collection.h"
+#include "html/html_html_element.h"
 
 #include "core/string.h"
 #include "utils/namespace.h"
@@ -149,7 +150,23 @@ dom_exception _dom_html_document_copy(dom_node_internal *old,
 }
 
 /* Overloaded methods inherited from super class */
-/** \todo: dispatch on tag name to create correct HTMLElement subclass */
+
+/** Internal method to support both kinds of create method */
+static dom_exception
+_dom_html_document_create_element_internal(dom_html_document *html,
+					   dom_string *tag_name,
+					   dom_string *namespace,
+					   dom_string *prefix,
+					   dom_html_element **result)
+{
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_html])) {
+		return _dom_html_html_element_create(html, namespace, prefix,
+				(dom_html_html_element **) result);
+	}
+
+	return _dom_html_element_create(html, tag_name, namespace, prefix,
+			result);
+}
 
 dom_exception _dom_html_document_create_element(dom_document *doc,
 		dom_string *tag_name, dom_element **result)
@@ -159,8 +176,9 @@ dom_exception _dom_html_document_create_element(dom_document *doc,
 	if (_dom_validate_name(tag_name) == false)
 		return DOM_INVALID_CHARACTER_ERR;
 
-	return _dom_html_element_create(html, tag_name, NULL, NULL,
-			(dom_html_element **) result);
+	return _dom_html_document_create_element_internal(html,
+			tag_name, NULL, NULL,
+			(dom_html_element **)result);
 }
 
 dom_exception _dom_html_document_create_element_ns(dom_document *doc,
@@ -187,8 +205,8 @@ dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 	}
 
 	/* Attempt to create element */
-	err = _dom_html_element_create(html, localname, namespace, prefix,
-			(dom_html_element **) result);
+	err = _dom_html_document_create_element_internal(html, localname,
+			namespace, prefix, (dom_html_element **)result);
 
 	/* Tidy up */
 	if (localname != NULL) {
