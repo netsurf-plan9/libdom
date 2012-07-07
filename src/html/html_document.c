@@ -428,21 +428,10 @@ dom_exception _dom_html_document_get_links(dom_html_document *doc,
 
 static bool __dom_html_document_node_is_form(dom_node_internal *node)
 {
-	dom_string *form;
-	dom_exception err;
+	dom_html_document *doc = (dom_html_document *)node->owner;
 
-	err = dom_string_create_interned((const uint8_t *) "form",
-			SLEN("form"), &form);
-	if (err == DOM_NO_ERR) {
-		if (dom_string_caseless_isequal(node->name, form)) {
-			dom_string_unref(form);
-			return true;
-		}
-
-		dom_string_unref(form);
-	}
-
-	return false;
+	return dom_string_caseless_isequal(node->name,
+					   doc->memoised[hds_FORM]);
 }
 
 dom_exception _dom_html_document_get_forms(dom_html_document *doc,
