@@ -1,6 +1,7 @@
-The following is the status of the HTML Element and derived objects
+The following is the status of the HTML Element and derived objects, at least
+as far as the test suite is concerned.
 
-HTMLElement		html_element			UNFINISHED
+HTMLElement		html_element			DONE
 HTMLHtmlElement		html_html_element		DONE
 HTMLHeadElement		html_head_element		DONE
 HTMLLinkElement		html_link_element		MISSING
@@ -10,7 +11,7 @@ HTMLBaseElement		html_base_element		MISSING
 HTMLIsIndexElement	html_isindex_element		MISSING
 HTMLStyleElement	html_style_element		MISSING
 HTMLBodyElement		html_body_element		MISSING
-HTMLFormElement		html_form_element		MISSING
+HTMLFormElement		html_form_element		DONE
 HTMLSelectElement	html_select_element		MISSING
 HTMLOptGroupElement	html_optgroup_element		MISSING
 HTMLOptionElement	html_option_element		MISSING
