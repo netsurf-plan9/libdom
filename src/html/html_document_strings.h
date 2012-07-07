@@ -30,6 +30,8 @@ HTML_DOCUMENT_STRINGS_ACTION(title)
 HTML_DOCUMENT_STRINGS_ACTION(lang)
 HTML_DOCUMENT_STRINGS_ACTION(dir)
 HTML_DOCUMENT_STRINGS_ACTION(class)
+/* Useful attributes used by HTMLHtmlElement */
+HTML_DOCUMENT_STRINGS_ACTION(version)
 /* Names for elements which get specialised.  Ones commented out are
  * present above.
  */
