@@ -135,7 +135,7 @@ dom_exception dom_html_collection_get_length(dom_html_collection *col,
 				parent = parent->parent;
 			}
 			
-			if (parent == col->root)
+			if (node == col->root)
 				node = NULL;
 			else
 				node = node->next;
@@ -184,7 +184,7 @@ dom_exception dom_html_collection_item(dom_html_collection *col,
 				parent = parent->parent;
 			}
 			
-			if (parent == col->root)
+			if (n == col->root)
 				n = NULL;
 			else
 				n = n->next;
