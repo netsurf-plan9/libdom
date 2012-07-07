@@ -665,9 +665,9 @@ sub generate_method {
 	}
 
 	$method = to_cmethod($ats{'interface'}, $en);
-
+        my $cast = to_attribute_cast($ats{'interface'});
 	my $ns = $dd->find("parameters/param", $node);
-	my $params = "$ats{'obj'}";
+	my $params = "${cast}$ats{'obj'}";
 	for ($count = 1; $count <= $ns->size; $count++) {
 		my $n = $ns->get_node($count);
 		my $p = $n->getAttribute("name");
