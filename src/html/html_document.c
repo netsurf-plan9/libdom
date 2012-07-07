@@ -220,6 +220,48 @@ dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 	return err;
 }
 
+/**
+ * Retrieve a list of all elements with a given tag name
+ *
+ * \param doc      The document to search in
+ * \param tagname  The tag name to search for ("*" for all)
+ * \param result   Pointer to location to receive result
+ * \return DOM_NO_ERR.
+ *
+ * The returned list will have its reference count increased. It is
+ * the responsibility of the caller to unref the list once it has
+ * finished with it.
+ */
+dom_exception _dom_html_document_get_elements_by_tag_name(dom_document *doc,
+		dom_string *tagname, dom_nodelist **result)
+{
+	return _dom_document_get_nodelist(doc, DOM_NODELIST_BY_NAME_CASELESS,
+			(dom_node_internal *) doc,  tagname, NULL, NULL, 
+			result);
+}
+
+/**
+ * Retrieve a list of all elements with a given local name and namespace URI
+ *
+ * \param doc        The document to search in
+ * \param namespace  The namespace URI
+ * \param localname  The local name
+ * \param result     Pointer to location to receive result
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ *
+ * The returned list will have its reference count increased. It is
+ * the responsibility of the caller to unref the list once it has
+ * finished with it.
+ */
+dom_exception _dom_html_document_get_elements_by_tag_name_ns(
+		dom_document *doc, dom_string *namespace,
+		dom_string *localname, dom_nodelist **result)
+{
+	return _dom_document_get_nodelist(doc, DOM_NODELIST_BY_NAMESPACE_CASELESS,
+			(dom_node_internal *) doc, NULL, namespace, localname, 
+			result);
+}
+
 /*-----------------------------------------------------------------------*/
 /* The DOM spec public API */
 

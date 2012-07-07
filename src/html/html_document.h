@@ -113,6 +113,11 @@ dom_exception _dom_html_document_create_element(dom_document *doc,
 dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 		dom_string *namespace, dom_string *qname,
 		dom_element **result);
+dom_exception _dom_html_document_get_elements_by_tag_name(dom_document *doc,
+		dom_string *tagname, dom_nodelist **result);
+dom_exception _dom_html_document_get_elements_by_tag_name_ns(
+		dom_document *doc, dom_string *namespace,
+		dom_string *localname, dom_nodelist **result);
 
 #define DOM_DOCUMENT_VTABLE_HTML \
 	_dom_document_get_doctype, \
@@ -126,11 +131,11 @@ dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 	_dom_document_create_processing_instruction, \
 	_dom_document_create_attribute, \
 	_dom_document_create_entity_reference, \
-	_dom_document_get_elements_by_tag_name, \
+	_dom_html_document_get_elements_by_tag_name, \
 	_dom_document_import_node, \
 	_dom_html_document_create_element_ns, \
 	_dom_document_create_attribute_ns, \
-	_dom_document_get_elements_by_tag_name_ns, \
+	_dom_html_document_get_elements_by_tag_name_ns, \
 	_dom_document_get_element_by_id, \
 	_dom_document_get_input_encoding, \
 	_dom_document_get_xml_encoding, \
