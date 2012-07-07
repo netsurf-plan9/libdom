@@ -27,6 +27,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_html_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,                            
 		struct dom_html_html_element **ele)
 {
 	struct dom_node_internal *node;
@@ -40,7 +41,7 @@ dom_exception _dom_html_html_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_html_element_initialise(doc, *ele);
+	return _dom_html_html_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
@@ -51,6 +52,7 @@ dom_exception _dom_html_html_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_html_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,                            
 		struct dom_html_html_element *ele)
 {
 	dom_string *name = NULL;
@@ -60,7 +62,8 @@ dom_exception _dom_html_html_element_initialise(struct dom_html_document *doc,
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
+	err = _dom_html_element_initialise(doc, &ele->base,
+			name, namespace, prefix);
 	dom_string_unref(name);
 
 	return err;
