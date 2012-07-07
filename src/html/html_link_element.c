@@ -149,42 +149,46 @@ dom_exception _dom_html_link_element_copy(dom_node_internal *old,
 /*-----------------------------------------------------------------------*/
 /* API functions */
 
-#define SIMPLE_GET_SET(fattr,attr)                                    \
-dom_exception dom_html_link_element_get_##fattr(dom_html_link_element *element, \
-					   dom_string **fattr)		\
-{									\
-	dom_exception ret;						\
-	dom_string *_memo_##attr;					\
+#define SIMPLE_GET_SET(attr)						\
+	dom_exception dom_html_link_element_get_##attr(			\
+		dom_html_link_element *element,				\
+		dom_string **attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
 									\
-	_memo_##attr =							\
-		((struct dom_html_document *)				\
-		 ((struct dom_node_internal *)element)->owner)->memoised[hds_##attr]; \
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
 									\
-	ret = dom_element_get_attribute(element, _memo_##attr, fattr);	\
+		ret = dom_element_get_attribute(element, _memo_##attr, attr); \
 									\
-	return ret;							\
-}									\
+		return ret;						\
+	}								\
 									\
-dom_exception dom_html_link_element_set_##fattr(dom_html_link_element *element,	\
-					   dom_string *fattr)		\
-{									\
-	dom_exception ret;						\
-	dom_string *_memo_##attr;					\
+	dom_exception dom_html_link_element_set_##attr(			\
+		dom_html_link_element *element,				\
+		dom_string *attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
 									\
-	_memo_##attr =							\
-		((struct dom_html_document *)				\
-		 ((struct dom_node_internal *)element)->owner)->memoised[hds_##attr]; \
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
 									\
-	ret = dom_element_set_attribute(element, _memo_##attr, fattr);	\
+		ret = dom_element_set_attribute(element, _memo_##attr, attr); \
 									\
-	return ret;							\
-}
+		return ret;						\
+	}
 
-SIMPLE_GET_SET(charset,charset)
-SIMPLE_GET_SET(href,href)
-SIMPLE_GET_SET(hreflang,hreflang)
-SIMPLE_GET_SET(media,media)
-SIMPLE_GET_SET(rel,rel)
-SIMPLE_GET_SET(rev,rev)
-SIMPLE_GET_SET(target,target)
-SIMPLE_GET_SET(type,type)
+SIMPLE_GET_SET(charset)
+SIMPLE_GET_SET(href)
+SIMPLE_GET_SET(hreflang)
+SIMPLE_GET_SET(media)
+SIMPLE_GET_SET(rel)
+SIMPLE_GET_SET(rev)
+SIMPLE_GET_SET(target)
+SIMPLE_GET_SET(type)

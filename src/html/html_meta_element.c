@@ -116,38 +116,42 @@ dom_exception _dom_html_meta_element_copy(dom_node_internal *old,
 /*-----------------------------------------------------------------------*/
 /* API functions */
 
-#define SIMPLE_GET_SET(fattr,attr)                                    \
-dom_exception dom_html_meta_element_get_##fattr(dom_html_meta_element *element, \
-					   dom_string **fattr)		\
-{									\
-	dom_exception ret;						\
-	dom_string *_memo_##attr;					\
+#define SIMPLE_GET_SET(attr)						\
+	dom_exception dom_html_meta_element_get_##attr(			\
+		dom_html_meta_element *element,				\
+		dom_string **attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
 									\
-	_memo_##attr =							\
-		((struct dom_html_document *)				\
-		 ((struct dom_node_internal *)element)->owner)->memoised[hds_##attr]; \
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
 									\
-	ret = dom_element_get_attribute(element, _memo_##attr, fattr);	\
+		ret = dom_element_get_attribute(element, _memo_##attr, attr); \
 									\
-	return ret;							\
-}									\
+		return ret;						\
+	}								\
 									\
-dom_exception dom_html_meta_element_set_##fattr(dom_html_meta_element *element,	\
-					   dom_string *fattr)		\
-{									\
-	dom_exception ret;						\
-	dom_string *_memo_##attr;					\
+	dom_exception dom_html_meta_element_set_##attr(			\
+		dom_html_meta_element *element,				\
+		dom_string *attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
 									\
-	_memo_##attr =							\
-		((struct dom_html_document *)				\
-		 ((struct dom_node_internal *)element)->owner)->memoised[hds_##attr]; \
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
 									\
-	ret = dom_element_set_attribute(element, _memo_##attr, fattr);	\
+		ret = dom_element_set_attribute(element, _memo_##attr, attr); \
 									\
-	return ret;							\
-}
+		return ret;						\
+	}
 
-SIMPLE_GET_SET(content,content)
-SIMPLE_GET_SET(http_equiv,http_equiv)
-SIMPLE_GET_SET(name,name)
-SIMPLE_GET_SET(scheme,scheme)
+SIMPLE_GET_SET(content)
+SIMPLE_GET_SET(http_equiv)
+SIMPLE_GET_SET(name)
+SIMPLE_GET_SET(scheme)
