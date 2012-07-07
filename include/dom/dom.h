@@ -43,6 +43,7 @@
 #include <dom/html/html_element.h>
 #include <dom/html/html_html_element.h>
 #include <dom/html/html_head_element.h>
+#include <dom/html/html_link_element.h>
 #include <dom/html/html_title_element.h>
 #include <dom/html/html_form_element.h>
 
