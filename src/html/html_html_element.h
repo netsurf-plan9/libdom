@@ -48,5 +48,15 @@ dom_exception _dom_html_html_element_copy(dom_node_internal *old,
 	_dom_virtual_html_html_element_destroy, \
 	_dom_html_html_element_copy
 
+/* The API functions */
+dom_exception _dom_html_html_element_get_version(dom_html_html_element *element,
+                                       dom_string **version);
+dom_exception _dom_html_html_element_set_version(dom_html_html_element *element,
+                                       dom_string *version);
+
+#define DOM_HTML_HTML_ELEMENT_VTABLE \
+	_dom_html_html_element_get_version, \
+	_dom_html_html_element_set_version
+
 #endif
 

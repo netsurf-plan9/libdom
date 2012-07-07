@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 
+#include "html/html_document.h"
 #include "html/html_html_element.h"
 
 #include "core/node.h"
@@ -17,6 +18,22 @@ static struct dom_element_protected_vtable _protect_vtable = {
 		DOM_NODE_PROTECT_VTABLE_HTML_HTML_ELEMENT
 	},
 	DOM_HTML_HTML_ELEMENT_PROTECT_VTABLE
+};
+
+static struct dom_html_html_element_vtable _vtable = {
+	{
+		{
+			{
+				{
+					DOM_NODE_EVENT_TARGET_VTABLE
+				},
+				DOM_NODE_VTABLE_ELEMENT,
+			},
+			DOM_ELEMENT_VTABLE
+		},
+		DOM_HTML_ELEMENT_VTABLE
+	},
+	DOM_HTML_HTML_ELEMENT_VTABLE
 };
 
 /**
@@ -38,7 +55,7 @@ dom_exception _dom_html_html_element_create(struct dom_html_document *doc,
 	
 	/* Set up vtables */
 	node = (struct dom_node_internal *) *ele;
-	node->base.vtable = &_dom_element_vtable;
+	node->base.vtable = &_vtable;
 	node->vtable = &_protect_vtable;
 
 	return _dom_html_html_element_initialise(doc, namespace, prefix, *ele);
@@ -122,3 +139,35 @@ dom_exception _dom_html_html_element_copy(dom_node_internal *old,
 	return _dom_html_element_copy(old, copy);
 }
 
+/*-----------------------------------------------------------------------*/
+/* API functions */
+
+dom_exception _dom_html_html_element_get_version(dom_html_html_element *element,
+					   dom_string **version)
+{
+	dom_exception ret;
+	dom_string *_memo_version;
+
+	_memo_version =
+		((struct dom_html_document *)
+		 ((struct dom_node_internal *)element)->owner)->memoised[hds_version];
+
+	ret = dom_element_get_attribute(element, _memo_version, version);
+
+	return ret;
+}
+
+dom_exception _dom_html_html_element_set_version(dom_html_html_element *element,
+					   dom_string *version)
+{
+	dom_exception ret;
+	dom_string *_memo_version;
+
+	_memo_version =
+		((struct dom_html_document *)
+		 ((struct dom_node_internal *)element)->owner)->memoised[hds_version];
+
+	ret = dom_element_set_attribute(element, _memo_version, version);
+
+	return ret;
+}
