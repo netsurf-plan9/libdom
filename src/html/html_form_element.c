@@ -33,6 +33,7 @@ static bool _dom_is_form_control(struct dom_node_internal *node);
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_form_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_form_element **ele)
 {
 	struct dom_node_internal *node;
@@ -43,10 +44,10 @@ dom_exception _dom_html_form_element_create(struct dom_html_document *doc,
 	
 	/* Set up vtables */
 	node = (struct dom_node_internal *) *ele;
-	node->base.vtable = &_dom_element_vtable;
+	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_form_element_initialise(doc, *ele);
+	return _dom_html_form_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
@@ -57,18 +58,15 @@ dom_exception _dom_html_form_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_form_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_form_element *ele)
 {
-	dom_string *name = NULL;
 	dom_exception err;
 
-	err = dom_string_create((const uint8_t *) "FORM", SLEN("FORM"), &name);
-	if (err != DOM_NO_ERR)
-		return err;
+	err = _dom_html_element_initialise(doc, &ele->base,
+					   doc->memoised[hds_FORM],
+					   namespace, prefix);
 	
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	dom_string_unref(name);
-
 	ele->col = NULL;
 
 	return err;
@@ -231,11 +229,25 @@ dom_exception dom_html_form_element_reset(dom_html_form_element *ele)
  * src/html/html_collection.h for detail. */
 static bool _dom_is_form_control(struct dom_node_internal *node)
 {
-	UNUSED(node);
+	struct dom_html_document *doc =
+		(struct dom_html_document *)(node->owner);
 
 	assert(node->type == DOM_ELEMENT_NODE);
 
-	/** \todo: implement */
+        /* Form controls are INPUT TEXTAREA SELECT and BUTTON */
+        if (dom_string_caseless_isequal(node->name,
+					doc->memoised[hds_INPUT]))
+		return true;
+	if (dom_string_caseless_isequal(node->name,
+					doc->memoised[hds_TEXTAREA]))
+		return true;
+	if (dom_string_caseless_isequal(node->name,
+					doc->memoised[hds_SELECT]))
+		return true;
+	if (dom_string_caseless_isequal(node->name,
+					doc->memoised[hds_BUTTON]))
+		return true;
+
 	return false;
 }
 
