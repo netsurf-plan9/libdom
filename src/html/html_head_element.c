@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 
+#include "html/html_document.h"
 #include "html/html_head_element.h"
 
 #include "core/node.h"
@@ -19,6 +20,22 @@ static struct dom_element_protected_vtable _protect_vtable = {
 	DOM_HTML_HEAD_ELEMENT_PROTECT_VTABLE
 };
 
+static struct dom_html_head_element_vtable _vtable = {
+	{
+		{
+			{
+				{
+					DOM_NODE_EVENT_TARGET_VTABLE
+				},
+				DOM_NODE_VTABLE_ELEMENT,
+			},
+			DOM_ELEMENT_VTABLE
+		},
+		DOM_HTML_ELEMENT_VTABLE
+	},
+	DOM_HTML_HEAD_ELEMENT_VTABLE
+};
+
 /**
  * Create a dom_html_head_element object
  *
@@ -27,6 +44,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_head_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_head_element **ele)
 {
 	struct dom_node_internal *node;
@@ -37,10 +55,10 @@ dom_exception _dom_html_head_element_create(struct dom_html_document *doc,
 	
 	/* Set up vtables */
 	node = (struct dom_node_internal *) *ele;
-	node->base.vtable = &_dom_element_vtable;
+	node->base.vtable = &_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_head_element_initialise(doc, *ele);
+	return _dom_html_head_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
@@ -51,19 +69,12 @@ dom_exception _dom_html_head_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_head_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_head_element *ele)
 {
-	dom_string *name = NULL;
-	dom_exception err;
-
-	err = dom_string_create((const uint8_t *) "HEAD", SLEN("HEAD"), &name);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	dom_string_unref(name);
-
-	return err;
+	return _dom_html_element_initialise(doc, &ele->base, 
+					    doc->memoised[hds_HEAD], 
+					    namespace, prefix);
 }
 
 /**
@@ -118,3 +129,35 @@ dom_exception _dom_html_head_element_copy(dom_node_internal *old,
 	return _dom_html_element_copy(old, copy);
 }
 
+/*-----------------------------------------------------------------------*/
+/* API functions */
+
+dom_exception _dom_html_head_element_get_profile(dom_html_head_element *element,
+					   dom_string **profile)
+{
+	dom_exception ret;
+	dom_string *_memo_profile;
+
+	_memo_profile =
+		((struct dom_html_document *)
+		 ((struct dom_node_internal *)element)->owner)->memoised[hds_profile];
+
+	ret = dom_element_get_attribute(element, _memo_profile, profile);
+
+	return ret;
+}
+
+dom_exception _dom_html_head_element_set_profile(dom_html_head_element *element,
+					   dom_string *profile)
+{
+	dom_exception ret;
+	dom_string *_memo_profile;
+
+	_memo_profile =
+		((struct dom_html_document *)
+		 ((struct dom_node_internal *)element)->owner)->memoised[hds_profile];
+
+	ret = dom_element_set_attribute(element, _memo_profile, profile);
+
+	return ret;
+}

@@ -19,10 +19,12 @@ struct dom_html_head_element {
 
 /* Create a dom_html_head_element object */
 dom_exception _dom_html_head_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_head_element **ele);
 
 /* Initialise a dom_html_head_element object */
 dom_exception _dom_html_head_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_head_element *ele);
 
 /* Finalise a dom_html_head_element object */
@@ -45,6 +47,16 @@ dom_exception _dom_html_head_element_copy(dom_node_internal *old,
 #define DOM_NODE_PROTECT_VTABLE_HTML_HEAD_ELEMENT \
 	_dom_virtual_html_head_element_destroy, \
 	_dom_html_head_element_copy
+
+/* The API functions */
+dom_exception _dom_html_head_element_get_profile(dom_html_head_element *element,
+                                       dom_string **profile);
+dom_exception _dom_html_head_element_set_profile(dom_html_head_element *element,
+                                       dom_string *profile);
+
+#define DOM_HTML_HEAD_ELEMENT_VTABLE \
+	_dom_html_head_element_get_profile, \
+	_dom_html_head_element_set_profile
 
 #endif
 

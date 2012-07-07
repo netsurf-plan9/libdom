@@ -2,7 +2,7 @@ The following is the status of the HTML Element and derived objects
 
 HTMLElement		html_element			UNFINISHED
 HTMLHtmlElement		html_html_element		DONE
-HTMLHeadElement		html_head_element		MISSING
+HTMLHeadElement		html_head_element		DONE
 HTMLLinkElement		html_link_element		MISSING
 HTMLTitleElement	html_title_element		MISSING
 HTMLMetaElement		html_meta_element		MISSING

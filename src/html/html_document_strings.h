@@ -32,6 +32,8 @@ HTML_DOCUMENT_STRINGS_ACTION(dir)
 HTML_DOCUMENT_STRINGS_ACTION(class)
 /* Useful attributes used by HTMLHtmlElement */
 HTML_DOCUMENT_STRINGS_ACTION(version)
+/* Useful attributes used by HTMLHeadElement */
+HTML_DOCUMENT_STRINGS_ACTION(profile)
 /* Names for elements which get specialised. */
 HTML_DOCUMENT_STRINGS_ACTION(HTML)
 HTML_DOCUMENT_STRINGS_ACTION(HEAD)
