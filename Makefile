@@ -79,8 +79,9 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/document_event.h
 
 Is := include/dom/html
 I := /include/dom/html
-INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_document.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_element.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_html_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_form_element.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib/pkgconfig:lib$(COMPONENT).pc.in
