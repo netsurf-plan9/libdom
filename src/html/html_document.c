@@ -15,6 +15,7 @@
 #include "html/html_head_element.h"
 #include "html/html_link_element.h"
 #include "html/html_title_element.h"
+#include "html/html_meta_element.h"
 #include "html/html_form_element.h"
 
 #include "core/string.h"
