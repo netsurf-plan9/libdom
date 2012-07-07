@@ -4,7 +4,7 @@ HTMLElement		html_element			UNFINISHED
 HTMLHtmlElement		html_html_element		DONE
 HTMLHeadElement		html_head_element		DONE
 HTMLLinkElement		html_link_element		MISSING
-HTMLTitleElement	html_title_element		MISSING
+HTMLTitleElement	html_title_element		DONE
 HTMLMetaElement		html_meta_element		MISSING
 HTMLBaseElement		html_base_element		MISSING
 HTMLIsIndexElement	html_isindex_element		MISSING

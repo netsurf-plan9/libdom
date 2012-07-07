@@ -788,7 +788,7 @@ sub generate_attribute_fetcher {
 	}
 
 	my $fetcher = to_attribute_fetcher($ats{'interface'}, "$en");
-
+        my $cast = to_attribute_cast($ats{'interface'});
 	my $unref = 0;
 	my $temp_node = 0;
 	# Deal with the situation like
@@ -807,14 +807,14 @@ sub generate_attribute_fetcher {
 		my $t = type_to_ctype($self->{'var'}->{$ats{'var'}});
 		$tnode_index ++;
 		print "\t$t tnode$tnode_index = NULL;\n";
-		print "\texp = $fetcher($ats{'obj'}, \&tnode$tnode_index);\n";
+		print "\texp = $fetcher(${cast}$ats{'obj'}, \&tnode$tnode_index);\n";
 		# The ats{'obj'} must have been added to cleanup stack 
 		$unref = 1;
 		# Indicate that we have created a temp node
 		$temp_node = 1;
 	} else {
 		$unref = $self->param_unref($ats{'var'});
-		print "\texp = $fetcher($ats{'obj'}, \&$ats{'var'});\n";
+		print "\texp = $fetcher(${cast}$ats{'obj'}, \&$ats{'var'});\n";
 	}
 
 
@@ -1377,6 +1377,13 @@ sub to_attribute_accessor {
 
 	$ret =~ s/h_t_m_l/html/;
 	return $ret;
+}
+
+sub to_attribute_cast {
+	my $type = shift;
+        my $ret = get_prefix($type);
+        $ret =~ s/h_t_m_l/html/;
+        return "(${ret} *)";
 }
 
 sub get_prefix {

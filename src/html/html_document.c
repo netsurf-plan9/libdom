@@ -13,6 +13,7 @@
 #include "html/html_collection.h"
 #include "html/html_html_element.h"
 #include "html/html_head_element.h"
+#include "html/html_title_element.h"
 
 #include "core/string.h"
 #include "utils/namespace.h"
@@ -170,6 +171,11 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 				(dom_html_head_element **) result);
 	}
 
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TITLE])) {
+		return _dom_html_title_element_create(html, namespace, prefix,
+				(dom_html_title_element **) result);
+	}
+
 	return _dom_html_element_create(html, tag_name, namespace, prefix,
 			result);
 }
@@ -293,20 +299,12 @@ dom_exception _dom_html_document_get_title(dom_html_document *doc,
 		*title = dom_string_ref(doc->title);
 	} else {
 		dom_element *node;
-		dom_string *title_str;
 		dom_nodelist *nodes;
 		unsigned long len;
 		
-		exc = dom_string_create_interned((uint8_t*)"title", 
-						 5, &title_str);
-		if (exc != DOM_NO_ERR) {
-			return exc;
-		}
-		
 		exc = dom_document_get_elements_by_tag_name(doc,
-							    title_str,
+							    doc->memoised[hds_TITLE],
 							    &nodes);
-		dom_string_unref(title_str);
 		if (exc != DOM_NO_ERR) {
 			return exc;
 		}
