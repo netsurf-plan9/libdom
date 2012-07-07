@@ -159,7 +159,7 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 					   dom_string *prefix,
 					   dom_html_element **result)
 {
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_html])) {
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HTML])) {
 		return _dom_html_html_element_create(html, namespace, prefix,
 				(dom_html_html_element **) result);
 	}
