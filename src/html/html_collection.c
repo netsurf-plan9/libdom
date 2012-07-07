@@ -32,13 +32,14 @@
 dom_exception _dom_html_collection_create(struct dom_html_document *doc,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic,
+		void *ctx,
 		struct dom_html_collection **col)
 {
 	*col = malloc(sizeof(dom_html_collection));
 	if (*col == NULL)
 		return DOM_NO_MEM_ERR;
 	
-	return _dom_html_collection_initialise(doc, *col, root, ic);
+	return _dom_html_collection_initialise(doc, *col, root, ic, ctx);
 }
 
 /**
@@ -54,7 +55,7 @@ dom_exception _dom_html_collection_create(struct dom_html_document *doc,
 dom_exception _dom_html_collection_initialise(struct dom_html_document *doc,
 		struct dom_html_collection *col,
 		struct dom_node_internal *root,
-		dom_callback_is_in_collection ic)
+		dom_callback_is_in_collection ic, void *ctx)
 {
 	assert(doc != NULL);
 	assert(ic != NULL);
@@ -67,6 +68,7 @@ dom_exception _dom_html_collection_initialise(struct dom_html_document *doc,
 	dom_node_ref(root);
 
 	col->ic = ic;
+	col->ctx = ctx;
 	col->refcnt = 1;
 
 	return DOM_NO_ERR;
@@ -117,7 +119,8 @@ dom_exception dom_html_collection_get_length(dom_html_collection *col,
 	*len = 0;
 
 	while (node != NULL) {
-		if (node->type == DOM_ELEMENT_NODE && col->ic(node) == true)
+		if (node->type == DOM_ELEMENT_NODE && 
+		    col->ic(node, col->ctx) == true)
 			(*len)++;
 
 		/* Depth first iterating */
@@ -160,7 +163,8 @@ dom_exception dom_html_collection_item(dom_html_collection *col,
 	unsigned long len = 0;
 
 	while (n != NULL) {
-		if (n->type == DOM_ELEMENT_NODE && col->ic(n) == true)
+		if (n->type == DOM_ELEMENT_NODE && 
+		    col->ic(n, col->ctx) == true)
 			len++;
 
 		if (len == index + 1) {
@@ -213,7 +217,8 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
         while (*node != NULL) {
 		assert(n != NULL);
 	
-		if (n->type == DOM_ELEMENT_NODE && col->ic(n) == true) {
+		if (n->type == DOM_ELEMENT_NODE &&
+		    col->ic(n, col->ctx) == true) {
 			dom_string *id = NULL;
 
 			err = _dom_element_get_id((struct dom_element *) n,

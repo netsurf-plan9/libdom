@@ -11,6 +11,7 @@
 #include <dom/html/html_form_element.h>
 
 #include "html/html_form_element.h"
+#include "html/html_button_element.h"
 
 #include "html/html_collection.h"
 #include "html/html_document.h"
@@ -25,7 +26,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
 	DOM_HTML_FORM_ELEMENT_PROTECT_VTABLE
 };
 
-static bool _dom_is_form_control(struct dom_node_internal *node);
+static bool _dom_is_form_control(struct dom_node_internal *node, void *ctx);
 
 /**
  * Create a dom_html_form_element object
@@ -145,8 +146,8 @@ dom_exception dom_html_form_element_get_elements(dom_html_form_element *ele,
 		dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
 		assert(doc != NULL);
 		err = _dom_html_collection_create(doc,
-				(dom_node_internal *) ele,
-				_dom_is_form_control, col);
+				(dom_node_internal *) doc,
+				_dom_is_form_control, ele, col);
 		if (err != DOM_NO_ERR)
 			return err;
 
@@ -175,8 +176,8 @@ dom_exception dom_html_form_element_get_length(dom_html_form_element *ele,
 		dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
 		assert(doc != NULL);
 		err = _dom_html_collection_create(doc,
-				(dom_node_internal *) ele,
-				_dom_is_form_control, &ele->col);
+				(dom_node_internal *) doc,
+				_dom_is_form_control, ele, &ele->col);
 		if (err != DOM_NO_ERR)
 			return err;
 	}
@@ -271,11 +272,13 @@ dom_exception dom_html_form_element_reset(dom_html_form_element *ele)
 
 /* Callback function to test whether certain node is a form control, see 
  * src/html/html_collection.h for detail. */
-static bool _dom_is_form_control(struct dom_node_internal *node)
+static bool _dom_is_form_control(struct dom_node_internal *node, void *ctx)
 {
 	struct dom_html_document *doc =
 		(struct dom_html_document *)(node->owner);
+	struct dom_html_form_element *form = ctx, *form2;
 
+	
 	assert(node->type == DOM_ELEMENT_NODE);
 
         /* Form controls are INPUT TEXTAREA SELECT and BUTTON */
@@ -289,8 +292,17 @@ static bool _dom_is_form_control(struct dom_node_internal *node)
 					doc->memoised[hds_SELECT]))
 		return true;
 	if (dom_string_caseless_isequal(node->name,
-					doc->memoised[hds_BUTTON]))
-		return true;
+					doc->memoised[hds_BUTTON])) {
+		dom_html_button_element *button =
+			(dom_html_button_element *) node;
+		dom_exception err = 
+			dom_html_button_element_get_form(button, &form2);
+		if (err == DOM_NO_ERR) {
+			return form == form2;
+		}
+		/* Couldn't get the form, assume it's not ours. */
+		return false;
+	}
 
 	return false;
 }

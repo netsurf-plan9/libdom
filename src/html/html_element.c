@@ -7,6 +7,8 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "html/html_document.h"
 #include "html/html_element.h"
@@ -240,3 +242,103 @@ fail:
 	return err;
 }
 
+static char *_strndup(const char *s, size_t n)
+{
+	size_t len;
+	char *s2;
+
+	for (len = 0; len != n && s[len] != '\0'; len++)
+		continue;
+
+	s2 = malloc(len + 1);
+	if (s2 == NULL)
+		return NULL;
+
+	memcpy(s2, s, len);
+	s2[len] = '\0';
+	return s2;
+}
+
+/**
+ * Get the a long property
+ *
+ * \param ele   The dom_html_element object
+ * \param name  The name of the attribute
+ * \param len   The length of ::name
+ * \param value   The returned value
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception dom_html_element_get_long_property(dom_html_element *ele,
+		const char *name, unsigned long len, unsigned long *value)
+{
+	dom_string *str = NULL, *s2 = NULL;
+	dom_attr *a = NULL;
+	dom_exception err;
+
+	err = dom_string_create((const uint8_t *) name, len, &str);
+	if (err != DOM_NO_ERR)
+		goto fail;
+
+	err = dom_element_get_attribute_node(ele, str, &a);
+	if (err != DOM_NO_ERR)
+		goto cleanup1;
+
+	if (a != NULL) {
+		err = dom_node_get_text_content(a, &s2);
+		if (err == DOM_NO_ERR) {
+			char *s3 = _strndup(dom_string_data(s2),
+					    dom_string_byte_length(s2));
+			*value = strtoul(s3, NULL, 0);
+			free(s3);
+			dom_string_unref(s2);
+		}
+	} else {
+		*value = 0;
+	}
+
+	dom_node_unref(a);
+
+cleanup1:
+	dom_string_unref(str);
+
+fail:
+	return err;
+}
+
+/**
+ * Set a long property
+ *
+ * \param ele   The dom_html_element object
+ * \param name  The name of the attribute
+ * \param len   The length of ::name
+ * \param value   The value
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception dom_html_element_set_long_property(dom_html_element *ele,
+		const char *name, unsigned long len, unsigned long value)
+{
+	dom_string *str = NULL, *svalue = NULL;
+	dom_exception err;
+	char numbuffer[32];
+
+	err = dom_string_create((const uint8_t *) name, len, &str);
+	if (err != DOM_NO_ERR)
+		goto fail;
+	
+	if (snprintf(numbuffer, 32, "%lu", value) == 32)
+		numbuffer[31] = '\0';
+	
+	err = dom_string_create((const uint8_t *) numbuffer,
+				strlen(numbuffer), &svalue);
+	if (err != DOM_NO_ERR)
+		goto cleanup;
+	
+	err = dom_element_set_attribute(ele, svalue, str);
+	
+	dom_string_unref(svalue);
+cleanup:
+	dom_string_unref(str);
+
+fail:
+	return err;
+}

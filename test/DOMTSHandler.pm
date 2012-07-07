@@ -39,6 +39,7 @@ our %special_type = (
 	NamedNodeMap => "dom_namednodemap *",
 	NodeList => "dom_nodelist *",
         HTMLCollection => "dom_html_collection *",
+        HTMLFormElement => "dom_html_form_element *",
 	CharacterData => "dom_characterdata *",
 	CDATASection => "dom_cdata_section *",
 );
@@ -48,6 +49,7 @@ our %special_prefix = (
 	NamedNodeMap => "dom_namednodemap",
 	NodeList => "dom_nodelist",
         HTMLCollection => "dom_html_collection",
+        HTMLFormElement => "dom_html_form_element",
 	CharacterData => "dom_characterdata",
 	CDATASection => "dom_cdata_section *",
 );

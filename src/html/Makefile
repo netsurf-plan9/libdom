@@ -4,11 +4,12 @@ DIR_SOURCES := \
 	html_element.c html_html_element.c html_head_element.c \
 	html_link_element.c html_title_element.c html_meta_element.c \
 	html_base_element.c html_isindex_element.c html_style_element.c \
-	html_body_element.c html_form_element.c html_select_element.c 
+	html_body_element.c html_form_element.c html_select_element.c \
+	html_button_element.c
 
 UNINMPLEMENTED_SOURCES := html_optgroup_element.c \
 	html_option_element.c html_input_element.c html_textarea_element.c \
-	html_button_element.c html_label_element.c html_fieldset_element.c \
+	html_label_element.c html_fieldset_element.c \
 	html_legend_element.c html_ulist_element.c html_olist_element.c \
 	html_dlist_element.c html_directory_element.c html_menu_element.c \
 	html_li_element.c html_div_element.c html_paragraph_element.c \

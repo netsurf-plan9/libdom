@@ -47,6 +47,7 @@
 #include <dom/html/html_title_element.h>
 #include <dom/html/html_meta_element.h>
 #include <dom/html/html_form_element.h>
+#include <dom/html/html_button_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>

@@ -20,6 +20,10 @@
 
 #include "core/document.h"
 #include "core/string.h"
+#include "core/node.h"
+
+#include "html/html_document.h"
+#include "html/html_button_element.h"
 
 #include <libwapcaplet/libwapcaplet.h>
 
@@ -465,10 +469,24 @@ static hubbub_error has_children(void *parser, void *node, bool *result)
 
 static hubbub_error form_associate(void *parser, void *form, void *node)
 {
-	UNUSED(parser);
-	UNUSED(form);
-	UNUSED(node);
-
+	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
+	dom_html_form_element *form_ele = form;
+	dom_node_internal *ele = node;
+	dom_html_document *doc = (dom_html_document *)ele->owner;
+	dom_exception err = DOM_NO_ERR;
+	
+	/* Determine the kind of the node we have here. */
+	if (dom_string_caseless_isequal(ele->name,
+					doc->memoised[hds_BUTTON])) {
+		err = _dom_html_button_element_set_form(
+			(dom_html_button_element *)node, form_ele);
+		if (err != DOM_NO_ERR) {
+			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
+					"Error in form_associate");
+			return HUBBUB_UNKNOWN;
+		}
+	}
+		
 	return HUBBUB_OK;
 }
 

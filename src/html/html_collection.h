@@ -12,7 +12,8 @@
 
 struct dom_node_internal;
 
-typedef bool (*dom_callback_is_in_collection)(struct dom_node_internal *node);
+typedef bool (*dom_callback_is_in_collection)(
+	struct dom_node_internal *node, void *ctx);
 
 /**
  * The html_collection structure
@@ -23,6 +24,7 @@ struct dom_html_collection {
 			 * whether some node is an element of
 			 * this collection
 			 */
+	void *ctx; /**< Context for the callback */
 	struct dom_html_document *doc;	/**< The document created this
 					 * collection
 					 */
@@ -35,12 +37,13 @@ struct dom_html_collection {
 dom_exception _dom_html_collection_create(struct dom_html_document *doc,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic,
+		void *ctx,
 		struct dom_html_collection **col);
 
 dom_exception _dom_html_collection_initialise(struct dom_html_document *doc,
 		struct dom_html_collection *col,
 		struct dom_node_internal *root,
-		dom_callback_is_in_collection ic);
+		dom_callback_is_in_collection ic, void *ctx);
 
 void _dom_html_collection_finalise(struct dom_html_collection *col);
 

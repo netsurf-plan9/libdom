@@ -426,10 +426,13 @@ dom_exception _dom_html_document_get_links(dom_html_document *doc,
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
-static bool __dom_html_document_node_is_form(dom_node_internal *node)
+static bool __dom_html_document_node_is_form(dom_node_internal *node,
+					     void *ctx)
 {
 	dom_html_document *doc = (dom_html_document *)node->owner;
-
+	
+	UNUSED(ctx);
+	
 	return dom_string_caseless_isequal(node->name,
 					   doc->memoised[hds_FORM]);
 }
@@ -446,7 +449,7 @@ dom_exception _dom_html_document_get_forms(dom_html_document *doc,
 		return err;
 
 	err = _dom_html_collection_create(doc, (dom_node_internal *) root, 
-			__dom_html_document_node_is_form, &result);
+			__dom_html_document_node_is_form, NULL, &result);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref(root);
 		return err;

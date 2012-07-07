@@ -21,7 +21,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
 	DOM_HTML_SELECT_ELEMENT_PROTECT_VTABLE
 };
 
-static bool is_option(struct dom_node_internal *node);
+static bool is_option(struct dom_node_internal *node, void *ctx);
 
 /**
  * Create a dom_html_select_element object
@@ -176,7 +176,7 @@ dom_exception dom_html_select_element_get_length(
 	if (ele->options == NULL) {
 		err = _dom_html_options_collection_create(doc,
 				(dom_node_internal *) ele,
-				is_option, &ele->options);
+				is_option, NULL, &ele->options);
 		if (err != DOM_NO_ERR)
 			return err;
 	}
@@ -220,7 +220,7 @@ dom_exception dom_html_select_element_get_options(
 	if (ele->options == NULL) {
 		err = _dom_html_options_collection_create(doc,
 				(dom_node_internal *) ele,
-				is_option, &ele->options);
+				is_option, NULL, &ele->options);
 		if (err != DOM_NO_ERR)
 			return err;
 
@@ -310,12 +310,14 @@ dom_exception dom_html_element_focus(struct dom_html_select_element *ele);
 /* Helper functions */
 
 /* Test whether certain node is an option node */
-bool is_option(struct dom_node_internal *node)
+bool is_option(struct dom_node_internal *node, void *ctx)
 {
 	dom_string *name = NULL;
 	bool ret = false;
 	dom_exception err;
-
+	
+	UNUSED(ctx);
+	
 	err = dom_string_create((const uint8_t *) "OPTION", SLEN("OPTION"),
 			&name);
 	if (err != DOM_NO_ERR)

@@ -25,12 +25,13 @@ struct dom_html_options_collection {
 dom_exception _dom_html_options_collection_create(struct dom_html_document *doc,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic,
+		void *ctx,
 		struct dom_html_options_collection **col);
 
 dom_exception _dom_html_options_collection_initialise(struct dom_html_document *doc,
 		struct dom_html_options_collection *col,
 		struct dom_node_internal *root,
-		dom_callback_is_in_collection ic);
+		dom_callback_is_in_collection ic, void *ctx);
 
 void _dom_html_options_collection_finalise(
 		struct dom_html_options_collection *col);

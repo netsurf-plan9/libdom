@@ -33,13 +33,15 @@
 dom_exception _dom_html_options_collection_create(struct dom_html_document *doc,
 		struct dom_node_internal *root,
 		dom_callback_is_in_collection ic,
+		void *ctx,
 		struct dom_html_options_collection **col)
 {
 	*col = malloc(sizeof(dom_html_options_collection));
 	if (*col == NULL)
 		return DOM_NO_MEM_ERR;
 	
-	return _dom_html_options_collection_initialise(doc, *col, root, ic);
+	return _dom_html_options_collection_initialise(doc, *col, root,
+						       ic, ctx);
 }
 
 /**
@@ -55,9 +57,9 @@ dom_exception _dom_html_options_collection_create(struct dom_html_document *doc,
 dom_exception _dom_html_options_collection_initialise(struct dom_html_document *doc,
 		struct dom_html_options_collection *col,
 		struct dom_node_internal *root,
-		dom_callback_is_in_collection ic)
+		dom_callback_is_in_collection ic, void *ctx)
 {
-	return _dom_html_collection_initialise(doc, &col->base, root, ic);
+	return _dom_html_collection_initialise(doc, &col->base, root, ic, ctx);
 }
 
 /**

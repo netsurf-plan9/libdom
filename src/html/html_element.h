@@ -83,6 +83,11 @@ dom_exception dom_html_element_get_bool_property(dom_html_element *ele,
 dom_exception dom_html_element_set_bool_property(dom_html_element *ele,
 		const char *name, unsigned long len, bool has);
 
+dom_exception dom_html_element_get_long_property(dom_html_element *ele,
+		const char *name, unsigned long len, unsigned long *value);
+dom_exception dom_html_element_set_long_property(dom_html_element *ele,
+		const char *name, unsigned long len, unsigned long value);
+
 extern struct dom_html_element_vtable _dom_html_element_vtable;
 
 #endif
