@@ -38,6 +38,7 @@ our %special_type = (
 	DOMImplementation => "dom_implementation *",
 	NamedNodeMap => "dom_namednodemap *",
 	NodeList => "dom_nodelist *",
+        HTMLCollection => "dom_html_collection *",
 	CharacterData => "dom_characterdata *",
 	CDATASection => "dom_cdata_section *",
 );
@@ -46,6 +47,7 @@ our %special_prefix = (
 	DOMImplementation => "dom_implementation",
 	NamedNodeMap => "dom_namednodemap",
 	NodeList => "dom_nodelist",
+        HTMLCollection => "dom_html_collection",
 	CharacterData => "dom_characterdata",
 	CDATASection => "dom_cdata_section *",
 );
@@ -54,6 +56,7 @@ our %unref_prefix = (
 	DOMString => "dom_string",
 	NamedNodeMap => "dom_namednodemap",
 	NodeList => "dom_nodelist",
+        HTMLCollection => "dom_html_collection",
 );
 
 our %special_method = (
@@ -79,6 +82,7 @@ our %override_suffix = (
 	DOMImplementation => "domimplementation",
 	NamedNodeMap => "domnamednodemap",
 	NodeList => "domnodelist",
+        HTMLCollection => "domhtmlcollection",
 	Collection => "list",
 	List => "list",
 );
