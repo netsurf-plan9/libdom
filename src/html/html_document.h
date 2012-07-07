@@ -24,13 +24,11 @@ struct dom_html_document {
 	dom_string *url;	/**< HTML document URL */
 	dom_string *cookie;	/**< HTML document cookie */
 	
-	/* Cached strings for html objects to use */
-	dom_string *_memo_id;	/**< Memoised 'id' */
-	dom_string *_memo_title;/**< Memoised 'title' */
-	dom_string *_memo_lang; /**< Memoised 'lang' */
-	dom_string *_memo_dir;  /**< Memoised 'dir' */
-	dom_string *_memo_class;/**< Memoised 'class' */
+	/** Cached strings for html objects to use */
+	dom_string **memoised;
 };
+
+#include "html_document_strings.h"
 
 /* Create a HTMLDocument */
 dom_exception _dom_html_document_create(

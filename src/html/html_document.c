@@ -64,6 +64,7 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 		dom_events_default_action_fetcher daf)
 {
 	dom_exception error;
+	int sidx;
 
 	error = _dom_document_initialise(&doc->base, daf);
 	if (error != DOM_NO_ERR)
@@ -75,47 +76,55 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 	doc->url = NULL;
 	doc->cookie = NULL;
 	
-	doc->_memo_id = doc->_memo_title = doc->_memo_lang = 
-		doc->_memo_dir = doc->_memo_class = NULL;
-	
-#define MEMOISE(attr)							\
-	error = dom_string_create_interned((const uint8_t *) #attr,	\
-					   SLEN(#attr), &doc->_memo_##attr); \
-	if (error != DOM_NO_ERR) {					\
-		if (doc->_memo_id != NULL)				\
-			dom_string_unref(doc->_memo_id);		\
-		if (doc->_memo_title != NULL)				\
-			dom_string_unref(doc->_memo_title);		\
-		if (doc->_memo_lang != NULL)				\
-			dom_string_unref(doc->_memo_lang);		\
-		if (doc->_memo_dir != NULL)				\
-			dom_string_unref(doc->_memo_dir);		\
-		return error;						\
+	doc->memoised = calloc(sizeof(dom_string *), hds_COUNT);
+	if (doc->memoised == NULL) {
+		error = DOM_NO_MEM_ERR;
+		goto out;
 	}
 	
-	MEMOISE(id)
-	MEMOISE(title)
-	MEMOISE(lang)
-	MEMOISE(dir)
-	MEMOISE(class)
-	
+#define HTML_DOCUMENT_STRINGS_ACTION(attr)                               \
+	error = dom_string_create_interned((const uint8_t *) #attr,	\
+					   SLEN(#attr), &doc->memoised[hds_##attr]); \
+	if (error != DOM_NO_ERR) {					\
+		goto out;						\
+	}
+
+#include "html_document_strings.h"
+#undef HTML_DOCUMENT_STRINGS_ACTION
+
+out:
+	if (doc->memoised != NULL && error != DOM_NO_ERR) {
+		for(sidx = 0; sidx < hds_COUNT; ++sidx) {
+			if (doc->memoised[sidx] != NULL) {
+				dom_string_unref(doc->memoised[sidx]);
+			}
+		}
+		free(doc->memoised);
+		doc->memoised = NULL;
+	}
 	return error;
 }
 
 /* Finalise a HTMLDocument */
 void _dom_html_document_finalise(dom_html_document *doc)
 {
+	int sidx;
+	
 	dom_string_unref(doc->cookie);
 	dom_string_unref(doc->url);
 	dom_string_unref(doc->domain);
 	dom_string_unref(doc->referrer);
 	dom_string_unref(doc->title);
 	
-	dom_string_unref(doc->_memo_id);
-	dom_string_unref(doc->_memo_title);
-	dom_string_unref(doc->_memo_lang);
-	dom_string_unref(doc->_memo_dir);
-	dom_string_unref(doc->_memo_class);
+	if (doc->memoised != NULL) {
+		for(sidx = 0; sidx < hds_COUNT; ++sidx) {
+			if (doc->memoised[sidx] != NULL) {
+				dom_string_unref(doc->memoised[sidx]);
+			}
+		}
+		free(doc->memoised);
+		doc->memoised = NULL;
+	}
 	
 	_dom_document_finalise(&doc->base);
 }
