@@ -20,22 +20,6 @@ static struct dom_element_protected_vtable _protect_vtable = {
 	DOM_HTML_HTML_ELEMENT_PROTECT_VTABLE
 };
 
-static struct dom_html_html_element_vtable _vtable = {
-	{
-		{
-			{
-				{
-					DOM_NODE_EVENT_TARGET_VTABLE
-				},
-				DOM_NODE_VTABLE_ELEMENT,
-			},
-			DOM_ELEMENT_VTABLE
-		},
-		DOM_HTML_ELEMENT_VTABLE
-	},
-	DOM_HTML_HTML_ELEMENT_VTABLE
-};
-
 /**
  * Create a dom_html_html_element object
  *
@@ -55,7 +39,7 @@ dom_exception _dom_html_html_element_create(struct dom_html_document *doc,
 	
 	/* Set up vtables */
 	node = (struct dom_node_internal *) *ele;
-	node->base.vtable = &_vtable;
+	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
 	return _dom_html_html_element_initialise(doc, namespace, prefix, *ele);
@@ -132,7 +116,7 @@ dom_exception _dom_html_html_element_copy(dom_node_internal *old,
 /*-----------------------------------------------------------------------*/
 /* API functions */
 
-dom_exception _dom_html_html_element_get_version(dom_html_html_element *element,
+dom_exception dom_html_html_element_get_version(dom_html_html_element *element,
 					   dom_string **version)
 {
 	dom_exception ret;
@@ -147,7 +131,7 @@ dom_exception _dom_html_html_element_get_version(dom_html_html_element *element,
 	return ret;
 }
 
-dom_exception _dom_html_html_element_set_version(dom_html_html_element *element,
+dom_exception dom_html_html_element_set_version(dom_html_html_element *element,
 					   dom_string *version)
 {
 	dom_exception ret;

@@ -48,15 +48,5 @@ dom_exception _dom_html_head_element_copy(dom_node_internal *old,
 	_dom_virtual_html_head_element_destroy, \
 	_dom_html_head_element_copy
 
-/* The API functions */
-dom_exception _dom_html_head_element_get_profile(dom_html_head_element *element,
-                                       dom_string **profile);
-dom_exception _dom_html_head_element_set_profile(dom_html_head_element *element,
-                                       dom_string *profile);
-
-#define DOM_HTML_HEAD_ELEMENT_VTABLE \
-	_dom_html_head_element_get_profile, \
-	_dom_html_head_element_set_profile
-
 #endif
 
