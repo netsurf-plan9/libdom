@@ -11,6 +11,12 @@
 #include "html/html_document.h"
 #include "html/html_element.h"
 #include "html/html_collection.h"
+#include "html/html_html_element.h"
+#include "html/html_head_element.h"
+#include "html/html_link_element.h"
+#include "html/html_title_element.h"
+#include "html/html_meta_element.h"
+#include "html/html_form_element.h"
 
 #include "core/string.h"
 #include "utils/namespace.h"
@@ -64,6 +70,7 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 		dom_events_default_action_fetcher daf)
 {
 	dom_exception error;
+	int sidx;
 
 	error = _dom_document_initialise(&doc->base, daf);
 	if (error != DOM_NO_ERR)
@@ -75,47 +82,55 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 	doc->url = NULL;
 	doc->cookie = NULL;
 	
-	doc->_memo_id = doc->_memo_title = doc->_memo_lang = 
-		doc->_memo_dir = doc->_memo_class = NULL;
-	
-#define MEMOISE(attr)							\
-	error = dom_string_create_interned((const uint8_t *) #attr,	\
-					   SLEN(#attr), &doc->_memo_##attr); \
-	if (error != DOM_NO_ERR) {					\
-		if (doc->_memo_id != NULL)				\
-			dom_string_unref(doc->_memo_id);		\
-		if (doc->_memo_title != NULL)				\
-			dom_string_unref(doc->_memo_title);		\
-		if (doc->_memo_lang != NULL)				\
-			dom_string_unref(doc->_memo_lang);		\
-		if (doc->_memo_dir != NULL)				\
-			dom_string_unref(doc->_memo_dir);		\
-		return error;						\
+	doc->memoised = calloc(sizeof(dom_string *), hds_COUNT);
+	if (doc->memoised == NULL) {
+		error = DOM_NO_MEM_ERR;
+		goto out;
 	}
 	
-	MEMOISE(id)
-	MEMOISE(title)
-	MEMOISE(lang)
-	MEMOISE(dir)
-	MEMOISE(class)
-	
+#define HTML_DOCUMENT_STRINGS_ACTION(attr,str)                             \
+	error = dom_string_create_interned((const uint8_t *) #str,	\
+					   SLEN(#str), &doc->memoised[hds_##attr]); \
+	if (error != DOM_NO_ERR) {					\
+		goto out;						\
+	}
+
+#include "html_document_strings.h"
+#undef HTML_DOCUMENT_STRINGS_ACTION
+
+out:
+	if (doc->memoised != NULL && error != DOM_NO_ERR) {
+		for(sidx = 0; sidx < hds_COUNT; ++sidx) {
+			if (doc->memoised[sidx] != NULL) {
+				dom_string_unref(doc->memoised[sidx]);
+			}
+		}
+		free(doc->memoised);
+		doc->memoised = NULL;
+	}
 	return error;
 }
 
 /* Finalise a HTMLDocument */
 void _dom_html_document_finalise(dom_html_document *doc)
 {
+	int sidx;
+	
 	dom_string_unref(doc->cookie);
 	dom_string_unref(doc->url);
 	dom_string_unref(doc->domain);
 	dom_string_unref(doc->referrer);
 	dom_string_unref(doc->title);
 	
-	dom_string_unref(doc->_memo_id);
-	dom_string_unref(doc->_memo_title);
-	dom_string_unref(doc->_memo_lang);
-	dom_string_unref(doc->_memo_dir);
-	dom_string_unref(doc->_memo_class);
+	if (doc->memoised != NULL) {
+		for(sidx = 0; sidx < hds_COUNT; ++sidx) {
+			if (doc->memoised[sidx] != NULL) {
+				dom_string_unref(doc->memoised[sidx]);
+			}
+		}
+		free(doc->memoised);
+		doc->memoised = NULL;
+	}
 	
 	_dom_document_finalise(&doc->base);
 }
@@ -140,7 +155,43 @@ dom_exception _dom_html_document_copy(dom_node_internal *old,
 }
 
 /* Overloaded methods inherited from super class */
-/** \todo: dispatch on tag name to create correct HTMLElement subclass */
+
+/** Internal method to support both kinds of create method */
+static dom_exception
+_dom_html_document_create_element_internal(dom_html_document *html,
+					   dom_string *tag_name,
+					   dom_string *namespace,
+					   dom_string *prefix,
+					   dom_html_element **result)
+{
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HTML])) {
+		return _dom_html_html_element_create(html, namespace, prefix,
+				(dom_html_html_element **) result);
+	}
+
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HEAD])) {
+		return _dom_html_head_element_create(html, namespace, prefix,
+				(dom_html_head_element **) result);
+	}
+
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TITLE])) {
+		return _dom_html_title_element_create(html, namespace, prefix,
+				(dom_html_title_element **) result);
+	}
+
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FORM])) {
+		return _dom_html_form_element_create(html, namespace, prefix,
+				(dom_html_form_element **) result);
+	}
+
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LINK])) {
+		return _dom_html_link_element_create(html, namespace, prefix,
+				(dom_html_link_element **) result);
+	}
+
+	return _dom_html_element_create(html, tag_name, namespace, prefix,
+			result);
+}
 
 dom_exception _dom_html_document_create_element(dom_document *doc,
 		dom_string *tag_name, dom_element **result)
@@ -150,8 +201,9 @@ dom_exception _dom_html_document_create_element(dom_document *doc,
 	if (_dom_validate_name(tag_name) == false)
 		return DOM_INVALID_CHARACTER_ERR;
 
-	return _dom_html_element_create(html, tag_name, NULL, NULL,
-			(dom_html_element **) result);
+	return _dom_html_document_create_element_internal(html,
+			tag_name, NULL, NULL,
+			(dom_html_element **)result);
 }
 
 dom_exception _dom_html_document_create_element_ns(dom_document *doc,
@@ -178,8 +230,8 @@ dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 	}
 
 	/* Attempt to create element */
-	err = _dom_html_element_create(html, localname, namespace, prefix,
-			(dom_html_element **) result);
+	err = _dom_html_document_create_element_internal(html, localname,
+			namespace, prefix, (dom_html_element **)result);
 
 	/* Tidy up */
 	if (localname != NULL) {
@@ -191,6 +243,48 @@ dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 	}
 
 	return err;
+}
+
+/**
+ * Retrieve a list of all elements with a given tag name
+ *
+ * \param doc      The document to search in
+ * \param tagname  The tag name to search for ("*" for all)
+ * \param result   Pointer to location to receive result
+ * \return DOM_NO_ERR.
+ *
+ * The returned list will have its reference count increased. It is
+ * the responsibility of the caller to unref the list once it has
+ * finished with it.
+ */
+dom_exception _dom_html_document_get_elements_by_tag_name(dom_document *doc,
+		dom_string *tagname, dom_nodelist **result)
+{
+	return _dom_document_get_nodelist(doc, DOM_NODELIST_BY_NAME_CASELESS,
+			(dom_node_internal *) doc,  tagname, NULL, NULL, 
+			result);
+}
+
+/**
+ * Retrieve a list of all elements with a given local name and namespace URI
+ *
+ * \param doc        The document to search in
+ * \param namespace  The namespace URI
+ * \param localname  The local name
+ * \param result     Pointer to location to receive result
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ *
+ * The returned list will have its reference count increased. It is
+ * the responsibility of the caller to unref the list once it has
+ * finished with it.
+ */
+dom_exception _dom_html_document_get_elements_by_tag_name_ns(
+		dom_document *doc, dom_string *namespace,
+		dom_string *localname, dom_nodelist **result)
+{
+	return _dom_document_get_nodelist(doc, DOM_NODELIST_BY_NAMESPACE_CASELESS,
+			(dom_node_internal *) doc, NULL, namespace, localname, 
+			result);
 }
 
 /*-----------------------------------------------------------------------*/
@@ -218,20 +312,12 @@ dom_exception _dom_html_document_get_title(dom_html_document *doc,
 		*title = dom_string_ref(doc->title);
 	} else {
 		dom_element *node;
-		dom_string *title_str;
 		dom_nodelist *nodes;
 		unsigned long len;
 		
-		exc = dom_string_create_interned((uint8_t*)"title", 
-						 5, &title_str);
-		if (exc != DOM_NO_ERR) {
-			return exc;
-		}
-		
 		exc = dom_document_get_elements_by_tag_name(doc,
-							    title_str,
+							    doc->memoised[hds_TITLE],
 							    &nodes);
-		dom_string_unref(title_str);
 		if (exc != DOM_NO_ERR) {
 			return exc;
 		}

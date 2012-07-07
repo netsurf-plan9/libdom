@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <dom/html/html_form_element.h>
+
 #include "html/html_form_element.h"
 
 #include "html/html_collection.h"
@@ -33,6 +35,7 @@ static bool _dom_is_form_control(struct dom_node_internal *node);
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_form_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_form_element **ele)
 {
 	struct dom_node_internal *node;
@@ -43,10 +46,10 @@ dom_exception _dom_html_form_element_create(struct dom_html_document *doc,
 	
 	/* Set up vtables */
 	node = (struct dom_node_internal *) *ele;
-	node->base.vtable = &_dom_element_vtable;
+	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_form_element_initialise(doc, *ele);
+	return _dom_html_form_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
@@ -57,18 +60,15 @@ dom_exception _dom_html_form_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_form_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_form_element *ele)
 {
-	dom_string *name = NULL;
 	dom_exception err;
 
-	err = dom_string_create((const uint8_t *) "FORM", SLEN("FORM"), &name);
-	if (err != DOM_NO_ERR)
-		return err;
+	err = _dom_html_element_initialise(doc, &ele->base,
+					   doc->memoised[hds_FORM],
+					   namespace, prefix);
 	
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	dom_string_unref(name);
-
 	ele->col = NULL;
 
 	return err;
@@ -184,6 +184,48 @@ dom_exception dom_html_form_element_get_length(dom_html_form_element *ele,
 	return dom_html_collection_get_length(ele->col, len);
 }
 
+#define SIMPLE_GET_SET(attr)						\
+	dom_exception dom_html_form_element_get_##attr(			\
+		dom_html_form_element *element,				\
+		dom_string **attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_get_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}								\
+									\
+	dom_exception dom_html_form_element_set_##attr(			\
+		dom_html_form_element *element,				\
+		dom_string *attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_set_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}
+
+SIMPLE_GET_SET(accept_charset)
+SIMPLE_GET_SET(action)
+SIMPLE_GET_SET(enctype)
+SIMPLE_GET_SET(method)
+SIMPLE_GET_SET(target)
+
+
 /**
  * Submit this form
  *
@@ -231,11 +273,25 @@ dom_exception dom_html_form_element_reset(dom_html_form_element *ele)
  * src/html/html_collection.h for detail. */
 static bool _dom_is_form_control(struct dom_node_internal *node)
 {
-	UNUSED(node);
+	struct dom_html_document *doc =
+		(struct dom_html_document *)(node->owner);
 
 	assert(node->type == DOM_ELEMENT_NODE);
 
-	/** \todo: implement */
+        /* Form controls are INPUT TEXTAREA SELECT and BUTTON */
+        if (dom_string_caseless_isequal(node->name,
+					doc->memoised[hds_INPUT]))
+		return true;
+	if (dom_string_caseless_isequal(node->name,
+					doc->memoised[hds_TEXTAREA]))
+		return true;
+	if (dom_string_caseless_isequal(node->name,
+					doc->memoised[hds_SELECT]))
+		return true;
+	if (dom_string_caseless_isequal(node->name,
+					doc->memoised[hds_BUTTON]))
+		return true;
+
 	return false;
 }
 

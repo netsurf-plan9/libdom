@@ -190,20 +190,148 @@ bool is_size_list(unsigned long size, list *list)
 }
 
 
-bool is_uri_equals(char *scheme, char *path, char *host, 
-		char *file, char *query, char *fragment, 
-		bool isAbsolute, dom_string *actual)
+bool is_uri_equals(const char *scheme, const char *path, const char *host,
+		   const char *file, const char *name, const char *query,
+		   const char *fragment, const char *isAbsolute,
+		   dom_string *actual)
 {
-	UNUSED(scheme);
-	UNUSED(path);
-	UNUSED(host);
-	UNUSED(file);
-	UNUSED(query);
-	UNUSED(fragment);
-	UNUSED(isAbsolute);
-	UNUSED(actual);
+	const char *_ptr = actual != NULL ? dom_string_data(actual) : NULL;
+	const size_t slen = actual != NULL ? dom_string_byte_length(actual) : 0;
+	char *_sptr = actual != NULL ? domts_strndup(_ptr, slen) : NULL;
+	char *sptr = _sptr;
+	bool result = false;
+	
+	/* Used farther down */
+	const char *firstColon = NULL;
+	const char *firstSlash = NULL;
+	char *actualPath = NULL;
+	char *actualScheme = NULL;
+	char *actualHost = NULL;
+	char *actualFile = NULL;
+	char *actualName = NULL;
+	
+	assert(sptr != NULL);
+	
+	/* Note, from here on down, this is essentially a semi-direct
+	 * reimplementation of assertURIEquals in the Java DOMTS.
+	 */
+	
+	/* Attempt to check fragment */
+	{
+		char *fptr = strrchr(sptr, '#');
+		const char *cfptr = fptr + 1;
+		if (fptr != NULL) {
+			*fptr = '\0'; /* Remove fragment from sptr */
+		} else {
+			cfptr = "";
+		}
+		if (fragment != NULL) {
+			if (strcmp(fragment, cfptr) != 0)
+				goto out;
+		}
+	}
+	/* Attempt to check query string */
+	{
+		char *qptr = strrchr(sptr, '?');
+		const char *cqptr = qptr + 1;
+		if (qptr != NULL) {
+			*qptr = '\0'; /* Remove query from sptr */
+		} else {
+			cqptr = "";
+		}
+		if (query != NULL) {
+			if (strcmp(query, cqptr) != 0)
+				goto out;
+		}
+	}
+	
+	/* Scheme and path */
+	firstColon = strchr(sptr, ':');
+	firstSlash = strchr(sptr, '/');
+	actualPath = strdup(sptr);
+	actualScheme = strdup("");
+	if (firstColon != NULL && firstColon < firstSlash) {
+		free(actualScheme);
+		free(actualPath);
+		actualScheme = domts_strndup(sptr, firstColon - sptr);
+		actualPath = strdup(firstColon + 1);
+	}
+	if (scheme != NULL) {
+		if (strcmp(scheme, actualScheme) != 0)
+			goto out;
+	}
+	if (path != NULL) {
+		if (strcmp(path, actualPath) != 0)
+			goto out;
+	}
+	
+	/* host */
+	if (host != NULL) {
+		if (actualPath[0] == '/' &&
+		    actualPath[1] == '/') {
+			const char *termslash = strchr(actualPath + 2, '/');
+			actualHost = domts_strndup(actualPath, 
+					     termslash - actualPath);
+		} else {
+			actualHost = strdup("");
+		}
+		if (strcmp(actualHost, host) != 0)
+			goto out;
+	}
+	
+	
+	/* file */
+	actualFile = strdup(actualPath);
+	if (file != NULL || name != NULL) {
+		const char *finalSlash = strrchr(actualPath, '/');
+		if (finalSlash != NULL) {
+			free(actualFile);
+			actualFile = strdup(finalSlash + 1);
+		}
+		if (file != NULL) {
+			if (strcmp(actualFile, file) != 0)
+				goto out;
+		}
+	}
+	
+	/* name */
+	if (name != NULL) {
+		const char *finalPeriod = strrchr(actualFile, '.');
+		if (finalPeriod != NULL) {
+			actualName = domts_strndup(actualFile, 
+					     finalPeriod - actualFile);
+		} else {
+			actualName = strdup(actualFile);
+		}
+		if (strcmp(actualName, name) != 0)
+			goto out;
+	}
+	
+	/* isAbsolute */
+	if (isAbsolute != NULL) {
+		bool startslash = *actualPath == '/';
+		bool isabsolute = strcasecmp(isAbsolute, "true") == 0;
+		isabsolute |= (strcasecmp(isAbsolute, "yes") == 0);
+		isabsolute |= (strcmp(isAbsolute, "1") == 0);
+		startslash |= (strncmp(actualPath, "file:/", 6) == 0);
+		if (isabsolute != startslash)
+			goto out;
+	}
 
-	return false;
+	result = true;
+out:
+	if (actualPath != NULL)
+		free(actualPath);
+	if (actualScheme != NULL)
+		free(actualScheme);
+	if (actualHost != NULL)
+		free(actualHost);
+	if (actualFile != NULL)
+		free(actualFile);
+	if (actualName != NULL)
+		free(actualName);
+	free(_sptr);
+	return result;
 }
 
 

@@ -38,8 +38,14 @@
 #include <dom/core/comment.h>
 
 /* DOM HTML headers */
-#include <dom/html/html_element.h>
+#include <dom/html/html_collection.h>
 #include <dom/html/html_document.h>
+#include <dom/html/html_element.h>
+#include <dom/html/html_html_element.h>
+#include <dom/html/html_head_element.h>
+#include <dom/html/html_link_element.h>
+#include <dom/html/html_title_element.h>
+#include <dom/html/html_meta_element.h>
 #include <dom/html/html_form_element.h>
 
 /* DOM Events header */

@@ -19,10 +19,12 @@ struct dom_html_html_element {
 
 /* Create a dom_html_html_element object */
 dom_exception _dom_html_html_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_html_element **ele);
 
 /* Initialise a dom_html_html_element object */
 dom_exception _dom_html_html_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_html_element *ele);
 
 /* Finalise a dom_html_html_element object */
@@ -40,7 +42,7 @@ dom_exception _dom_html_html_element_copy(dom_node_internal *old,
 		dom_node_internal **copy);
 
 #define DOM_HTML_HTML_ELEMENT_PROTECT_VTABLE \
-	_dom_html_html_element_parse_attribute
+	_dom_element_parse_attribute
 
 #define DOM_NODE_PROTECT_VTABLE_HTML_HTML_ELEMENT \
 	_dom_virtual_html_html_element_destroy, \

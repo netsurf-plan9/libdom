@@ -16,7 +16,7 @@
 #include "core/document.h"
 #include "utils/utils.h"
 
-static struct dom_html_element_vtable _dom_html_element_vtable = {
+struct dom_html_element_vtable _dom_html_element_vtable = {
 	{
 		{
 			{
@@ -112,7 +112,7 @@ dom_exception _dom_html_element_get_##fattr(dom_html_element *element, \
 									\
 	_memo_##attr =							\
 		((struct dom_html_document *)				\
-		 ((struct dom_node_internal *)element)->owner)->_memo_##attr; \
+		 ((struct dom_node_internal *)element)->owner)->memoised[hds_##attr]; \
 									\
 	ret = dom_element_get_attribute(element, _memo_##attr, fattr);	\
 									\
@@ -127,7 +127,7 @@ dom_exception _dom_html_element_set_##fattr(dom_html_element *element,	\
 									\
 	_memo_##attr =							\
 		((struct dom_html_document *)				\
-		 ((struct dom_node_internal *)element)->owner)->_memo_##attr; \
+		 ((struct dom_node_internal *)element)->owner)->memoised[hds_##attr]; \
 									\
 	ret = dom_element_set_attribute(element, _memo_##attr, fattr);	\
 									\

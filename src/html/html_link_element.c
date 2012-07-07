@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "html/html_document.h"
 #include "html/html_link_element.h"
 
 #include "core/node.h"
@@ -29,6 +30,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_link_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_link_element **ele)
 {
 	struct dom_node_internal *node;
@@ -42,7 +44,7 @@ dom_exception _dom_html_link_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_link_element_initialise(doc, *ele);
+	return _dom_html_link_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
@@ -53,19 +55,12 @@ dom_exception _dom_html_link_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_link_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_link_element *ele)
 {
-	dom_string *name = NULL;
-	dom_exception err;
-
-	err = dom_string_create((const uint8_t *) "HEAD", SLEN("HEAD"), &name);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	dom_string_unref(name);
-
-	return err;
+	return _dom_html_element_initialise(doc, &ele->base,
+					    doc->memoised[hds_LINK],
+					    namespace, prefix);
 }
 
 /**
@@ -151,3 +146,49 @@ dom_exception _dom_html_link_element_copy(dom_node_internal *old,
 	return _dom_html_element_copy(old, copy);
 }
 
+/*-----------------------------------------------------------------------*/
+/* API functions */
+
+#define SIMPLE_GET_SET(attr)						\
+	dom_exception dom_html_link_element_get_##attr(			\
+		dom_html_link_element *element,				\
+		dom_string **attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_get_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}								\
+									\
+	dom_exception dom_html_link_element_set_##attr(			\
+		dom_html_link_element *element,				\
+		dom_string *attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_set_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}
+
+SIMPLE_GET_SET(charset)
+SIMPLE_GET_SET(href)
+SIMPLE_GET_SET(hreflang)
+SIMPLE_GET_SET(media)
+SIMPLE_GET_SET(rel)
+SIMPLE_GET_SET(rev)
+SIMPLE_GET_SET(target)
+SIMPLE_GET_SET(type)

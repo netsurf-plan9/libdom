@@ -49,9 +49,10 @@ bool is_size_domnamednodemap(unsigned long size, dom_namednodemap *map);
 bool is_size_domnodelist(unsigned long size, dom_nodelist *list);
 bool is_size_list(unsigned long size, list *list);
 
-bool is_uri_equals(char *scheme, char *path, char *host, 
-		char *file, char *query, char *fragment, 
-		bool isAbsolute, dom_string *actual);
+bool is_uri_equals(const char *scheme, const char *path, const char *host, 
+                   const char *file, const char *name, const char *query,
+                   const char *fragment, const char *isAbsolute,
+                   dom_string *actual);
 
 bool is_contenttype(const char *type);
 

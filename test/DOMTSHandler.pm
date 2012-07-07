@@ -38,6 +38,7 @@ our %special_type = (
 	DOMImplementation => "dom_implementation *",
 	NamedNodeMap => "dom_namednodemap *",
 	NodeList => "dom_nodelist *",
+        HTMLCollection => "dom_html_collection *",
 	CharacterData => "dom_characterdata *",
 	CDATASection => "dom_cdata_section *",
 );
@@ -46,6 +47,7 @@ our %special_prefix = (
 	DOMImplementation => "dom_implementation",
 	NamedNodeMap => "dom_namednodemap",
 	NodeList => "dom_nodelist",
+        HTMLCollection => "dom_html_collection",
 	CharacterData => "dom_characterdata",
 	CDATASection => "dom_cdata_section *",
 );
@@ -54,6 +56,7 @@ our %unref_prefix = (
 	DOMString => "dom_string",
 	NamedNodeMap => "dom_namednodemap",
 	NodeList => "dom_nodelist",
+        HTMLCollection => "dom_html_collection",
 );
 
 our %special_method = (
@@ -79,6 +82,7 @@ our %override_suffix = (
 	DOMImplementation => "domimplementation",
 	NamedNodeMap => "domnamednodemap",
 	NodeList => "domnodelist",
+        HTMLCollection => "domhtmlcollection",
 	Collection => "list",
 	List => "list",
 );
@@ -661,9 +665,9 @@ sub generate_method {
 	}
 
 	$method = to_cmethod($ats{'interface'}, $en);
-
+        my $cast = to_attribute_cast($ats{'interface'});
 	my $ns = $dd->find("parameters/param", $node);
-	my $params = "$ats{'obj'}";
+	my $params = "${cast}$ats{'obj'}";
 	for ($count = 1; $count <= $ns->size; $count++) {
 		my $n = $ns->get_node($count);
 		my $p = $n->getAttribute("name");
@@ -788,7 +792,7 @@ sub generate_attribute_fetcher {
 	}
 
 	my $fetcher = to_attribute_fetcher($ats{'interface'}, "$en");
-
+        my $cast = to_attribute_cast($ats{'interface'});
 	my $unref = 0;
 	my $temp_node = 0;
 	# Deal with the situation like
@@ -807,14 +811,14 @@ sub generate_attribute_fetcher {
 		my $t = type_to_ctype($self->{'var'}->{$ats{'var'}});
 		$tnode_index ++;
 		print "\t$t tnode$tnode_index = NULL;\n";
-		print "\texp = $fetcher($ats{'obj'}, \&tnode$tnode_index);\n";
+		print "\texp = $fetcher(${cast}$ats{'obj'}, \&tnode$tnode_index);\n";
 		# The ats{'obj'} must have been added to cleanup stack 
 		$unref = 1;
 		# Indicate that we have created a temp node
 		$temp_node = 1;
 	} else {
 		$unref = $self->param_unref($ats{'var'});
-		print "\texp = $fetcher($ats{'obj'}, \&$ats{'var'});\n";
+		print "\texp = $fetcher(${cast}$ats{'obj'}, \&$ats{'var'});\n";
 	}
 
 
@@ -1116,7 +1120,7 @@ sub generate_assertion {
 		
 		case "assertURIEquals" {
 			my $actual = $ats->{actual};
-			my ($scheme, $path, $host, $file, $query, $fragment, $isAbsolute) = qw(NULL NULL NULL NULL NULL NULL NULL);
+			my ($scheme, $path, $host, $file, $name, $query, $fragment, $isAbsolute) = qw(NULL NULL NULL NULL NULL NULL NULL NULL);
 			if (exists $ats->{scheme}) {
 				$scheme = $ats->{scheme};
 			}
@@ -1129,6 +1133,9 @@ sub generate_assertion {
 			if (exists $ats->{file}) {
 				$file = $ats->{file};
 			}
+			if (exists $ats->{name}) {
+				$name = $ats->{name};
+			}
 			if (exists $ats->{query}) {
 				$query = $ats->{query};
 			}
@@ -1139,7 +1146,7 @@ sub generate_assertion {
 				$isAbsolute = $ats->{isAbsolute};
 			}
 
-			print "is_uri_equals($scheme, $path, $host, $file, $query, $fragment, $isAbsolute, $actual)"
+			print "is_uri_equals($scheme, $path, $host, $file, $name, $query, $fragment, $isAbsolute, $actual)"
 		}
 	}
 
@@ -1374,6 +1381,13 @@ sub to_attribute_accessor {
 
 	$ret =~ s/h_t_m_l/html/;
 	return $ret;
+}
+
+sub to_attribute_cast {
+	my $type = shift;
+        my $ret = get_prefix($type);
+        $ret =~ s/h_t_m_l/html/;
+        return "(${ret} *)";
 }
 
 sub get_prefix {

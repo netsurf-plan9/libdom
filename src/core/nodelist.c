@@ -84,7 +84,8 @@ dom_exception _dom_nodelist_create(dom_document *doc, nodelist_type type,
 
 	l->type = type;
 
-	if (type == DOM_NODELIST_BY_NAME) {
+	if (type == DOM_NODELIST_BY_NAME || 
+	    type == DOM_NODELIST_BY_NAME_CASELESS) {
 		assert(tagname != NULL);
 		l->data.n.any_name = false;
 		if (dom_string_byte_length(tagname) == 1) {
@@ -95,7 +96,8 @@ dom_exception _dom_nodelist_create(dom_document *doc, nodelist_type type,
 		}
 	
 		l->data.n.name = dom_string_ref(tagname);
-	} else if (type == DOM_NODELIST_BY_NAMESPACE) {
+	} else if (type == DOM_NODELIST_BY_NAMESPACE ||
+		   type == DOM_NODELIST_BY_NAMESPACE_CASELESS) {
 		l->data.ns.any_localname = false;
 		l->data.ns.any_namespace = false;
 		if (localname != NULL) {
@@ -159,12 +161,14 @@ void dom_nodelist_unref(dom_nodelist *list)
 			/* Nothing to do */
 			break;
 		case DOM_NODELIST_BY_NAMESPACE:
+		case DOM_NODELIST_BY_NAMESPACE_CASELESS:
 			if (list->data.ns.namespace != NULL)
 				dom_string_unref(list->data.ns.namespace);
 			if (list->data.ns.localname != NULL)
 				dom_string_unref(list->data.ns.localname);
 			break;
 		case DOM_NODELIST_BY_NAME:
+		case DOM_NODELIST_BY_NAME_CASELESS:
 			assert(list->data.n.name != NULL);
 			dom_string_unref(list->data.n.name);
 			break;
@@ -210,7 +214,15 @@ dom_exception dom_nodelist_get_length(dom_nodelist *list, unsigned long *length)
 				if (cur->type == DOM_ELEMENT_NODE)
 					len++;
 			}
-		} else {
+		} else if (list->type == DOM_NODELIST_BY_NAME_CASELESS) {
+			if (list->data.n.any_name == true || (
+					cur->name != NULL && 
+					dom_string_caseless_isequal(cur->name, 
+						list->data.n.name))) {
+				if (cur->type == DOM_ELEMENT_NODE)
+					len++;
+			}
+		} else if (list->type == DOM_NODELIST_BY_NAMESPACE) {
 			if (list->data.ns.any_namespace == true ||
 					dom_string_isequal(cur->namespace,
 					list->data.ns.namespace)) {
@@ -222,6 +234,22 @@ dom_exception dom_nodelist_get_length(dom_nodelist *list, unsigned long *length)
 						len++;
 				}
 			}
+		} else if (list->type == DOM_NODELIST_BY_NAMESPACE_CASELESS) {
+			if (list->data.ns.any_namespace == true ||
+					dom_string_caseless_isequal(
+					cur->namespace,
+					list->data.ns.namespace)) {
+				if (list->data.ns.any_localname == true ||
+						(cur->name != NULL &&
+						dom_string_caseless_isequal(
+						cur->name,
+						list->data.ns.localname))) {
+					if (cur->type == DOM_ELEMENT_NODE)
+						len++;
+				}
+			}
+		} else {
+			assert("Unknown list type" == NULL);
 		}
 
 		/* Now, find next node */
@@ -290,7 +318,15 @@ dom_exception _dom_nodelist_item(dom_nodelist *list,
 				if (cur->type == DOM_ELEMENT_NODE)
 					count++;
 			}
-		} else {
+		} else if (list->type == DOM_NODELIST_BY_NAME_CASELESS) {
+			if (list->data.n.any_name == true || (
+					cur->name != NULL && 
+					dom_string_caseless_isequal(cur->name, 
+						list->data.n.name))) {
+				if (cur->type == DOM_ELEMENT_NODE)
+					count++;
+			}
+		} else if (list->type == DOM_NODELIST_BY_NAMESPACE) {
 			if (list->data.ns.any_namespace == true || 
 					(cur->namespace != NULL &&
 					dom_string_isequal(cur->namespace,
@@ -303,6 +339,23 @@ dom_exception _dom_nodelist_item(dom_nodelist *list,
 						count++;
 				}
 			}
+		} else if (list->type == DOM_NODELIST_BY_NAMESPACE_CASELESS) {
+			if (list->data.ns.any_namespace == true || 
+					(cur->namespace != NULL &&
+					dom_string_caseless_isequal(
+						cur->namespace,
+						list->data.ns.namespace))) {
+				if (list->data.ns.any_localname == true ||
+						(cur->name != NULL &&
+						dom_string_caseless_isequal(
+						cur->name,
+						list->data.ns.localname))) {
+					if (cur->type == DOM_ELEMENT_NODE)
+						count++;
+				}
+			}
+		} else {
+			assert("Unknown list type" == NULL);
 		}
 
 		/* Stop if this is the requested index */
@@ -366,20 +419,24 @@ bool _dom_nodelist_match(dom_nodelist *list, nodelist_type type,
 
 	if (list->type != type)
 		return false;
-
-	if (list->type == DOM_NODELIST_CHILDREN) {
+	
+	switch (list->type) {
+	case DOM_NODELIST_CHILDREN:
 		return true;
-	}
-
-	if (list->type == DOM_NODELIST_BY_NAME) {
+	case DOM_NODELIST_BY_NAME:
 		return dom_string_isequal(list->data.n.name, tagname);
-	}
-
-	if (list->type == DOM_NODELIST_BY_NAMESPACE) {
+	case DOM_NODELIST_BY_NAMESPACE:
 		return dom_string_isequal(list->data.ns.namespace, namespace) &&
 			dom_string_isequal(list->data.ns.localname, localname);
+	case DOM_NODELIST_BY_NAME_CASELESS:
+		return dom_string_caseless_isequal(list->data.n.name, tagname);
+	case DOM_NODELIST_BY_NAMESPACE_CASELESS:
+		return dom_string_caseless_isequal(list->data.ns.namespace,
+						   namespace) &&
+			dom_string_caseless_isequal(list->data.ns.localname,
+						    localname);
 	}
-
+	
 	return false;
 }
 

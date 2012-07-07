@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 
+#include "html/html_document.h"
 #include "html/html_html_element.h"
 
 #include "core/node.h"
@@ -27,6 +28,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_html_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,                            
 		struct dom_html_html_element **ele)
 {
 	struct dom_node_internal *node;
@@ -37,10 +39,10 @@ dom_exception _dom_html_html_element_create(struct dom_html_document *doc,
 	
 	/* Set up vtables */
 	node = (struct dom_node_internal *) *ele;
-	node->base.vtable = &_dom_element_vtable;
+	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_html_element_initialise(doc, *ele);
+	return _dom_html_html_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
@@ -51,19 +53,11 @@ dom_exception _dom_html_html_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_html_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,                            
 		struct dom_html_html_element *ele)
 {
-	dom_string *name = NULL;
-	dom_exception err;
-
-	err = dom_string_create((const uint8_t *) "HTML", SLEN("HTML"), &name);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	dom_string_unref(name);
-
-	return err;
+	return _dom_html_element_initialise(doc, &ele->base,
+			doc->memoised[hds_HTML], namespace, prefix);
 }
 
 /**
@@ -119,3 +113,35 @@ dom_exception _dom_html_html_element_copy(dom_node_internal *old,
 	return _dom_html_element_copy(old, copy);
 }
 
+/*-----------------------------------------------------------------------*/
+/* API functions */
+
+dom_exception dom_html_html_element_get_version(dom_html_html_element *element,
+					   dom_string **version)
+{
+	dom_exception ret;
+	dom_string *_memo_version;
+
+	_memo_version =
+		((struct dom_html_document *)
+		 ((struct dom_node_internal *)element)->owner)->memoised[hds_version];
+
+	ret = dom_element_get_attribute(element, _memo_version, version);
+
+	return ret;
+}
+
+dom_exception dom_html_html_element_set_version(dom_html_html_element *element,
+					   dom_string *version)
+{
+	dom_exception ret;
+	dom_string *_memo_version;
+
+	_memo_version =
+		((struct dom_html_document *)
+		 ((struct dom_node_internal *)element)->owner)->memoised[hds_version];
+
+	ret = dom_element_set_attribute(element, _memo_version, version);
+
+	return ret;
+}
