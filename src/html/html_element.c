@@ -16,7 +16,7 @@
 #include "core/document.h"
 #include "utils/utils.h"
 
-static struct dom_html_element_vtable _dom_html_element_vtable = {
+struct dom_html_element_vtable _dom_html_element_vtable = {
 	{
 		{
 			{
