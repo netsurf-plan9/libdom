@@ -78,6 +78,16 @@ dom_exception _dom_html_input_element_initialise(struct dom_html_document *doc,
  */
 void _dom_html_input_element_finalise(struct dom_html_input_element *ele)
 {
+	if (ele->default_value != NULL) {
+		dom_string_unref(ele->default_value);
+		ele->default_value = NULL;
+	}
+
+	if (ele->form != NULL) {
+		dom_node_unref(ele->form);
+		ele->form = NULL;
+	}
+
 	_dom_html_element_finalise(&ele->base);
 }
 
