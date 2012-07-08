@@ -89,6 +89,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_title_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_meta_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_form_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_button_element.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_input_element.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /lib:$(OUTPUT)

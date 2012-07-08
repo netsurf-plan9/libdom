@@ -4,6 +4,7 @@
  *                http://www.opensource.org/licenses/mit-license.php
  * Copyright 2007 John-Mark Bell <jmb@netsurf-browser.org>
  * Copyright 2009 Bo Yang <struggleyb.nku@gmail.com>
+ * Copyright 2012 Daniel Silverstone <dsilvers@netsurf-browser.org>
  */
 
 #include <stdio.h>
@@ -24,6 +25,7 @@
 
 #include "html/html_document.h"
 #include "html/html_button_element.h"
+#include "html/html_input_element.h"
 
 #include <libwapcaplet/libwapcaplet.h>
 
@@ -480,6 +482,15 @@ static hubbub_error form_associate(void *parser, void *form, void *node)
 					doc->memoised[hds_BUTTON])) {
 		err = _dom_html_button_element_set_form(
 			(dom_html_button_element *)node, form_ele);
+		if (err != DOM_NO_ERR) {
+			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
+					"Error in form_associate");
+			return HUBBUB_UNKNOWN;
+		}
+	} else if (dom_string_caseless_isequal(ele->name,
+					       doc->memoised[hds_INPUT])) {
+		err = _dom_html_input_element_set_form(
+			(dom_html_input_element *)node, form_ele);
 		if (err != DOM_NO_ERR) {
 			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 					"Error in form_associate");
