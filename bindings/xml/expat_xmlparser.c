@@ -229,6 +229,55 @@ expat_xmlparser_external_entity_ref_handler(XML_Parser parser,
 }
 
 static void
+expat_xmlparser_comment_handler(void *_parser,
+				const XML_Char *_comment)
+{
+	dom_xml_parser *parser = _parser;
+	struct dom_comment *comment, *ins_comment = NULL;
+	dom_string *data;
+	dom_exception err;
+
+	/* Create DOM string data for comment */
+	err = dom_string_create((const uint8_t *)_comment,
+			strlen((const char *) _comment), &data);
+	if (err != DOM_NO_ERR) {
+		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+				"No memory for comment data");
+		return;
+	}
+
+	/* Create comment */
+	err = dom_document_create_comment(parser->doc, data, &comment);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(data);
+		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+					"No memory for comment node");
+		return;
+	}
+
+	/* No longer need data */
+	dom_string_unref(data);
+
+	/* Append comment to parent */
+	err = dom_node_append_child(parser->current, (struct dom_node *) comment,
+			(struct dom_node **) (void *) &ins_comment);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) comment);
+		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+				"Failed attaching comment node");
+		return;
+	}
+
+	/* We're not interested in the inserted comment */
+	if (ins_comment != NULL)
+		dom_node_unref((struct dom_node *) ins_comment);
+
+	/* No longer interested in comment */
+	dom_node_unref((struct dom_node *) comment);
+
+}
+
+static void
 expat_xmlparser_unknown_data_handler(void *_parser,
 				     const XML_Char *s,
 				     int len)
@@ -307,6 +356,9 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 
 	XML_SetExternalEntityRefHandler(parser->parser,
 					expat_xmlparser_external_entity_ref_handler);
+
+	XML_SetCommentHandler(parser->parser,
+			      expat_xmlparser_comment_handler);
 
 	XML_SetDefaultHandlerExpand(parser->parser,
 			      expat_xmlparser_unknown_data_handler);
