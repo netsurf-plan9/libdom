@@ -159,7 +159,8 @@ expat_xmlparser_cdata_handler(void *_parser,
 	dom_xml_parser *parser = _parser;
 	dom_string *data;
 	dom_exception err;
-	struct dom_node *cdata, *ins_cdata;
+	struct dom_node *cdata, *ins_cdata, *lastchild = NULL;
+	dom_node_type ntype = 0;
 
 	err = dom_string_create((const uint8_t *)s, len, &data);
 	if (err != DOM_NO_ERR) {
@@ -168,6 +169,39 @@ expat_xmlparser_cdata_handler(void *_parser,
 		return;
 	}
 
+	err = dom_node_get_last_child(parser->current, &lastchild);
+
+	if (err == DOM_NO_ERR && lastchild != NULL) {
+		err = dom_node_get_node_type(lastchild, &ntype);
+	}
+
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(data);
+		if (lastchild != NULL)
+			dom_node_unref(lastchild);
+		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+			    "No memory for cdata section");
+		return;
+	}
+
+	if (ntype == DOM_TEXT_NODE && parser->is_cdata == false) {
+		/* We can append this text instead */
+		err = dom_characterdata_append_data(
+			(dom_characterdata *)lastchild, data);
+		dom_string_unref(data);
+		if (lastchild != NULL)
+			dom_node_unref(lastchild);
+		if (err != DOM_NO_ERR) {
+			parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+				    "No memory for cdata section");
+		}
+		return;
+	}
+
+	if (lastchild != NULL)
+		dom_node_unref(lastchild);
+
+	/* We can't append directly, so make a new node */
 	err = parser->is_cdata ?
 		dom_document_create_cdata_section(parser->doc, data,
 						  (dom_cdata_section **)&cdata) :
