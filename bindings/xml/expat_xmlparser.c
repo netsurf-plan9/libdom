@@ -29,6 +29,7 @@ struct dom_xml_parser {
 	bool complete;			/**< Indicate stream completion */
 	struct dom_document *doc;	/**< DOM Document we're building */
 	struct dom_node *current;	/**< DOM node we're currently building */
+	bool is_cdata;			/**< If the character data is cdata or text */
 };
 
 /* Binding functions */
@@ -135,6 +136,22 @@ expat_xmlparser_end_element_handler(void *_parser,
 }
 
 static void
+expat_xmlparser_start_cdata_handler(void *_parser)
+{
+	dom_xml_parser *parser = _parser;
+
+	parser->is_cdata = true;
+}
+
+static void
+expat_xmlparser_end_cdata_handler(void *_parser)
+{
+	dom_xml_parser *parser = _parser;
+
+	parser->is_cdata = false;
+}
+
+static void
 expat_xmlparser_cdata_handler(void *_parser,
 			      const XML_Char *s,
 			      int len)
@@ -142,7 +159,7 @@ expat_xmlparser_cdata_handler(void *_parser,
 	dom_xml_parser *parser = _parser;
 	dom_string *data;
 	dom_exception err;
-	struct dom_cdata_section *cdata, *ins_cdata;
+	struct dom_node *cdata, *ins_cdata;
 
 	err = dom_string_create((const uint8_t *)s, len, &data);
 	if (err != DOM_NO_ERR) {
@@ -151,7 +168,11 @@ expat_xmlparser_cdata_handler(void *_parser,
 		return;
 	}
 
-	err = dom_document_create_cdata_section(parser->doc, data, &cdata);
+	err = parser->is_cdata ?
+		dom_document_create_cdata_section(parser->doc, data,
+						  (dom_cdata_section **)&cdata) :
+		dom_document_create_text_node(parser->doc, data,
+					      (dom_text **)&cdata);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(data);
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -163,8 +184,7 @@ expat_xmlparser_cdata_handler(void *_parser,
 	dom_string_unref(data);
 
 	/* Append cdata section to parent */
-	err = dom_node_append_child(parser->current, (struct dom_node *) cdata,
-				    (struct dom_node **) (void *) &ins_cdata);
+	err = dom_node_append_child(parser->current, cdata, &ins_cdata);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref((struct dom_node *) cdata);
 		parser->msg(DOM_MSG_ERROR, parser->mctx,
@@ -174,10 +194,10 @@ expat_xmlparser_cdata_handler(void *_parser,
 
 	/* We're not interested in the inserted cdata section */
 	if (ins_cdata != NULL)
-		dom_node_unref((struct dom_node *) ins_cdata);
+		dom_node_unref(ins_cdata);
 
 	/* No longer interested in cdata section */
-	dom_node_unref((struct dom_node *) cdata);
+	dom_node_unref(cdata);
 }
 
 static int
@@ -390,6 +410,10 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 			      expat_xmlparser_start_element_handler,
 			      expat_xmlparser_end_element_handler);
 
+	XML_SetCdataSectionHandler(parser->parser,
+				   expat_xmlparser_start_cdata_handler,
+				   expat_xmlparser_end_cdata_handler);
+
 	XML_SetCharacterDataHandler(parser->parser,
 				    expat_xmlparser_cdata_handler);
 
@@ -409,6 +433,8 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 			      expat_xmlparser_unknown_data_handler);
 
 	parser->current = dom_node_ref(parser->doc);
+
+	parser->is_cdata = false;
 
 	return parser;
 }
