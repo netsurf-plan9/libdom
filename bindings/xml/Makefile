@@ -26,7 +26,7 @@ ifeq ($(WITH_EXPAT_BINDING),yes)
 endif
 
 ifeq ($(DO_XML_INSTALL),yes)
-  DIR_INSTALL_ITEMS := /include/dom/bindings/libxml:xmlerror.h;xmlparser.h
+  DIR_INSTALL_ITEMS := /include/dom/bindings/xml:xmlerror.h;xmlparser.h
 endif
 
 include $(NSBUILD)/Makefile.subdir
