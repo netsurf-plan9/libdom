@@ -278,6 +278,48 @@ expat_xmlparser_comment_handler(void *_parser,
 }
 
 static void
+expat_xmlparser_start_doctype_decl_handler(void *_parser,
+					   const XML_Char *doctype_name,
+					   const XML_Char *system_id,
+					   const XML_Char *public_id,
+					   int has_internal_subset)
+{
+	dom_xml_parser *parser = _parser;
+	struct dom_document_type *doctype, *ins_doctype = NULL;
+	dom_exception err;
+
+	UNUSED(has_internal_subset);
+
+	err = dom_implementation_create_document_type(
+		doctype_name, system_id ? system_id : "",
+		public_id ? public_id : "",
+		&doctype);
+
+	if (err != DOM_NO_ERR) {
+		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+				"Failed to create document type");
+		return;
+	}
+
+	/* Add doctype to document */
+	err = dom_node_append_child(parser->doc, (struct dom_node *) doctype,
+			(struct dom_node **) (void *) &ins_doctype);
+	if (err != DOM_NO_ERR) {
+		dom_node_unref((struct dom_node *) doctype);
+		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+					"Failed attaching doctype");
+		return;
+	}
+
+	/* Not interested in inserted node */
+	if (ins_doctype != NULL)
+		dom_node_unref((struct dom_node *) ins_doctype);
+
+	/* No longer interested in doctype */
+	dom_node_unref((struct dom_node *) doctype);
+}
+
+static void
 expat_xmlparser_unknown_data_handler(void *_parser,
 				     const XML_Char *s,
 				     int len)
@@ -359,6 +401,9 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 
 	XML_SetCommentHandler(parser->parser,
 			      expat_xmlparser_comment_handler);
+
+	XML_SetStartDoctypeDeclHandler(parser->parser,
+				       expat_xmlparser_start_doctype_decl_handler);
 
 	XML_SetDefaultHandlerExpand(parser->parser,
 			      expat_xmlparser_unknown_data_handler);
