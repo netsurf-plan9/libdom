@@ -42,9 +42,7 @@ expat_xmlparser_start_element_handler(void *_parser,
 	dom_exception err;
 	dom_element *elem, *ins_elem;
 	dom_string *tag_name;
-	
-	fprintf(stderr, "<%s>\n", name);
-	
+
 	err = dom_string_create((const uint8_t *)name,
 				strlen(name),
 				&tag_name);
@@ -53,7 +51,7 @@ expat_xmlparser_start_element_handler(void *_parser,
 			    "No memory for tag name");
 		return;
 	}
-	
+
 	err = dom_document_create_element(parser->doc, tag_name, &elem);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(tag_name);
@@ -61,15 +59,15 @@ expat_xmlparser_start_element_handler(void *_parser,
 			    "Failed to create element '%s'", name);
 		return;
 	}
-	
+
 	dom_string_unref(tag_name);
-	
+
 	/* Add attributes to the element */
-	
+
 	while (*atts) {
 		dom_string *key, *value;
 
-		err = dom_string_create((const uint8_t *)(*atts), 
+		err = dom_string_create((const uint8_t *)(*atts),
 					strlen(*atts), &key);
 		if (err != DOM_NO_ERR) {
 			parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -88,7 +86,7 @@ expat_xmlparser_start_element_handler(void *_parser,
 			return;
 		}
 		atts++;
-		
+
 		err = dom_element_set_attribute(elem, key, value);
 		dom_string_unref(key);
 		dom_string_unref(value);
@@ -99,7 +97,7 @@ expat_xmlparser_start_element_handler(void *_parser,
 			return;
 		}
 	}
-	
+
 	err = dom_node_append_child(parser->current, elem, &ins_elem);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref(elem);
@@ -107,9 +105,9 @@ expat_xmlparser_start_element_handler(void *_parser,
 			    "No memory for appending child node");
 		return;
 	}
-	
+
 	dom_node_unref(ins_elem);
-	
+
 	dom_node_unref(parser->current);
 	parser->current = (struct dom_node *)elem; /* Steal initial ref */
 }
@@ -121,19 +119,17 @@ expat_xmlparser_end_element_handler(void *_parser,
 	dom_xml_parser *parser = _parser;
 	dom_exception err;
 	dom_node *parent;
-	
+
 	UNUSED(name);
-	
-	fprintf(stderr, "</%s>\n", name);
-	
+
 	err = dom_node_get_parent_node(parser->current, &parent);
-	
+
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 			    "Unable to find a parent while closing element.");
 		return;
 	}
-	
+
 	dom_node_unref(parser->current);
 	parser->current = parent;  /* Takes the ref given by get_parent_node */
 }
@@ -147,14 +143,14 @@ expat_xmlparser_cdata_handler(void *_parser,
 	dom_string *data;
 	dom_exception err;
 	struct dom_cdata_section *cdata, *ins_cdata;
-	
+
 	err = dom_string_create((const uint8_t *)s, len, &data);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 			    "No memory for cdata section contents");
 		return;
 	}
-	
+
 	err = dom_document_create_cdata_section(parser->doc, data, &cdata);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(data);
@@ -162,7 +158,7 @@ expat_xmlparser_cdata_handler(void *_parser,
 			    "No memory for cdata section");
 		return;
 	}
-	
+
 	/* No longer need data */
 	dom_string_unref(data);
 
@@ -184,14 +180,62 @@ expat_xmlparser_cdata_handler(void *_parser,
 	dom_node_unref((struct dom_node *) cdata);
 }
 
+static int
+expat_xmlparser_external_entity_ref_handler(XML_Parser parser,
+					    const XML_Char *context,
+					    const XML_Char *base,
+					    const XML_Char *system_id,
+					    const XML_Char *public_id)
+{
+	FILE *fh;
+	XML_Parser subparser;
+	unsigned char data[1024];
+	size_t len;
+	enum XML_Status status;
+
+	UNUSED(base);
+	UNUSED(public_id);
+
+	if (system_id == NULL)
+		return XML_STATUS_OK;
+
+	fh = fopen(system_id, "r");
+
+	if (fh == NULL)
+		return XML_STATUS_OK;
+
+	subparser = XML_ExternalEntityParserCreate(parser,
+						   context,
+						   NULL);
+
+	if (subparser == NULL) {
+		fclose(fh);
+		return XML_STATUS_OK;
+	}
+
+	/* Parse the file bit by bit */
+	while ((len = fread(data, 1, 1024, fh)) > 0) {
+		status = XML_Parse(subparser, (const char *)data, len, 0);
+		if (status != XML_STATUS_OK) {
+			XML_ParserFree(subparser);
+			fclose(fh);
+			return XML_STATUS_OK;
+		}
+	}
+	XML_Parse(subparser, "", 0, 1);
+	XML_ParserFree(subparser);
+	fclose(fh);
+	return XML_STATUS_OK;
+}
+
 static void
 expat_xmlparser_unknown_data_handler(void *_parser,
 				     const XML_Char *s,
 				     int len)
 {
 	UNUSED(_parser);
-	
-	fprintf(stderr, "!!! %.*s !!!\n", len, s);
+	UNUSED(s);
+	UNUSED(len);
 }
 /**
  * Create an XML parser instance
@@ -210,29 +254,29 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 {
 	dom_xml_parser *parser;
 	dom_exception err;
-	
+
 	UNUSED(int_enc);
-	
+
 	parser = calloc(sizeof(*parser), 1);
 	if (parser == NULL) {
 		msg(DOM_MSG_CRITICAL, mctx, "No memory for parser");
 		return NULL;
 	}
-	
+
 	parser->msg = msg;
 	parser->mctx = mctx;
-	
+
 	parser->parser = XML_ParserCreateNS(enc, ':');
-	
+
 	if (parser->parser == NULL) {
 		free(parser);
 		msg(DOM_MSG_CRITICAL, mctx, "No memory for parser");
 		return NULL;
 	}
-	
+
 	parser->complete = false;
 	parser->doc = NULL;
-	
+
 	err = dom_implementation_create_document(
 		DOM_IMPLEMENTATION_XML,
 		/* namespace */ NULL,
@@ -240,32 +284,35 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 		/* doctype */ NULL,
 		NULL,
 		&parser->doc);
-	
+
 	if (err != DOM_NO_ERR) {
-		parser->msg(DOM_MSG_CRITICAL, parser->mctx, 
+		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 			    "Failed creating document");
 		XML_ParserFree(parser->parser);
 		free(parser);
 		return NULL;
 	}
-	
+
 	XML_SetUserData(parser->parser, parser);
-	
+
 	XML_SetElementHandler(parser->parser,
 			      expat_xmlparser_start_element_handler,
 			      expat_xmlparser_end_element_handler);
-	
+
 	XML_SetCharacterDataHandler(parser->parser,
 				    expat_xmlparser_cdata_handler);
-	
-	XML_SetParamEntityParsing(parser->parser, 
+
+	XML_SetParamEntityParsing(parser->parser,
 				  XML_PARAM_ENTITY_PARSING_ALWAYS);
-	
-	XML_SetDefaultHandler(parser->parser,
+
+	XML_SetExternalEntityRefHandler(parser->parser,
+					expat_xmlparser_external_entity_ref_handler);
+
+	XML_SetDefaultHandlerExpand(parser->parser,
 			      expat_xmlparser_unknown_data_handler);
-	
+
 	parser->current = dom_node_ref(parser->doc);
-	
+
 	return parser;
 }
 
@@ -278,7 +325,7 @@ void
 dom_xml_parser_destroy(dom_xml_parser *parser)
 {
 	XML_ParserFree(parser->parser);
-	
+
 	free(parser);
 }
 
@@ -294,14 +341,14 @@ dom_xml_error
 dom_xml_parser_parse_chunk(dom_xml_parser *parser, uint8_t *data, size_t len)
 {
 	enum XML_Status status;
-	
+
 	status = XML_Parse(parser->parser, (const char *)data, len, 0);
 	if (status != XML_STATUS_OK) {
 		parser->msg(DOM_MSG_ERROR, parser->mctx,
 			    "XML_Parse failed: %d", status);
 		return DOM_XML_EXTERNAL_ERR | status;
 	}
-	
+
 	return DOM_XML_OK;
 }
 
@@ -313,20 +360,20 @@ dom_xml_parser_parse_chunk(dom_xml_parser *parser, uint8_t *data, size_t len)
  *
  * This will force any remaining data through the parser
  */
-dom_xml_error 
+dom_xml_error
 dom_xml_parser_completed(dom_xml_parser *parser)
 {
 	enum XML_Status status;
-	
+
 	status = XML_Parse(parser->parser, "", 0, 1);
 	if (status != XML_STATUS_OK) {
 		parser->msg(DOM_MSG_ERROR, parser->mctx,
 			    "XML_Parse failed: %d", status);
 		return DOM_XML_EXTERNAL_ERR | status;
 	}
-	
+
 	parser->complete = true;
-	
+
 	return DOM_XML_OK;
 
 }
