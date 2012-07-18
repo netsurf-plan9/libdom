@@ -26,6 +26,7 @@
 #include "html/html_document.h"
 #include "html/html_button_element.h"
 #include "html/html_input_element.h"
+#include "html/html_text_area_element.h"
 
 #include <libwapcaplet/libwapcaplet.h>
 
@@ -491,6 +492,15 @@ static hubbub_error form_associate(void *parser, void *form, void *node)
 					       doc->memoised[hds_INPUT])) {
 		err = _dom_html_input_element_set_form(
 			(dom_html_input_element *)node, form_ele);
+		if (err != DOM_NO_ERR) {
+			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
+					"Error in form_associate");
+			return HUBBUB_UNKNOWN;
+		}
+	} else if (dom_string_caseless_isequal(ele->name,
+					       doc->memoised[hds_TEXTAREA])) {
+		err = _dom_html_text_area_element_set_form(
+			(dom_html_text_area_element *)node, form_ele);
 		if (err != DOM_NO_ERR) {
 			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
 					"Error in form_associate");
