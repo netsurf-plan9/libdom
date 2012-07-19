@@ -77,6 +77,10 @@ HTML_DOCUMENT_STRINGS_ACTION(tab_index,tabindex)
 /* HTML_DOCUMENT_STRINGS_ACTION1(type) */
 HTML_DOCUMENT_STRINGS_ACTION(use_map,usemap)
 /* HTML_DOCUMENT_STRINGS_ACTION1(value) */
+/* HTMLTextAreaElement type */
+HTML_DOCUMENT_STRINGS_ACTION1(textarea)
+/* HTMLOptGroupElement attributes */
+HTML_DOCUMENT_STRINGS_ACTION1(label)
 /* Names for elements which get specialised. */
 HTML_DOCUMENT_STRINGS_ACTION1(HTML)
 HTML_DOCUMENT_STRINGS_ACTION1(HEAD)

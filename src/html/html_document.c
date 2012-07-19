@@ -19,6 +19,8 @@
 #include "html/html_form_element.h"
 #include "html/html_button_element.h"
 #include "html/html_input_element.h"
+#include "html/html_text_area_element.h"
+#include "html/html_opt_group_element.h"
 
 #include "core/string.h"
 #include "utils/namespace.h"
@@ -199,6 +201,16 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_INPUT])) {
 		return _dom_html_input_element_create(html, namespace, prefix,
 				(dom_html_input_element **) result);
+	}
+
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TEXTAREA])) {
+		return _dom_html_text_area_element_create(html, namespace, prefix,
+				(dom_html_text_area_element **) result);
+	}
+
+	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OPTGROUP])) {
+		return _dom_html_opt_group_element_create(html, namespace, prefix,
+				(dom_html_opt_group_element **) result);
 	}
 
 	return _dom_html_element_create(html, tag_name, namespace, prefix,

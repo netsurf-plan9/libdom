@@ -49,6 +49,8 @@
 #include <dom/html/html_form_element.h>
 #include <dom/html/html_input_element.h>
 #include <dom/html/html_button_element.h>
+#include <dom/html/html_text_area_element.h>
+#include <dom/html/html_opt_group_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
