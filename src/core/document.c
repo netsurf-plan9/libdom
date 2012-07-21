@@ -143,7 +143,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	/* Intern the empty string. The use of a space in the constant
 	 * is to prevent the compiler warning about an empty string.
 	 */
-	err = dom_string_create_interned((const uint8_t *) ' ', 0,
+	err = dom_string_create_interned((const uint8_t *) " ", 0,
 					 &doc->_memo_empty);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(doc->class_string);
@@ -184,6 +184,7 @@ bool _dom_document_finalise(dom_document *doc)
 		dom_string_unref(doc->id_name);
 
 	dom_string_unref(doc->class_string);
+	dom_string_unref(doc->_memo_empty);
 	
 	_dom_document_event_internal_finalise(doc, &doc->dei);
 
