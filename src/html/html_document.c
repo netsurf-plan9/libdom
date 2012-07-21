@@ -163,58 +163,53 @@ dom_exception _dom_html_document_copy(dom_node_internal *old,
 /** Internal method to support both kinds of create method */
 static dom_exception
 _dom_html_document_create_element_internal(dom_html_document *html,
-					   dom_string *tag_name,
+					   dom_string *in_tag_name,
 					   dom_string *namespace,
 					   dom_string *prefix,
 					   dom_html_element **result)
 {
+	dom_exception exc;
+	dom_string *tag_name;
+
+	exc = dom_string_toupper(in_tag_name, true, &tag_name);
+	if (exc != DOM_NO_ERR)
+		return exc;
+
 	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HTML])) {
-		return _dom_html_html_element_create(html, namespace, prefix,
+		exc = _dom_html_html_element_create(html, namespace, prefix,
 				(dom_html_html_element **) result);
-	}
-
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HEAD])) {
-		return _dom_html_head_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HEAD])) {
+		exc = _dom_html_head_element_create(html, namespace, prefix,
 				(dom_html_head_element **) result);
-	}
-
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TITLE])) {
-		return _dom_html_title_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TITLE])) {
+		exc = _dom_html_title_element_create(html, namespace, prefix,
 				(dom_html_title_element **) result);
-	}
-
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FORM])) {
-		return _dom_html_form_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FORM])) {
+		exc = _dom_html_form_element_create(html, namespace, prefix,
 				(dom_html_form_element **) result);
-	}
-
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LINK])) {
-		return _dom_html_link_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LINK])) {
+		exc = _dom_html_link_element_create(html, namespace, prefix,
 				(dom_html_link_element **) result);
-	}
-
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_BUTTON])) {
-		return _dom_html_button_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_BUTTON])) {
+		exc = _dom_html_button_element_create(html, namespace, prefix,
 				(dom_html_button_element **) result);
-	}
-
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_INPUT])) {
-		return _dom_html_input_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_INPUT])) {
+		exc = _dom_html_input_element_create(html, namespace, prefix,
 				(dom_html_input_element **) result);
-	}
-
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TEXTAREA])) {
-		return _dom_html_text_area_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TEXTAREA])) {
+		exc = _dom_html_text_area_element_create(html, namespace, prefix,
 				(dom_html_text_area_element **) result);
-	}
-
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OPTGROUP])) {
-		return _dom_html_opt_group_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OPTGROUP])) {
+		exc = _dom_html_opt_group_element_create(html, namespace, prefix,
 				(dom_html_opt_group_element **) result);
+	} else {
+		exc =  _dom_html_element_create(html, tag_name, namespace,
+						prefix, result);
 	}
 
-	return _dom_html_element_create(html, tag_name, namespace, prefix,
-			result);
+	dom_string_unref(tag_name);
+
+	return exc;
 }
 
 dom_exception _dom_html_document_create_element(dom_document *doc,
