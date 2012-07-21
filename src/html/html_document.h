@@ -38,7 +38,7 @@ dom_exception _dom_html_document_create(
 dom_exception _dom_html_document_initialise(dom_html_document *doc,
 		dom_events_default_action_fetcher daf);
 /* Finalise a HTMLDocument */
-void _dom_html_document_finalise(dom_html_document *doc);
+bool _dom_html_document_finalise(dom_html_document *doc);
 
 void _dom_html_document_destroy(dom_node_internal *node);
 dom_exception _dom_html_document_copy(dom_node_internal *old, 

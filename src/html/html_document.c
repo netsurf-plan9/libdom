@@ -116,15 +116,20 @@ out:
 }
 
 /* Finalise a HTMLDocument */
-void _dom_html_document_finalise(dom_html_document *doc)
+bool _dom_html_document_finalise(dom_html_document *doc)
 {
 	int sidx;
 	
-	dom_string_unref(doc->cookie);
-	dom_string_unref(doc->url);
-	dom_string_unref(doc->domain);
-	dom_string_unref(doc->referrer);
-	dom_string_unref(doc->title);
+	if (doc->cookie != NULL)
+		dom_string_unref(doc->cookie);
+	if (doc->url != NULL)
+		dom_string_unref(doc->url);
+	if (doc->domain != NULL)
+		dom_string_unref(doc->domain);
+	if (doc->referrer != NULL)
+		dom_string_unref(doc->referrer);
+	if (doc->title != NULL)
+		dom_string_unref(doc->title);
 	
 	if (doc->memoised != NULL) {
 		for(sidx = 0; sidx < hds_COUNT; ++sidx) {
@@ -136,7 +141,7 @@ void _dom_html_document_finalise(dom_html_document *doc)
 		doc->memoised = NULL;
 	}
 	
-	_dom_document_finalise(&doc->base);
+	return _dom_document_finalise(&doc->base);
 }
 
 /* Destroy a HTMLDocument */
@@ -144,9 +149,8 @@ void _dom_html_document_destroy(dom_node_internal *node)
 {
 	dom_html_document *doc = (dom_html_document *) node;
 
-	_dom_html_document_finalise(doc);
-
-	free(doc);
+	if (_dom_html_document_finalise(doc) == true)
+		free(doc);
 }
 
 dom_exception _dom_html_document_copy(dom_node_internal *old,
