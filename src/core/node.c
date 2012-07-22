@@ -231,11 +231,15 @@ void _dom_node_finalise(dom_node_internal *node)
 	}
 	node->user_data = NULL;
 
-	if (node->prefix != NULL)
+	if (node->prefix != NULL) {
 		dom_string_unref(node->prefix);
+		node->prefix = NULL;
+	}
 
-	if (node->namespace != NULL)
+	if (node->namespace != NULL) {
 		dom_string_unref(node->namespace);
+		node->namespace = NULL;
+	}
 
 	/* Destroy all the child nodes of this node */
 	p = node->first_child;
@@ -253,11 +257,15 @@ void _dom_node_finalise(dom_node_internal *node)
 	node->first_child = NULL;
 	node->parent = NULL;
 
-	if (node->value != NULL)
+	if (node->value != NULL) {
 		dom_string_unref(node->value);
+		node->value = NULL;
+	}
 
-	if (node->name != NULL)
+	if (node->name != NULL) {
 		dom_string_unref(node->name);
+		node->name = NULL;
+	}
 
 	/* If the node has no owner document, we need not to finalise its
 	 * dom_event_target_internal structure. 
