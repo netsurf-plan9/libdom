@@ -13,6 +13,7 @@
 #include "html/html_collection.h"
 #include "html/html_html_element.h"
 #include "html/html_head_element.h"
+#include "html/html_body_element.h"
 #include "html/html_link_element.h"
 #include "html/html_title_element.h"
 #include "html/html_meta_element.h"
@@ -188,6 +189,9 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TITLE])) {
 		exc = _dom_html_title_element_create(html, namespace, prefix,
 				(dom_html_title_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_BODY])) {
+		exc = _dom_html_body_element_create(html, namespace, prefix,
+				(dom_html_body_element **) result);
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FORM])) {
 		exc = _dom_html_form_element_create(html, namespace, prefix,
 				(dom_html_form_element **) result);
