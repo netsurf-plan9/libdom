@@ -1666,8 +1666,6 @@ dom_exception _dom_node_get_feature(dom_node_internal *node,
 {
 	bool has;
 
-	UNUSED(node);
-
 	dom_implementation_has_feature(dom_string_data(feature), 
 			dom_string_data(version), &has);
 

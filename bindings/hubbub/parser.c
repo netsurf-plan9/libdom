@@ -459,8 +459,6 @@ static hubbub_error has_children(void *parser, void *node, bool *result)
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
 	dom_exception err;
 
-	UNUSED(parser);
-
 	err = dom_node_has_child_nodes((struct dom_node *) node, result);
 	if (err != DOM_NO_ERR) {
 		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,

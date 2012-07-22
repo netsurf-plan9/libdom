@@ -890,7 +890,7 @@ const char *dom_string_data(const dom_string *str)
 	}
 }
 
-/* Get the byte length of this dom_string 
+/** Get the byte length of this dom_string 
  *
  * \param str	The dom_string object
  */
@@ -902,5 +902,119 @@ size_t dom_string_byte_length(const dom_string *str)
 	} else {
 		return lwc_string_length(istr->data.intern);
 	}
+}
+
+/** Convert the given string to uppercase
+ *
+ * \param source 
+ * \param ascii_only  Whether to only convert [a-z] to [A-Z]
+ * \param upper       Result pointer for uppercase string.  Caller owns ref
+ *
+ * \return DOM_NO_ERR on success.
+ *
+ * \note Right now, will return DOM_NOT_SUPPORTED_ERR if ascii_only is false.
+ */
+dom_exception
+dom_string_toupper(dom_string *source, bool ascii_only, dom_string **upper)
+{
+	const uint8_t *orig_s = (const uint8_t *) dom_string_data(source);
+	const size_t nbytes = dom_string_byte_length(source);
+	uint8_t *copy_s;
+	size_t index = 0, clen;
+	parserutils_error err;
+	dom_exception exc;
+	
+	if (ascii_only == false)
+		return DOM_NOT_SUPPORTED_ERR;
+	
+	copy_s = malloc(nbytes);
+	if (copy_s == NULL)
+		return DOM_NO_MEM_ERR;
+	memcpy(copy_s, orig_s, nbytes);
+	
+	while (index < nbytes) {
+		err = parserutils_charset_utf8_char_byte_length(orig_s + index,
+								&clen);
+		if (err != PARSERUTILS_OK) {
+			free(copy_s);
+			/** \todo Find a better exception */
+			return DOM_NO_MEM_ERR;
+		}
+		
+		if (clen == 1) {
+			if (orig_s[index] >= 'a' &&
+			    orig_s[index] <= 'z')
+				copy_s[index] -= 'a' - 'A';
+		}
+		
+		index += clen;
+	}
+	
+	if (((dom_string_internal*)source)->type == DOM_STRING_CDATA) {
+		exc = dom_string_create(copy_s, nbytes, upper);
+	} else {
+		exc = dom_string_create_interned(copy_s, nbytes, upper);
+	}
+	
+	free(copy_s);
+	
+	return exc;
+}
+
+/** Convert the given string to lowercase
+ *
+ * \param source 
+ * \param ascii_only  Whether to only convert [a-z] to [A-Z]
+ * \param lower       Result pointer for lowercase string.  Caller owns ref
+ *
+ * \return DOM_NO_ERR on success.
+ *
+ * \note Right now, will return DOM_NOT_SUPPORTED_ERR if ascii_only is false.
+ */
+dom_exception
+dom_string_tolower(dom_string *source, bool ascii_only, dom_string **lower)
+{
+	const uint8_t *orig_s = (const uint8_t *) dom_string_data(source);
+	const size_t nbytes = dom_string_byte_length(source);
+	uint8_t *copy_s;
+	size_t index = 0, clen;
+	parserutils_error err;
+	dom_exception exc;
+	
+	if (ascii_only == false)
+		return DOM_NOT_SUPPORTED_ERR;
+	
+	copy_s = malloc(nbytes);
+	if (copy_s == NULL)
+		return DOM_NO_MEM_ERR;
+	memcpy(copy_s, orig_s, nbytes);
+	
+	while (index < nbytes) {
+		err = parserutils_charset_utf8_char_byte_length(orig_s + index,
+								&clen);
+		if (err != PARSERUTILS_OK) {
+			free(copy_s);
+			/** \todo Find a better exception */
+			return DOM_NO_MEM_ERR;
+		}
+		
+		if (clen == 1) {
+			if (orig_s[index] >= 'A' &&
+			    orig_s[index] <= 'Z')
+				copy_s[index] += 'a' - 'A';
+		}
+		
+		index += clen;
+	}
+	
+	if (((dom_string_internal*)source)->type == DOM_STRING_CDATA) {
+		exc = dom_string_create(copy_s, nbytes, lower);
+	} else {
+		exc = dom_string_create_interned(copy_s, nbytes, lower);
+	}
+	
+	free(copy_s);
+	
+	return exc;
 }
 

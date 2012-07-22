@@ -102,6 +102,14 @@ dom_exception dom_string_replace(dom_string *target,
 		dom_string *source, uint32_t i1, uint32_t i2,
 		dom_string **result);
 
+/* Generate an uppercase version of the given string */
+dom_exception dom_string_toupper(dom_string *source, bool ascii_only,
+				 dom_string **upper);
+
+/* Generate an lowercase version of the given string */
+dom_exception dom_string_tolower(dom_string *source, bool ascii_only,
+				 dom_string **lower);
+
 /* Calculate a hash value from a dom string */
 uint32_t dom_string_hash(dom_string *str);
 
