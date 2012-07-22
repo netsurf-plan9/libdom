@@ -74,11 +74,6 @@ dom_exception _dom_html_button_element_initialise(struct dom_html_document *doc,
  */
 void _dom_html_button_element_finalise(struct dom_html_button_element *ele)
 {
-	if (ele->form != NULL) {
-		dom_node_unref(ele->form);
-		ele->form = NULL;
-	}
-
 	_dom_html_element_finalise(&ele->base);
 }
 
@@ -228,16 +223,7 @@ dom_exception dom_html_button_element_get_form(
 dom_exception _dom_html_button_element_set_form(
 	dom_html_button_element *button, dom_html_form_element *form)
 {
-	if (button->form == form)
-		return DOM_NO_ERR;
-	
-	if (button->form != NULL)
-		dom_node_unref(button->form);
-	
 	button->form = form;
-	
-	if (button->form != NULL)
-		dom_node_ref(button->form);
 	
 	return DOM_NO_ERR;
 }

@@ -90,11 +90,6 @@ void _dom_html_text_area_element_finalise(struct dom_html_text_area_element *ele
 		ele->value_set = false;
 	}
 
-	if (ele->form != NULL) {
-		dom_node_unref(ele->form);
-		ele->form = NULL;
-	}
-
 	_dom_html_element_finalise(&ele->base);
 }
 
@@ -425,16 +420,7 @@ dom_exception dom_html_text_area_element_get_form(
 dom_exception _dom_html_text_area_element_set_form(
 	dom_html_text_area_element *text_area, dom_html_form_element *form)
 {
-	if (text_area->form == form)
-		return DOM_NO_ERR;
-
-	if (text_area->form != NULL)
-		dom_node_unref(text_area->form);
-
 	text_area->form = form;
-
-	if (text_area->form != NULL)
-		dom_node_ref(text_area->form);
 
 	return DOM_NO_ERR;
 }
