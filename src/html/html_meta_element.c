@@ -39,7 +39,7 @@ dom_exception _dom_html_meta_element_create(struct dom_html_document *doc,
 	
 	/* Set up vtables */
 	node = (struct dom_node_internal *) *ele;
-	node->base.vtable = &_dom_element_vtable;
+	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
 	return _dom_html_meta_element_initialise(doc, namespace, prefix, *ele);
