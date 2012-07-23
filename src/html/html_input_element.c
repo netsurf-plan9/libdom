@@ -83,11 +83,6 @@ void _dom_html_input_element_finalise(struct dom_html_input_element *ele)
 		ele->default_value = NULL;
 	}
 
-	if (ele->form != NULL) {
-		dom_node_unref(ele->form);
-		ele->form = NULL;
-	}
-
 	_dom_html_element_finalise(&ele->base);
 }
 
@@ -402,16 +397,7 @@ dom_exception dom_html_input_element_get_form(
 dom_exception _dom_html_input_element_set_form(
 	dom_html_input_element *input, dom_html_form_element *form)
 {
-	if (input->form == form)
-		return DOM_NO_ERR;
-
-	if (input->form != NULL)
-		dom_node_unref(input->form);
-
 	input->form = form;
-
-	if (input->form != NULL)
-		dom_node_ref(input->form);
 
 	return DOM_NO_ERR;
 }
