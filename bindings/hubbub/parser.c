@@ -911,3 +911,24 @@ const char *dom_hubbub_parser_get_encoding(dom_hubbub_parser *parser,
 	return parser->encoding != NULL ? parser->encoding
 					: "Windows-1252";
 }
+
+/**
+ * Set the Parse pause state.
+ *
+ * \param parser  The parser object
+ * \param pause   The pause state to set.
+ * \return DOM_HUBBUB_OK on success,
+ *         DOM_HUBBUB_HUBBUB_ERR | <hubbub_error> on failure
+ */
+dom_hubbub_error dom_hubbub_parser_pause(dom_hubbub_parser *parser, bool pause)
+{
+	hubbub_error err;
+	hubbub_parser_optparams params;
+
+	params.pause_parse = pause;
+	err = hubbub_parser_setopt(parser->parser, HUBBUB_PARSER_PAUSE, &params);
+	if (err != HUBBUB_OK)
+		return DOM_HUBBUB_HUBBUB_ERR | err;
+
+	return DOM_HUBBUB_OK;
+}

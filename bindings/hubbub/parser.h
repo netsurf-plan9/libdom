@@ -77,4 +77,14 @@ dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser);
 const char *dom_hubbub_parser_get_encoding(dom_hubbub_parser *parser,
 		dom_hubbub_encoding_source *source);
 
+/**
+ * Set the Parse pause state.
+ *
+ * \param parser  The parser object
+ * \param pause   The pause state to set.
+ * \return DOM_HUBBUB_OK on success,
+ *         DOM_HUBBUB_HUBBUB_ERR | <hubbub_error> on failure
+ */
+dom_hubbub_error dom_hubbub_parser_pause(dom_hubbub_parser *parser, bool pause);
+
 #endif
