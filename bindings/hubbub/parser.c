@@ -658,8 +658,8 @@ static hubbub_tree_handler tree_handler = {
 	add_attributes,
 	set_quirks_mode,
 	change_encoding,
-	NULL,
-	complete_script
+	complete_script,
+	NULL
 };
 
 /**
