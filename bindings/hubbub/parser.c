@@ -633,11 +633,16 @@ static hubbub_error complete_script(void *parser, void *script)
 	dom_hubbub_error err;
 
 	err = dom_parser->script(dom_parser->mctx, (struct dom_node *)script);
-	if (err != DOM_HUBBUB_OK) {
-		return HUBBUB_UNKNOWN;
+
+	if (err == DOM_HUBBUB_OK) {
+		return HUBBUB_OK;
 	}
 
-	return HUBBUB_OK;
+	if ((err & DOM_HUBBUB_HUBBUB_ERR) != 0) {
+		return err & (~DOM_HUBBUB_HUBBUB_ERR);
+	}
+
+	return HUBBUB_UNKNOWN;
 }
 
 static hubbub_tree_handler tree_handler = {
