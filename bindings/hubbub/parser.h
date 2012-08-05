@@ -53,7 +53,10 @@ typedef enum dom_hubbub_encoding_source {
  */
 
 /* Create a Hubbub parser instance */
-dom_hubbub_parser *dom_hubbub_parser_create(const char *enc, bool fix_enc, bool enable_script, dom_document **document, dom_msg msg, dom_script script, void *mctx);
+dom_hubbub_parser *dom_hubbub_parser_create(const char *enc, bool fix_enc,
+		bool enable_script, dom_msg msg,
+		dom_script script, void *mctx,
+		dom_document **document);
 
 /* Destroy a Hubbub parser instance */
 void dom_hubbub_parser_destroy(dom_hubbub_parser *parser);
@@ -63,7 +66,8 @@ dom_hubbub_error dom_hubbub_parser_parse_chunk(dom_hubbub_parser *parser,
 		const uint8_t *data, size_t len);
 
 /* insert data into the parse stream but do not parse it */
-dom_hubbub_error dom_hubbub_parser_insert_chunk(dom_hubbub_parser *parser, const uint8_t *data, size_t length);
+dom_hubbub_error dom_hubbub_parser_insert_chunk(dom_hubbub_parser *parser,
+		const uint8_t *data, size_t length);
 
 /* Notify parser that datastream is empty */
 dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser);

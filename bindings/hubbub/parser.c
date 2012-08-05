@@ -710,23 +710,23 @@ dom_hubbub_parser_default_script(void *ctx, struct dom_node *node)
 /**
  * Create a Hubbub parser instance
  *
- * \param enc      Source charset, or NULL
- * \param fix_enc  Whether fix the encoding
- * \param enable_script Whether scripting should be enabled.
- * \param document Dom document return parameter.
- * \param msg      Informational message function
- * \param script   Script callback function
- * \param mctx     Pointer to client-specific private data
+ * \param enc            Source charset, or NULL
+ * \param fix_enc        Whether fix the encoding
+ * \param enable_script  Whether scripting should be enabled.
+ * \param msg            Informational message function
+ * \param script         Script callback function
+ * \param mctx           Pointer to client-specific private data
+ * \param document       Pointer to location to receive document
  * \return Pointer to instance, or NULL on memory exhaustion
  */
 dom_hubbub_parser *
 dom_hubbub_parser_create(const char *enc,
 			 bool fix_enc,
 			 bool enable_script,
-			 dom_document **document,
 			 dom_msg msg,
 			 dom_script script,
-			 void *mctx)
+			 void *mctx,
+			 dom_document **document)
 {
 	dom_hubbub_parser *parser;
 	hubbub_parser_optparams params;
