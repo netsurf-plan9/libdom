@@ -713,6 +713,7 @@ dom_hubbub_parser_default_script(void *ctx, struct dom_node *node)
  * \param enc      Source charset, or NULL
  * \param fix_enc  Whether fix the encoding
  * \param enable_script Whether scripting should be enabled.
+ * \param document Dom document return parameter.
  * \param msg      Informational message function
  * \param script   Script callback function
  * \param mctx     Pointer to client-specific private data
@@ -722,6 +723,7 @@ dom_hubbub_parser *
 dom_hubbub_parser_create(const char *enc,
 			 bool fix_enc,
 			 bool enable_script,
+			 dom_document **document,
 			 dom_msg msg,
 			 dom_script script,
 			 void *mctx)
@@ -730,6 +732,12 @@ dom_hubbub_parser_create(const char *enc,
 	hubbub_parser_optparams params;
 	hubbub_error error;
 	dom_exception err;
+
+	/* check result parameter */
+	if (document == NULL) {
+		msg(DOM_MSG_CRITICAL, mctx, "Bad document return parameter");
+		return NULL;
+	}
 
 	parser = malloc(sizeof(dom_hubbub_parser));
 	if (parser == NULL) {
@@ -794,6 +802,9 @@ dom_hubbub_parser_create(const char *enc,
 	hubbub_parser_setopt(parser->parser,
 			     HUBBUB_PARSER_ENABLE_SCRIPTING,
 			     &params);
+
+	/* set return parameter */
+	*document = (dom_document *)dom_node_ref(parser->doc);
 
 	return parser;
 }
@@ -881,24 +892,6 @@ dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
 	dom_string_unref(name);
 
 	return DOM_HUBBUB_OK;
-}
-
-/**
- * Fetch the Document object from the parser
- *
- * \param parser  The parser object
- * \return the created document on success, NULL on failure
- */
-dom_document *dom_hubbub_parser_get_document(dom_hubbub_parser *parser)
-{
-	dom_document *doc = NULL;
-
-	if (parser->complete) {
-		doc = parser->doc;
-		parser->doc = NULL;
-	}
-
-	return doc;
 }
 
 /**
