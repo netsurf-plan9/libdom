@@ -1233,14 +1233,15 @@ dom_exception _dom_find_element_by_id(dom_node_internal *root,
 			dom_string *real_id;
 
 			_dom_element_get_id((dom_element *) node, &real_id);
+			if (real_id != NULL) {
+				if (dom_string_isequal(real_id, id)) {
+					dom_string_unref(real_id);
+					*result = (dom_element *) node;
+					return DOM_NO_ERR;
+				}
 
-			if (dom_string_isequal(real_id, id)) {
 				dom_string_unref(real_id);
-				*result = (dom_element *) node;
-				return DOM_NO_ERR;
 			}
-
-			dom_string_unref(real_id);
 		}
 
 		if (node->first_child != NULL) {
