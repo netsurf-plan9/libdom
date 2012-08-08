@@ -214,9 +214,7 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
 	struct dom_node_internal *n = col->root;
 	dom_exception err;
         
-        while (*node != NULL) {
-		assert(n != NULL);
-	
+        while (n != NULL) {
 		if (n->type == DOM_ELEMENT_NODE &&
 		    col->ic(n, col->ctx) == true) {
 			dom_string *id = NULL;

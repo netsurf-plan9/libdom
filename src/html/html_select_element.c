@@ -8,6 +8,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <dom/html/html_option_element.h>
+#include <dom/html/html_options_collection.h>
+
 #include "html/html_document.h"
 #include "html/html_select_element.h"
 
@@ -31,6 +34,7 @@ static bool is_option(struct dom_node_internal *node, void *ctx);
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_select_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_select_element **ele)
 {
 	struct dom_node_internal *node;
@@ -44,7 +48,7 @@ dom_exception _dom_html_select_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_select_element_initialise(doc, *ele);
+	return _dom_html_select_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
@@ -55,23 +59,15 @@ dom_exception _dom_html_select_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_select_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_select_element *ele)
 {
-	dom_string *name = NULL;
-	dom_exception err;
-
-	err = dom_string_create((const uint8_t *) "SELECT", SLEN("SELECT"),
-			&name);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	dom_string_unref(name);
-
-	ele->selected = -1;
+	ele->form = NULL;
 	ele->options = NULL;
 
-	return err;
+	return _dom_html_element_initialise(doc, &ele->base,
+					    doc->memoised[hds_SELECT],
+					    namespace, prefix);
 }
 
 /**
@@ -81,6 +77,9 @@ dom_exception _dom_html_select_element_initialise(struct dom_html_document *doc,
  */
 void _dom_html_select_element_finalise(struct dom_html_select_element *ele)
 {
+	if (ele->options != NULL)
+		dom_html_options_collection_unref(ele->options);
+
 	_dom_html_element_finalise(&ele->base);
 }
 
@@ -129,6 +128,51 @@ dom_exception _dom_html_select_element_copy(dom_node_internal *old,
 /*-----------------------------------------------------------------------*/
 /* Public APIs */
 
+static dom_exception _dom_html_select_element_ensure_collection(
+		dom_html_select_element *ele)
+{
+	dom_exception err;
+	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
+
+	assert(doc != NULL);
+
+	if (ele->options == NULL) {
+		err = _dom_html_options_collection_create(doc,
+				(dom_node_internal *) ele,
+				is_option, ele, &ele->options);
+		if (err != DOM_NO_ERR)
+			return err;
+	}
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Get the type of selection control
+ *
+ * \param ele   The Select element
+ * \param type  Pointer to location to receive type
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */
+dom_exception dom_html_select_element_get_type(
+		dom_html_select_element *ele, dom_string **type)
+{
+	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
+	dom_exception err;
+	bool multiple;
+
+	err = dom_html_select_element_get_multiple(ele, &multiple);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	if (multiple)
+		*type = dom_string_ref(doc->memoised[hds_select_multiple]);
+	else
+		*type = dom_string_ref(doc->memoised[hds_select_one]);
+
+	return DOM_NO_ERR;
+}
+
 /**
  * Get the ordinal index of the selected option
  *
@@ -139,7 +183,36 @@ dom_exception _dom_html_select_element_copy(dom_node_internal *old,
 dom_exception dom_html_select_element_get_selected_index(
 		dom_html_select_element *ele, unsigned long *index)
 {
-	*index = ele->selected;
+	dom_exception err;
+	unsigned long idx, len;
+	dom_node *option;
+	bool selected;
+
+	err = dom_html_select_element_get_length(ele, &len);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	for (idx = 0; idx < len; idx++) {
+		err = dom_html_options_collection_item(ele->options,
+				idx, &option);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		err = dom_html_option_element_get_selected(
+				(dom_html_option_element *) option, &selected);
+
+		dom_node_unref(option);
+
+		if (err != DOM_NO_ERR)
+			return err;
+
+		if (selected) {
+			*index = idx;
+			return DOM_NO_ERR;
+		}
+	}
+
+	*index = -1;
 
 	return DOM_NO_ERR;
 }
@@ -154,9 +227,76 @@ dom_exception dom_html_select_element_get_selected_index(
 dom_exception dom_html_select_element_set_selected_index(
 		dom_html_select_element *ele, unsigned long index)
 {
-	ele->selected = index;
+	UNUSED(ele);
+	UNUSED(index);
+
+	/** \todo Implement */
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+/**
+ * Get the value of this form control
+ *
+ * \param ele    The select element
+ * \param value  Pointer to location to receive value
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */
+dom_exception dom_html_select_element_get_value(
+		dom_html_select_element *ele, dom_string **value)
+{
+	dom_exception err;
+	unsigned long idx, len;
+	dom_node *option;
+	bool selected;
+
+	err = dom_html_select_element_get_length(ele, &len);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	for (idx = 0; idx < len; idx++) {
+		err = dom_html_options_collection_item(ele->options,
+				idx, &option);
+		if (err != DOM_NO_ERR)
+			return err;
+
+		err = dom_html_option_element_get_selected(
+				(dom_html_option_element *) option, &selected);
+		if (err != DOM_NO_ERR) {
+			dom_node_unref(option);
+			return err;
+		}
+
+		if (selected) {
+			err = dom_html_option_element_get_value(
+					(dom_html_option_element *) option,
+					value);
+
+			dom_node_unref(option);
+
+			return err;
+		}
+	}
+
+	*value = NULL;
 
 	return DOM_NO_ERR;
+}
+
+/**
+ * Set the value of this form control
+ *
+ * \param ele    The select element
+ * \param value  New value
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */
+dom_exception dom_html_select_element_set_value(
+		dom_html_select_element *ele, dom_string *value)
+{
+	UNUSED(ele);
+	UNUSED(value);
+
+	/** \todo Implement */
+	return DOM_NOT_SUPPORTED_ERR;
 }
 
 /**
@@ -170,16 +310,10 @@ dom_exception dom_html_select_element_get_length(
 		dom_html_select_element *ele, unsigned long *len)
 {
 	dom_exception err;
-	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
-	assert(doc != NULL);
 
-	if (ele->options == NULL) {
-		err = _dom_html_options_collection_create(doc,
-				(dom_node_internal *) ele,
-				is_option, NULL, &ele->options);
-		if (err != DOM_NO_ERR)
-			return err;
-	}
+	err = _dom_html_select_element_ensure_collection(ele);
+	if (err != DOM_NO_ERR)
+		return err;
 
 	return dom_html_options_collection_get_length(ele->options, len);
 }
@@ -203,6 +337,24 @@ dom_exception dom_html_select_element_set_length(
 }
 
 /**
+ * Get the form associated with a select
+ *
+ * \param select  The dom_html_select_element object
+ * \param form    Pointer to location to receive form
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */
+dom_exception dom_html_select_element_get_form(
+	dom_html_select_element *select, dom_html_form_element **form)
+{
+	*form = select->form;
+
+	if (*form != NULL)
+		dom_node_ref(*form);
+
+	return DOM_NO_ERR;
+}
+
+/**
  * The collection of OPTION elements of this element
  *
  * \param ele  The element object
@@ -214,19 +366,10 @@ dom_exception dom_html_select_element_get_options(
 		struct dom_html_options_collection **col)
 {
 	dom_exception err;
-	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
-	assert(doc != NULL);
 
-	if (ele->options == NULL) {
-		err = _dom_html_options_collection_create(doc,
-				(dom_node_internal *) ele,
-				is_option, NULL, &ele->options);
-		if (err != DOM_NO_ERR)
-			return err;
-
-		*col = ele->options;
-		return DOM_NO_ERR;
-	}
+	err = _dom_html_select_element_ensure_collection(ele);
+	if (err != DOM_NO_ERR)
+		return err;
 
 	dom_html_options_collection_ref(ele->options);
 	*col = ele->options;
@@ -290,20 +433,166 @@ dom_exception dom_html_select_element_set_multiple(
 			"multiple", SLEN("multiple"), multiple);
 }
 
+/**
+ * Get the name property
+ *
+ * \param ele   The select element
+ * \param name  Pointer to location to receive name
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */ 
+dom_exception dom_html_select_element_get_name(
+		dom_html_select_element *ele, dom_string **name)
+{
+	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
+
+	return dom_element_get_attribute(ele,
+			doc->memoised[hds_name], name);
+}
+
+/**
+ * Set the name property
+ *
+ * \param ele   The select element
+ * \param name  New name
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */ 
+dom_exception dom_html_select_element_set_name(
+		dom_html_select_element *ele, dom_string *name)
+{
+	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
+
+	return dom_element_set_attribute(ele,
+			doc->memoised[hds_name], name);
+
+}
+
+/**
+ * Get the size property
+ *
+ * \param ele   The select element
+ * \param size  Pointer to location to receive size
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */
 dom_exception dom_html_select_element_get_size(
-		dom_html_select_element *ele, unsigned long *size);
+		dom_html_select_element *ele, unsigned long *size)
+{
+	return dom_html_element_get_long_property(&ele->base, "size",
+			SLEN("size"), size);
+}
+
+/**
+ * Set the size property
+ *
+ * \param ele   The select element
+ * \param size  New size
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */
 dom_exception dom_html_select_element_set_size(
-		dom_html_select_element *ele, unsigned long size);
+		dom_html_select_element *ele, unsigned long size)
+{
+	return dom_html_element_set_long_property(&ele->base, "size",
+			SLEN("size"), size);
+}
+
+/**
+ * Get the tabindex property
+ *
+ * \param ele        The select element
+ * \param tab_index  Pointer to location to receive tab index
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */
 dom_exception dom_html_select_element_get_tab_index(
-		dom_html_select_element *ele, unsigned long *tab_index);
+		dom_html_select_element *ele, unsigned long *tab_index)
+{
+	return dom_html_element_get_long_property(&ele->base, "tabindex",
+			SLEN("tabindex"), tab_index);
+}
+
+/**
+ * Set the tabindex property
+ *
+ * \param ele        The select element
+ * \param tab_index  New tab index
+ * \return DOM_NO_ERR on success, appropriate error otherwise.
+ */
 dom_exception dom_html_select_element_set_tab_index(
-		dom_html_select_element *ele, unsigned long tab_index);
+		dom_html_select_element *ele, unsigned long tab_index)
+{
+	return dom_html_element_set_long_property(&ele->base, "tabindex",
+			SLEN("tabindex"), tab_index);
+}
+
 
 /* Functions */
-dom_exception dom_html_select_element_add(struct dom_html_element *ele,
-		struct dom_html_element *before);
-dom_exception dom_html_element_blur(struct dom_html_select_element *ele);
-dom_exception dom_html_element_focus(struct dom_html_select_element *ele);
+dom_exception dom_html_select_element_add(dom_html_select_element *select,
+		struct dom_html_element *ele, struct dom_html_element *before)
+{
+	UNUSED(select);
+	UNUSED(ele);
+	UNUSED(before);
+
+	/** \todo Implement */
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+dom_exception dom_html_select_element_remove(dom_html_select_element *ele,
+		long index)
+{
+	dom_exception err;
+	unsigned long len;
+	dom_node *option;
+
+	err = dom_html_select_element_get_length(ele, &len);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	/* Ensure index is in range */
+	if ((unsigned long) index >= len)
+		return DOM_NO_ERR;
+
+	err = dom_html_options_collection_item(ele->options, index, &option);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	/** \todo What does remove mean? Remove option from tree and destroy it? */
+	return DOM_NOT_SUPPORTED_ERR;
+}
+
+/**
+ * Blur this control
+ *
+ * \param ele  Element to blur
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception dom_html_select_element_blur(struct dom_html_select_element *ele)
+{
+	struct dom_document *doc = dom_node_get_owner(ele);
+	bool success = false;
+	assert(doc != NULL);
+
+	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
+	return _dom_dispatch_generic_event(doc, (dom_event_target *) ele,
+			(const uint8_t *) "blur", SLEN("blur"), true,
+			true, &success);
+}
+
+/**
+ * Focus this control
+ *
+ * \param ele  Element to focus
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception dom_html_select_element_focus(struct dom_html_select_element *ele)
+{
+	struct dom_document *doc = dom_node_get_owner(ele);
+	bool success = false;
+	assert(doc != NULL);
+
+	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
+	return _dom_dispatch_generic_event(doc, (dom_event_target *) ele,
+			(const uint8_t *) "focus", SLEN("focus"), true,
+			true, &success);
+}
 
 
 /*-----------------------------------------------------------------------*/
@@ -312,21 +601,20 @@ dom_exception dom_html_element_focus(struct dom_html_select_element *ele);
 /* Test whether certain node is an option node */
 bool is_option(struct dom_node_internal *node, void *ctx)
 {
-	dom_string *name = NULL;
-	bool ret = false;
-	dom_exception err;
+	dom_html_select_element *ele = ctx;
+	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
 	
-	UNUSED(ctx);
-	
-	err = dom_string_create((const uint8_t *) "OPTION", SLEN("OPTION"),
-			&name);
-	if (err != DOM_NO_ERR)
-		return false;
+	if (dom_string_isequal(node->name, doc->memoised[hds_OPTION]))
+		return true;
 
-	if (dom_string_isequal(name, node->name))
-		ret = true;
-	
-	dom_string_unref(name);
-
-	return ret;
+	return false;
 }
+
+dom_exception _dom_html_select_element_set_form(
+	dom_html_select_element *select, dom_html_form_element *form)
+{
+	select->form = form;
+
+	return DOM_NO_ERR;
+}
+

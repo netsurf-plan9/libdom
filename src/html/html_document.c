@@ -22,6 +22,8 @@
 #include "html/html_input_element.h"
 #include "html/html_text_area_element.h"
 #include "html/html_opt_group_element.h"
+#include "html/html_option_element.h"
+#include "html/html_select_element.h"
 
 #include "core/string.h"
 #include "utils/namespace.h"
@@ -210,6 +212,12 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OPTGROUP])) {
 		exc = _dom_html_opt_group_element_create(html, namespace, prefix,
 				(dom_html_opt_group_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OPTION])) {
+		exc = _dom_html_option_element_create(html, namespace, prefix,
+				(dom_html_option_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_SELECT])) {
+		exc = _dom_html_select_element_create(html, namespace, prefix,
+				(dom_html_select_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);
