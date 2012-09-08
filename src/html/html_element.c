@@ -330,11 +330,11 @@ static char *_strndup(const char *s, size_t n)
  * \param ele   The dom_html_element object
  * \param name  The name of the attribute
  * \param len   The length of ::name
- * \param value   The returned value
+ * \param value   The returned value, or -1 if prop. not set
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_element_get_long_property(dom_html_element *ele,
-		const char *name, unsigned long len, unsigned long *value)
+		const char *name, unsigned long len, long *value)
 {
 	dom_string *str = NULL, *s2 = NULL;
 	dom_attr *a = NULL;
@@ -358,7 +358,8 @@ dom_exception dom_html_element_get_long_property(dom_html_element *ele,
 			dom_string_unref(s2);
 		}
 	} else {
-		*value = 0;
+		/* Property is not set on this node */
+		*value = -1;
 	}
 
 	dom_node_unref(a);

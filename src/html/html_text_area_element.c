@@ -365,7 +365,7 @@ dom_exception dom_html_text_area_element_get_type(
 }
 
 dom_exception dom_html_text_area_element_get_tab_index(
-	dom_html_text_area_element *text_area, unsigned long *tab_index)
+	dom_html_text_area_element *text_area, long *tab_index)
 {
 	return dom_html_element_get_long_property(&text_area->base, "tabindex",
 			SLEN("tabindex"), tab_index);
@@ -379,7 +379,7 @@ dom_exception dom_html_text_area_element_set_tab_index(
 }
 
 dom_exception dom_html_text_area_element_get_cols(
-	dom_html_text_area_element *text_area, unsigned long *cols)
+	dom_html_text_area_element *text_area, long *cols)
 {
 	return dom_html_element_get_long_property(&text_area->base, "cols",
 			SLEN("cols"), cols);
@@ -393,7 +393,7 @@ dom_exception dom_html_text_area_element_set_cols(
 }
 
 dom_exception dom_html_text_area_element_get_rows(
-	dom_html_text_area_element *text_area, unsigned long *rows)
+	dom_html_text_area_element *text_area, long *rows)
 {
 	return dom_html_element_get_long_property(&text_area->base, "rows",
 			SLEN("rows"), rows);

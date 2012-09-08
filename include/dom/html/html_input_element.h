@@ -67,7 +67,7 @@ dom_exception dom_html_input_element_set_disabled(
 	dom_html_input_element *input, bool disabled);
 
 dom_exception dom_html_input_element_get_max_length(
-	dom_html_input_element *input, unsigned long *max_length);
+	dom_html_input_element *input, long *max_length);
 
 dom_exception dom_html_input_element_set_max_length(
 	dom_html_input_element *input, unsigned long max_length);
@@ -97,7 +97,7 @@ dom_exception dom_html_input_element_set_src(
 	dom_html_input_element *input, dom_string *src);
 
 dom_exception dom_html_input_element_get_tab_index(
-	dom_html_input_element *input, unsigned long *tab_index);
+	dom_html_input_element *input, long *tab_index);
 
 dom_exception dom_html_input_element_set_tab_index(
 	dom_html_input_element *input, unsigned long tab_index);

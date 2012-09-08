@@ -118,7 +118,7 @@ dom_exception dom_html_element_set_bool_property(dom_html_element *ele,
 		const char *name, unsigned long len, bool has);
 
 dom_exception dom_html_element_get_long_property(dom_html_element *ele,
-		const char *name, unsigned long len, unsigned long *value);
+		const char *name, unsigned long len, long *value);
 dom_exception dom_html_element_set_long_property(dom_html_element *ele,
 		const char *name, unsigned long len, unsigned long value);
 

@@ -356,7 +356,7 @@ SIMPLE_GET_SET(use_map);
 SIMPLE_GET_SET(value);
 
 dom_exception dom_html_input_element_get_tab_index(
-	dom_html_input_element *input, unsigned long *tab_index)
+	dom_html_input_element *input, long *tab_index)
 {
 	return dom_html_element_get_long_property(&input->base, "tabindex",
 			SLEN("tabindex"), tab_index);
@@ -370,7 +370,7 @@ dom_exception dom_html_input_element_set_tab_index(
 }
 
 dom_exception dom_html_input_element_get_max_length(
-	dom_html_input_element *input, unsigned long *max_length)
+	dom_html_input_element *input, long *max_length)
 {
 	return dom_html_element_get_long_property(&input->base, "maxlength",
 			SLEN("maxlength"), max_length);
