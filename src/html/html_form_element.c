@@ -168,7 +168,7 @@ dom_exception dom_html_form_element_get_elements(dom_html_form_element *ele,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_form_element_get_length(dom_html_form_element *ele,
-		unsigned long *len)
+		uint32_t *len)
 {
 	dom_exception err;
 

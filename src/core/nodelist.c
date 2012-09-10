@@ -196,10 +196,10 @@ void dom_nodelist_unref(dom_nodelist *list)
  * \param length  Pointer to location to receive length
  * \return DOM_NO_ERR.
  */
-dom_exception dom_nodelist_get_length(dom_nodelist *list, unsigned long *length)
+dom_exception dom_nodelist_get_length(dom_nodelist *list, uint32_t *length)
 {
 	dom_node_internal *cur = list->root->first_child;
-	unsigned long len = 0;
+	uint32_t len = 0;
 
 	/* Traverse data structure */
 	while (cur != NULL) {
@@ -300,10 +300,10 @@ dom_exception dom_nodelist_get_length(dom_nodelist *list, unsigned long *length)
  * should unref the node once it has finished with it.
  */
 dom_exception _dom_nodelist_item(dom_nodelist *list,
-		unsigned long index, dom_node **node)
+		uint32_t index, dom_node **node)
 {
 	dom_node_internal *cur = list->root->first_child;
-	unsigned long count = 0;
+	uint32_t count = 0;
 
 	/* Traverse data structure */
 	while (cur != NULL) {

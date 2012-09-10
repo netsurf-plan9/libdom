@@ -16,9 +16,9 @@ struct dom_node;
 typedef struct dom_html_collection dom_html_collection;
 
 dom_exception dom_html_collection_get_length(dom_html_collection *col,
-		unsigned long *len);
+		uint32_t *len);
 dom_exception dom_html_collection_item(dom_html_collection *col,
-		unsigned long index, struct dom_node **node);
+		uint32_t index, struct dom_node **node);
 dom_exception dom_html_collection_named_item(dom_html_collection *col,
 		dom_string *name, struct dom_node **node);
 

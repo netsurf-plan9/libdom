@@ -113,14 +113,14 @@ dom_exception _dom_html_element_set_class_name(dom_html_element *element,
 
 /* Some common functions used by all child classes */
 dom_exception dom_html_element_get_bool_property(dom_html_element *ele,
-		const char *name, unsigned long len, bool *has);
+		const char *name, uint32_t len, bool *has);
 dom_exception dom_html_element_set_bool_property(dom_html_element *ele,
-		const char *name, unsigned long len, bool has);
+		const char *name, uint32_t len, bool has);
 
-dom_exception dom_html_element_get_long_property(dom_html_element *ele,
-		const char *name, unsigned long len, long *value);
-dom_exception dom_html_element_set_long_property(dom_html_element *ele,
-		const char *name, unsigned long len, unsigned long value);
+dom_exception dom_html_element_get_int32_t_property(dom_html_element *ele,
+		const char *name, uint32_t len, int32_t *value);
+dom_exception dom_html_element_set_int32_t_property(dom_html_element *ele,
+		const char *name, uint32_t len, uint32_t value);
 
 extern struct dom_html_element_vtable _dom_html_element_vtable;
 

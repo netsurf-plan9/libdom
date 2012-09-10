@@ -12,7 +12,7 @@
  * Class of a DOM exception.
  *
  * The top 16 bits of a dom_exception are a bitfield 
- * indicating which class the exception belongs to.
+ * indicating which class the exception beint32_ts to.
  */
 typedef enum {
 	DOM_EXCEPTION_CLASS_NORMAL = 0,

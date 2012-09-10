@@ -137,7 +137,7 @@ dom_exception _dom_html_select_element_copy(dom_node_internal *old,
  * \return DOM_NO_ERR on success.
  */
 dom_exception dom_html_select_element_get_selected_index(
-		dom_html_select_element *ele, unsigned long *index)
+		dom_html_select_element *ele, uint32_t *index)
 {
 	*index = ele->selected;
 
@@ -152,7 +152,7 @@ dom_exception dom_html_select_element_get_selected_index(
  * \return DOM_NO_ERR on success.
  */
 dom_exception dom_html_select_element_set_selected_index(
-		dom_html_select_element *ele, unsigned long index)
+		dom_html_select_element *ele, uint32_t index)
 {
 	ele->selected = index;
 
@@ -167,7 +167,7 @@ dom_exception dom_html_select_element_set_selected_index(
  * \return DOM_NO_ERR on success.
  */
 dom_exception dom_html_select_element_get_length(
-		dom_html_select_element *ele, unsigned long *len)
+		dom_html_select_element *ele, uint32_t *len)
 {
 	dom_exception err;
 	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
@@ -194,7 +194,7 @@ dom_exception dom_html_select_element_get_length(
  * todo: how to deal with set the len of the children option objects?
  */
 dom_exception dom_html_select_element_set_length(
-		dom_html_select_element *ele, unsigned long len)
+		dom_html_select_element *ele, uint32_t len)
 {
 	UNUSED(ele);
 	UNUSED(len);
@@ -291,13 +291,13 @@ dom_exception dom_html_select_element_set_multiple(
 }
 
 dom_exception dom_html_select_element_get_size(
-		dom_html_select_element *ele, unsigned long *size);
+		dom_html_select_element *ele, uint32_t *size);
 dom_exception dom_html_select_element_set_size(
-		dom_html_select_element *ele, unsigned long size);
+		dom_html_select_element *ele, uint32_t size);
 dom_exception dom_html_select_element_get_tab_index(
-		dom_html_select_element *ele, unsigned long *tab_index);
+		dom_html_select_element *ele, uint32_t *tab_index);
 dom_exception dom_html_select_element_set_tab_index(
-		dom_html_select_element *ele, unsigned long tab_index);
+		dom_html_select_element *ele, uint32_t tab_index);
 
 /* Functions */
 dom_exception dom_html_select_element_add(struct dom_html_element *ele,

@@ -114,7 +114,7 @@ static inline dom_exception dom_attr_is_id(struct dom_attr *attr, bool *result)
  * Following are our implementation specific APIs.
  *
  * These APIs are defined for the purpose that there are some attributes in
- * HTML and other DOM module whose type is not DOMString, but unsigned long or
+ * HTML and other DOM module whose type is not DOMString, but uint32_t or
  * boolean, for those types of attributes, clients should call one of the
  * following APIs to set it. 
  *
@@ -135,8 +135,8 @@ static inline dom_exception dom_attr_is_id(struct dom_attr *attr, bool *result)
  * dom_attr_get_* functions.
  */
 dom_attr_type dom_attr_get_type(dom_attr *a);
-dom_exception dom_attr_get_integer(dom_attr *a, unsigned long *value);
-dom_exception dom_attr_set_integer(dom_attr *a, unsigned long value);
+dom_exception dom_attr_get_integer(dom_attr *a, uint32_t *value);
+dom_exception dom_attr_set_integer(dom_attr *a, uint32_t value);
 dom_exception dom_attr_get_short(dom_attr *a, unsigned short *value);
 dom_exception dom_attr_set_short(dom_attr *a, unsigned short value);
 dom_exception dom_attr_get_bool(dom_attr *a, bool *value);

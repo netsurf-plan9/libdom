@@ -220,7 +220,7 @@ dom_exception _dom_html_element_get_elements_by_tag_name_ns(
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_element_get_bool_property(dom_html_element *ele,
-		const char *name, unsigned long len, bool *has)
+		const char *name, uint32_t len, bool *has)
 {
 	dom_string *str = NULL;
 	dom_attr *a = NULL;
@@ -259,7 +259,7 @@ fail:
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_element_set_bool_property(dom_html_element *ele,
-		const char *name, unsigned long len, bool has)
+		const char *name, uint32_t len, bool has)
 {
 	dom_string *str = NULL;
 	dom_attr *a = NULL;
@@ -325,7 +325,7 @@ static char *_strndup(const char *s, size_t n)
 }
 
 /**
- * Get the a long property
+ * Get the a int32_t property
  *
  * \param ele   The dom_html_element object
  * \param name  The name of the attribute
@@ -333,8 +333,8 @@ static char *_strndup(const char *s, size_t n)
  * \param value   The returned value, or -1 if prop. not set
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception dom_html_element_get_long_property(dom_html_element *ele,
-		const char *name, unsigned long len, long *value)
+dom_exception dom_html_element_get_int32_t_property(dom_html_element *ele,
+		const char *name, uint32_t len, int32_t *value)
 {
 	dom_string *str = NULL, *s2 = NULL;
 	dom_attr *a = NULL;
@@ -372,7 +372,7 @@ fail:
 }
 
 /**
- * Set a long property
+ * Set a int32_t property
  *
  * \param ele   The dom_html_element object
  * \param name  The name of the attribute
@@ -380,8 +380,8 @@ fail:
  * \param value   The value
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception dom_html_element_set_long_property(dom_html_element *ele,
-		const char *name, unsigned long len, unsigned long value)
+dom_exception dom_html_element_set_int32_t_property(dom_html_element *ele,
+		const char *name, uint32_t len, uint32_t value)
 {
 	dom_string *str = NULL, *svalue = NULL;
 	dom_exception err;
@@ -391,7 +391,7 @@ dom_exception dom_html_element_set_long_property(dom_html_element *ele,
 	if (err != DOM_NO_ERR)
 		goto fail;
 	
-	if (snprintf(numbuffer, 32, "%lu", value) == 32)
+	if (snprintf(numbuffer, 32, "%u", value) == 32)
 		numbuffer[31] = '\0';
 	
 	err = dom_string_create((const uint8_t *) numbuffer,

@@ -38,7 +38,7 @@ void foreach_initialise_domnamednodemap(dom_namednodemap *map, unsigned int *ite
 bool _get_next_domnodelist(dom_nodelist *list, unsigned int *iterator, dom_node **ret)
 {
 	dom_exception err;
-	unsigned long len;
+	uint32_t len;
 
 	err = dom_nodelist_get_length(list, &len);
 	if (err != DOM_NO_ERR)
@@ -80,7 +80,7 @@ bool get_next_list(list *list, unsigned int *iterator, void **ret)
 bool _get_next_domnamednodemap(dom_namednodemap *map, unsigned int *iterator, dom_node **ret)
 {
 	dom_exception err;
-	unsigned long len;
+	uint32_t len;
 
 	err = dom_namednodemap_get_length(map, &len);
 	if (err != DOM_NO_ERR)

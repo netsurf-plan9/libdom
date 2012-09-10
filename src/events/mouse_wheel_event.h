@@ -18,7 +18,7 @@
 struct dom_mouse_wheel_event {
 	struct dom_mouse_event base;	/**< The base class */
 
-	long delta;	/**< The wheelDelta */
+	int32_t delta;	/**< The wheelDelta */
 };
 
 /* Constructor */

@@ -196,16 +196,16 @@ SIMPLE_GET(type);
 SIMPLE_GET_SET(value);
 
 dom_exception dom_html_button_element_get_tab_index(
-	dom_html_button_element *button, long *tab_index)
+	dom_html_button_element *button, int32_t *tab_index)
 {
-	return dom_html_element_get_long_property(&button->base, "tabindex",
+	return dom_html_element_get_int32_t_property(&button->base, "tabindex",
 			SLEN("tabindex"), tab_index);
 }
 
 dom_exception dom_html_button_element_set_tab_index(
-	dom_html_button_element *button, unsigned long tab_index)
+	dom_html_button_element *button, uint32_t tab_index)
 {
-	return dom_html_element_set_long_property(&button->base, "tabindex",
+	return dom_html_element_set_int32_t_property(&button->base, "tabindex",
 			SLEN("tabindex"), tab_index);
 }
 

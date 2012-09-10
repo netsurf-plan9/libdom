@@ -25,7 +25,7 @@
  * \param doc   The document
  * \param root  The root element of the collection
  * \param ic    The callback function used to determin whether certain node
- *              belongs to the collection
+ *              beint32_ts to the collection
  * \param col   The result collection object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
@@ -49,7 +49,7 @@ dom_exception _dom_html_collection_create(struct dom_html_document *doc,
  * \param col   The collection object to be initialised
  * \param root  The root element of the collection
  * \param ic    The callback function used to determin whether certain node
- *              belongs to the collection
+ *              beint32_ts to the collection
  * \return DOM_NO_ERR on success.
  */
 dom_exception _dom_html_collection_initialise(struct dom_html_document *doc,
@@ -113,7 +113,7 @@ void _dom_html_collection_destroy(struct dom_html_collection *col)
  * \return DOM_NO_ERR on success.
  */
 dom_exception dom_html_collection_get_length(dom_html_collection *col,
-		unsigned long *len)
+		uint32_t *len)
 {
 	struct dom_node_internal *node = col->root;
 	*len = 0;
@@ -157,10 +157,10 @@ dom_exception dom_html_collection_get_length(dom_html_collection *col,
  * \return DOM_NO_ERR on success.
  */
 dom_exception dom_html_collection_item(dom_html_collection *col,
-		unsigned long index, struct dom_node **node)
+		uint32_t index, struct dom_node **node)
 {
 	struct dom_node_internal *n = col->root;
-	unsigned long len = 0;
+	uint32_t len = 0;
 
 	while (n != NULL) {
 		if (n->type == DOM_ELEMENT_NODE && 

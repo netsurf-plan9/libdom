@@ -25,22 +25,22 @@ typedef struct dom_characterdata_vtable {
 			dom_string *data);
 	dom_exception (*dom_characterdata_get_length)(
 			struct dom_characterdata *cdata,
-			unsigned long *length);
+			uint32_t *length);
 	dom_exception (*dom_characterdata_substring_data)(
-			struct dom_characterdata *cdata, unsigned long offset,
-			unsigned long count, dom_string **data);
+			struct dom_characterdata *cdata, uint32_t offset,
+			uint32_t count, dom_string **data);
 	dom_exception (*dom_characterdata_append_data)(
 			struct dom_characterdata *cdata,
 			dom_string *data);
 	dom_exception (*dom_characterdata_insert_data)(
 			struct dom_characterdata *cdata,
-			unsigned long offset, dom_string *data);
+			uint32_t offset, dom_string *data);
 	dom_exception (*dom_characterdata_delete_data)(
 			struct dom_characterdata *cdata,
-			unsigned long offset, unsigned long count);
+			uint32_t offset, uint32_t count);
 	dom_exception (*dom_characterdata_replace_data)(
-			struct dom_characterdata *cdata, unsigned long offset,
-			unsigned long count, dom_string *data);
+			struct dom_characterdata *cdata, uint32_t offset,
+			uint32_t count, dom_string *data);
 } dom_characterdata_vtable;
 
 
@@ -63,17 +63,17 @@ static inline dom_exception dom_characterdata_set_data(
 		(struct dom_characterdata *) (c), (d))
 
 static inline dom_exception dom_characterdata_get_length(
-		struct dom_characterdata *cdata, unsigned long *length)
+		struct dom_characterdata *cdata, uint32_t *length)
 {
 	return ((dom_characterdata_vtable *) ((dom_node *) cdata)->vtable)->
 			dom_characterdata_get_length(cdata, length);
 }
 #define dom_characterdata_get_length(c, l) dom_characterdata_get_length( \
-		(struct dom_characterdata *) (c), (unsigned long *) (l))
+		(struct dom_characterdata *) (c), (uint32_t *) (l))
 
 static inline dom_exception dom_characterdata_substring_data(
-		struct dom_characterdata *cdata, unsigned long offset,
-		unsigned long count, dom_string **data)
+		struct dom_characterdata *cdata, uint32_t offset,
+		uint32_t count, dom_string **data)
 {
 	return ((dom_characterdata_vtable *) ((dom_node *) cdata)->vtable)->
 			dom_characterdata_substring_data(cdata, offset, count,
@@ -81,8 +81,8 @@ static inline dom_exception dom_characterdata_substring_data(
 }
 #define dom_characterdata_substring_data(c, o, ct, d) \
 		dom_characterdata_substring_data( \
-		(struct dom_characterdata *) (c), (unsigned long) (o), \
-		(unsigned long) (ct), (d))
+		(struct dom_characterdata *) (c), (uint32_t) (o), \
+		(uint32_t) (ct), (d))
 
 static inline dom_exception dom_characterdata_append_data(
 		struct dom_characterdata *cdata, dom_string *data)
@@ -94,29 +94,29 @@ static inline dom_exception dom_characterdata_append_data(
 		(struct dom_characterdata *) (c), (d))
 
 static inline dom_exception dom_characterdata_insert_data(
-		struct dom_characterdata *cdata, unsigned long offset, 
+		struct dom_characterdata *cdata, uint32_t offset, 
 		dom_string *data)
 {
 	return ((dom_characterdata_vtable *) ((dom_node *) cdata)->vtable)->
 			dom_characterdata_insert_data(cdata, offset, data);
 }
 #define dom_characterdata_insert_data(c, o, d) dom_characterdata_insert_data( \
-		(struct dom_characterdata *) (c), (unsigned long) (o), (d))
+		(struct dom_characterdata *) (c), (uint32_t) (o), (d))
 
 static inline dom_exception dom_characterdata_delete_data(
-		struct dom_characterdata *cdata, unsigned long offset, 
-		unsigned long count)
+		struct dom_characterdata *cdata, uint32_t offset, 
+		uint32_t count)
 {
 	return ((dom_characterdata_vtable *) ((dom_node *) cdata)->vtable)->
 			dom_characterdata_delete_data(cdata, offset, count);
 }
 #define dom_characterdata_delete_data(c, o, ct) dom_characterdata_delete_data(\
-		(struct dom_characterdata *) (c), (unsigned long) (o), \
-		(unsigned long) (ct))
+		(struct dom_characterdata *) (c), (uint32_t) (o), \
+		(uint32_t) (ct))
 
 static inline dom_exception dom_characterdata_replace_data(
-		struct dom_characterdata *cdata, unsigned long offset, 
-		unsigned long count, dom_string *data)
+		struct dom_characterdata *cdata, uint32_t offset, 
+		uint32_t count, dom_string *data)
 {
 	return ((dom_characterdata_vtable *) ((dom_node *) cdata)->vtable)->
 			dom_characterdata_replace_data(cdata, offset, count, 
@@ -124,7 +124,7 @@ static inline dom_exception dom_characterdata_replace_data(
 }
 #define dom_characterdata_replace_data(c, o, ct, d) \
 		dom_characterdata_replace_data(\
-		(struct dom_characterdata *) (c), (unsigned long) (o),\
-		(unsigned long) (ct), (d))
+		(struct dom_characterdata *) (c), (uint32_t) (o),\
+		(uint32_t) (ct), (d))
 
 #endif

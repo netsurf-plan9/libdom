@@ -37,10 +37,10 @@ dom_exception dom_html_button_element_set_name(
 	dom_html_button_element *button, dom_string *name);
 
 dom_exception dom_html_button_element_get_tab_index(
-	dom_html_button_element *button, long *tab_index);
+	dom_html_button_element *button, int32_t *tab_index);
 
 dom_exception dom_html_button_element_set_tab_index(
-	dom_html_button_element *button, unsigned long tab_index);
+	dom_html_button_element *button, uint32_t tab_index);
 
 dom_exception dom_html_button_element_get_type(
 	dom_html_button_element *button, dom_string **type);

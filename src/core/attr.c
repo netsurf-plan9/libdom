@@ -36,7 +36,7 @@ struct dom_attr {
 	dom_attr_type type;	/**< The type of this attribute */
 	
 	union {
-		unsigned long lvalue;
+		uint32_t lvalue;
 		unsigned short svalue;
 		bool bvalue;
 	} value;	/**< The special type value of this attribute */
@@ -204,7 +204,7 @@ dom_attr_type dom_attr_get_type(dom_attr *a)
  *         DOM_ATTR_WRONG_TYPE_ERR if the attribute node is not a integer
  *                                 attribute
  */
-dom_exception dom_attr_get_integer(dom_attr *a, unsigned long *value)
+dom_exception dom_attr_get_integer(dom_attr *a, uint32_t *value)
 {
 	if (a->type != DOM_ATTR_INTEGER)
 		return DOM_ATTR_WRONG_TYPE_ERR;
@@ -223,7 +223,7 @@ dom_exception dom_attr_get_integer(dom_attr *a, unsigned long *value)
  *         DOM_ATTR_WRONG_TYPE_ERR if the attribute node is not a integer
  *                                 attribute
  */
-dom_exception dom_attr_set_integer(dom_attr *a, unsigned long value)
+dom_exception dom_attr_set_integer(dom_attr *a, uint32_t value)
 {
 	struct dom_document *doc;
 	struct dom_node_internal *ele;
@@ -507,7 +507,7 @@ dom_exception _dom_attr_get_value(struct dom_attr *attr,
 				return err;
 			}
 
-			/* No longer need textual representation */
+			/* No int32_ter need textual representation */
 			dom_string_unref(tr);
 
 			/* Finished with previous value */

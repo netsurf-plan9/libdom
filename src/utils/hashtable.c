@@ -114,7 +114,7 @@ dom_hash_table *_dom_hash_clone(dom_hash_table *ht)
  * Destroys a hash table, freeing all memory associated with it.
  *
  * \param ht        Hash table to destroy. After the function returns, this
- *                  will nolonger be valid
+ *                  will noint32_ter be valid
  */
 void _dom_hash_destroy(dom_hash_table *ht) 
 {
@@ -305,7 +305,7 @@ uint32_t _dom_hash_get_length(struct dom_hash_table *ht)
  * If you make changes to this hash table implementation, please rerun this
  * test, and if possible, through valgrind to make sure there are no memory
  * leaks or invalid memory accesses.  If you add new functionality, please
- * include a test for it that has good coverage along side the other tests.
+ * include a test for it that has good coverage aint32_t side the other tests.
  */
 
 #ifdef TEST_RIG

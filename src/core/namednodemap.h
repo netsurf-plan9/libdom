@@ -19,7 +19,7 @@ struct dom_namednodemap;
 
 struct nnm_operation {
 	dom_exception (*namednodemap_get_length)(void *priv,
-			unsigned long *length);
+			uint32_t *length);
 
 	dom_exception (*namednodemap_get_named_item)(void *priv,
 			dom_string *name, struct dom_node **node);
@@ -32,7 +32,7 @@ struct nnm_operation {
 			struct dom_node **node);
 
 	dom_exception (*namednodemap_item)(void *priv,
-			unsigned long index, struct dom_node **node);
+			uint32_t index, struct dom_node **node);
 
 	dom_exception (*namednodemap_get_named_item_ns)(
 			void *priv, dom_string *namespace,

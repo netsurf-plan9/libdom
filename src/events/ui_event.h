@@ -32,7 +32,7 @@ typedef enum {
 struct dom_ui_event {
 	struct dom_event base;	/**< The base class */
 	struct dom_abstract_view *view;	/**< The AbstractView */
-	long detail;	/**< Some private data for this event */
+	int32_t detail;	/**< Some private data for this event */
 };
 
 /* Constructor */

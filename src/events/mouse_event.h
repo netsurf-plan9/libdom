@@ -18,10 +18,10 @@
 struct dom_mouse_event {
 	struct dom_ui_event base;	/**< Base class */
 
-	long sx;	/**< ScreenX */
-	long sy;	/**< ScreenY */
-	long cx;	/**< ClientX */
-	long cy;	/**< ClientY */
+	int32_t sx;	/**< ScreenX */
+	int32_t sy;	/**< ScreenY */
+	int32_t cx;	/**< ClientX */
+	int32_t cy;	/**< ClientY */
 
 	uint32_t modifier_state;	/**< The modifier keys state */
 

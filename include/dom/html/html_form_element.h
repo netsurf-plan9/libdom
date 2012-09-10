@@ -18,7 +18,7 @@ typedef struct dom_html_form_element dom_html_form_element;
 dom_exception dom_html_form_element_get_elements(dom_html_form_element *ele,
 		struct dom_html_collection **col);
 dom_exception dom_html_form_element_get_length(dom_html_form_element *ele,
-		unsigned long *len);
+		uint32_t *len);
 
 dom_exception dom_html_form_element_get_accept_charset(
 	dom_html_form_element *ele, dom_string **accept_charset);

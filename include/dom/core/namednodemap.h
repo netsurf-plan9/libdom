@@ -19,7 +19,7 @@ void dom_namednodemap_ref(struct dom_namednodemap *map);
 void dom_namednodemap_unref(struct dom_namednodemap *map);
 
 dom_exception dom_namednodemap_get_length(struct dom_namednodemap *map,
-		unsigned long *length);
+		uint32_t *length);
 
 dom_exception _dom_namednodemap_get_named_item(struct dom_namednodemap *map,
 		dom_string *name, struct dom_node **node);
@@ -47,10 +47,10 @@ dom_exception _dom_namednodemap_remove_named_item(
 
 
 dom_exception _dom_namednodemap_item(struct dom_namednodemap *map,
-		unsigned long index, struct dom_node **node);
+		uint32_t index, struct dom_node **node);
 
 #define dom_namednodemap_item(m, i, n) _dom_namednodemap_item( \
-		(dom_namednodemap *) (m), (unsigned long) (i), \
+		(dom_namednodemap *) (m), (uint32_t) (i), \
 		(dom_node **) (n))
 
 

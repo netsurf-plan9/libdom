@@ -18,9 +18,9 @@
 struct dom_mouse_multi_wheel_event {
 	struct dom_mouse_event base;	/**< The base class */
 
-	long x;	/**< The wheelDeltaX */
-	long y;	/**< The wheelDeltaY */
-	long z;	/**< The wheelDeltaZ */
+	int32_t x;	/**< The wheelDeltaX */
+	int32_t y;	/**< The wheelDeltaY */
+	int32_t z;	/**< The wheelDeltaZ */
 };
 
 /* Constructor */

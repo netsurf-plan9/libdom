@@ -43,7 +43,7 @@ void _dom_text_finalise(dom_text *text);
 
 /* Virtual functions for dom_text */
 dom_exception _dom_text_split_text(dom_text *text,
-		unsigned long offset, dom_text **result);
+		uint32_t offset, dom_text **result);
 dom_exception _dom_text_get_is_element_content_whitespace(
 		dom_text *text, bool *result);
 dom_exception _dom_text_get_whole_text(dom_text *text,

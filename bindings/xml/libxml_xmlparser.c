@@ -672,7 +672,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 			return;
 		}
 
-		/* No longer need tag name */
+		/* No int32_ter need tag name */
 		dom_string_unref(tag_name);
 	} else {
 		/* Namespace */
@@ -727,7 +727,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 			return;
 		}
 
-		/* No longer need namespace / qname */
+		/* No int32_ter need namespace / qname */
 		dom_string_unref(namespace);
 		dom_string_unref(qname);
 	}
@@ -764,7 +764,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 				goto cleanup;
 			}
 
-			/* No longer need attribute name */
+			/* No int32_ter need attribute name */
 			dom_string_unref(name);
 		} else {
 			/* Attribute has namespace */
@@ -819,7 +819,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 				return;
 			}
 
-			/* No longer need namespace / qname */
+			/* No int32_ter need namespace / qname */
 			dom_string_unref(namespace);
 			dom_string_unref(qname);
 		}
@@ -865,7 +865,7 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 		if (prev_attr != NULL && prev_attr != attr)
 			dom_node_unref((struct dom_node *) prev_attr);
 
-		/* We're no longer interested in the attribute node */
+		/* We're no int32_ter interested in the attribute node */
 		dom_node_unref((struct dom_node *) attr);
 	}
 
@@ -890,13 +890,13 @@ void xml_parser_add_element_node(dom_xml_parser *parser,
 		goto cleanup;
 	}
 
-	/* No longer interested in element node */
+	/* No int32_ter interested in element node */
 	dom_node_unref((struct dom_node *) el);
 
 	return;
 
 cleanup:
-	/* No longer want node (any attributes attached to it
+	/* No int32_ter want node (any attributes attached to it
 	 * will be cleaned up with it) */
 	dom_node_unref((struct dom_node *) el);
 
@@ -935,7 +935,7 @@ void xml_parser_add_text_node(dom_xml_parser *parser, struct dom_node *parent,
 		return;
 	}
 
-	/* No longer need data */
+	/* No int32_ter need data */
 	dom_string_unref(data);
 
 	/* Append text node to parent */
@@ -960,7 +960,7 @@ void xml_parser_add_text_node(dom_xml_parser *parser, struct dom_node *parent,
 		return;
 	}
 
-	/* No longer interested in text node */
+	/* No int32_ter interested in text node */
 	dom_node_unref((struct dom_node *) text);
 }
 
@@ -996,7 +996,7 @@ void xml_parser_add_cdata_section(dom_xml_parser *parser,
 		return;
 	}
 
-	/* No longer need data */
+	/* No int32_ter need data */
 	dom_string_unref(data);
 
 	/* Append cdata section to parent */
@@ -1021,7 +1021,7 @@ void xml_parser_add_cdata_section(dom_xml_parser *parser,
 		return;
 	}
 
-	/* No longer interested in cdata section */
+	/* No int32_ter interested in cdata section */
 	dom_node_unref((struct dom_node *) cdata);
 }
 
@@ -1059,7 +1059,7 @@ void xml_parser_add_entity_reference(dom_xml_parser *parser,
 		return;
 	}
 
-	/* No longer need name */
+	/* No int32_ter need name */
 	dom_string_unref(name);
 
 	/* Mirror subtree (reference value) */
@@ -1089,7 +1089,7 @@ void xml_parser_add_entity_reference(dom_xml_parser *parser,
 		return;
 	}
 
-	/* No longer interested in entity reference */
+	/* No int32_ter interested in entity reference */
 	dom_node_unref((struct dom_node *) entity);
 }
 
@@ -1133,7 +1133,7 @@ void xml_parser_add_comment(dom_xml_parser *parser, struct dom_node *parent,
 		return;
 	}
 
-	/* No longer need data */
+	/* No int32_ter need data */
 	dom_string_unref(data);
 
 	/* Append comment to parent */
@@ -1158,7 +1158,7 @@ void xml_parser_add_comment(dom_xml_parser *parser, struct dom_node *parent,
 		return;
 	}
 
-	/* No longer interested in comment */
+	/* No int32_ter interested in comment */
 	dom_node_unref((struct dom_node *) comment);
 }
 
@@ -1220,7 +1220,7 @@ void xml_parser_add_document_type(dom_xml_parser *parser,
 		return;
 	}
 
-	/* No longer interested in doctype */
+	/* No int32_ter interested in doctype */
 	dom_node_unref((struct dom_node *) doctype);
 }
 

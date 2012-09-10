@@ -50,7 +50,7 @@ bool is_same_int(int expected, int actual)
 	return expected == actual;
 }
 
-bool is_same_unsigned_long(unsigned long expected, unsigned long actual)
+bool is_same_unsigned_int32_t(uint32_t expected, uint32_t actual)
 {
 	return expected == actual;
 }
@@ -69,7 +69,7 @@ bool is_equals_bool(bool expected, bool actual, bool dummy)
 	return expected == actual;
 }
 
-bool is_equals_unsigned_long(unsigned long expected, unsigned long actual, bool dummy)
+bool is_equals_unsigned_int32_t(uint32_t expected, uint32_t actual, bool dummy)
 {
 	UNUSED(dummy);
 
@@ -156,9 +156,9 @@ bool is_instanceof(const char *type, dom_node *node)
 }
 
 
-bool is_size_domnamednodemap(unsigned long size, dom_namednodemap *map)
+bool is_size_domnamednodemap(uint32_t size, dom_namednodemap *map)
 {
-	unsigned long len;
+	uint32_t len;
 	dom_exception err;
 
 	err = dom_namednodemap_get_length(map, &len);
@@ -170,9 +170,9 @@ bool is_size_domnamednodemap(unsigned long size, dom_namednodemap *map)
 	return size == len;
 }
 
-bool is_size_domnodelist(unsigned long size, dom_nodelist *list)
+bool is_size_domnodelist(uint32_t size, dom_nodelist *list)
 {
-	unsigned long len;
+	uint32_t len;
 	dom_exception err;
 
 	err = dom_nodelist_get_length(list, &len);
@@ -184,7 +184,7 @@ bool is_size_domnodelist(unsigned long size, dom_nodelist *list)
 	return size == len;
 }
 
-bool is_size_list(unsigned long size, list *list)
+bool is_size_list(uint32_t size, list *list)
 {
 	return size == list->size;
 }

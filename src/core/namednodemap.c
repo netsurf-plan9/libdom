@@ -117,7 +117,7 @@ void dom_namednodemap_unref(dom_namednodemap *map)
  * \return DOM_NO_ERR.
  */
 dom_exception dom_namednodemap_get_length(dom_namednodemap *map,
-		unsigned long *length)
+		uint32_t *length)
 {
 	assert(map->opt != NULL);
 	return map->opt->namednodemap_get_length(map->priv, length);
@@ -209,7 +209,7 @@ dom_exception _dom_namednodemap_remove_named_item(
  * should unref the node once it has finished with it.
  */
 dom_exception _dom_namednodemap_item(dom_namednodemap *map,
-		unsigned long index, dom_node **node)
+		uint32_t index, dom_node **node)
 {
 	assert(map->opt != NULL);
 	return map->opt->namednodemap_item(map->priv, index, node);

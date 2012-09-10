@@ -159,7 +159,7 @@ dom_exception _dom_characterdata_set_data(struct dom_characterdata *cdata,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_characterdata_get_length(struct dom_characterdata *cdata,
-		unsigned long *length)
+		uint32_t *length)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 
@@ -192,13 +192,13 @@ dom_exception _dom_characterdata_get_length(struct dom_characterdata *cdata,
  * this implementation; dom_strings are unbounded.
  */
 dom_exception _dom_characterdata_substring_data(
-		struct dom_characterdata *cdata, unsigned long offset,
-		unsigned long count, dom_string **data)
+		struct dom_characterdata *cdata, uint32_t offset,
+		uint32_t count, dom_string **data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	uint32_t len, end;
 
-	if ((signed long) offset < 0 || (signed long) count < 0) {
+	if ((int32_t) offset < 0 || (int32_t) count < 0) {
 		return DOM_INDEX_SIZE_ERR;
 	}
 
@@ -273,7 +273,7 @@ dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
 dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
-		unsigned long offset, dom_string *data)
+		uint32_t offset, dom_string *data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	dom_string *temp;
@@ -286,7 +286,7 @@ dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 	}
 
-	if ((signed long) offset < 0) {
+	if ((int32_t) offset < 0) {
 		return DOM_INDEX_SIZE_ERR;
 	}
 
@@ -335,7 +335,7 @@ dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
 dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
-		unsigned long offset, unsigned long count)
+		uint32_t offset, uint32_t count)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
 	dom_string *temp;
@@ -349,7 +349,7 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 	}
 
-	if ((signed long) offset < 0 || (signed long) count < 0) {
+	if ((int32_t) offset < 0 || (int32_t) count < 0) {
 		return DOM_INDEX_SIZE_ERR;
 	}
 
@@ -404,7 +404,7 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
  */
 dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
-		unsigned long offset, unsigned long count,
+		uint32_t offset, uint32_t count,
 		dom_string *data)
 {
 	struct dom_node_internal *c = (struct dom_node_internal *) cdata;
@@ -418,7 +418,7 @@ dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 	}
 
-	if ((signed long) offset < 0 || (signed long) count < 0) {
+	if ((int32_t) offset < 0 || (int32_t) count < 0) {
 		return DOM_INDEX_SIZE_ERR;
 	}
 

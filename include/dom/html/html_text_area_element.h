@@ -37,16 +37,16 @@ dom_exception dom_html_text_area_element_set_disabled(
 	dom_html_text_area_element *text_area, bool disabled);
 
 dom_exception dom_html_text_area_element_get_cols(
-	dom_html_text_area_element *text_area, long *cols);
+	dom_html_text_area_element *text_area, int32_t *cols);
 
 dom_exception dom_html_text_area_element_set_cols(
-	dom_html_text_area_element *text_area, unsigned long cols);
+	dom_html_text_area_element *text_area, uint32_t cols);
 
 dom_exception dom_html_text_area_element_get_rows(
-	dom_html_text_area_element *text_area, long *rows);
+	dom_html_text_area_element *text_area, int32_t *rows);
 
 dom_exception dom_html_text_area_element_set_rows(
-	dom_html_text_area_element *text_area, unsigned long rows);
+	dom_html_text_area_element *text_area, uint32_t rows);
 
 dom_exception dom_html_text_area_element_get_name(
 	dom_html_text_area_element *text_area, dom_string **name);
@@ -61,10 +61,10 @@ dom_exception dom_html_text_area_element_set_read_only(
 	dom_html_text_area_element *text_area, bool read_only);
 
 dom_exception dom_html_text_area_element_get_tab_index(
-	dom_html_text_area_element *text_area, long *tab_index);
+	dom_html_text_area_element *text_area, int32_t *tab_index);
 
 dom_exception dom_html_text_area_element_set_tab_index(
-	dom_html_text_area_element *text_area, unsigned long tab_index);
+	dom_html_text_area_element *text_area, uint32_t tab_index);
 
 dom_exception dom_html_text_area_element_get_type(
 	dom_html_text_area_element *text_area, dom_string **type);

@@ -161,11 +161,11 @@ bool binary_search(unsigned int ch, int left, int right,
 }
 
 /**
- * Test whether certain character belongs to some XML character group
+ * Test whether certain character beint32_ts to some XML character group
  *
  * \param ch     The character being tested
  * \param group  The character group
- * \return true if the character belongs to the group, false otherwise.
+ * \return true if the character beint32_ts to the group, false otherwise.
  *
  * Generally, we use an algorithm like binary search to find the desired 
  * character in the group. The time complexity is about lg(n) and here n is

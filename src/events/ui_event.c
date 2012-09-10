@@ -84,7 +84,7 @@ dom_exception _dom_ui_event_get_view(dom_ui_event *evt,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_ui_event_get_detail(dom_ui_event *evt,
-		long *detail)
+		int32_t *detail)
 {
 	*detail = evt->detail;
 
@@ -104,7 +104,7 @@ dom_exception _dom_ui_event_get_detail(dom_ui_event *evt,
  */
 dom_exception _dom_ui_event_init(dom_ui_event *evt, dom_string *type, 
 		bool bubble, bool cancelable, struct dom_abstract_view *view,
-		long detail)
+		int32_t detail)
 {
 	evt->view = view;
 	evt->detail = detail;
@@ -127,7 +127,7 @@ dom_exception _dom_ui_event_init(dom_ui_event *evt, dom_string *type,
 dom_exception _dom_ui_event_init_ns(dom_ui_event *evt, 
 		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view,
-		long detail)
+		int32_t detail)
 {
 	evt->view = view;
 	evt->detail = detail;

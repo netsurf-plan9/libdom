@@ -18,24 +18,24 @@ struct dom_abstract_view;
 typedef struct dom_mouse_event dom_mouse_event;
 
 dom_exception _dom_mouse_event_get_screen_x(dom_mouse_event *evt,
-		long *x);
+		int32_t *x);
 #define dom_mouse_event_get_screen_x(e, x) _dom_mouse_event_get_screen_x(\
-		(dom_mouse_event *) (e), (long *) (x))
+		(dom_mouse_event *) (e), (int32_t *) (x))
 
 dom_exception _dom_mouse_event_get_screen_y(dom_mouse_event *evt,
-		long *y);
+		int32_t *y);
 #define dom_mouse_event_get_screen_y(e, y) _dom_mouse_event_get_screen_y(\
-		(dom_mouse_event *) (e), (long *) (y))
+		(dom_mouse_event *) (e), (int32_t *) (y))
 
 dom_exception _dom_mouse_event_get_client_x(dom_mouse_event *evt,
-		long *x);
+		int32_t *x);
 #define dom_mouse_event_get_client_x(e, x) _dom_mouse_event_get_client_x(\
-		(dom_mouse_event *) (e), (long *) (x))
+		(dom_mouse_event *) (e), (int32_t *) (x))
 
 dom_exception _dom_mouse_event_get_client_y(dom_mouse_event *evt,
-		long *y);
+		int32_t *y);
 #define dom_mouse_event_get_client_y(e, y) _dom_mouse_event_get_client_y(\
-		(dom_mouse_event *) (e), (long *) (y))
+		(dom_mouse_event *) (e), (int32_t *) (y))
 
 dom_exception _dom_mouse_event_get_ctrl_key(dom_mouse_event *evt,
 		bool *key);
@@ -76,32 +76,32 @@ dom_exception _dom_mouse_event_get_modifier_state(dom_mouse_event *evt,
 
 dom_exception _dom_mouse_event_init(dom_mouse_event *evt, 
 		dom_string *type, bool bubble, bool cancelable, 
-		struct dom_abstract_view *view, long detail, long screen_x,
-		long screen_y, long client_x, long client_y, bool ctrl,
+		struct dom_abstract_view *view, int32_t detail, int32_t screen_x,
+		int32_t screen_y, int32_t client_x, int32_t client_y, bool ctrl,
 		bool alt, bool shift, bool meta, unsigned short button,
 		dom_event_target *et);
 #define dom_mouse_event_init(e, t, b, c, v, d, sx, sy, cx, cy, ctrl, alt, \
 		shift, meta, button, et) \
 		_dom_mouse_event_init((dom_mouse_event *) (e), \
 		(dom_string *) (t), (bool) (b), (bool) (c),\
-		(struct dom_abstract_view *) (v), (long) (d), (long) (sx), \
-		(long) (sy), (long) (cx), (long) (cy), (bool) (ctrl),\
+		(struct dom_abstract_view *) (v), (int32_t) (d), (int32_t) (sx), \
+		(int32_t) (sy), (int32_t) (cx), (int32_t) (cy), (bool) (ctrl),\
 		(bool) (alt), (bool) (shift), (bool) (meta), \
 		(unsigned short) (button), (dom_event_target *) (et))
 
 dom_exception _dom_mouse_event_init_ns(dom_mouse_event *evt,
 		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view,
-		long detail, long screen_x, long screen_y, long client_x,
-		long client_y, bool ctrl, bool alt, bool shift, bool meta,
+		int32_t detail, int32_t screen_x, int32_t screen_y, int32_t client_x,
+		int32_t client_y, bool ctrl, bool alt, bool shift, bool meta,
 		unsigned short button, dom_event_target *et);
 #define dom_mouse_event_init_ns(e, n, t, b, c, v, d, sx, sy, cx, cy, ctrl, alt,\
 		shift, meta, button, et) \
 		_dom_mouse_event_init_ns((dom_mouse_event *) (e), \
 		(dom_string *) (n), (dom_string *) (t),\
 		(bool) (b), (bool) (c), (struct dom_abstract_view *) (v),\
-		(long) (d), (long) (sx), (long) (sy), (long) (cx),\
-		(long) (cy), (bool) (ctrl), (bool) (alt), (bool) (shift),\
+		(int32_t) (d), (int32_t) (sx), (int32_t) (sy), (int32_t) (cx),\
+		(int32_t) (cy), (bool) (ctrl), (bool) (alt), (bool) (shift),\
 		(bool) (meta), (unsigned short) (button),\
 		(dom_event_target *) (et))
 

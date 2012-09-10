@@ -266,7 +266,7 @@ dom_exception dom_implementation_create_document(
 			return err;
 		}
 
-		/* No longer interested in inserted node */
+		/* No int32_ter interested in inserted node */
 		dom_node_unref(inserted);
 
 		/* Done with element */

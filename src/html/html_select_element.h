@@ -16,7 +16,7 @@
 struct dom_html_select_element {
 	struct dom_html_element base;
 			/**< The base class */
-	long selected;
+	int32_t selected;
 			/**< The selected element's index */
 	dom_html_options_collection *options;
 			/**< The options objects */

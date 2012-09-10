@@ -67,7 +67,7 @@ void _virtual_dom_mouse_multi_wheel_event_destroy(struct dom_event *evt)
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mouse_multi_wheel_event_get_wheel_delta_x(
-		dom_mouse_multi_wheel_event *evt, long *x)
+		dom_mouse_multi_wheel_event *evt, int32_t *x)
 {
 	*x = evt->x;
 
@@ -82,7 +82,7 @@ dom_exception _dom_mouse_multi_wheel_event_get_wheel_delta_x(
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mouse_multi_wheel_event_get_wheel_delta_y(
-		dom_mouse_multi_wheel_event *evt, long *y)
+		dom_mouse_multi_wheel_event *evt, int32_t *y)
 {
 	*y = evt->y;
 
@@ -97,7 +97,7 @@ dom_exception _dom_mouse_multi_wheel_event_get_wheel_delta_y(
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mouse_multi_wheel_event_get_wheel_delta_z(
-		dom_mouse_multi_wheel_event *evt, long *z)
+		dom_mouse_multi_wheel_event *evt, int32_t *z)
 {
 	*z = evt->z;
 
@@ -129,11 +129,11 @@ dom_exception _dom_mouse_multi_wheel_event_get_wheel_delta_z(
 dom_exception _dom_mouse_multi_wheel_event_init_ns(
 		dom_mouse_multi_wheel_event *evt, dom_string *namespace,
 		dom_string *type,  bool bubble, bool cancelable,
-		struct dom_abstract_view *view, long detail, long screen_x,
-		long screen_y, long client_x, long client_y,
+		struct dom_abstract_view *view, int32_t detail, int32_t screen_x,
+		int32_t screen_y, int32_t client_x, int32_t client_y,
 		unsigned short button, dom_event_target *et,
-		dom_string *modifier_list, long wheel_delta_x,
-		long wheel_delta_y, long wheel_delta_z)
+		dom_string *modifier_list, int32_t wheel_delta_x,
+		int32_t wheel_delta_y, int32_t wheel_delta_z)
 {
 	dom_exception err;
 	dom_mouse_event *e = (dom_mouse_event *) evt;

@@ -485,7 +485,7 @@ static dom_exception _dom_element_set_id_attr(struct dom_element *element,
 
 /* The operation set for namednodemap */
 static dom_exception attributes_get_length(void *priv,
-		unsigned long *length);
+		uint32_t *length);
 static dom_exception attributes_get_named_item(void *priv,
 		dom_string *name, struct dom_node **node);
 static dom_exception attributes_set_named_item(void *priv,
@@ -494,7 +494,7 @@ static dom_exception attributes_remove_named_item(
 		void *priv, dom_string *name,
 		struct dom_node **node);
 static dom_exception attributes_item(void *priv,
-		unsigned long index, struct dom_node **node);
+		uint32_t index, struct dom_node **node);
 static dom_exception attributes_get_named_item_ns(
 		void *priv, dom_string *namespace,
 		dom_string *localname, struct dom_node **node);
@@ -739,7 +739,7 @@ dom_exception _dom_element_get_attribute_node(struct dom_element *element,
  * \param attr     The attribute node to add
  * \param result   Pointer to location to receive previous node
  * \return DOM_NO_ERR                      on success,
- *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not belong to the
+ *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not beint32_t to the
  *                                         same document as ::element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly,
  *         DOM_INUSE_ATTRIBUTE_ERR         if ::attr is already an attribute
@@ -944,7 +944,7 @@ dom_exception _dom_element_get_attribute_node_ns(struct dom_element *element,
  * \param attr     The attribute node to add
  * \param result   Pointer to location to recieve previous node
  * \return DOM_NO_ERR                      on success,
- *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not belong to the
+ *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not beint32_t to the
  *                                         same document as ::element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly,
  *         DOM_INUSE_ATTRIBUTE_ERR         if ::attr is already an attribute
@@ -1843,7 +1843,7 @@ dom_exception _dom_element_get_attr_node(struct dom_element *element,
  * \param attr     The attribute node to add
  * \param result   Pointer to location to receive previous node
  * \return DOM_NO_ERR                      on success,
- *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not belong to the
+ *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not beint32_t to the
  *                                         same document as ::element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly,
  *         DOM_INUSE_ATTRIBUTE_ERR         if ::attr is already an attribute
@@ -1869,7 +1869,7 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 
 	/** \todo validate name */
 
-	/* Ensure element and attribute belong to the same document */
+	/* Ensure element and attribute beint32_t to the same document */
 	if (e->owner != attr_node->owner)
 		return DOM_WRONG_DOCUMENT_ERR;
 
@@ -2226,7 +2226,7 @@ dom_exception _dom_element_get_id(struct dom_element *ele, dom_string **id)
 
 /* Implementation function for NamedNodeMap, see core/namednodemap.h for 
  * details */
-dom_exception attributes_get_length(void *priv, unsigned long *length)
+dom_exception attributes_get_length(void *priv, uint32_t *length)
 {
 	dom_element *e = (dom_element *) priv;
 
@@ -2283,7 +2283,7 @@ dom_exception attributes_remove_named_item(
 /* Implementation function for NamedNodeMap, see core/namednodemap.h for 
  * details */
 dom_exception attributes_item(void *priv,
-		unsigned long index, struct dom_node **node)
+		uint32_t index, struct dom_node **node)
 {
 	dom_attr_list * match = NULL;
 	unsigned int num = index + 1;

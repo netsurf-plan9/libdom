@@ -66,7 +66,7 @@ void _virtual_dom_mouse_event_destroy(struct dom_event *evt)
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mouse_event_get_screen_x(dom_mouse_event *evt,
-		long *x)
+		int32_t *x)
 {
 	*x = evt->sx;
 
@@ -81,7 +81,7 @@ dom_exception _dom_mouse_event_get_screen_x(dom_mouse_event *evt,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mouse_event_get_screen_y(dom_mouse_event *evt,
-		long *y)
+		int32_t *y)
 {
 	*y = evt->sy;
 
@@ -96,7 +96,7 @@ dom_exception _dom_mouse_event_get_screen_y(dom_mouse_event *evt,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mouse_event_get_client_x(dom_mouse_event *evt,
-		long *x)
+		int32_t *x)
 {
 	*x = evt->cx;
 
@@ -111,7 +111,7 @@ dom_exception _dom_mouse_event_get_client_x(dom_mouse_event *evt,
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mouse_event_get_client_y(dom_mouse_event *evt,
-		long *y)
+		int32_t *y)
 {
 	*y = evt->cy;
 
@@ -282,8 +282,8 @@ dom_exception _dom_mouse_event_get_modifier_state(dom_mouse_event *evt,
  */
 dom_exception _dom_mouse_event_init(dom_mouse_event *evt, 
 		dom_string *type, bool bubble, bool cancelable, 
-		struct dom_abstract_view *view, long detail, long screen_x,
-		long screen_y, long client_x, long client_y, bool ctrl,
+		struct dom_abstract_view *view, int32_t detail, int32_t screen_x,
+		int32_t screen_y, int32_t client_x, int32_t client_y, bool ctrl,
 		bool alt, bool shift, bool meta, unsigned short button,
 		dom_event_target *et)
 {
@@ -337,8 +337,8 @@ dom_exception _dom_mouse_event_init(dom_mouse_event *evt,
 dom_exception _dom_mouse_event_init_ns(dom_mouse_event *evt,
 		dom_string *namespace, dom_string *type,
 		bool bubble, bool cancelable, struct dom_abstract_view *view,
-		long detail, long screen_x, long screen_y, long client_x,
-		long client_y, bool ctrl, bool alt, bool shift, bool meta, 
+		int32_t detail, int32_t screen_x, int32_t screen_y, int32_t client_x,
+		int32_t client_y, bool ctrl, bool alt, bool shift, bool meta, 
 		unsigned short button, dom_event_target *et)
 {
 	evt->sx = screen_x;

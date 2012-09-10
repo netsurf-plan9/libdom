@@ -30,10 +30,10 @@ bool is_null(void *arg);
 
 bool is_same(void *excepted, void *actual);
 bool is_same_int(int excepted, int actual);
-bool is_same_unsigned_long(unsigned long excepted, unsigned long actual);
+bool is_same_unsigned_int32_t(uint32_t excepted, uint32_t actual);
 
 bool is_equals_int(int excepted, int actual, bool dummy);
-bool is_equals_unsigned_long(unsigned long excepted, unsigned long actual, bool dummy);
+bool is_equals_unsigned_int32_t(uint32_t excepted, uint32_t actual, bool dummy);
 bool is_equals_bool(bool excepted, bool actual, bool dummy);
 bool is_equals_string(const char *excepted, dom_string *actual, 
 		bool ignoreCase);
@@ -45,9 +45,9 @@ bool is_equals_list(list *expected, list *actual, bool ignoreCase);
 
 bool is_instanceof(const char *type, dom_node *node);
 
-bool is_size_domnamednodemap(unsigned long size, dom_namednodemap *map);
-bool is_size_domnodelist(unsigned long size, dom_nodelist *list);
-bool is_size_list(unsigned long size, list *list);
+bool is_size_domnamednodemap(uint32_t size, dom_namednodemap *map);
+bool is_size_domnodelist(uint32_t size, dom_nodelist *list);
+bool is_size_list(uint32_t size, list *list);
 
 bool is_uri_equals(const char *scheme, const char *path, const char *host, 
                    const char *file, const char *name, const char *query,

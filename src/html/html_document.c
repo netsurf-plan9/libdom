@@ -340,7 +340,7 @@ dom_exception _dom_html_document_get_title(dom_html_document *doc,
 	} else {
 		dom_element *node;
 		dom_nodelist *nodes;
-		unsigned long len;
+		uint32_t len;
 		
 		exc = dom_document_get_elements_by_tag_name(doc,
 							    doc->memoised[hds_TITLE],

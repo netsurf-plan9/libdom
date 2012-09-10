@@ -65,7 +65,7 @@ void _virtual_dom_mouse_wheel_event_destroy(struct dom_event *evt)
  * \return DOM_NO_ERR.
  */
 dom_exception _dom_mouse_wheel_event_get_wheel_delta(
-		dom_mouse_wheel_event *evt, long *d)
+		dom_mouse_wheel_event *evt, int32_t *d)
 {
 	*d = evt->delta;
 
@@ -95,10 +95,10 @@ dom_exception _dom_mouse_wheel_event_get_wheel_delta(
 dom_exception _dom_mouse_wheel_event_init_ns(
 		dom_mouse_wheel_event *evt, dom_string *namespace,
 		dom_string *type,  bool bubble, bool cancelable,
-		struct dom_abstract_view *view, long detail, long screen_x,
-		long screen_y, long client_x, long client_y,
+		struct dom_abstract_view *view, int32_t detail, int32_t screen_x,
+		int32_t screen_y, int32_t client_x, int32_t client_y,
 		unsigned short button, dom_event_target *et,
-		dom_string *modifier_list, long wheel_delta)
+		dom_string *modifier_list, int32_t wheel_delta)
 {
 	dom_exception err;
 	dom_mouse_event *e = (dom_mouse_event *) evt;

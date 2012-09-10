@@ -21,7 +21,7 @@ typedef struct dom_text_vtable {
 	struct dom_characterdata_vtable base;
 
 	dom_exception (*dom_text_split_text)(struct dom_text *text,
-			unsigned long offset, struct dom_text **result);
+			uint32_t offset, struct dom_text **result);
 	dom_exception (*dom_text_get_is_element_content_whitespace)(
 			struct dom_text *text, bool *result);
 	dom_exception (*dom_text_get_whole_text)(struct dom_text *text,
@@ -31,13 +31,13 @@ typedef struct dom_text_vtable {
 } dom_text_vtable;
 
 static inline dom_exception dom_text_split_text(struct dom_text *text,
-		unsigned long offset, struct dom_text **result)
+		uint32_t offset, struct dom_text **result)
 {
 	return ((dom_text_vtable *) ((dom_node *) text)->vtable)->
 			dom_text_split_text(text, offset, result);
 }
 #define dom_text_split_text(t, o, r) dom_text_split_text((dom_text *) (t), \
-		(unsigned long) (o), (dom_text **) (r))
+		(uint32_t) (o), (dom_text **) (r))
 
 static inline dom_exception dom_text_get_is_element_content_whitespace(
 		struct dom_text *text, bool *result)

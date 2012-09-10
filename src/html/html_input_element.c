@@ -356,30 +356,30 @@ SIMPLE_GET_SET(use_map);
 SIMPLE_GET_SET(value);
 
 dom_exception dom_html_input_element_get_tab_index(
-	dom_html_input_element *input, long *tab_index)
+	dom_html_input_element *input, int32_t *tab_index)
 {
-	return dom_html_element_get_long_property(&input->base, "tabindex",
+	return dom_html_element_get_int32_t_property(&input->base, "tabindex",
 			SLEN("tabindex"), tab_index);
 }
 
 dom_exception dom_html_input_element_set_tab_index(
-	dom_html_input_element *input, unsigned long tab_index)
+	dom_html_input_element *input, uint32_t tab_index)
 {
-	return dom_html_element_set_long_property(&input->base, "tabindex",
+	return dom_html_element_set_int32_t_property(&input->base, "tabindex",
 			SLEN("tabindex"), tab_index);
 }
 
 dom_exception dom_html_input_element_get_max_length(
-	dom_html_input_element *input, long *max_length)
+	dom_html_input_element *input, int32_t *max_length)
 {
-	return dom_html_element_get_long_property(&input->base, "maxlength",
+	return dom_html_element_get_int32_t_property(&input->base, "maxlength",
 			SLEN("maxlength"), max_length);
 }
 
 dom_exception dom_html_input_element_set_max_length(
-	dom_html_input_element *input, unsigned long max_length)
+	dom_html_input_element *input, uint32_t max_length)
 {
-	return dom_html_element_set_long_property(&input->base, "maxlength",
+	return dom_html_element_set_int32_t_property(&input->base, "maxlength",
 			SLEN("maxlength"), max_length);
 }
 
