@@ -30,8 +30,8 @@ our %native_interface = (
 our %special_type = (
 	# Some of the type are not defined now!
 	boolean => "bool ",
-	int => "unsigned long ",
-	"unsigned long" => "unsigned long ",
+	int => "int32_t ",
+	"unsigned long" => "uint32_t ",
 	DOMString => "dom_string *",
 	List => "list *",
 	Collection => "list *",
