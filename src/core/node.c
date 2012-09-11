@@ -167,7 +167,7 @@ dom_exception _dom_node_initialise(dom_node_internal *node,
 	node->previous = NULL;
 	node->next = NULL;
 
-	/* Note: nodes do not reference the document to which they beint32_t,
+	/* Note: nodes do not reference the document to which they belong,
 	 * as this would result in the document never being destroyed once
 	 * the client has finished with it. The document will be aware of
 	 * any nodes that it owns through 2 mechanisms:
@@ -783,7 +783,7 @@ dom_exception _dom_node_insert_before(dom_node_internal *node,
 	 * also need to set its owner. */
 	if (node->type == DOM_DOCUMENT_NODE &&
 			new_child->type == DOM_DOCUMENT_TYPE_NODE) {
-		/* See int32_t comment in _dom_node_initialise as to why 
+		/* See long comment in _dom_node_initialise as to why 
 		 * we don't ref the document here */
 		new_child->owner = (struct dom_document *) node;
 	}
@@ -1277,7 +1277,7 @@ dom_exception _dom_node_set_prefix(dom_node_internal *node,
 		return DOM_NO_MODIFICATION_ALLOWED_ERR;
 	}
 
-	/* No int32_ter want existing prefix */
+	/* No longer want existing prefix */
 	if (node->prefix != NULL) {
 		dom_string_unref(node->prefix);
 	}

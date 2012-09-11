@@ -739,7 +739,7 @@ dom_exception _dom_element_get_attribute_node(struct dom_element *element,
  * \param attr     The attribute node to add
  * \param result   Pointer to location to receive previous node
  * \return DOM_NO_ERR                      on success,
- *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not beint32_t to the
+ *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not belong to the
  *                                         same document as ::element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly,
  *         DOM_INUSE_ATTRIBUTE_ERR         if ::attr is already an attribute
@@ -944,7 +944,7 @@ dom_exception _dom_element_get_attribute_node_ns(struct dom_element *element,
  * \param attr     The attribute node to add
  * \param result   Pointer to location to recieve previous node
  * \return DOM_NO_ERR                      on success,
- *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not beint32_t to the
+ *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not belong to the
  *                                         same document as ::element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly,
  *         DOM_INUSE_ATTRIBUTE_ERR         if ::attr is already an attribute
@@ -1843,7 +1843,7 @@ dom_exception _dom_element_get_attr_node(struct dom_element *element,
  * \param attr     The attribute node to add
  * \param result   Pointer to location to receive previous node
  * \return DOM_NO_ERR                      on success,
- *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not beint32_t to the
+ *         DOM_WRONG_DOCUMENT_ERR          if ::attr does not belong to the
  *                                         same document as ::element,
  *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::element is readonly,
  *         DOM_INUSE_ATTRIBUTE_ERR         if ::attr is already an attribute
@@ -1869,7 +1869,7 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 
 	/** \todo validate name */
 
-	/* Ensure element and attribute beint32_t to the same document */
+	/* Ensure element and attribute belong to the same document */
 	if (e->owner != attr_node->owner)
 		return DOM_WRONG_DOCUMENT_ERR;
 

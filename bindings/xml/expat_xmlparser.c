@@ -214,7 +214,7 @@ expat_xmlparser_cdata_handler(void *_parser,
 		return;
 	}
 
-	/* No int32_ter need data */
+	/* No longer need data */
 	dom_string_unref(data);
 
 	/* Append cdata section to parent */
@@ -230,7 +230,7 @@ expat_xmlparser_cdata_handler(void *_parser,
 	if (ins_cdata != NULL)
 		dom_node_unref(ins_cdata);
 
-	/* No int32_ter interested in cdata section */
+	/* No longer interested in cdata section */
 	dom_node_unref(cdata);
 }
 
@@ -309,7 +309,7 @@ expat_xmlparser_comment_handler(void *_parser,
 		return;
 	}
 
-	/* No int32_ter need data */
+	/* No longer need data */
 	dom_string_unref(data);
 
 	/* Append comment to parent */
@@ -326,7 +326,7 @@ expat_xmlparser_comment_handler(void *_parser,
 	if (ins_comment != NULL)
 		dom_node_unref((struct dom_node *) ins_comment);
 
-	/* No int32_ter interested in comment */
+	/* No longer interested in comment */
 	dom_node_unref((struct dom_node *) comment);
 
 }
@@ -369,7 +369,7 @@ expat_xmlparser_start_doctype_decl_handler(void *_parser,
 	if (ins_doctype != NULL)
 		dom_node_unref((struct dom_node *) ins_doctype);
 
-	/* No int32_ter interested in doctype */
+	/* No longer interested in doctype */
 	dom_node_unref((struct dom_node *) doctype);
 }
 
