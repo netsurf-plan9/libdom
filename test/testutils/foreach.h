@@ -26,6 +26,7 @@
 void foreach_initialise_domnodelist(dom_nodelist *list, unsigned int *iterator);
 void foreach_initialise_list(list *list, unsigned int *iterator);
 void foreach_initialise_domnamednodemap(dom_namednodemap *map, unsigned int *iterator);
+void foreach_initialise_domhtmlcollection(dom_html_collection *coll, unsigned int *iterator);
 
 bool _get_next_domnodelist(dom_nodelist *list, unsigned int *iterator, dom_node **ret);
 #define get_next_domnodelist(l, i, r) _get_next_domnodelist( \
@@ -37,5 +38,8 @@ bool _get_next_domnamednodemap(dom_namednodemap *map, unsigned int *iterator, do
 #define get_next_domnamednodemap(m, i, r) _get_next_domnamednodemap( \
 		(dom_namednodemap *) (m), (unsigned int *) (i), (dom_node **) (r))
 
+bool _get_next_domhtmlcollection(dom_html_collection *coll, unsigned int *iterator, dom_node **ret);
+#define get_next_domhtmlcollection(c, i, r) _get_next_domhtmlcollection( \
+		(dom_html_collection *) (c), (unsigned int *) (i), (dom_node **) (r))
 
 #endif

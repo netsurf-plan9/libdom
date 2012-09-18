@@ -34,6 +34,11 @@ void foreach_initialise_domnamednodemap(dom_namednodemap *map, unsigned int *ite
 	*iterator = 0;
 }
 
+void foreach_initialise_domhtmlcollection(dom_html_collection *coll, unsigned int *iterator)
+{
+	(void)coll;
+	*iterator = 0;
+}
 
 bool _get_next_domnodelist(dom_nodelist *list, unsigned int *iterator, dom_node **ret)
 {
@@ -94,6 +99,27 @@ bool _get_next_domnamednodemap(dom_namednodemap *map, unsigned int *iterator, do
 		return false;
 	
 	(*iterator)++;	
+
+	return true;
+}
+
+bool _get_next_domhtmlcollection(dom_html_collection *coll, unsigned int *iterator, dom_node **ret)
+{
+	dom_exception err;
+	unsigned long len;
+
+	err = dom_html_collection_get_length(coll, &len);
+	if (err != DOM_NO_ERR)
+		return false;
+
+	if (*iterator >= len)
+		return false;
+
+	err = dom_html_collection_item(coll, (*iterator), ret);
+	if (err != DOM_NO_ERR)
+		return false;
+
+	(*iterator)++;
 
 	return true;
 }

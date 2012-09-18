@@ -361,7 +361,7 @@ dom_exception dom_html_select_element_get_form(
  * \param col  THe returned collection object
  * \return DOM_NO_ERR on success.
  */
-dom_exception dom_html_select_element_get_options(
+dom_exception dom__html_select_element_get_options(
 		dom_html_select_element *ele,
 		struct dom_html_options_collection **col)
 {
@@ -524,7 +524,7 @@ dom_exception dom_html_select_element_set_tab_index(
 
 
 /* Functions */
-dom_exception dom_html_select_element_add(dom_html_select_element *select,
+dom_exception dom__html_select_element_add(dom_html_select_element *select,
 		struct dom_html_element *ele, struct dom_html_element *before)
 {
 	UNUSED(select);

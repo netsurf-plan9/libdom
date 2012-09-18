@@ -1244,6 +1244,13 @@ sub generate_control_statement {
 				print "foreach_initialise_domnamednodemap($coll, \&iterator$iterator_index);\n";
 				print "while(get_next_domnamednodemap($coll, \&iterator$iterator_index, \&$member)) {\n";
 			}
+
+			if ($self->{"var"}->{$coll} eq "HTMLCollection") {
+				$iterator_index++;
+				print "unsigned int iterator$iterator_index = 0;";
+				print "foreach_initialise_domhtmlcollection($coll, \&iterator$iterator_index);\n";
+				print "while(get_next_domhtmlcollection($coll, \&iterator$iterator_index, \&$member)) {\n";
+			}
 		}
 	}
 
