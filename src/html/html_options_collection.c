@@ -142,7 +142,73 @@ dom_exception dom_html_options_collection_item(dom_html_options_collection *col,
 dom_exception dom_html_options_collection_named_item(dom_html_options_collection *col,
 		dom_string *name, struct dom_node **node)
 {
-	return dom_html_collection_named_item(&col->base, name, node);
+	struct dom_node_internal *n = col->base.root;
+	dom_string *kname;
+	dom_exception err;
+
+	/* Search for an element with an appropriate ID */
+	err = dom_html_collection_named_item(&col->base, name, node);
+	if (err == DOM_NO_ERR && *node != NULL)
+		return err;
+
+	/* Didn't find one, so consider name attribute */
+	err = dom_string_create_interned((const uint8_t *) "name", SLEN("name"),
+			&kname);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	while (n != NULL) {
+		if (n->type == DOM_ELEMENT_NODE &&
+		    col->base.ic(n, col->base.ctx) == true) {
+			dom_string *nval = NULL;
+
+			err = dom_element_get_attribute(n, kname, &nval);
+			if (err != DOM_NO_ERR) {
+				dom_string_unref(kname);
+				return err;
+			}
+
+			if (nval != NULL && dom_string_isequal(name, nval)) {
+				*node = (struct dom_node *) n;
+				dom_node_ref(n);
+				dom_string_unref(nval);
+				dom_string_unref(kname);
+
+				return DOM_NO_ERR;
+			}
+
+			if (nval != NULL)
+				dom_string_unref(nval);
+		}
+
+		/* Depth first iterating */
+		if (n->first_child != NULL) {
+			n = n->first_child;
+		} else if (n->next != NULL) {
+			n = n->next;
+		} else {
+			/* No children and siblings */
+			struct dom_node_internal *parent = n->parent;
+
+			while (parent != col->base.root &&
+					n == parent->last_child) {
+				n = parent;
+				parent = parent->parent;
+			}
+			
+			if (parent == col->base.root)
+				n = NULL;
+			else
+				n = n->next;
+		}
+	}
+
+	dom_string_unref(kname);
+
+	/* Not found the target node */
+	*node = NULL;
+
+	return DOM_NO_ERR;
 }
 
 /**

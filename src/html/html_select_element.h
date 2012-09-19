@@ -18,16 +18,20 @@ struct dom_html_select_element {
 			/**< The base class */
 	int32_t selected;
 			/**< The selected element's index */
+	dom_html_form_element *form;
+			/**< The form associated with select */
 	dom_html_options_collection *options;
 			/**< The options objects */
 };
 
 /* Create a dom_html_select_element object */
 dom_exception _dom_html_select_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_select_element **ele);
 
 /* Initialise a dom_html_select_element object */
 dom_exception _dom_html_select_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_select_element *ele);
 
 /* Finalise a dom_html_select_element object */
@@ -50,6 +54,11 @@ dom_exception _dom_html_select_element_copy(dom_node_internal *old,
 #define DOM_NODE_PROTECT_VTABLE_HTML_SELECT_ELEMENT \
 	_dom_virtual_html_select_element_destroy, \
 	_dom_html_select_element_copy
+
+/* Internal function for bindings */
+
+dom_exception _dom_html_select_element_set_form(
+	dom_html_select_element *select, dom_html_form_element *form);
 
 #endif
 
