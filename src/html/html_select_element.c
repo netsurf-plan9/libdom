@@ -536,7 +536,7 @@ dom_exception dom__html_select_element_add(dom_html_select_element *select,
 }
 
 dom_exception dom_html_select_element_remove(dom_html_select_element *ele,
-		long index)
+		int32_t index)
 {
 	dom_exception err;
 	uint32_t len;
@@ -547,7 +547,7 @@ dom_exception dom_html_select_element_remove(dom_html_select_element *ele,
 		return err;
 
 	/* Ensure index is in range */
-	if (index >= len)
+	if (index < 0 || (uint32_t)index >= len)
 		return DOM_NO_ERR;
 
 	err = dom_html_options_collection_item(ele->options, index, &option);

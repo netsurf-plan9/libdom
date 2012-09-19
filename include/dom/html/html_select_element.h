@@ -80,7 +80,7 @@ dom_exception dom__html_select_element_add(dom_html_select_element *select,
 		(struct dom_html_element *) (e), \
 		(struct dom_html_element *) (b))
 dom_exception dom_html_select_element_remove(dom_html_select_element *ele,
-		long index);
+		int32_t index);
 dom_exception dom_html_select_element_blur(struct dom_html_select_element *ele);
 dom_exception dom_html_select_element_focus(struct dom_html_select_element *ele);
 
