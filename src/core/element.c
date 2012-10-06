@@ -289,7 +289,6 @@ static void _dom_element_attr_list_node_destroy(dom_attr_list *n)
 	doc = a->owner;
 	if (n->namespace == NULL &&
 			dom_string_isequal(n->name, doc->class_string)) {
-		dom_node_internal *a = (dom_node_internal *)(n->attr);
 		_dom_element_destroy_classes((dom_element *)(a->parent));
 	}
 
@@ -384,10 +383,12 @@ static void _dom_element_attr_list_destroy(dom_attr_list *list)
 /**
  * Clone an attribute list node, and its attribute
  *
- * \param n  The attribute list node to clone
+ * \param n     The attribute list node to clone
+ * \param newe  Element to clone attribute for
  * \return the new attribute list node, or NULL on failure
  */
-static dom_attr_list * _dom_element_attr_list_node_clone(dom_attr_list *n)
+static dom_attr_list *_dom_element_attr_list_node_clone(dom_attr_list *n,
+		dom_element *newe)
 {
 	dom_attr *clone = NULL;
 	dom_attr_list *new_list_node;
@@ -412,6 +413,9 @@ static dom_attr_list * _dom_element_attr_list_node_clone(dom_attr_list *n)
 		return NULL;
 	}
 
+	dom_node_set_parent(clone, newe);
+	dom_node_remove_pending(clone);
+	dom_node_unref(clone);
 	new_list_node->attr = clone;
 
 	if (n->name != NULL)
@@ -427,28 +431,29 @@ static dom_attr_list * _dom_element_attr_list_node_clone(dom_attr_list *n)
  * Clone an entire attribute list, and its attributes
  *
  * \param list  The attribute list to clone
+ * \param newe  Element to clone list for
  * \return the new attribute list, or NULL on failure
  */
-static dom_attr_list * _dom_element_attr_list_clone(dom_attr_list *list)
+static dom_attr_list *_dom_element_attr_list_clone(dom_attr_list *list,
+		dom_element *newe)
 {
 	dom_attr_list *attr = list;
 
 	dom_attr_list *new_list = NULL;
 	dom_attr_list *new_list_node = NULL;
-	bool first = true;
 
 	if (list == NULL)
 		return NULL;
 
 	do {
-		new_list_node = _dom_element_attr_list_node_clone(attr);
+		new_list_node = _dom_element_attr_list_node_clone(attr, newe);
 		if (new_list_node == NULL) {
 			if (new_list != NULL)
 				_dom_element_attr_list_destroy(new_list);
 			return NULL;
 		}
 
-		if (first) {
+		if (new_list == NULL) {
 			new_list = new_list_node;
 		} else {
 			_dom_element_attr_list_insert(new_list, new_list_node);
@@ -1536,7 +1541,8 @@ dom_exception _dom_element_copy(dom_node_internal *old,
 
 	if (olde->attributes != NULL) {
 		/* Copy the attribute list */
-		e->attributes = _dom_element_attr_list_clone(olde->attributes);
+		e->attributes = _dom_element_attr_list_clone(olde->attributes,
+				e);
 	} else {
 		e->attributes = NULL;
 	}
