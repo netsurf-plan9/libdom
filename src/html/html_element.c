@@ -353,8 +353,12 @@ dom_exception dom_html_element_get_int32_t_property(dom_html_element *ele,
 		if (err == DOM_NO_ERR) {
 			char *s3 = _strndup(dom_string_data(s2),
 					    dom_string_byte_length(s2));
-			*value = strtoul(s3, NULL, 0);
-			free(s3);
+			if (s3 != NULL) {
+				*value = strtoul(s3, NULL, 0);
+				free(s3);
+			} else {
+				err = DOM_NO_MEM_ERR;
+			}
 			dom_string_unref(s2);
 		}
 	} else {

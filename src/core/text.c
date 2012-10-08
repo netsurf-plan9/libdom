@@ -473,8 +473,10 @@ dom_exception walk_logic_adjacent_text(dom_text *text,
 	/* Firstly, we look our left */
 	err = walk_logic_adjacent_text_in_order(left, opt, LEFT, ret, &cont);
 	if (err != DOM_NO_ERR) {
-		dom_string_unref(*ret);
-		*ret = NULL;
+		if (opt == COLLECT) {
+			dom_string_unref(*ret);
+			*ret = NULL;
+		}
 		return err;
 	}
 
@@ -508,8 +510,10 @@ dom_exception walk_logic_adjacent_text(dom_text *text,
 	/* Now, look right */
 	err = walk_logic_adjacent_text_in_order(right, opt, RIGHT, ret, &cont);
 	if (err != DOM_NO_ERR) {
-		dom_string_unref(*ret);
-		*ret = NULL;
+		if (opt == COLLECT) {
+			dom_string_unref(*ret);
+			*ret = NULL;
+		}
 		return err;
 	}
 
