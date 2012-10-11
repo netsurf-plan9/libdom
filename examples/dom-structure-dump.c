@@ -46,21 +46,6 @@
 #include <dom/dom.h>
 #include <dom/bindings/hubbub/parser.h>
 
-#define UNUSED(x) ((x)=(x))
-
-void test_msg(uint32_t severity, void *ctx, const char *msg, ...)
-{
-	va_list l;
-
-	UNUSED(ctx);
-
-	va_start(l, msg);
-
-	fprintf(stderr, "%d: ", severity);
-	vfprintf(stderr, msg, l);
-	fprintf(stderr, "\n");
-}
-
 
 /**
  * Generate a LibDOM document DOM from an HTML file
@@ -79,8 +64,8 @@ dom_document *create_doc_dom_from_file(char *file)
 	unsigned char buffer[buffer_size];
 
 	/* Create Hubbub parser */
-	parser = dom_hubbub_parser_create(NULL, true, false, test_msg, NULL,
-			NULL, NULL);
+	parser = dom_hubbub_parser_create(NULL, true, false, NULL, NULL,
+			NULL, &doc);
 	if (parser == NULL) {
 		printf("Can't create Hubbub Parser\n");
 		return NULL;
@@ -114,9 +99,6 @@ dom_document *create_doc_dom_from_file(char *file)
 		printf("Parsing error when construct DOM\n");
 		return NULL;
 	}
-
-	/* Get the document */
-	doc = dom_hubbub_parser_get_document(parser);
 
 	/* Finished with parser */
 	dom_hubbub_parser_destroy(parser);
