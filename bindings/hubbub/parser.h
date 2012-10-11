@@ -40,16 +40,12 @@ typedef enum dom_hubbub_encoding_source {
  * After you have parsed the data,
  *
  * dom_hubbub_parser_completed(...);
- * dom_bubbub_parser_get_document(...);
  * dom_hubbub_parser_destroy(...);
  *
- * Clients must ensure that the last 3 function calls above are called in
- * the order shown. dom_hubbub_parser_get_document() will pass the ownership
+ * Clients must ensure that these function calls above are called in
+ * the order shown. dom_hubbub_parser_create() will pass the ownership
  * of the document to the client. After that, the parser should be destroyed.
  * The client must not call any method of this parser after destruction.
- *
- * The client must call dom_hubbub_parser_completed() before calling
- * dom_hubbub_parser_get_document().
  */
 
 /* Create a Hubbub parser instance */
