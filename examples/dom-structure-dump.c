@@ -79,7 +79,8 @@ dom_document *create_doc_dom_from_file(char *file)
 	unsigned char buffer[buffer_size];
 
 	/* Create Hubbub parser */
-	parser = dom_hubbub_parser_create(NULL, true, test_msg, NULL);
+	parser = dom_hubbub_parser_create(NULL, true, false, test_msg, NULL,
+			NULL, NULL);
 	if (parser == NULL) {
 		printf("Can't create Hubbub Parser\n");
 		return NULL;
