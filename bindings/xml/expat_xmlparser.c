@@ -43,6 +43,20 @@ expat_xmlparser_start_element_handler(void *_parser,
 	dom_exception err;
 	dom_element *elem, *ins_elem;
 	dom_string *tag_name;
+	dom_string *namespace = NULL;
+	const XML_Char *ns_sep = strchr(name, '\n');
+
+	if (ns_sep != NULL) {
+		err = dom_string_create((const uint8_t *)name,
+					ns_sep - name,
+					&namespace);
+		if (err != DOM_NO_ERR) {
+			parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+				    "No memory for namespace name");
+			return;
+		}
+		name = ns_sep + 1;
+	}
 
 	err = dom_string_create((const uint8_t *)name,
 				strlen(name),
@@ -50,11 +64,20 @@ expat_xmlparser_start_element_handler(void *_parser,
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 			    "No memory for tag name");
+		if (namespace != NULL)
+			dom_string_unref(namespace);
 		return;
 	}
 
-	err = dom_document_create_element(parser->doc, tag_name, &elem);
+	if (namespace == NULL)
+		err = dom_document_create_element(parser->doc,
+						  tag_name, &elem);
+	else
+		err = dom_document_create_element_ns(parser->doc, namespace,
+						     tag_name, &elem);
 	if (err != DOM_NO_ERR) {
+		if (namespace != NULL)
+			dom_string_unref(namespace);
 		dom_string_unref(tag_name);
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 			    "Failed to create element '%s'", name);
@@ -62,6 +85,8 @@ expat_xmlparser_start_element_handler(void *_parser,
 	}
 
 	dom_string_unref(tag_name);
+	if (namespace != NULL)
+		dom_string_unref(namespace);
 
 	/* Add attributes to the element */
 
@@ -411,7 +436,7 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 	parser->msg = msg;
 	parser->mctx = mctx;
 
-	parser->parser = XML_ParserCreateNS(enc, ':');
+	parser->parser = XML_ParserCreateNS(enc, '\n');
 
 	if (parser->parser == NULL) {
 		free(parser);
