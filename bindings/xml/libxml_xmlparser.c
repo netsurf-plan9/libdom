@@ -270,8 +270,6 @@ dom_xml_error dom_xml_parser_parse_chunk(dom_xml_parser *parser,
 dom_xml_error dom_xml_parser_completed(dom_xml_parser *parser)
 {
 	xmlParserErrors err;
-	dom_string *name = NULL;
-	dom_exception derr;
 
 	err = xmlParseChunk(parser->xml_ctx, "", 0, 1);
 	if (err != XML_ERR_OK) {
