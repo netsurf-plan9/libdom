@@ -89,15 +89,31 @@ expat_xmlparser_start_element_handler(void *_parser,
 		dom_string_unref(namespace);
 
 	/* Add attributes to the element */
-
 	while (*atts) {
 		dom_string *key, *value;
-
-		err = dom_string_create((const uint8_t *)(*atts),
-					strlen(*atts), &key);
+		ns_sep = strchr(*atts, '\n');
+		if (ns_sep != NULL) {
+			err = dom_string_create((const uint8_t *)(*atts),
+						ns_sep - (*atts), &namespace);
+			if (err != DOM_NO_ERR) {
+				parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+					    "No memory for attr namespace");
+				dom_node_unref(elem);
+				return;
+			}
+		} else
+			namespace = NULL;
+		if (ns_sep == NULL)
+			err = dom_string_create((const uint8_t *)(*atts),
+						strlen(*atts), &key);
+		else
+			err = dom_string_create((const uint8_t *)(ns_sep + 1),
+						strlen(ns_sep + 1), &key);
 		if (err != DOM_NO_ERR) {
 			parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 				    "No memory for attribute name");
+			if (namespace != NULL)
+				dom_string_unref(namespace);
 			dom_node_unref(elem);
 			return;
 		}
@@ -106,6 +122,8 @@ expat_xmlparser_start_element_handler(void *_parser,
 					strlen(*atts), &value);
 		if (err != DOM_NO_ERR) {
 			dom_node_unref(elem);
+			if (namespace != NULL)
+				dom_string_unref(namespace);
 			dom_string_unref(key);
 			parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 				    "No memory for attribute value");
@@ -113,7 +131,13 @@ expat_xmlparser_start_element_handler(void *_parser,
 		}
 		atts++;
 
-		err = dom_element_set_attribute(elem, key, value);
+		if (namespace == NULL)
+			err = dom_element_set_attribute(elem, key, value);
+		else
+			err = dom_element_set_attribute_ns(elem, namespace,
+							   key, value);
+	        if (namespace != NULL)
+			dom_string_unref(namespace);
 		dom_string_unref(key);
 		dom_string_unref(value);
 		if (err != DOM_NO_ERR) {
