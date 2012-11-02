@@ -282,16 +282,6 @@ dom_xml_error dom_xml_parser_completed(dom_xml_parser *parser)
 
 	parser->complete = true;
 
-	/* TODO: In future, this string "id" should be extracted from the 
-	 * document schema file instead of just setting it as "id".
-	 */
-	derr = dom_string_create((const uint8_t *) "id", SLEN("id"), &name);
-	if (derr != DOM_NO_ERR)
-		return derr;
-	
-	_dom_document_set_id_name(parser->doc, name);
-	dom_string_unref(name);
-
 	return DOM_XML_OK;
 }
 
