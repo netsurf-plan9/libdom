@@ -25,10 +25,10 @@
 #include "html/html_option_element.h"
 #include "html/html_select_element.h"
 
+#include "core/attr.h"
 #include "core/string.h"
 #include "utils/namespace.h"
 #include "utils/utils.h"
-#include "utils/validate.h"
 
 static struct dom_html_document_vtable html_document_vtable = {
 	{
@@ -233,9 +233,6 @@ dom_exception _dom_html_document_create_element(dom_document *doc,
 {
 	dom_html_document *html = (dom_html_document *) doc;
 
-	if (_dom_validate_name(tag_name) == false)
-		return DOM_INVALID_CHARACTER_ERR;
-
 	return _dom_html_document_create_element_internal(html,
 			tag_name, NULL, NULL,
 			(dom_html_element **)result);
@@ -249,15 +246,6 @@ dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 	dom_string *prefix, *localname;
 	dom_exception err;
 
-	if (_dom_validate_name(qname) == false)
-		return DOM_INVALID_CHARACTER_ERR;
-
-	/* Validate qname */
-	err = _dom_namespace_validate_qname(qname, namespace);
-	if (err != DOM_NO_ERR) {
-		return err;
-	}
-
 	/* Divide QName into prefix/localname pair */
 	err = _dom_namespace_split_qname(qname, &prefix, &localname);
 	if (err != DOM_NO_ERR) {
@@ -267,6 +255,81 @@ dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 	/* Attempt to create element */
 	err = _dom_html_document_create_element_internal(html, localname,
 			namespace, prefix, (dom_html_element **)result);
+
+	/* Tidy up */
+	if (localname != NULL) {
+		dom_string_unref(localname);
+	}
+
+	if (prefix != NULL) {
+		dom_string_unref(prefix);
+	}
+
+	return err;
+}
+
+/**
+ * Create an attribute
+ *
+ * \param doc     The document owning the attribute
+ * \param name    The name of the attribute
+ * \param result  Pointer to location to receive result
+ * \return DOM_NO_ERR                on success,
+ *
+ * The constructed attribute will always be classified as 'specified'.
+ *
+ * The returned node will have its reference count increased. It is
+ * the responsibility of the caller to unref the node once it has
+ * finished with it.
+ */
+dom_exception _dom_html_document_create_attribute(dom_document *doc,
+		dom_string *name, dom_attr **result)
+{
+	return _dom_attr_create(doc, name, NULL, NULL, true, result);
+}
+
+/**
+ * Create an attribute from the qualified name and namespace URI
+ *
+ * \param doc        The document owning the attribute
+ * \param namespace  The namespace URI to use
+ * \param qname      The qualified name of the attribute
+ * \param result     Pointer to location to receive result
+ * \return DOM_NO_ERR                on success,
+ *         DOM_NAMESPACE_ERR         if ::qname is malformed, or it has a
+ *                                   prefix and ::namespace is NULL, or
+ *                                   ::qname has a prefix "xml" and
+ *                                   ::namespace is not
+ *                                   "http://www.w3.org/XML/1998/namespace",
+ *                                   or ::qname has a prefix "xmlns" and
+ *                                   ::namespace is not
+ *                                   "http://www.w3.org/2000/xmlns", or
+ *                                   ::namespace is
+ *                                   "http://www.w3.org/2000/xmlns" and
+ *                                   ::qname is not (or is not prefixed by)
+ *                                   "xmlns",
+ *         DOM_NOT_SUPPORTED_ERR     if ::doc does not support the "XML"
+ *                                   feature.
+ *
+ * The returned node will have its reference count increased. It is
+ * the responsibility of the caller to unref the node once it has
+ * finished with it.
+ */
+dom_exception _dom_html_document_create_attribute_ns(dom_document *doc,
+		dom_string *namespace, dom_string *qname,
+		dom_attr **result)
+{
+	dom_string *prefix, *localname;
+	dom_exception err;
+
+	/* Divide QName into prefix/localname pair */
+	err = _dom_namespace_split_qname(qname, &prefix, &localname);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	/* Attempt to create attribute */
+	err = _dom_attr_create(doc, localname, namespace, prefix, true, result);
 
 	/* Tidy up */
 	if (localname != NULL) {
