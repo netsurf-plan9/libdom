@@ -742,6 +742,7 @@ dom_hubbub_parser_create(const char *enc,
 	hubbub_parser_optparams params;
 	hubbub_error error;
 	dom_exception err;
+	dom_string *idname = NULL;
 
 	/* check result parameter */
 	if (document == NULL) {
@@ -813,6 +814,21 @@ dom_hubbub_parser_create(const char *enc,
 			     HUBBUB_PARSER_ENABLE_SCRIPTING,
 			     &params);
 
+	/* set the document id parameter before the parse so searches
+	 * based on id succeed.
+	 */
+	err = dom_string_create_interned((const uint8_t *) "id",
+					 SLEN("id"),
+					 &idname);
+	if (err != DOM_NO_ERR) {
+		hubbub_parser_destroy(parser->parser);
+		free(parser);
+		msg(DOM_MSG_ERROR, mctx, "Can't set DOM document id name");
+		return NULL;
+	}
+	_dom_document_set_id_name(parser->doc, idname);
+	dom_string_unref(idname);
+
 	/* set return parameter */
 	*document = (dom_document *)dom_node_ref(parser->doc);
 
@@ -880,9 +896,7 @@ dom_hubbub_error dom_hubbub_parser_parse_chunk(dom_hubbub_parser *parser,
  */
 dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
 {
-	dom_exception derr;
 	hubbub_error err;
-	dom_string *name = NULL;
 
 	err = hubbub_parser_completed(parser->parser);
 	if (err != HUBBUB_OK) {
@@ -892,14 +906,6 @@ dom_hubbub_error dom_hubbub_parser_completed(dom_hubbub_parser *parser)
 	}
 
 	parser->complete = true;
-
-	derr = dom_string_create_interned((const uint8_t *) "id", SLEN("id"),
-			&name);
-	if (derr != DOM_NO_ERR)
-		return DOM_HUBBUB_HUBBUB_ERR | HUBBUB_UNKNOWN;
-
-	_dom_document_set_id_name(parser->doc, name);
-	dom_string_unref(name);
 
 	return DOM_HUBBUB_OK;
 }
