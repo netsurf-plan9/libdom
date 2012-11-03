@@ -7,5 +7,5 @@ Name: libdom
 Description: W3C DOM implementation
 Version: VERSION
 REQUIRED
-Libs: -L${libdir} -ldom
+Libs: -L${libdir} -ldom -lexpat
 Cflags: -I${includedir}
