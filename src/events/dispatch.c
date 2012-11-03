@@ -7,6 +7,7 @@
 
 #include <assert.h>
 
+#include "core/document.h"
 #include "events/dispatch.h"
 #include "events/mutation_event.h"
 
@@ -35,15 +36,9 @@ dom_exception __dom_dispatch_node_change_event(dom_document *doc,
 		return err;
 	
 	if (change == DOM_MUTATION_ADDITION) {
-		err = dom_string_create((const uint8_t *) "DOMNodeInserted",
-				SLEN("DOMNodeInserted"), &type);
-		if (err != DOM_NO_ERR)
-			goto cleanup;
+		type = dom_string_ref(doc->_memo_domnodeinserted);
 	} else if (change == DOM_MUTATION_REMOVAL) {
-		err = dom_string_create((const uint8_t *) "DOMNodeRemoval",
-				SLEN("DOMNodeRemoved"), &type);
-		if (err != DOM_NO_ERR)
-			goto cleanup;
+		type = dom_string_ref(doc->_memo_domnoderemoved);
 	} else {
 		assert("Should never be here" == NULL);
 	}
@@ -87,18 +82,9 @@ dom_exception __dom_dispatch_node_change_document_event(dom_document *doc,
 		return err;
 
 	if (change == DOM_MUTATION_ADDITION) {
-		err = dom_string_create(
-				(const uint8_t *) 
-					"DOMNodeInsertedIntoDocument", 
-				SLEN("DOMNodeInsertedIntoDocument"), &type);
-		if (err != DOM_NO_ERR)
-			goto cleanup;
+		type = dom_string_ref(doc->_memo_domnodeinsertedintodocument);
 	} else if (change == DOM_MUTATION_REMOVAL) {
-		err = dom_string_create(
-				(const uint8_t *) "DOMNodeRemovedFromDocument", 
-				SLEN("DOMNodeRemovedFromDocument"), &type);
-		if (err != DOM_NO_ERR)
-			goto cleanup;
+		type = dom_string_ref(doc->_memo_domnoderemovedfromdocument);
 	} else {
 		assert("Should never be here" == NULL);
 	}
@@ -146,10 +132,7 @@ dom_exception __dom_dispatch_attr_modified_event(dom_document *doc,
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	err = dom_string_create((const uint8_t *) "DOMAttrModified",
-			SLEN("DOMAttrModified"), &type);
-	if (err != DOM_NO_ERR)
-		goto cleanup;
+	type = dom_string_ref(doc->_memo_domattrmodified);
 
 	/* Initialise the event with corresponding parameters */
 	err = dom_mutation_event_init(evt, type, true, false, related, 
@@ -193,10 +176,7 @@ dom_exception __dom_dispatch_characterdata_modified_event(
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	err = dom_string_create((const uint8_t *) "DOMCharacterDataModified",
-			SLEN("DOMCharacterDataModified"), &type);
-	if (err != DOM_NO_ERR)
-		goto cleanup;
+	type = dom_string_ref(doc->_memo_domcharacterdatamodified);
 
 	err = dom_mutation_event_init(evt, type, true, false, et, prev, 
 			new, NULL, DOM_MUTATION_MODIFICATION);
@@ -232,10 +212,7 @@ dom_exception __dom_dispatch_subtree_modified_event(dom_document *doc,
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	err = dom_string_create((const uint8_t *) "DOMSubtreeModified",
-			SLEN("DOMSubtreeModified"), &type);
-	if (err != DOM_NO_ERR)
-		goto cleanup;
+	type = dom_string_ref(doc->_memo_domsubtreemodified);
 
 	err = dom_mutation_event_init(evt, type, true, false, et, NULL, 
 			NULL, NULL, DOM_MUTATION_MODIFICATION);

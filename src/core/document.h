@@ -59,6 +59,15 @@ struct dom_document {
 	dom_document_quirks_mode quirks;
 				/**< Document is in quirks mode */
 	dom_string *_memo_empty;	/**< The string ''. */
+
+	/* Memoised event strings */
+	dom_string *_memo_domnodeinserted; /**< DOMNodeInserted */
+	dom_string *_memo_domnoderemoved;  /**< DOMNodeRemoved */
+	dom_string *_memo_domnodeinsertedintodocument; /**< DOMNodeInsertedIntoDocument */
+	dom_string *_memo_domnoderemovedfromdocument;  /**< DOMNodeRemovedFromDocument */
+	dom_string *_memo_domattrmodified; /**< DOMAttrModified */
+	dom_string *_memo_domcharacterdatamodified; /**< DOMCharacterDataModified */
+	dom_string *_memo_domsubtreemodified; /**< DOMSubtreeModified */
 };
 
 /* Create a DOM document */

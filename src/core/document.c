@@ -156,6 +156,97 @@ dom_exception _dom_document_initialise(dom_document *doc,
 		return err;
 	}
 
+	err = dom_string_create_interned((const uint8_t *) "DOMNodeInserted",
+					 SLEN("DOMNodeInserted"),
+					 &doc->_memo_domnodeinserted);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->id_name);
+		dom_string_unref(doc->class_string);
+		return err;
+	}
+
+	err = dom_string_create_interned((const uint8_t *) "DOMNodeRemoved",
+					 SLEN("DOMNodeRemoved"),
+					 &doc->_memo_domnoderemoved);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->_memo_domnodeinserted);
+		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->id_name);
+		dom_string_unref(doc->class_string);
+		return err;
+	}
+
+	err = dom_string_create_interned((const uint8_t *) "DOMNodeInsertedIntoDocument",
+					 SLEN("DOMNodeInsertedIntoDocument"),
+					 &doc->_memo_domnodeinsertedintodocument);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->_memo_domnoderemoved);
+		dom_string_unref(doc->_memo_domnodeinserted);
+		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->id_name);
+		dom_string_unref(doc->class_string);
+		return err;
+	}
+
+	err = dom_string_create_interned((const uint8_t *) "DOMNodeRemovedFromDocument",
+					 SLEN("DOMNodeRemovedFromDocument"),
+					 &doc->_memo_domnoderemovedfromdocument);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->_memo_domnodeinsertedintodocument);
+		dom_string_unref(doc->_memo_domnoderemoved);
+		dom_string_unref(doc->_memo_domnodeinserted);
+		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->id_name);
+		dom_string_unref(doc->class_string);
+		return err;
+	}
+
+	err = dom_string_create_interned((const uint8_t *) "DOMAttrModified",
+					 SLEN("DOMAttrModified"),
+					 &doc->_memo_domattrmodified);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->_memo_domnoderemovedfromdocument);
+		dom_string_unref(doc->_memo_domnodeinsertedintodocument);
+		dom_string_unref(doc->_memo_domnoderemoved);
+		dom_string_unref(doc->_memo_domnodeinserted);
+		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->id_name);
+		dom_string_unref(doc->class_string);
+		return err;
+	}
+
+	err = dom_string_create_interned((const uint8_t *) "DOMCharacterDataModified",
+					 SLEN("DOMCharacterDataModified"),
+					 &doc->_memo_domcharacterdatamodified);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->_memo_domattrmodified);
+		dom_string_unref(doc->_memo_domnoderemovedfromdocument);
+		dom_string_unref(doc->_memo_domnodeinsertedintodocument);
+		dom_string_unref(doc->_memo_domnoderemoved);
+		dom_string_unref(doc->_memo_domnodeinserted);
+		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->id_name);
+		dom_string_unref(doc->class_string);
+		return err;
+	}
+
+	err = dom_string_create_interned((const uint8_t *) "DOMSubtreeModified",
+					 SLEN("DOMSubtreeModified"),
+					 &doc->_memo_domsubtreemodified);
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->_memo_domcharacterdatamodified);
+		dom_string_unref(doc->_memo_domattrmodified);
+		dom_string_unref(doc->_memo_domnoderemovedfromdocument);
+		dom_string_unref(doc->_memo_domnodeinsertedintodocument);
+		dom_string_unref(doc->_memo_domnoderemoved);
+		dom_string_unref(doc->_memo_domnodeinserted);
+		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->id_name);
+		dom_string_unref(doc->class_string);
+		return err;
+	}
+
 	/* We should not pass a NULL when all things hook up */
 	return _dom_document_event_internal_initialise(doc, &doc->dei, daf);
 }
@@ -191,6 +282,13 @@ bool _dom_document_finalise(dom_document *doc)
 
 	dom_string_unref(doc->class_string);
 	dom_string_unref(doc->_memo_empty);
+	dom_string_unref(doc->_memo_domnodeinserted);
+	dom_string_unref(doc->_memo_domnoderemoved);
+	dom_string_unref(doc->_memo_domnodeinsertedintodocument);
+	dom_string_unref(doc->_memo_domnoderemovedfromdocument);
+	dom_string_unref(doc->_memo_domattrmodified);
+	dom_string_unref(doc->_memo_domcharacterdatamodified);
+	dom_string_unref(doc->_memo_domsubtreemodified);
 	
 	_dom_document_event_internal_finalise(doc, &doc->dei);
 
