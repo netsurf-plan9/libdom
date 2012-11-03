@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <dom/core/attr.h>
 #include <dom/core/text.h>
@@ -2309,12 +2310,12 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 		struct dom_event *evt, bool *success)
 {
 	dom_exception err, ret = DOM_NO_ERR;
-	dom_event_target_entry list;
 	dom_node_internal *target = (dom_node_internal *) et;
 	dom_document *doc;
 	dom_document_event_internal *dei;
+	dom_event_target **targets;
+	uint32_t ntargets, ntargets_allocated, targetnr;
 	void *pw = NULL;
-	struct list_entry *e;
 
 	assert(et != NULL);
 	assert(evt != NULL);
@@ -2343,21 +2344,24 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	*success = true;
 
 	/* Compose the event target list */
-	list_init(&list.entry);
-	list.et = et;
-	dom_node_ref(et);
+	ntargets = 0;
+	ntargets_allocated = 64;
+	targets = calloc(sizeof(*targets), ntargets_allocated);
+	targets[ntargets++] = (dom_event_target *)dom_node_ref(et);
 	target = target->parent;
 
 	while (target != NULL) {
-		dom_event_target_entry *l = malloc(
-				sizeof(dom_event_target_entry));
-		if (l == NULL) {
-			ret = DOM_NO_MEM_ERR;
-			goto cleanup;
+		if (ntargets == ntargets_allocated) {
+			dom_event_target **newtargets = realloc(
+				targets, ntargets_allocated * 2);
+			if (newtargets == NULL)
+				goto cleanup;
+			memset(newtargets + ntargets_allocated,
+			       0, ntargets_allocated * sizeof(*newtargets));
+			targets = newtargets;
+			ntargets_allocated *= 2;
 		}
-		list_append(&list.entry, &l->entry);
-		l->et = (dom_event_target *) target;
-		dom_node_ref(target);
+		targets[ntargets++] = (dom_event_target *)dom_node_ref(target);
 		target = target->parent;
 	}
 
@@ -2376,13 +2380,12 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	}
 
 	/* The capture phase */
-	e = list.entry.prev;
-	for (; e != &list.entry; e = e->prev) {
-		dom_event_target_entry *l = (dom_event_target_entry *) e;
-		dom_node_internal *node = (dom_node_internal *) l->et;
+	for (targetnr = ntargets; targetnr > 0; --targetnr) {
+		dom_node_internal *node =
+			(dom_node_internal *) targets[targetnr - 1];
 
-		err = _dom_event_target_dispatch(l->et, &node->eti, evt,
-				DOM_CAPTURING_PHASE, success);
+		err = _dom_event_target_dispatch(targets[targetnr - 1],
+				&node->eti, evt, DOM_CAPTURING_PHASE, success);
 		if (err != DOM_NO_ERR) {
 			ret = err;
 			goto cleanup;
@@ -2408,12 +2411,11 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	/* Bubbling phase */
 	evt->phase = DOM_BUBBLING_PHASE;
 
-	e = list.entry.next;
-	for (; e != &list.entry; e = e->next) {
-		dom_event_target_entry *l = (dom_event_target_entry *) e;
-		dom_node_internal *node = (dom_node_internal *) l->et;
-		err = _dom_event_target_dispatch(l->et, &node->eti, evt,
-				DOM_BUBBLING_PHASE, success);
+	for (targetnr = 0; targetnr < ntargets; ++targetnr) {
+		dom_node_internal *node =
+			(dom_node_internal *) targets[targetnr];
+		err = _dom_event_target_dispatch(targets[targetnr],
+				&node->eti, evt, DOM_BUBBLING_PHASE, success);
 		if (err != DOM_NO_ERR) {
 			ret = err;
 			goto cleanup;
@@ -2450,15 +2452,10 @@ cleanup:
 		*success = false;
 	}
 
-	while (list.entry.next != &list.entry) {
-		dom_event_target_entry *e = (dom_event_target_entry *)
-				list.entry.next;
-		dom_node_unref(e->et);
-		list_del(list.entry.next);
-		free(e);
+	while (ntargets--) {
+		dom_node_unref(targets[ntargets]);
 	}
-
-	dom_node_unref(et);
+	free(targets);
 
 	return ret;
 }
