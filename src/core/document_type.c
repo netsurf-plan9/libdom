@@ -243,18 +243,17 @@ dom_exception _dom_document_type_get_notations(
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
  * finished with it.
- *
- * We don't support this API now, so this function call should always
- * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_public_id(
 		dom_document_type *doc_type,
 		dom_string **result)
 {
-	UNUSED(doc_type);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	if (doc_type->public_id != NULL)
+		*result = dom_string_ref(doc_type->public_id);
+	else
+		*result = NULL;
+	
+	return DOM_NO_ERR;
 }
 
 /**
@@ -267,18 +266,17 @@ dom_exception _dom_document_type_get_public_id(
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
  * finished with it.
- *
- * We don't support this API now, so this function call should always
- * return DOM_NOT_SUPPORTED_ERR.
  */
 dom_exception _dom_document_type_get_system_id(
 		dom_document_type *doc_type,
 		dom_string **result)
 {
-	UNUSED(doc_type);
-	UNUSED(result);
-
-	return DOM_NOT_SUPPORTED_ERR;
+	if (doc_type->system_id != NULL)
+		*result = dom_string_ref(doc_type->system_id);
+	else
+		*result = NULL;
+	
+	return DOM_NO_ERR;
 }
 
 /**
