@@ -2326,7 +2326,7 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 		evt->in_dispatch = true;
 	}
 
-	if (evt->type == NULL || dom_string_length(evt->type) == 0) {
+	if (evt->type == NULL || dom_string_byte_length(evt->type) == 0) {
 		return DOM_UNSPECIFIED_EVENT_TYPE_ERR;
 	}
 
@@ -2340,10 +2340,6 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 		return DOM_NO_ERR;
 	}
 	
-	if (_dom_validate_ncname(evt->type) == false) {
-		return DOM_INVALID_CHARACTER_ERR;
-	}
-
 	*success = true;
 
 	/* Compose the event target list */
