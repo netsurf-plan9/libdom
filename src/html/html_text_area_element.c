@@ -433,14 +433,16 @@ dom_exception _dom_html_text_area_element_set_form(
  */
 dom_exception dom_html_text_area_element_blur(dom_html_text_area_element *ele)
 {
-	struct dom_document *doc = dom_node_get_owner(ele);
+	struct dom_html_document *doc =
+		(dom_html_document *) dom_node_get_owner(ele);
 	bool success = false;
 	assert(doc != NULL);
 
 	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
-	return _dom_dispatch_generic_event(doc, (dom_event_target *) ele,
-			(const uint8_t *) "blur", SLEN("blur"), true,
-			true, &success);
+	return _dom_dispatch_generic_event((dom_document *) doc,
+					   (dom_event_target *) ele,
+					   doc->memoised[hds_blur], true,
+					   true, &success);
 }
 
 /**
@@ -451,14 +453,16 @@ dom_exception dom_html_text_area_element_blur(dom_html_text_area_element *ele)
  */
 dom_exception dom_html_text_area_element_focus(dom_html_text_area_element *ele)
 {
-	struct dom_document *doc = dom_node_get_owner(ele);
+	struct dom_html_document *doc =
+		(dom_html_document *) dom_node_get_owner(ele);
 	bool success = false;
 	assert(doc != NULL);
 
 	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
-	return _dom_dispatch_generic_event(doc, (dom_event_target *) ele,
-			(const uint8_t *) "focus", SLEN("focus"), true,
-			true, &success);
+	return _dom_dispatch_generic_event((dom_document *)doc,
+					   (dom_event_target *) ele,
+					   doc->memoised[hds_focus], true,
+					   true, &success);
 }
 
 /**
@@ -469,12 +473,14 @@ dom_exception dom_html_text_area_element_focus(dom_html_text_area_element *ele)
  */
 dom_exception dom_html_text_area_element_select(dom_html_text_area_element *ele)
 {
-	struct dom_document *doc = dom_node_get_owner(ele);
+	struct dom_html_document *doc =
+		(dom_html_document *) dom_node_get_owner(ele);
 	bool success = false;
 	assert(doc != NULL);
 
 	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
-	return _dom_dispatch_generic_event(doc, (dom_event_target *) ele,
-			(const uint8_t *) "select", SLEN("select"), true,
-			true, &success);
+	return _dom_dispatch_generic_event((dom_document *)doc,
+					   (dom_event_target *) ele,
+					   doc->memoised[hds_select], true,
+					   true, &success);
 }

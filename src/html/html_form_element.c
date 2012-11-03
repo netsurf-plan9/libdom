@@ -235,16 +235,18 @@ SIMPLE_GET_SET(target)
  */
 dom_exception dom_html_form_element_submit(dom_html_form_element *ele)
 {
-	struct dom_document *doc = dom_node_get_owner(ele);
+	struct dom_html_document *doc =
+		(dom_html_document *) dom_node_get_owner(ele);
 	bool success = false;
 	assert(doc != NULL);
 
 	/* Dispatch an event and let the default action handler to deal with
 	 * the submit action, and a 'submit' event is bubbling and cancelable
 	 */
-	return _dom_dispatch_generic_event(doc, (dom_event_target *) ele,
-			(const uint8_t *) "submit", SLEN("submit"), true,
-			true, &success);
+	return _dom_dispatch_generic_event((dom_document *)doc,
+					   (dom_event_target *) ele,
+					   doc->memoised[hds_submit], true,
+					   true, &success);
 }
 
 /**
@@ -255,16 +257,18 @@ dom_exception dom_html_form_element_submit(dom_html_form_element *ele)
  */
 dom_exception dom_html_form_element_reset(dom_html_form_element *ele)
 {
-	struct dom_document *doc = dom_node_get_owner(ele);
+	struct dom_html_document *doc =
+		(dom_html_document *) dom_node_get_owner(ele);
 	bool success = false;
 	assert(doc != NULL);
 
 	/* Dispatch an event and let the default action handler to deal with
 	 * the reset action, and a 'reset' event is bubbling and cancelable
 	 */
-	return _dom_dispatch_generic_event(doc, (dom_event_target *) ele,
-			(const uint8_t *) "reset", SLEN("reset"), true,
-			true, &success);
+	return _dom_dispatch_generic_event((dom_document *) doc,
+					   (dom_event_target *) ele,
+					   doc->memoised[hds_reset], true,
+					   true, &success);
 }
 
 /*-----------------------------------------------------------------------*/

@@ -242,23 +242,18 @@ cleanup:
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_dispatch_generic_event(dom_document *doc,
-		dom_event_target *et, const uint8_t *name, size_t len,
+		dom_event_target *et, dom_string *event_name,
 		bool bubble, bool cancelable, bool *success)
 {
 	struct dom_event *evt;
-	dom_string *type = NULL;
 	dom_exception err;
 
 	err = _dom_event_create(doc, &evt);
 	if (err != DOM_NO_ERR)
 		return err;
 	
-	err = dom_string_create(name, len, &type);
-	if (err != DOM_NO_ERR)
-		goto cleanup;
+	err = dom_event_init(evt, event_name, bubble, cancelable);
 
-	err = dom_event_init(evt, type, bubble, cancelable);
-	dom_string_unref(type);
 	if (err != DOM_NO_ERR) {
 		goto cleanup;
 	}

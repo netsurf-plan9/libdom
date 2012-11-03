@@ -71,7 +71,7 @@ dom_exception __dom_dispatch_subtree_modified_event(dom_document *doc,
 
 /* Dispatch a generic event */
 dom_exception _dom_dispatch_generic_event(dom_document *doc,
-		dom_event_target *et, const uint8_t *name, size_t len,
+		dom_event_target *et, dom_string *event_name,
 		bool bubble, bool cancelable, bool *success);
 
 #endif
