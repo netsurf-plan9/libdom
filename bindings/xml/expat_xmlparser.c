@@ -148,7 +148,8 @@ expat_xmlparser_start_element_handler(void *_parser,
 		}
 	}
 
-	err = dom_node_append_child(parser->current, elem, &ins_elem);
+	err = dom_node_append_child(parser->current, (struct dom_node *) elem,
+				    (struct dom_node **) (void *) &ins_elem);
 	if (err != DOM_NO_ERR) {
 		dom_node_unref(elem);
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -253,9 +254,9 @@ expat_xmlparser_cdata_handler(void *_parser,
 	/* We can't append directly, so make a new node */
 	err = parser->is_cdata ?
 		dom_document_create_cdata_section(parser->doc, data,
-						  (dom_cdata_section **)&cdata) :
+				(dom_cdata_section **) (void *) &cdata) :
 		dom_document_create_text_node(parser->doc, data,
-					      (dom_text **)&cdata);
+					      (dom_text **) (void *) &cdata);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(data);
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
