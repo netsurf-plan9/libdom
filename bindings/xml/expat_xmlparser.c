@@ -46,9 +46,9 @@ expat_xmlparser_start_element_handler(void *_parser,
 	const XML_Char *ns_sep = strchr(name, '\n');
 
 	if (ns_sep != NULL) {
-		err = dom_string_create((const uint8_t *)name,
-					ns_sep - name,
-					&namespace);
+		err = dom_string_create_interned((const uint8_t *)name,
+						 ns_sep - name,
+						 &namespace);
 		if (err != DOM_NO_ERR) {
 			parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 				    "No memory for namespace name");
@@ -57,9 +57,9 @@ expat_xmlparser_start_element_handler(void *_parser,
 		name = ns_sep + 1;
 	}
 
-	err = dom_string_create((const uint8_t *)name,
-				strlen(name),
-				&tag_name);
+	err = dom_string_create_interned((const uint8_t *)name,
+					 strlen(name),
+					 &tag_name);
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 			    "No memory for tag name");
@@ -92,8 +92,9 @@ expat_xmlparser_start_element_handler(void *_parser,
 		dom_string *key, *value;
 		ns_sep = strchr(*atts, '\n');
 		if (ns_sep != NULL) {
-			err = dom_string_create((const uint8_t *)(*atts),
-						ns_sep - (*atts), &namespace);
+			err = dom_string_create_interned((const uint8_t *)(*atts),
+							 ns_sep - (*atts),
+							 &namespace);
 			if (err != DOM_NO_ERR) {
 				parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 					    "No memory for attr namespace");
@@ -103,11 +104,12 @@ expat_xmlparser_start_element_handler(void *_parser,
 		} else
 			namespace = NULL;
 		if (ns_sep == NULL)
-			err = dom_string_create((const uint8_t *)(*atts),
-						strlen(*atts), &key);
+			err = dom_string_create_interned((const uint8_t *)(*atts),
+							 strlen(*atts), &key);
 		else
-			err = dom_string_create((const uint8_t *)(ns_sep + 1),
-						strlen(ns_sep + 1), &key);
+			err = dom_string_create_interned((const uint8_t *)(ns_sep + 1),
+							 strlen(ns_sep + 1),
+							 &key);
 		if (err != DOM_NO_ERR) {
 			parser->msg(DOM_MSG_CRITICAL, parser->mctx,
 				    "No memory for attribute name");
