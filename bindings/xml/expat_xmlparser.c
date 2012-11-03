@@ -26,7 +26,6 @@ struct dom_xml_parser {
 	dom_msg msg;			/**< Informational message function */
 	void *mctx;			/**< Pointer to client data */
 	XML_Parser parser;		/**< expat parser context */
-	bool complete;			/**< Indicate stream completion */
 	struct dom_document *doc;	/**< DOM Document we're building */
 	struct dom_node *current;	/**< DOM node we're currently building */
 	bool is_cdata;			/**< If the character data is cdata or text */
@@ -445,7 +444,7 @@ expat_xmlparser_unknown_data_handler(void *_parser,
  */
 dom_xml_parser *
 dom_xml_parser_create(const char *enc, const char *int_enc,
-		      dom_msg msg, void *mctx)
+		      dom_msg msg, void *mctx, dom_document **document)
 {
 	dom_xml_parser *parser;
 	dom_exception err;
@@ -469,7 +468,6 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 		return NULL;
 	}
 
-	parser->complete = false;
 	parser->doc = NULL;
 
 	err = dom_implementation_create_document(
@@ -478,7 +476,7 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 		/* qname */ NULL,
 		/* doctype */ NULL,
 		NULL,
-		&parser->doc);
+		document);
 
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -487,6 +485,8 @@ dom_xml_parser_create(const char *enc, const char *int_enc,
 		free(parser);
 		return NULL;
 	}
+
+	parser->doc = (dom_document *) dom_node_ref(*document);
 
 	XML_SetUserData(parser->parser, parser);
 
@@ -532,7 +532,9 @@ void
 dom_xml_parser_destroy(dom_xml_parser *parser)
 {
 	XML_ParserFree(parser->parser);
-
+	if (parser->current != NULL)
+		dom_node_unref(parser->current);
+	dom_node_unref(parser->doc);
 	free(parser);
 }
 
@@ -579,22 +581,6 @@ dom_xml_parser_completed(dom_xml_parser *parser)
 		return DOM_XML_EXTERNAL_ERR | status;
 	}
 
-	parser->complete = true;
-
 	return DOM_XML_OK;
 
-}
-
-/**
- * Retrieve the created DOM Document from a parser
- *
- * \param parser  The parser instance to retrieve the document from
- * \return Pointer to document, or NULL if parsing is not complete
- *
- * This may only be called after xml_parser_completed().
- */
-struct dom_document *
-dom_xml_parser_get_document(dom_xml_parser *parser)
-{
-	return (parser->complete ? parser->doc : NULL);
 }

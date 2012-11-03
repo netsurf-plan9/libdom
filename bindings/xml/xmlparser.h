@@ -15,13 +15,11 @@
 
 #include "xmlerror.h"
 
-struct dom_document;
-
 typedef struct dom_xml_parser dom_xml_parser;
 
 /* Create an XML parser instance */
 dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
-		dom_msg msg, void *mctx);
+		dom_msg msg, void *mctx, dom_document **document);
 
 /* Destroy an XML parser instance */
 void dom_xml_parser_destroy(dom_xml_parser *parser);
@@ -32,8 +30,5 @@ dom_xml_error dom_xml_parser_parse_chunk(dom_xml_parser *parser,
 
 /* Notify parser that datastream is empty */
 dom_xml_error dom_xml_parser_completed(dom_xml_parser *parser);
-
-/* Retrieve the created DOM Document */
-struct dom_document *dom_xml_parser_get_document(dom_xml_parser *parser);
 
 #endif

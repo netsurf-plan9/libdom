@@ -42,7 +42,7 @@ dom_document *load_xml(const char *file, bool willBeModified)
 
 	UNUSED(willBeModified);
 
-	parser = dom_xml_parser_create(NULL, NULL, mymsg, NULL);
+	parser = dom_xml_parser_create(NULL, NULL, mymsg, NULL, &ret);
 	if (parser == NULL) {
 		fprintf(stderr, "Can't create XMLParser\n");
 		return NULL;
@@ -50,6 +50,7 @@ dom_document *load_xml(const char *file, bool willBeModified)
 
 	handle = open(file, O_RDONLY);
 	if (handle == -1) {
+		dom_node_unref(ret);
 		dom_xml_parser_destroy(parser);
 		fprintf(stderr, "Can't open test input file: %s\n", file);
 		return NULL;
@@ -58,6 +59,7 @@ dom_document *load_xml(const char *file, bool willBeModified)
 	readed = read(handle, buffer, 1024);
 	error = dom_xml_parser_parse_chunk(parser, buffer, readed);
 	if (error != DOM_XML_OK) {
+		dom_node_unref(ret);
 		dom_xml_parser_destroy(parser);
 		fprintf(stderr, "Parsing errors occur\n");
 		return NULL;
@@ -67,6 +69,7 @@ dom_document *load_xml(const char *file, bool willBeModified)
 		readed = read(handle, buffer, 1024);
 		error = dom_xml_parser_parse_chunk(parser, buffer, readed);
 		if (error != DOM_XML_OK) {
+			dom_node_unref(ret);
 			dom_xml_parser_destroy(parser);
 			fprintf(stderr, "Parsing errors occur\n");
 			return NULL;
@@ -75,12 +78,12 @@ dom_document *load_xml(const char *file, bool willBeModified)
 
 	error = dom_xml_parser_completed(parser);
 	if (error != DOM_XML_OK) {
+		dom_node_unref(ret);
 		dom_xml_parser_destroy(parser);
 		fprintf(stderr, "Parsing error when construct DOM\n");
 		return NULL;
 	}
 
-	ret = dom_xml_parser_get_document(parser);
 	dom_xml_parser_destroy(parser);
 
 	return ret;

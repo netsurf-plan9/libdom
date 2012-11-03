@@ -92,8 +92,6 @@ struct dom_xml_parser {
 
 	struct dom_document *doc;	/**< DOM Document we're building */
 
-	bool complete;			/**< Indicate stream completion */
-
 	dom_string *udkey;	/**< Key for DOM node user data */
 
 	dom_msg msg;		/**< Informational message function */
@@ -167,7 +165,7 @@ static void *dom_xml_alloc(void *ptr, size_t len, void *pw)
  * parser encoding is not yet implemented
  */
 dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
-		dom_msg msg, void *mctx)
+		dom_msg msg, void *mctx, dom_document **document)
 {
 	dom_xml_parser *parser;
 	dom_exception err;
@@ -200,10 +198,6 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 		return NULL;
 	}
 
-	parser->doc = NULL;
-
-	parser->complete = false;
-
 	/* Create key for user data registration */
 	err = dom_string_create((const uint8_t *) "__xmlnode", 
 			SLEN("__xmlnode"), &parser->udkey);
@@ -213,6 +207,25 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 		msg(DOM_MSG_CRITICAL, mctx, "No memory for userdata key");
 		return NULL;
 	}
+
+	err = dom_implementation_create_document(
+			DOM_IMPLEMENTATION_XML,
+			/* namespace */ NULL,
+			/* qname */ NULL,
+			/* doctype */ NULL,
+			NULL,
+			document);
+
+	if (err != DOM_NO_ERR) {
+		xmlFreeParserCtxt(parser->xml_ctx);
+		dom_string_unref(parser->udkey);
+		dom_xml_alloc(parser, 0, NULL);
+		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+				"Failed creating document");
+		return NULL;
+	}
+
+	parser->doc = (dom_document *) dom_node_ref(*document);
 
 	parser->msg = msg;
 	parser->mctx = mctx;
@@ -228,6 +241,7 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 void dom_xml_parser_destroy(dom_xml_parser *parser)
 {
 	dom_string_unref(parser->udkey);
+	dom_node_unref(parser->doc);
 
 	xmlFreeDoc(parser->xml_ctx->myDoc);
 	
@@ -278,22 +292,7 @@ dom_xml_error dom_xml_parser_completed(dom_xml_parser *parser)
 		return DOM_XML_EXTERNAL_ERR | err;
 	}
 
-	parser->complete = true;
-
 	return DOM_XML_OK;
-}
-
-/**
- * Retrieve the created DOM Document from a parser
- *
- * \param parser  The parser instance to retrieve the document from
- * \return Pointer to document, or NULL if parsing is not complete
- *
- * This may only be called after xml_parser_completed().
- */
-struct dom_document *dom_xml_parser_get_document(dom_xml_parser *parser)
-{
-	return (parser->complete ? parser->doc : NULL);
 }
 
 /**
@@ -304,38 +303,18 @@ struct dom_document *dom_xml_parser_get_document(dom_xml_parser *parser)
 void xml_parser_start_document(void *ctx)
 {
 	dom_xml_parser *parser = (dom_xml_parser *) ctx;
-	struct dom_document *doc;
 	dom_exception err;
 
 	/* Invoke libxml2's default behaviour */
 	xmlSAX2StartDocument(parser->xml_ctx);
 
-	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
-	 * we should pass the real function when we integrate libDOM with
-	 * Netsurf */
-	err = dom_implementation_create_document(
-			DOM_IMPLEMENTATION_XML,
-			/* namespace */ NULL,
-			/* qname */ NULL,
-			/* doctype */ NULL,
-			NULL,
-			&doc);
-	if (err != DOM_NO_ERR) {
-		parser->msg(DOM_MSG_CRITICAL, parser->mctx, 
-				"Failed creating document");
-		return;
-	}
-
 	/* Link nodes together */
-	err = xml_parser_link_nodes(parser, (struct dom_node *) doc,
+	err = xml_parser_link_nodes(parser, (struct dom_node *) parser->doc,
 			(xmlNodePtr) parser->xml_ctx->myDoc);
 	if (err != DOM_NO_ERR) {
-		dom_node_unref((struct dom_node *) doc);
-		return;
+		parser->msg(DOM_MSG_WARNING, parser->mctx,
+				"Not able to link document nodes");
 	}
-
-	/* And squirrel the document away for later use */
-	parser->doc = doc;
 }
 
 /**
