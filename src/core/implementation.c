@@ -74,24 +74,10 @@ dom_exception dom_implementation_create_document_type(
 			return err;
 	}
 
-	if (qname_s != NULL && _dom_validate_name(qname_s) == false) {
-		dom_string_unref(qname_s);
-		return DOM_INVALID_CHARACTER_ERR;
-	}
-
 	err = _dom_namespace_split_qname(qname_s, &prefix, &lname);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(qname_s);
 		return err;
-	}
-
-	if ((prefix != NULL && _dom_validate_ncname(prefix) == false) ||
-			(lname != NULL && 
-				_dom_validate_ncname(lname) == false)) {
-		dom_string_unref(lname);
-		dom_string_unref(prefix);
-		dom_string_unref(qname_s);
-		return DOM_NAMESPACE_ERR;
 	}
 
 	if (public_id != NULL) {
