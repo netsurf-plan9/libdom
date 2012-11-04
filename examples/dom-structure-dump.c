@@ -315,7 +315,7 @@ int main(int argc, char **argv)
 	dom_node *root = NULL; /* root element of document */
 
 	/* Load up the input HTML file */
-	doc = create_doc_dom_from_file("files/test.html");
+	doc = create_doc_dom_from_file((argc > 1) ? (argv[1]) : "files/test.html");
 	if (doc == NULL) {
 		printf("Failed to load document.\n");
 		return EXIT_FAILURE;
