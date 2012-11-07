@@ -75,7 +75,7 @@ typedef enum {
  *
  * \param type   The type of the event
  * \param phase  The phase of the default action callback
- * \param pw     The return privat data of the callback function
+ * \param pw     The return private data of the callback function
  * \return a callback function, NULL if there is none.
  */
 typedef dom_default_action_callback (*dom_events_default_action_fetcher)

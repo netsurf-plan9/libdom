@@ -786,7 +786,7 @@ dom_hubbub_parser_create(const char *enc,
 
 	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
 	 * we should pass the real function when we integrate libDOM with
-	 * Netsurf */
+	 * NetSurf */
 	err = dom_implementation_create_document(DOM_IMPLEMENTATION_HTML,
 			NULL, NULL, NULL,
 			NULL, &parser->doc);
