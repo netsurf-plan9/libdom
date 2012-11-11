@@ -2347,13 +2347,18 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	ntargets = 0;
 	ntargets_allocated = 64;
 	targets = calloc(sizeof(*targets), ntargets_allocated);
+	if (targets == NULL) {
+		/** \todo Report memory exhaustion? */
+		return DOM_NO_ERR;
+	}
 	targets[ntargets++] = (dom_event_target *)dom_node_ref(et);
 	target = target->parent;
 
 	while (target != NULL) {
 		if (ntargets == ntargets_allocated) {
 			dom_event_target **newtargets = realloc(
-				targets, ntargets_allocated * 2);
+				targets,
+				ntargets_allocated * 2 * sizeof(*targets));
 			if (newtargets == NULL)
 				goto cleanup;
 			memset(newtargets + ntargets_allocated,
