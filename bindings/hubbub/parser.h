@@ -48,10 +48,23 @@ typedef enum dom_hubbub_encoding_source {
  * The client must not call any method of this parser after destruction.
  */
 
+/**
+ * Parameter block for dom_hubbub_parser_create
+ */
+typedef struct dom_hubbub_parser_params {
+	const char *enc; /**< Source charset, or NULL */
+	bool fix_enc; /**< Whether fix the encoding */
+
+	bool enable_script; /**< Whether scripting should be enabled. */
+	dom_script script; /**< Script callback function */
+
+	dom_msg msg; /**< Informational message function */
+	void *ctx; /**< Pointer to client-specific private data */
+} dom_hubbub_parser_params;
+
 /* Create a Hubbub parser instance */
-dom_hubbub_parser *dom_hubbub_parser_create(const char *enc, bool fix_enc,
-		bool enable_script, dom_msg msg,
-		dom_script script, void *mctx,
+dom_hubbub_error dom_hubbub_parser_create(dom_hubbub_parser_params *params,
+		dom_hubbub_parser **parser,
 		dom_document **document);
 
 /* Destroy a Hubbub parser instance */

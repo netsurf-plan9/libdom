@@ -103,11 +103,19 @@ dom_document *load_html(const char *file, bool willBeModified)
 	dom_hubbub_error error;
 	dom_document *ret;
 	uint8_t buffer[1024];
+	dom_hubbub_parser_params params;
 
 	UNUSED(willBeModified);
 
-	parser = dom_hubbub_parser_create(NULL, true, false, mymsg, NULL, NULL, &ret);
-	if (parser == NULL) {
+	params.enc = NULL;
+	params.fix_enc = true;
+	params.enable_script = false;
+	params.msg = mymsg;
+	params.script = NULL;
+	params.ctx = NULL;
+
+	error = dom_hubbub_parser_create(&params, &parser, &ret);
+	if (error != DOM_HUBBUB_OK) {
 		fprintf(stderr, "Can't create Hubbub Parser\n");
 		return NULL;
 	}

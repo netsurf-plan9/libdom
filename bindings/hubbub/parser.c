@@ -720,68 +720,72 @@ dom_hubbub_parser_default_script(void *ctx, struct dom_node *node)
 /**
  * Create a Hubbub parser instance
  *
- * \param enc            Source charset, or NULL
- * \param fix_enc        Whether fix the encoding
- * \param enable_script  Whether scripting should be enabled.
- * \param msg            Informational message function
- * \param script         Script callback function
- * \param mctx           Pointer to client-specific private data
- * \param document       Pointer to location to receive document
- * \return Pointer to instance, or NULL on memory exhaustion
+ * \param params The binding creation parameters
+ * \param parser Pointer to location to recive instance.
+ * \param document Pointer to location to receive document.
+ * \return Error code
  */
-dom_hubbub_parser *
-dom_hubbub_parser_create(const char *enc,
-			 bool fix_enc,
-			 bool enable_script,
-			 dom_msg msg,
-			 dom_script script,
-			 void *mctx,
+dom_hubbub_error
+dom_hubbub_parser_create(dom_hubbub_parser_params *params,
+			 dom_hubbub_parser **parser,
 			 dom_document **document)
 {
-	dom_hubbub_parser *parser;
-	hubbub_parser_optparams params;
+	dom_hubbub_parser *binding;
+	hubbub_parser_optparams optparams;
 	hubbub_error error;
 	dom_exception err;
 	dom_string *idname = NULL;
 
-	/* check result parameter */
+	/* check result parameters */
 	if (document == NULL) {
-		msg(DOM_MSG_CRITICAL, mctx, "Bad document return parameter");
-		return NULL;
+		return DOM_HUBBUB_BADPARM;
 	}
 
-	parser = malloc(sizeof(dom_hubbub_parser));
 	if (parser == NULL) {
-		msg(DOM_MSG_CRITICAL, mctx, "No memory for parsing context");
-		return NULL;
+		return DOM_HUBBUB_BADPARM;
 	}
 
-	parser->parser = NULL;
-	parser->doc = NULL;
-	parser->encoding = enc;
-	parser->encoding_source = enc != NULL ? DOM_HUBBUB_ENCODING_SOURCE_HEADER
-					      : DOM_HUBBUB_ENCODING_SOURCE_DETECTED;
-	parser->complete = false;
-
-	if (msg == NULL) {
-		msg = dom_hubbub_parser_default_msg;
+	/* setup binding parser context */
+	binding = malloc(sizeof(dom_hubbub_parser));
+	if (binding == NULL) {
+		return DOM_HUBBUB_NOMEM;
 	}
-	parser->msg = msg;
-	parser->mctx = mctx;
+
+	binding->parser = NULL;
+	binding->doc = NULL;
+	binding->encoding = params->enc;
+
+	if (params->enc != NULL) {
+		binding->encoding_source = DOM_HUBBUB_ENCODING_SOURCE_HEADER;
+	} else {
+		binding->encoding_source = DOM_HUBBUB_ENCODING_SOURCE_DETECTED;
+	}
+
+	binding->complete = false;
+
+	if (params->msg == NULL) {
+		binding->msg = dom_hubbub_parser_default_msg;
+	} else {
+		binding->msg = params->msg;
+	}
+	binding->mctx = params->ctx;
 
 	/* ensure script function is valid or use the default */
-	if (script == NULL) {
-		script = dom_hubbub_parser_default_script;
+	if (params->script == NULL) {
+		binding->script = dom_hubbub_parser_default_script;
+	} else {
+		binding->script = params->script;
 	}
-	parser->script = script;
 
-
-	error = hubbub_parser_create(enc, fix_enc, dom_hubbub_alloc, NULL,
-			&parser->parser);
+	/* create hubbub parser */
+	error = hubbub_parser_create(binding->encoding,
+				     params->fix_enc,
+				     dom_hubbub_alloc,
+				     NULL,
+				     &binding->parser);
 	if (error != HUBBUB_OK)	 {
-		free(parser);
-		msg(DOM_MSG_CRITICAL, mctx, "Can't create parser");
-		return NULL;
+		free(binding);
+		return (DOM_HUBBUB_HUBBUB_ERR | error);
 	}
 
 	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
@@ -789,30 +793,33 @@ dom_hubbub_parser_create(const char *enc,
 	 * NetSurf */
 	err = dom_implementation_create_document(DOM_IMPLEMENTATION_HTML,
 			NULL, NULL, NULL,
-			NULL, &parser->doc);
+			NULL, &binding->doc);
 	if (err != DOM_NO_ERR) {
-		hubbub_parser_destroy(parser->parser);
-		free(parser);
-		msg(DOM_MSG_ERROR, mctx, "Can't create DOM document");
-		return NULL;
+		hubbub_parser_destroy(binding->parser);
+		free(binding);
+		return DOM_HUBBUB_DOM;
 	}
 
-	parser->tree_handler = tree_handler;
-	parser->tree_handler.ctx = (void *) parser;
+	binding->tree_handler = tree_handler;
+	binding->tree_handler.ctx = (void *)binding;
 
-	params.tree_handler = &parser->tree_handler;
-	hubbub_parser_setopt(parser->parser, HUBBUB_PARSER_TREE_HANDLER,
-			&params);
+	/* set tree handler on parser */
+	optparams.tree_handler = &binding->tree_handler;
+	hubbub_parser_setopt(binding->parser,
+			     HUBBUB_PARSER_TREE_HANDLER,
+			     &optparams);
 
-	dom_node_ref((struct dom_node *) parser->doc);
-	params.document_node = parser->doc;
-	hubbub_parser_setopt(parser->parser, HUBBUB_PARSER_DOCUMENT_NODE,
-			&params);
+	/* set document node*/
+	optparams.document_node = dom_node_ref((struct dom_node *)binding->doc);
+	hubbub_parser_setopt(binding->parser,
+			     HUBBUB_PARSER_DOCUMENT_NODE,
+			     &optparams);
 
-	params.enable_scripting = enable_script;
-	hubbub_parser_setopt(parser->parser,
+	/* set scripting state */
+	optparams.enable_scripting = params->enable_script;
+	hubbub_parser_setopt(binding->parser,
 			     HUBBUB_PARSER_ENABLE_SCRIPTING,
-			     &params);
+			     &optparams);
 
 	/* set the document id parameter before the parse so searches
 	 * based on id succeed.
@@ -821,18 +828,19 @@ dom_hubbub_parser_create(const char *enc,
 					 SLEN("id"),
 					 &idname);
 	if (err != DOM_NO_ERR) {
-		hubbub_parser_destroy(parser->parser);
-		free(parser);
-		msg(DOM_MSG_ERROR, mctx, "Can't set DOM document id name");
-		return NULL;
+		binding->msg(DOM_MSG_ERROR, binding->mctx, "Can't set DOM document id name");
+		hubbub_parser_destroy(binding->parser);
+		free(binding);
+		return DOM_HUBBUB_DOM;
 	}
-	_dom_document_set_id_name(parser->doc, idname);
+	_dom_document_set_id_name(binding->doc, idname);
 	dom_string_unref(idname);
 
-	/* set return parameter */
-	*document = (dom_document *)dom_node_ref(parser->doc);
+	/* set return parameters */
+	*document = (dom_document *)dom_node_ref(binding->doc);
+	*parser = binding;
 
-	return parser;
+	return DOM_HUBBUB_OK;
 }
 
 

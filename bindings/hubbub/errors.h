@@ -13,6 +13,10 @@ typedef enum {
 
 	DOM_HUBBUB_NOMEM        = 1,
 
+	DOM_HUBBUB_BADPARM      = 2, /**< Bad input parameter */
+
+	DOM_HUBBUB_DOM          = 3, /**< DOM operation failed */
+
 	DOM_HUBBUB_HUBBUB_ERR   = (1<<16),
 
 	DOM_HUBBUB_HUBBUB_ERR_PAUSED = (DOM_HUBBUB_HUBBUB_ERR | HUBBUB_PAUSED),
