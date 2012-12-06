@@ -60,13 +60,21 @@ dom_document *create_doc_dom_from_file(char *file)
 	FILE *handle;
 	int chunk_length;
 	dom_hubbub_error error;
+	dom_hubbub_parser_params params;
 	dom_document *doc;
 	unsigned char buffer[buffer_size];
 
+	params.enc = NULL;
+	params.fix_enc = true;
+	params.enable_script = false;
+	params.msg = NULL;
+	params.script = NULL;
+	params.ctx = NULL;
+	params.daf = NULL;
+
 	/* Create Hubbub parser */
-	parser = dom_hubbub_parser_create(NULL, true, false, NULL, NULL,
-			NULL, &doc);
-	if (parser == NULL) {
+	error = dom_hubbub_parser_create(&params, &parser, &doc);
+	if (error != DOM_HUBBUB_OK) {
 		printf("Can't create Hubbub Parser\n");
 		return NULL;
 	}
