@@ -788,12 +788,13 @@ dom_hubbub_parser_create(dom_hubbub_parser_params *params,
 		return (DOM_HUBBUB_HUBBUB_ERR | error);
 	}
 
-	/* TODO: Just pass the dom_events_default_action_fetcher a NULL,
-	 * we should pass the real function when we integrate libDOM with
-	 * NetSurf */
+	/* create DOM document */
 	err = dom_implementation_create_document(DOM_IMPLEMENTATION_HTML,
-			NULL, NULL, NULL,
-			NULL, &binding->doc);
+						 NULL,
+						 NULL,
+						 NULL,
+						 params->daf,
+						 &binding->doc);
 	if (err != DOM_NO_ERR) {
 		hubbub_parser_destroy(binding->parser);
 		free(binding);

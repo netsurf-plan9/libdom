@@ -113,6 +113,7 @@ dom_document *load_html(const char *file, bool willBeModified)
 	params.msg = mymsg;
 	params.script = NULL;
 	params.ctx = NULL;
+	params.daf = NULL;
 
 	error = dom_hubbub_parser_create(&params, &parser, &ret);
 	if (error != DOM_HUBBUB_OK) {

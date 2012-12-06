@@ -60,6 +60,9 @@ typedef struct dom_hubbub_parser_params {
 
 	dom_msg msg; /**< Informational message function */
 	void *ctx; /**< Pointer to client-specific private data */
+
+	/** default action fetcher function */
+	dom_events_default_action_fetcher daf;
 } dom_hubbub_parser_params;
 
 /* Create a Hubbub parser instance */
