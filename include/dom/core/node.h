@@ -481,7 +481,7 @@ static inline dom_exception dom_node_set_text_content(struct dom_node *node,
 	return ((dom_node_vtable *) node->vtable)->dom_node_set_text_content(
 			(dom_node_internal *) node, content);
 }
-#define dom_node_set_text_content(n, c) dom_node_get_text_content( \
+#define dom_node_set_text_content(n, c) dom_node_set_text_content( \
 		(dom_node *) (n), (c))
 
 static inline dom_exception dom_node_is_same(struct dom_node *node, 
