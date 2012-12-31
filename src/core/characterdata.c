@@ -247,8 +247,10 @@ dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
 	doc = dom_node_get_owner(cdata);
 	err = _dom_dispatch_characterdata_modified_event(doc, c, c->value,
 			temp, &success);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(temp);
 		return err;
+	}
 
 	if (c->value != NULL) {
 		dom_string_unref(c->value);
