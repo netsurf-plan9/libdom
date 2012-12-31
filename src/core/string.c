@@ -228,12 +228,12 @@ bool dom_string_isequal(const dom_string *s1, const dom_string *s2)
 		return match;
 	}
 
-	len = dom_string_byte_length(s1);
+	len = dom_string_byte_length((dom_string *) is1);
 
 	if (len != dom_string_byte_length((dom_string *)is2))
 		return false;
 
-	return 0 == memcmp(dom_string_data(s1), dom_string_data((dom_string *)is2), len);
+	return 0 == memcmp(dom_string_data((dom_string *) is1), dom_string_data((dom_string *)is2), len);
 }
 
 /**
@@ -278,12 +278,12 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 		return match;
 	}
 
-	len = dom_string_byte_length(s1);
+	len = dom_string_byte_length((dom_string *) is1);
 
 	if (len != dom_string_byte_length((dom_string *)is2))
 		return false;
 
-	d1 = (const uint8_t *) dom_string_data(s1);
+	d1 = (const uint8_t *) dom_string_data((dom_string *) is1);
 	d2 = (const uint8_t *) dom_string_data((dom_string *)is2);
 
 	while (len > 0) {
