@@ -470,6 +470,8 @@ dom_exception walk_logic_adjacent_text(dom_text *text,
 		return DOM_NOT_SUPPORTED_ERR;
 	}
 
+	*ret = NULL;
+
 	/* Firstly, we look our left */
 	err = walk_logic_adjacent_text_in_order(left, opt, LEFT, ret, &cont);
 	if (err != DOM_NO_ERR) {
