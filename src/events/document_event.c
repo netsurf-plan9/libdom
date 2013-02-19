@@ -51,7 +51,8 @@ static const char *__event_types[] = {
  */
 dom_exception _dom_document_event_internal_initialise(struct dom_document *doc,
 		dom_document_event_internal *dei, 
-		dom_events_default_action_fetcher actions)
+		dom_events_default_action_fetcher actions,
+		void *actions_ctx)
 {
 	lwc_error err;
 	int i;
@@ -66,6 +67,7 @@ dom_exception _dom_document_event_internal_initialise(struct dom_document *doc,
 	}
 
 	dei->actions = actions;
+	dei->actions_ctx = actions_ctx;
 
 	return DOM_NO_ERR;
 }

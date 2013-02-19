@@ -2315,7 +2315,7 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	dom_document_event_internal *dei;
 	dom_event_target **targets;
 	uint32_t ntargets, ntargets_allocated, targetnr;
-	void *pw = NULL;
+	void *pw;
 
 	assert(et != NULL);
 	assert(evt != NULL);
@@ -2376,6 +2376,7 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 
 	/* The started callback of default action */
 	dei = &doc->dei;
+	pw = dei->actions_ctx;
 	if (dei->actions != NULL) {
 		dom_default_action_callback cb = dei->actions(evt->type,
 				DOM_DEFAULT_ACTION_STARTED, &pw);

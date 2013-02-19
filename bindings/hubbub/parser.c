@@ -794,6 +794,7 @@ dom_hubbub_parser_create(dom_hubbub_parser_params *params,
 						 NULL,
 						 NULL,
 						 params->daf,
+						 params->ctx,
 						 &binding->doc);
 	if (err != DOM_NO_ERR) {
 		hubbub_parser_destroy(binding->parser);

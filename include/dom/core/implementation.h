@@ -43,6 +43,7 @@ dom_exception dom_implementation_create_document(
 		const char *namespace, const char *qname,
 		struct dom_document_type *doctype,
 		dom_events_default_action_fetcher daf,
+		void *daf_ctx,
 		struct dom_document **doc);
 
 dom_exception dom_implementation_get_feature(

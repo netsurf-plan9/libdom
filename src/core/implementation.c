@@ -153,6 +153,7 @@ dom_exception dom_implementation_create_document(
 		const char *namespace, const char *qname,
 		struct dom_document_type *doctype,
 		dom_events_default_action_fetcher daf,
+		void *daf_ctx,
 		struct dom_document **doc)
 {
 	struct dom_document *d;
@@ -198,11 +199,11 @@ dom_exception dom_implementation_create_document(
  	if (impl_type == DOM_IMPLEMENTATION_HTML) {
 		dom_html_document *html_doc;
 
-		err = _dom_html_document_create(daf, &html_doc);
+		err = _dom_html_document_create(daf, daf_ctx, &html_doc);
 
 		d = (dom_document *) html_doc;
 	} else {
-		err = _dom_document_create(daf, &d);
+		err = _dom_document_create(daf, daf_ctx, &d);
 	}
 
 	if (err != DOM_NO_ERR) {

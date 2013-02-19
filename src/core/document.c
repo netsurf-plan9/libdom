@@ -79,7 +79,8 @@ static dom_exception dom_document_dup_node(dom_document *doc,
  * The returned document will already be referenced.
  */
 dom_exception _dom_document_create(dom_events_default_action_fetcher daf,
-		dom_document **doc)
+				   void *daf_ctx,
+				   dom_document **doc)
 {
 	dom_document *d;
 	dom_exception err;
@@ -98,7 +99,7 @@ dom_exception _dom_document_create(dom_events_default_action_fetcher daf,
 	 * reaches zero. Documents own themselves (this simplifies the 
 	 * rest of the code, as it doesn't need to special case Documents)
 	 */
-	err = _dom_document_initialise(d, daf);
+	err = _dom_document_initialise(d, daf, daf_ctx);
 	if (err != DOM_NO_ERR) {
 		/* Clean up document */
 		free(d);
@@ -111,8 +112,9 @@ dom_exception _dom_document_create(dom_events_default_action_fetcher daf,
 }
 
 /* Initialise the document */
-dom_exception _dom_document_initialise(dom_document *doc, 
-		dom_events_default_action_fetcher daf)
+dom_exception _dom_document_initialise(dom_document *doc,
+				       dom_events_default_action_fetcher daf, 
+				       void *daf_ctx)
 {
 	dom_exception err;
 	dom_string *name;
@@ -248,7 +250,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	}
 
 	/* We should not pass a NULL when all things hook up */
-	return _dom_document_event_internal_initialise(doc, &doc->dei, daf);
+	return _dom_document_event_internal_initialise(doc, &doc->dei, daf, daf_ctx);
 }
 
 

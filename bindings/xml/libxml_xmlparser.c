@@ -214,6 +214,7 @@ dom_xml_parser *dom_xml_parser_create(const char *enc, const char *int_enc,
 			/* qname */ NULL,
 			/* doctype */ NULL,
 			NULL,
+			NULL,
 			document);
 
 	if (err != DOM_NO_ERR) {

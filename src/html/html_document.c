@@ -50,6 +50,7 @@ static struct dom_node_protect_vtable html_document_protect_vtable = {
 /* Create a HTMLDocument */
 dom_exception _dom_html_document_create(
 		dom_events_default_action_fetcher daf,
+		void *daf_ctx,
 		dom_html_document **doc)
 {
 	dom_exception error;
@@ -62,7 +63,7 @@ dom_exception _dom_html_document_create(
 	result->base.base.base.vtable = &html_document_vtable;
 	result->base.base.vtable = &html_document_protect_vtable;
 	
-	error = _dom_html_document_initialise(result, daf);
+	error = _dom_html_document_initialise(result, daf, daf_ctx);
 	if (error != DOM_NO_ERR) {
 		free(result);
 		return error;
@@ -74,12 +75,13 @@ dom_exception _dom_html_document_create(
 
 /* Initialise a HTMLDocument */
 dom_exception _dom_html_document_initialise(dom_html_document *doc,
-		dom_events_default_action_fetcher daf)
+		dom_events_default_action_fetcher daf,
+		void *daf_ctx)
 {
 	dom_exception error;
 	int sidx;
 
-	error = _dom_document_initialise(&doc->base, daf);
+	error = _dom_document_initialise(&doc->base, daf, daf_ctx);
 	if (error != DOM_NO_ERR)
 		return error;
 

@@ -72,11 +72,13 @@ struct dom_document {
 
 /* Create a DOM document */
 dom_exception _dom_document_create(dom_events_default_action_fetcher daf,
-		dom_document **doc);
+				   void *daf_ctx,
+				   dom_document **doc);
 
 /* Initialise the document */
 dom_exception _dom_document_initialise(dom_document *doc, 
-		dom_events_default_action_fetcher daf);
+		dom_events_default_action_fetcher daf,
+				   void *daf_ctx);
 
 /* Finalise the document */
 bool _dom_document_finalise(dom_document *doc);

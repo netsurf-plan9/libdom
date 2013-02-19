@@ -33,10 +33,13 @@ struct dom_html_document {
 /* Create a HTMLDocument */
 dom_exception _dom_html_document_create(
 		dom_events_default_action_fetcher daf,
+		void *daf_ctx,
 		dom_html_document **doc);
 /* Initialise a HTMLDocument */
-dom_exception _dom_html_document_initialise(dom_html_document *doc,
-		dom_events_default_action_fetcher daf);
+dom_exception _dom_html_document_initialise(
+		dom_html_document *doc,
+		dom_events_default_action_fetcher daf,
+		void *daf_ctx);
 /* Finalise a HTMLDocument */
 bool _dom_html_document_finalise(dom_html_document *doc);
 
