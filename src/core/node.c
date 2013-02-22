@@ -227,6 +227,11 @@ void _dom_node_finalise(dom_node_internal *node)
 	/* Destroy user data */
 	for (u = node->user_data; u != NULL; u = v) {
 		v = u->next;
+
+		if (u->handler != NULL)
+			u->handler(DOM_NODE_DELETED, u->key, u->data, 
+					NULL, NULL);
+
 		dom_string_unref(u->key);
 		free(u);
 	}
