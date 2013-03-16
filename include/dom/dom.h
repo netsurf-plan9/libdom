@@ -54,6 +54,7 @@
 #include <dom/html/html_opt_group_element.h>
 #include <dom/html/html_option_element.h>
 #include <dom/html/html_select_element.h>
+#include <dom/html/html_options_collection.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
