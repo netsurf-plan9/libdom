@@ -1589,6 +1589,7 @@ dom_exception _dom_node_lookup_namespace(dom_node_internal *node,
  *   + The node entities are equal
  *   + The node notations are equal
  * TODO: in document_type, we should override this virtual function
+ * TODO: actually handle DocumentType nodes differently
  */
 dom_exception _dom_node_is_equal(dom_node_internal *node,
 		dom_node_internal *other, bool *result)
@@ -1609,7 +1610,7 @@ dom_exception _dom_node_is_equal(dom_node_internal *node,
 	assert(node->owner != NULL);
 	assert(other->owner != NULL);
 
-	/* Compare the node names */
+	/* Compare the node names (and prefix) */
 	err = dom_node_get_node_name(node, &s1);
 	if (err != DOM_NO_ERR) {
 		/* error */
@@ -1627,14 +1628,13 @@ dom_exception _dom_node_is_equal(dom_node_internal *node,
 		goto cleanup;
 	}
 
-	/* TODO: surely this bit is broken */
-	if (node->name != other->name || 
-			node->namespace != other->namespace ||
-			node->prefix != other->prefix) {
+	/* Compare namespace URI */
+	if (dom_string_isequal(node->namespace, other->namespace) == false) {
 		/* different */
 		goto cleanup;
 	}
 
+	/* Compare node value */
 	if (dom_string_isequal(node->value, other->value) == false) {
 		/* different */
 		goto cleanup;
@@ -1653,7 +1653,7 @@ dom_exception _dom_node_is_equal(dom_node_internal *node,
 		goto cleanup;
 	}
 
-	if (dom_namednodemap_equal(m1, m2) != true) {
+	if (dom_namednodemap_equal(m1, m2) == false) {
 		/* different */
 		goto cleanup;
 	}
@@ -1671,7 +1671,7 @@ dom_exception _dom_node_is_equal(dom_node_internal *node,
 		goto cleanup;
 	}
 
-	if (dom_nodelist_equal(l1, l2) != true) {
+	if (dom_nodelist_equal(l1, l2) == false) {
 		/* different */
 		goto cleanup;
 	}
