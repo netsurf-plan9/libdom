@@ -1593,75 +1593,108 @@ dom_exception _dom_node_lookup_namespace(dom_node_internal *node,
 dom_exception _dom_node_is_equal(dom_node_internal *node,
 		dom_node_internal *other, bool *result)
 {
-	dom_exception err;
-	dom_string *s1, *s2;
-	dom_namednodemap *m1, *m2;
-	dom_nodelist *l1, *l2;
+	dom_exception err = DOM_NO_ERR;
+	dom_string *s1 = NULL, *s2 = NULL;
+	dom_namednodemap *m1 = NULL, *m2 = NULL;
+	dom_nodelist *l1 = NULL, *l2 = NULL;
+	*result = false;
 
+	/* Compare the node types */
 	if (node->type != other->type){
-		*result = false;
-		return DOM_NO_ERR;
+		/* different */
+		err = DOM_NO_ERR;
+		goto cleanup;
 	}
 
 	assert(node->owner != NULL);
 	assert(other->owner != NULL);
 
+	/* Compare the node names */
 	err = dom_node_get_node_name(node, &s1);
-	if (err != DOM_NO_ERR)
-		return err;
+	if (err != DOM_NO_ERR) {
+		/* error */
+		goto cleanup;
+	}
 
 	err = dom_node_get_node_name(other, &s2);
-	if (err != DOM_NO_ERR)
-		return err;
+	if (err != DOM_NO_ERR) {
+		/* error */
+		goto cleanup;
+	}
 
 	if (dom_string_isequal(s1, s2) == false) {
-		*result = false;
-		return DOM_NO_ERR;
+		/* different */
+		goto cleanup;
 	}
-	
+
+	/* TODO: surely this bit is broken */
 	if (node->name != other->name || 
 			node->namespace != other->namespace ||
 			node->prefix != other->prefix) {
-		*result = false;
-		return DOM_NO_ERR;
+		/* different */
+		goto cleanup;
 	}
 
 	if (dom_string_isequal(node->value, other->value) == false) {
-		*result = false;
-		return DOM_NO_ERR;
+		/* different */
+		goto cleanup;
 	}
 
-	// Following comes the attributes
+	/* Compare the attributes */
 	err = dom_node_get_attributes(node, &m1);
-	if (err != DOM_NO_ERR)
-		return err;
+	if (err != DOM_NO_ERR) {
+		/* error */
+		goto cleanup;
+	}
 	
 	err = dom_node_get_attributes(other, &m2);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	if (dom_namednodemap_equal(m1, m2) != true) {
-		*result = false;
-		return DOM_NO_ERR;
+	if (err != DOM_NO_ERR) {
+		/* error */
+		goto cleanup;
 	}
 
-	// Finally the childNodes
+	if (dom_namednodemap_equal(m1, m2) != true) {
+		/* different */
+		goto cleanup;
+	}
+
+	/* Compare the children */
 	err = dom_node_get_child_nodes(node, &l1);
-	if (err != DOM_NO_ERR)
-		return err;
+	if (err != DOM_NO_ERR) {
+		/* error */
+		goto cleanup;
+	}
 
 	err = dom_node_get_child_nodes(other, &l2);
-	if (err != DOM_NO_ERR)
-		return err;
+	if (err != DOM_NO_ERR) {
+		/* error */
+		goto cleanup;
+	}
 
 	if (dom_nodelist_equal(l1, l2) != true) {
-		*result = false;
-		return DOM_NO_ERR;
+		/* different */
+		goto cleanup;
 	}
 
 	*result = true;
 
-	return DOM_NO_ERR;
+cleanup:
+	if (s1 != NULL)
+		dom_string_unref(s1);
+	if (s2 != NULL)
+		dom_string_unref(s2);
+
+	if (m1 != NULL)
+		dom_namednodemap_unref(m1);
+	if (m2 != NULL)
+		dom_namednodemap_unref(m2);
+
+	if (l1 != NULL)
+		dom_nodelist_unref(l1);
+	if (l2 != NULL)
+		dom_nodelist_unref(l2);
+
+	return err;
 }
 
 /**
