@@ -820,6 +820,9 @@ dom_exception _dom_document_get_element_by_id(dom_document *doc,
 	err = _dom_find_element_by_id(root, id, result);
 	dom_node_unref(root);
 
+	if (*result != NULL)
+		dom_node_ref(*result);
+
 	return err;
 }
 
