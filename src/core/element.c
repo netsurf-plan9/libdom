@@ -1964,8 +1964,10 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	/* TODO: We did not support some node type such as entity reference, in
 	 * that case, we should ignore the error to make sure the event model
 	 * work as excepted. */
-	if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR)
+	if (err != DOM_NO_ERR && err != DOM_NOT_SUPPORTED_ERR) {
+		_dom_element_attr_list_node_destroy(match);
 		return err;
+	}
 	err = _dom_dispatch_attr_modified_event(doc, e, NULL, new,
 			(dom_event_target *) attr, name, 
 			DOM_MUTATION_ADDITION, &success);
@@ -1973,19 +1975,24 @@ dom_exception _dom_element_set_attr_node(struct dom_element *element,
 	dom_string_unref(new);
 	dom_string_unref(name);
 	if (err != DOM_NO_ERR) {
+		_dom_element_attr_list_node_destroy(match);
 		return err;
 	}
 
 	err = dom_node_dispatch_node_change_event(doc, attr, element, 
 			DOM_MUTATION_ADDITION, &success);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		_dom_element_attr_list_node_destroy(match);
 		return err;
+	}
 
 	success = true;
 	err = _dom_dispatch_subtree_modified_event(doc,
 			(dom_event_target *) element, &success);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		_dom_element_attr_list_node_destroy(match);
 		return err;
+	}
 
 	/* Link into element's attribute list */
 	if (element->attributes == NULL)
