@@ -259,9 +259,7 @@ dom_exception _dom_html_document_create_element_ns(dom_document *doc,
 			namespace, prefix, (dom_html_element **)result);
 
 	/* Tidy up */
-	if (localname != NULL) {
-		dom_string_unref(localname);
-	}
+	dom_string_unref(localname);
 
 	if (prefix != NULL) {
 		dom_string_unref(prefix);
