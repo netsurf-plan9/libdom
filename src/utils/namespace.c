@@ -193,11 +193,13 @@ dom_exception _dom_namespace_validate_qname(dom_string *qname,
 
 		err = dom_string_substr(qname, colon + 1, len, &lname);
 		if (err != DOM_NO_ERR) {
+			dom_string_unref(prefix);
 			return err;
 		}
 
 		if ((_dom_validate_ncname(prefix) == false) ||
 		    (_dom_validate_ncname(lname) == false)) {
+			dom_string_unref(prefix);
 			dom_string_unref(lname);
 			return DOM_NAMESPACE_ERR;
 		}
