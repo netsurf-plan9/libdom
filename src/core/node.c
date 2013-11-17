@@ -2184,8 +2184,8 @@ dom_exception _dom_merge_adjacent_text(dom_node_internal *p,
 	dom_string *str;
 	dom_exception err;
 
-	assert(p->type = DOM_TEXT_NODE);
-	assert(n->type = DOM_TEXT_NODE);
+	assert(p->type == DOM_TEXT_NODE);
+	assert(n->type == DOM_TEXT_NODE);
 
 	err = dom_text_get_whole_text(n, &str);
 	if (err != DOM_NO_ERR)
