@@ -1157,7 +1157,7 @@ dom_exception _dom_element_set_id_attribute_node(struct dom_element *element,
  * Obtain a pre-parsed array of class names for an element
  *
  * \param element    Element containing classes
- * \param classes    Pointer to location to receive client-owned allocated array
+ * \param classes    Pointer to location to receive libdom-owned array
  * \param n_classes  Pointer to location to receive number of classes
  * \return DOM_NO_ERR on success,
  *         DOM_NO_MEM_ERR on memory exhaustion
@@ -1166,20 +1166,14 @@ dom_exception _dom_element_get_classes(struct dom_element *element,
 		lwc_string ***classes, uint32_t *n_classes)
 {	
 	if (element->n_classes > 0) {
-		lwc_string **classes_copy = NULL;
 		uint32_t classnr;
 
-		classes_copy = malloc(sizeof(lwc_string *) * 
-				element->n_classes);
-		if (classes_copy == NULL)
-			return DOM_NO_MEM_ERR;
+		*classes = element->classes;
+		*n_classes = element->n_classes;
 
 		for (classnr = 0; classnr < element->n_classes; classnr++)
-			classes_copy[classnr] = lwc_string_ref(
-					element->classes[classnr]);
+			lwc_string_ref((*classes)[classnr]);
 
-		*classes = classes_copy;
-		*n_classes = element->n_classes;
 	} else {
 		*n_classes = 0;
 		*classes = NULL;
