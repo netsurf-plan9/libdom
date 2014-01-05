@@ -82,6 +82,9 @@ dom_exception _dom_html_form_element_initialise(struct dom_html_document *doc,
  */
 void _dom_html_form_element_finalise(struct dom_html_form_element *ele)
 {
+	if (ele->col != NULL)
+		dom_html_collection_unref(ele->col);
+
 	_dom_html_element_finalise(&ele->base);
 }
 
