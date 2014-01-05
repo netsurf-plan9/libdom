@@ -63,7 +63,6 @@ dom_exception _dom_html_select_element_initialise(struct dom_html_document *doc,
 		struct dom_html_select_element *ele)
 {
 	ele->form = NULL;
-	ele->options = NULL;
 
 	return _dom_html_element_initialise(doc, &ele->base,
 					    doc->memoised[hds_SELECT],
@@ -77,9 +76,6 @@ dom_exception _dom_html_select_element_initialise(struct dom_html_document *doc,
  */
 void _dom_html_select_element_finalise(struct dom_html_select_element *ele)
 {
-	if (ele->options != NULL)
-		dom_html_options_collection_unref(ele->options);
-
 	_dom_html_element_finalise(&ele->base);
 }
 
@@ -128,23 +124,17 @@ dom_exception _dom_html_select_element_copy(dom_node_internal *old,
 /*-----------------------------------------------------------------------*/
 /* Public APIs */
 
-static dom_exception _dom_html_select_element_ensure_collection(
-		dom_html_select_element *ele)
+static dom_exception _dom_html_select_element_make_collection(
+	dom_html_select_element *ele,
+	dom_html_options_collection **col)
 {
-	dom_exception err;
 	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
 
 	assert(doc != NULL);
 
-	if (ele->options == NULL) {
-		err = _dom_html_options_collection_create(doc,
-				(dom_node_internal *) ele,
-				is_option, ele, &ele->options);
-		if (err != DOM_NO_ERR)
-			return err;
-	}
-
-	return DOM_NO_ERR;
+	return _dom_html_options_collection_create(doc,
+						   (dom_node_internal *) ele,
+						   is_option, ele, col);
 }
 
 /**
@@ -187,33 +177,44 @@ dom_exception dom_html_select_element_get_selected_index(
 	uint32_t idx, len;
 	dom_node *option;
 	bool selected;
+	dom_html_options_collection *col;
+	
+	err = _dom_html_select_element_make_collection(ele, &col);
 
-	err = dom_html_select_element_get_length(ele, &len);
-	if (err != DOM_NO_ERR)
+	err = dom_html_options_collection_get_length(col, &len);
+	if (err != DOM_NO_ERR) {
+		dom_html_options_collection_unref(col);
 		return err;
+	}
 
 	for (idx = 0; idx < len; idx++) {
-		err = dom_html_options_collection_item(ele->options,
+		err = dom_html_options_collection_item(col,
 				idx, &option);
-		if (err != DOM_NO_ERR)
+		if (err != DOM_NO_ERR) {
+			dom_html_options_collection_unref(col);
 			return err;
-
+		}
+		
 		err = dom_html_option_element_get_selected(
 				(dom_html_option_element *) option, &selected);
 
 		dom_node_unref(option);
 
-		if (err != DOM_NO_ERR)
+		if (err != DOM_NO_ERR) {
+			dom_html_options_collection_unref(col);
 			return err;
-
+		}
+		
 		if (selected) {
 			*index = idx;
+			dom_html_options_collection_unref(col);
 			return DOM_NO_ERR;
 		}
 	}
 
 	*index = -1;
 
+	dom_html_options_collection_unref(col);
 	return DOM_NO_ERR;
 }
 
@@ -248,20 +249,30 @@ dom_exception dom_html_select_element_get_value(
 	uint32_t idx, len;
 	dom_node *option;
 	bool selected;
-
-	err = dom_html_select_element_get_length(ele, &len);
+	dom_html_options_collection *col;
+	
+	err = _dom_html_select_element_make_collection(ele, &col);
 	if (err != DOM_NO_ERR)
 		return err;
 
+	err = dom_html_select_element_get_length(ele, &len);
+	if (err != DOM_NO_ERR) {
+		dom_html_options_collection_unref(col);
+		return err;
+	}
+
 	for (idx = 0; idx < len; idx++) {
-		err = dom_html_options_collection_item(ele->options,
+		err = dom_html_options_collection_item(col,
 				idx, &option);
-		if (err != DOM_NO_ERR)
+		if (err != DOM_NO_ERR) {
+			dom_html_options_collection_unref(col);
 			return err;
+		}
 
 		err = dom_html_option_element_get_selected(
 				(dom_html_option_element *) option, &selected);
 		if (err != DOM_NO_ERR) {
+			dom_html_options_collection_unref(col);
 			dom_node_unref(option);
 			return err;
 		}
@@ -271,6 +282,7 @@ dom_exception dom_html_select_element_get_value(
 					(dom_html_option_element *) option,
 					value);
 
+			dom_html_options_collection_unref(col);
 			dom_node_unref(option);
 
 			return err;
@@ -278,7 +290,8 @@ dom_exception dom_html_select_element_get_value(
 	}
 
 	*value = NULL;
-
+	dom_html_options_collection_unref(col);
+			
 	return DOM_NO_ERR;
 }
 
@@ -310,12 +323,17 @@ dom_exception dom_html_select_element_get_length(
 		dom_html_select_element *ele, uint32_t *len)
 {
 	dom_exception err;
-
-	err = _dom_html_select_element_ensure_collection(ele);
+	dom_html_options_collection *col;
+	
+	err = _dom_html_select_element_make_collection(ele, &col);
 	if (err != DOM_NO_ERR)
 		return err;
 
-	return dom_html_options_collection_get_length(ele->options, len);
+	err = dom_html_options_collection_get_length(col, len);
+	
+	dom_html_options_collection_unref(col);
+	
+	return err;
 }
 
 /**
@@ -365,16 +383,7 @@ dom_exception dom__html_select_element_get_options(
 		dom_html_select_element *ele,
 		struct dom_html_options_collection **col)
 {
-	dom_exception err;
-
-	err = _dom_html_select_element_ensure_collection(ele);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	dom_html_options_collection_ref(ele->options);
-	*col = ele->options;
-
-	return DOM_NO_ERR;
+	return _dom_html_select_element_make_collection(ele, col);
 }
 
 /**
@@ -540,7 +549,6 @@ dom_exception dom_html_select_element_remove(dom_html_select_element *ele,
 {
 	dom_exception err;
 	uint32_t len;
-	dom_node *option;
 
 	err = dom_html_select_element_get_length(ele, &len);
 	if (err != DOM_NO_ERR)
@@ -549,10 +557,6 @@ dom_exception dom_html_select_element_remove(dom_html_select_element *ele,
 	/* Ensure index is in range */
 	if (index < 0 || (uint32_t)index >= len)
 		return DOM_NO_ERR;
-
-	err = dom_html_options_collection_item(ele->options, index, &option);
-	if (err != DOM_NO_ERR)
-		return err;
 
 	/** \todo What does remove mean? Remove option from tree and destroy it? */
 	return DOM_NOT_SUPPORTED_ERR;

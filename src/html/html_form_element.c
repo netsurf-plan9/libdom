@@ -70,8 +70,6 @@ dom_exception _dom_html_form_element_initialise(struct dom_html_document *doc,
 					   doc->memoised[hds_FORM],
 					   namespace, prefix);
 	
-	ele->col = NULL;
-
 	return err;
 }
 
@@ -82,8 +80,6 @@ dom_exception _dom_html_form_element_initialise(struct dom_html_document *doc,
  */
 void _dom_html_form_element_finalise(struct dom_html_form_element *ele)
 {
-	if (ele->col != NULL)
-		dom_html_collection_unref(ele->col);
 
 	_dom_html_element_finalise(&ele->base);
 }
@@ -144,23 +140,13 @@ dom_exception dom_html_form_element_get_elements(dom_html_form_element *ele,
 		struct dom_html_collection **col)
 {
 	dom_exception err;
-
-	if (ele->col == NULL) {
-		dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
-		assert(doc != NULL);
-		err = _dom_html_collection_create(doc,
-				(dom_node_internal *) doc,
-				_dom_is_form_control, ele, col);
-		if (err != DOM_NO_ERR)
-			return err;
-
-		ele->col = *col;
-	}
-
-	*col = ele->col;
-	dom_html_collection_ref(*col);
-
-	return DOM_NO_ERR;
+	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
+	
+	assert(doc != NULL);
+	err = _dom_html_collection_create(doc,
+					  (dom_node_internal *) doc,
+					  _dom_is_form_control, ele, col);
+	return err;
 }
 
 /**
@@ -174,18 +160,22 @@ dom_exception dom_html_form_element_get_length(dom_html_form_element *ele,
 		uint32_t *len)
 {
 	dom_exception err;
+	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
+	dom_html_collection *col;
+	
+	assert(doc != NULL);
+	err = _dom_html_collection_create(doc,
+					  (dom_node_internal *) doc,
+					  _dom_is_form_control, ele, &col);
+	if (err != DOM_NO_ERR)
+		return err;
 
-	if (ele->col == NULL) {
-		dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
-		assert(doc != NULL);
-		err = _dom_html_collection_create(doc,
-				(dom_node_internal *) doc,
-				_dom_is_form_control, ele, &ele->col);
-		if (err != DOM_NO_ERR)
-			return err;
-	}
 
-	return dom_html_collection_get_length(ele->col, len);
+	err = dom_html_collection_get_length(col, len);
+	
+	dom_html_collection_unref(col);
+	
+	return err;
 }
 
 #define SIMPLE_GET_SET(attr)						\
@@ -287,7 +277,11 @@ static bool _dom_is_form_control(struct dom_node_internal *node, void *ctx)
 
 	
 	assert(node->type == DOM_ELEMENT_NODE);
-
+	
+	/* This should check the form of each element *AND* node that
+	 * buttons leak the forms too!  ARGH
+	 */
+	
         /* Form controls are INPUT TEXTAREA SELECT and BUTTON */
         if (dom_string_caseless_isequal(node->name,
 					doc->memoised[hds_INPUT]))

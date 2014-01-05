@@ -20,8 +20,6 @@ struct dom_html_select_element {
 			/**< The selected element's index */
 	dom_html_form_element *form;
 			/**< The form associated with select */
-	dom_html_options_collection *options;
-			/**< The options objects */
 };
 
 /* Create a dom_html_select_element object */
