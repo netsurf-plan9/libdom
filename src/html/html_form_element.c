@@ -11,6 +11,9 @@
 #include <dom/html/html_form_element.h>
 
 #include "html/html_form_element.h"
+#include "html/html_input_element.h"
+#include "html/html_select_element.h"
+#include "html/html_text_area_element.h"
 #include "html/html_button_element.h"
 
 #include "html/html_collection.h"
@@ -273,36 +276,24 @@ static bool _dom_is_form_control(struct dom_node_internal *node, void *ctx)
 {
 	struct dom_html_document *doc =
 		(struct dom_html_document *)(node->owner);
-	struct dom_html_form_element *form = ctx, *form2;
+	struct dom_html_form_element *form = ctx;
 
 	
 	assert(node->type == DOM_ELEMENT_NODE);
 	
-	/* This should check the form of each element *AND* node that
-	 * buttons leak the forms too!  ARGH
-	 */
-	
         /* Form controls are INPUT TEXTAREA SELECT and BUTTON */
         if (dom_string_caseless_isequal(node->name,
 					doc->memoised[hds_INPUT]))
-		return true;
+		return ((dom_html_input_element *)node)->form == form;
 	if (dom_string_caseless_isequal(node->name,
 					doc->memoised[hds_TEXTAREA]))
-		return true;
+		return ((dom_html_text_area_element *)node)->form == form;
 	if (dom_string_caseless_isequal(node->name,
 					doc->memoised[hds_SELECT]))
-		return true;
+		return ((dom_html_select_element *)node)->form == form;
 	if (dom_string_caseless_isequal(node->name,
 					doc->memoised[hds_BUTTON])) {
-		dom_html_button_element *button =
-			(dom_html_button_element *) node;
-		dom_exception err = 
-			dom_html_button_element_get_form(button, &form2);
-		if (err == DOM_NO_ERR) {
-			return form == form2;
-		}
-		/* Couldn't get the form, assume it's not ours. */
-		return false;
+		return ((dom_html_button_element *)node)->form == form;
 	}
 
 	return false;
