@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <dom/dom.h>
 #include <dom/html/html_option_element.h>
 #include <dom/html/html_select_element.h>
 
@@ -153,6 +154,86 @@ dom_exception dom_html_option_element_set_default_selected(
 }
 
 /**
+ * Helper for dom_html_option_element_get_text
+ */
+static dom_exception dom_html_option_element_get_text_node(
+	dom_node_internal *n, dom_string **text)
+{
+	dom_string *node_name = NULL;
+	dom_string *node_ns = NULL;
+	dom_document *owner = NULL;
+	dom_string *str = NULL;
+	dom_string *ret = NULL;
+	dom_exception exc;
+
+	*text = NULL;
+
+	assert(n->owner != NULL);
+	owner = n->owner;
+
+	for (n = n->first_child; n != NULL; n = n->next) {
+		/* Skip irrelevent node types */
+		if (n->type == DOM_COMMENT_NODE ||
+		    n->type == DOM_PROCESSING_INSTRUCTION_NODE)
+			continue;
+
+		if (n->type == DOM_ELEMENT_NODE) {
+			/* Skip script elements with html or svg namespace */
+			exc = dom_node_get_local_name(n, &node_name);
+			if (exc != DOM_NO_ERR)
+				return exc;
+			if (dom_string_caseless_isequal(node_name,
+					owner->script_string)) {
+				exc = dom_node_get_namespace(n, &node_ns);
+				if (exc != DOM_NO_ERR) {
+					dom_string_unref(node_name);
+					return exc;
+				}
+				if (dom_string_caseless_isequal(node_ns,
+						dom_namespaces[
+							DOM_NAMESPACE_HTML]) ||
+				    dom_string_caseless_isequal(node_ns,
+						dom_namespaces[
+							DOM_NAMESPACE_SVG])) {
+					dom_string_unref(node_name);
+					dom_string_unref(node_ns);
+					continue;
+				}
+				dom_string_unref(node_ns);
+			}
+			dom_string_unref(node_name);
+
+			/* Get text inside child node 'n' */
+			dom_html_option_element_get_text_node(n,
+					(str == NULL) ? &str : &ret);
+		} else {
+			/* Handle other nodes with their get_text_content
+			 * specialisation */
+			dom_node_get_text_content(n,
+					(str == NULL) ? &str : &ret);
+		}
+
+		/* If we already have text, concatenate it */
+		if (ret != NULL) {
+			dom_string *new_str;
+			dom_string_concat(str, ret, &new_str);
+			dom_string_unref(str);
+			dom_string_unref(ret);
+			str = new_str;
+		}
+	}
+
+	/* Strip and collapse whitespace */
+	if (str != NULL) {
+		dom_string_whitespace_op(str,
+				DOM_WHITESPACE_STRIP_COLLAPSE, text);
+		dom_string_unref(str);
+	}
+
+	return DOM_NO_ERR;
+}
+
+/**
  * Get the text contained in the option
  *
  * \param option  The dom_html_option_element object
@@ -162,7 +243,8 @@ dom_exception dom_html_option_element_set_default_selected(
 dom_exception dom_html_option_element_get_text(
 	dom_html_option_element *option, dom_string **text)
 {
-	return dom_node_get_text_content(option, text);
+	return dom_html_option_element_get_text_node(
+			(dom_node_internal *) option, text);
 }
 
 /**

@@ -271,8 +271,8 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 			is2->type == DOM_STRING_INTERNED) {
 		bool match;
 
-		if (lwc_string_caseless_isequal(is1->data.intern, is2->data.intern, 
-                                                &match) != lwc_error_ok) 
+		if (lwc_string_caseless_isequal(is1->data.intern,
+				is2->data.intern, &match) != lwc_error_ok)
 			return false;
 
 		return match;
@@ -1015,6 +1015,86 @@ dom_string_tolower(dom_string *source, bool ascii_only, dom_string **lower)
 	
 	free(copy_s);
 	
+	return exc;
+}
+
+/* exported function documented in string.h */
+dom_exception dom_string_whitespace_op(dom_string *s,
+		enum dom_whitespace_op op, dom_string **ret)
+{
+	const uint8_t *src_text = (const uint8_t *) dom_string_data(s);
+	size_t len = dom_string_byte_length(s);
+	const uint8_t *src_pos;
+	const uint8_t *src_end;
+	dom_exception exc;
+	uint8_t *temp_pos;
+	uint8_t *temp;
+
+	if (len == 0) {
+		*ret = dom_string_ref(s);
+	}
+
+	temp = malloc(len);
+	if (temp == NULL) {
+		return DOM_NO_MEM_ERR;
+	}
+
+	src_pos = src_text;
+	src_end = src_text + len;
+	temp_pos = temp;
+
+	if (op & DOM_WHITESPACE_STRIP_LEADING) {
+		while (src_pos < src_end) {
+			if (*src_pos == ' '  || *src_pos == '\t' ||
+			    *src_pos == '\n' || *src_pos == '\r' ||
+			    *src_pos == '\f')
+				src_pos++;
+			else
+				break;
+		}
+	}
+
+	while (src_pos < src_end) {
+		if ((op & DOM_WHITESPACE_COLLAPSE) &&
+				(*src_pos == ' ' || *src_pos == '\t' ||
+				*src_pos == '\n' || *src_pos == '\r' ||
+				*src_pos == '\f')) {
+			/* Got a whitespace character */
+			do {
+				/* Skip all adjacent whitespace */
+				src_pos++;
+			} while (src_pos < src_end &&
+					(*src_pos == ' ' || *src_pos == '\t' ||
+					*src_pos == '\n' || *src_pos == '\r' ||
+					*src_pos == '\f'));
+			/* Gets replaced with single space in output */
+			*temp_pos++ = ' ';
+		} else {
+			/* Otherwise, copy to output */
+			*temp_pos++ = *src_pos++;
+		}
+	}
+
+	if (op & DOM_WHITESPACE_STRIP_TRAILING) {
+		if (temp_pos > temp) {
+			temp_pos--;
+			if (*temp_pos != ' ')
+				temp_pos++;
+		}
+	}
+
+	/* New length */
+	len = temp_pos - temp;
+
+	/* Make new string */
+	if (((dom_string_internal *) s)->type == DOM_STRING_CDATA) {
+		exc = dom_string_create(temp, len, ret);
+	} else {
+		exc = dom_string_create_interned(temp, len, ret);
+	}
+
+	free(temp);
+
 	return exc;
 }
 

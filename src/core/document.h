@@ -54,6 +54,8 @@ struct dom_document {
 
 	dom_string *class_string;	/**< The string "class". */
 
+	dom_string *script_string;	/**< The string "script". */
+
 	dom_document_event_internal dei;
 			/**< The DocumentEvent interface */
 	dom_document_quirks_mode quirks;
