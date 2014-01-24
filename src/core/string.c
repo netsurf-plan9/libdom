@@ -1076,10 +1076,14 @@ dom_exception dom_string_whitespace_op(dom_string *s,
 	}
 
 	if (op & DOM_WHITESPACE_STRIP_TRAILING) {
-		if (temp_pos > temp) {
+		while (temp_pos > temp) {
 			temp_pos--;
-			if (*temp_pos != ' ')
+			if (*temp_pos != ' '  && *temp_pos != '\t' &&
+			    *temp_pos != '\n' && *temp_pos != '\r' &&
+			    *temp_pos != '\f') {
 				temp_pos++;
+				break;
+			}
 		}
 	}
 
