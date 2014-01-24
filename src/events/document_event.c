@@ -162,8 +162,6 @@ dom_exception _dom_document_event_create_event(dom_document_event *de,
 			err = _dom_mutation_name_event_create(doc, 
 					(dom_mutation_name_event **) evt);
 			break;
-		default:
-			assert("Should never be here" == NULL);
 	}
 
 	return err;
