@@ -50,7 +50,7 @@ static inline dom_exception _dom_node_attach_range(dom_node_internal *first,
 		dom_node_internal *parent, 
 		dom_node_internal *previous, 
 		dom_node_internal *next);
-static inline void _dom_node_detach_range(dom_node_internal *first, 
+static inline dom_exception _dom_node_detach_range(dom_node_internal *first,
 		dom_node_internal *last);
 static inline void _dom_node_replace(dom_node_internal *old, 
 		dom_node_internal *replacement);
@@ -2091,12 +2091,13 @@ dom_exception _dom_node_attach_range(dom_node_internal *first,
  *
  * The range is assumed to be a linked list of sibling nodes.
  */
-void _dom_node_detach_range(dom_node_internal *first, 
+dom_exception _dom_node_detach_range(dom_node_internal *first,
 		dom_node_internal *last)
 {
 	bool success = true;
 	dom_node_internal *parent;
 	dom_node_internal *n;
+	dom_exception err = DOM_NO_ERR;
 
 	if (first->previous != NULL)
 		first->previous->next = last->next;
@@ -2111,8 +2112,8 @@ void _dom_node_detach_range(dom_node_internal *first,
 	parent = first->parent;
 	for (n = first; n != last->next; n = n->next) {
 		/* Dispatch a DOMNodeRemoval event */
-		dom_node_dispatch_node_change_event(n->owner, n, n->parent, 
-				DOM_MUTATION_REMOVAL, &success);
+		err = dom_node_dispatch_node_change_event(n->owner, n,
+				n->parent, DOM_MUTATION_REMOVAL, &success);
 
 		n->parent = NULL;
 	}
@@ -2123,6 +2124,8 @@ void _dom_node_detach_range(dom_node_internal *first,
 
 	first->previous = NULL;
 	last->next = NULL;
+
+	return err;
 }
 
 /**
