@@ -602,10 +602,17 @@ dom_exception dom_string_concat(dom_string *s1, dom_string *s2,
 dom_exception dom_string_substr(dom_string *str, 
 		uint32_t i1, uint32_t i2, dom_string **result)
 {
-	const uint8_t *s = (const uint8_t *) dom_string_data(str);
-	size_t slen = dom_string_byte_length(str);
+	const uint8_t *s;
+	size_t slen;
 	uint32_t b1, b2;
 	parserutils_error err;
+
+	/* target string is NULL equivalent to empty. */
+	if (str == NULL)
+		str = (dom_string *)&empty_string;
+
+	s = (const uint8_t *) dom_string_data(str);
+	slen = dom_string_byte_length(str);
 
 	/* Initialise the byte index of the start to 0 */
 	b1 = 0;
@@ -662,6 +669,10 @@ dom_exception dom_string_insert(dom_string *target,
 	uint32_t tlen, slen, clen;
 	uint32_t ins = 0;
 	parserutils_error err;
+
+	/* target string is NULL equivalent to empty. */
+	if (target == NULL)
+		target = (dom_string *)&empty_string;
 
 	t = (const uint8_t *) dom_string_data(target);
 	tlen = dom_string_byte_length(target);
@@ -751,6 +762,10 @@ dom_exception dom_string_replace(dom_string *target,
 	uint32_t tlen, slen;
 	uint32_t b1, b2;
 	parserutils_error err;
+
+	/* target string is NULL equivalent to empty. */
+	if (target == NULL)
+		target = (dom_string *)&empty_string;
 
 	t = (const uint8_t *) dom_string_data(target);
 	tlen = dom_string_byte_length(target);
