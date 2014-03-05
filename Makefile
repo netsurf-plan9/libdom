@@ -96,6 +96,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_text_area_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_option_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_opt_group_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_options_collection.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_hr_element.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR)/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR):$(OUTPUT)
