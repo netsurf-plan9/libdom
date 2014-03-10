@@ -24,6 +24,7 @@
 #include "html/html_opt_group_element.h"
 #include "html/html_option_element.h"
 #include "html/html_select_element.h"
+#include "html/html_hr_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -220,6 +221,9 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_SELECT])) {
 		exc = _dom_html_select_element_create(html, namespace, prefix,
 				(dom_html_select_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HR])) {
+		exc = _dom_html_hr_element_create(html, namespace, prefix,
+				(dom_html_hr_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);

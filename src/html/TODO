@@ -36,7 +36,7 @@ HTMLPreElement		html_pre_element		MISSING
 HTMLBRElement		html_br_element			MISSING
 HTMLBaseFontElement	html_basefont_element		MISSING
 HTMLFontElement		html_font_element		MISSING
-HTMLHRElement		html_hr_element			MISSING
+HTMLHRElement		html_hr_element			DONE
 HTMLModElement		html_mod_element		MISSING
 HTMLAnchorElement	html_anchor_element		MISSING
 HTMLImageElement	html_image_element		MISSING

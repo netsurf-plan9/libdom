@@ -6,7 +6,7 @@ DIR_SOURCES := \
 	html_base_element.c html_isindex_element.c html_style_element.c \
 	html_body_element.c html_form_element.c html_select_element.c \
 	html_button_element.c html_input_element.c html_text_area_element.c \
-	html_opt_group_element.c html_option_element.c
+	html_opt_group_element.c html_option_element.c html_hr_element.c
 
 UNINMPLEMENTED_SOURCES := \
 	html_label_element.c html_fieldset_element.c \
@@ -15,7 +15,7 @@ UNINMPLEMENTED_SOURCES := \
 	html_li_element.c html_div_element.c html_paragraph_element.c \
 	html_heading_element.c html_quote_element.c html_pre_element.c \
 	html_br_element.c html_basefont_element.c html_font_element.c \
-	html_hr_element.c html_mod_element.c html_anchor_element.c \
+	html_mod_element.c html_anchor_element.c \
 	html_image_element.c html_object_element.c html_param_element.c \
 	html_applet_element.c html_map_element.c html_area_element.c \
 	html_script_element.c html_table_element.c html_tablecaption_element.c \
