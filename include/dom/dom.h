@@ -58,6 +58,7 @@
 #include <dom/html/html_hr_element.h>
 #include <dom/html/html_dlist_element.h>
 #include <dom/html/html_directory_element.h>
+#include <dom/html/html_menu_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>

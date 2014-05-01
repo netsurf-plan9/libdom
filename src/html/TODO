@@ -25,7 +25,7 @@ HTMLUListElement	html_ulist_element		MISSING
 HTMLOListElement	html_olist_element		MISSING
 HTMLDListElement	html_dlist_element		DONE
 HTMLDirectoryElement	html_directory_element		DONE
-HTMLMenuElement		html_menu_element		MISSING
+HTMLMenuElement		html_menu_element		DONE
 HTMLLIElement		html_li_element			MISSING
 HTMLBlockquoteElement	html_blockquote_element		MISSING
 HTMLDivElement		html_div_element		MISSING
