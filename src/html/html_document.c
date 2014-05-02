@@ -28,6 +28,8 @@
 #include "html/html_dlist_element.h"
 #include "html/html_directory_element.h"
 #include "html/html_menu_element.h"
+#include "html/html_fieldset_element.h"
+#include "html/html_legend_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -236,6 +238,12 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_MENU])) {
 		exc = _dom_html_menu_element_create(html, namespace, prefix,
 				(dom_html_menu_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FIELDSET])) {
+		exc = _dom_html_field_set_element_create(html, namespace, prefix,
+				(dom_html_field_set_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LEGEND])) {
+		exc = _dom_html_legend_element_create(html, namespace, prefix,
+				(dom_html_legend_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);

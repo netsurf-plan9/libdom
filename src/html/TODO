@@ -19,8 +19,8 @@ HTMLInputElement	html_input_element		MISSING
 HTMLTextAreaElement	html_textarea_element		MISSING
 HTMLButtonElement	html_button_element		MISSING
 HTMLLabelElement	html_label_element		MISSING
-HTMLFieldSetElement	html_fieldset_element		MISSING
-HTMLLegendElement	html_legend_element		MISSING
+HTMLFieldSetElement	html_fieldset_element		DONE
+HTMLLegendElement	html_legend_element		DONE
 HTMLUListElement	html_ulist_element		MISSING
 HTMLOListElement	html_olist_element		MISSING
 HTMLDListElement	html_dlist_element		DONE
