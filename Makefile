@@ -102,6 +102,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_directory_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_menu_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_fieldset_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_legend_element.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_div_element.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR)/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR):$(OUTPUT)
