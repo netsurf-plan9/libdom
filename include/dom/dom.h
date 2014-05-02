@@ -62,6 +62,7 @@
 #include <dom/html/html_fieldset_element.h>
 #include <dom/html/html_legend_element.h>
 #include <dom/html/html_div_element.h>
+#include <dom/html/html_paragraph_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
