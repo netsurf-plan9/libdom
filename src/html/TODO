@@ -30,7 +30,7 @@ HTMLLIElement		html_li_element			MISSING
 HTMLBlockquoteElement	html_blockquote_element		MISSING
 HTMLDivElement		html_div_element		MISSING
 HTMLParagraphElement	html_paragraph_element		MISSING
-HTMLHeadingElement	html_heading_element		MISSING
+HTMLHeadingElement	html_heading_element		DONE
 HTMLQuoteElement	html_quote_element		MISSING
 HTMLPreElement		html_pre_element		MISSING
 HTMLBRElement		html_br_element			MISSING

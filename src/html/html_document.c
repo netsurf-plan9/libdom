@@ -31,6 +31,7 @@
 #include "html/html_fieldset_element.h"
 #include "html/html_legend_element.h"
 #include "html/html_paragraph_element.h"
+#include "html/html_heading_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -248,6 +249,15 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_P])) {
 		exc = _dom_html_paragraph_element_create(html, namespace, prefix,
 				(dom_html_paragraph_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_H1]) ||
+			dom_string_caseless_isequal(tag_name, html->memoised[hds_H2]) ||
+			dom_string_caseless_isequal(tag_name, html->memoised[hds_H3]) ||
+			dom_string_caseless_isequal(tag_name, html->memoised[hds_H4]) ||
+			dom_string_caseless_isequal(tag_name, html->memoised[hds_H5]) ||
+			dom_string_caseless_isequal(tag_name, html->memoised[hds_H6])
+			) {
+		exc = _dom_html_heading_element_create(html, tag_name, namespace, prefix,
+				(dom_html_heading_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);
