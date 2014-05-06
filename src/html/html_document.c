@@ -32,6 +32,7 @@
 #include "html/html_legend_element.h"
 #include "html/html_paragraph_element.h"
 #include "html/html_heading_element.h"
+#include "html/html_quote_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -258,6 +259,9 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 			) {
 		exc = _dom_html_heading_element_create(html, tag_name, namespace, prefix,
 				(dom_html_heading_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_Q])) {
+		exc = _dom_html_quote_element_create(html, namespace, prefix,
+				(dom_html_quote_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);
