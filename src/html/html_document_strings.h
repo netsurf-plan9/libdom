@@ -65,6 +65,8 @@ HTML_DOCUMENT_STRINGS_ACTION1(method)
 /* HTML_DOCUMENT_STRINGS_ACTION1(target) */
 /* Useful attributes used by HTMLButtonElement */
 HTML_DOCUMENT_STRINGS_ACTION(access_key,accesskey)
+/* Useful attributes used by HTMLBrElement */
+HTML_DOCUMENT_STRINGS_ACTION1(clear)
 /* HTML_DOCUMENT_STRINGS_ACTION1(name) */
 /* HTML_DOCUMENT_STRINGS_ACTION1(type) */
 HTML_DOCUMENT_STRINGS_ACTION1(value)

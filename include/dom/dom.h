@@ -66,6 +66,7 @@
 #include <dom/html/html_heading_element.h>
 #include <dom/html/html_quote_element.h>
 #include <dom/html/html_pre_element.h>
+#include <dom/html/html_br_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
