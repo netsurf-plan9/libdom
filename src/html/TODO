@@ -31,8 +31,8 @@ HTMLBlockquoteElement	html_blockquote_element		MISSING
 HTMLDivElement		html_div_element		MISSING
 HTMLParagraphElement	html_paragraph_element		MISSING
 HTMLHeadingElement	html_heading_element		DONE
-HTMLQuoteElement	html_quote_element		MISSING
-HTMLPreElement		html_pre_element		MISSING
+HTMLQuoteElement	html_quote_element		DONE
+HTMLPreElement		html_pre_element		DONE
 HTMLBRElement		html_br_element			MISSING
 HTMLBaseFontElement	html_basefont_element		MISSING
 HTMLFontElement		html_font_element		MISSING
