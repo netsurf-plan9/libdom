@@ -54,6 +54,7 @@ our %special_prefix = (
 	CDATASection => "dom_cdata_section *",
         HTMLHRElement => "dom_html_hr_element",
         HTMLBRElement => "dom_html_br_element",
+        HTMLLIElement => "dom_html_li_element",
 );
 
 our %unref_prefix = (
