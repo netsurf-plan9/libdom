@@ -36,6 +36,7 @@
 #include "html/html_pre_element.h"
 #include "html/html_br_element.h"
 #include "html/html_label_element.h"
+#include "html/html_ulist_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -274,6 +275,9 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LABEL])) {
 		exc = _dom_html_label_element_create(html, namespace, prefix,
 				(dom_html_label_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_UL])) {
+		exc = _dom_html_u_list_element_create(html, namespace, prefix,
+				(dom_html_u_list_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);

@@ -17,7 +17,7 @@ struct dom_html_label_element {
 	struct dom_html_element base;
 			/**< The base class */
 	dom_html_form_element *form;
-	                        /**< The form associated with label */
+			/**< The form associated with label */
 };
 
 /* Create a dom_html_label_element object */
