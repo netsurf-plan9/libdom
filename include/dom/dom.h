@@ -69,6 +69,7 @@
 #include <dom/html/html_br_element.h>
 #include <dom/html/html_label_element.h>
 #include <dom/html/html_ulist_element.h>
+#include <dom/html/html_olist_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
