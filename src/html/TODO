@@ -18,7 +18,7 @@ HTMLOptionElement	html_option_element		MISSING
 HTMLInputElement	html_input_element		MISSING
 HTMLTextAreaElement	html_textarea_element		MISSING
 HTMLButtonElement	html_button_element		MISSING
-HTMLLabelElement	html_label_element		MISSING
+HTMLLabelElement	html_label_element		DONE
 HTMLFieldSetElement	html_fieldset_element		DONE
 HTMLLegendElement	html_legend_element		DONE
 HTMLUListElement	html_ulist_element		MISSING
@@ -33,7 +33,7 @@ HTMLParagraphElement	html_paragraph_element		MISSING
 HTMLHeadingElement	html_heading_element		DONE
 HTMLQuoteElement	html_quote_element		DONE
 HTMLPreElement		html_pre_element		DONE
-HTMLBRElement		html_br_element			MISSING
+HTMLBRElement		html_br_element			DONE
 HTMLBaseFontElement	html_basefont_element		MISSING
 HTMLFontElement		html_font_element		MISSING
 HTMLHRElement		html_hr_element			DONE
