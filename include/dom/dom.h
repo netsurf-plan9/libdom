@@ -71,6 +71,7 @@
 #include <dom/html/html_ulist_element.h>
 #include <dom/html/html_olist_element.h>
 #include <dom/html/html_li_element.h>
+#include <dom/html/html_font_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>

@@ -39,6 +39,7 @@
 #include "html/html_ulist_element.h"
 #include "html/html_olist_element.h"
 #include "html/html_li_element.h"
+#include "html/html_font_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -286,6 +287,9 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LI])) {
 		exc = _dom_html_li_element_create(html, namespace, prefix,
 				(dom_html_li_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FONT])) {
+		exc = _dom_html_font_element_create(html, namespace, prefix,
+				(dom_html_font_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);
