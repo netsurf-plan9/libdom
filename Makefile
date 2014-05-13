@@ -113,6 +113,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_ulist_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_olist_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_li_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_font_element.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_mod_element.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR)/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR):$(OUTPUT)

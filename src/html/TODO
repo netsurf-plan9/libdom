@@ -35,9 +35,9 @@ HTMLQuoteElement	html_quote_element		DONE
 HTMLPreElement		html_pre_element		DONE
 HTMLBRElement		html_br_element			DONE
 HTMLBaseFontElement	html_basefont_element		MISSING
-HTMLFontElement		html_font_element		MISSING
+HTMLFontElement		html_font_element		DONE
 HTMLHRElement		html_hr_element			DONE
-HTMLModElement		html_mod_element		MISSING
+HTMLModElement		html_mod_element		DONE
 HTMLAnchorElement	html_anchor_element		MISSING
 HTMLImageElement	html_image_element		MISSING
 HTMLObjectElement	html_object_element		MISSING
