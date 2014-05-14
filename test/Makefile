@@ -60,6 +60,9 @@ $(eval $(call do_xml_suite,level1/html,dom1-interfaces.xml))
 # Include the level 2 core tests
 $(eval $(call do_xml_suite,level2/core,dom2-core-interface.xml))
 
+# Include level 2 html tests
+$(eval $(call do_xml_suite,level2/html,dom1-interfaces.xml))
+
 CLEAN_ITEMS := $(DIR)INDEX
 
 include $(NSBUILD)/Makefile.subdir
