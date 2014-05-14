@@ -42,6 +42,7 @@ our %special_type = (
         HTMLFormElement => "dom_html_form_element *",
 	CharacterData => "dom_characterdata *",
 	CDATASection => "dom_cdata_section *",
+        HTMLAnchorElement => "dom_html_anchor_element *",
 );
 our %special_prefix = (
 	DOMString => "dom_string",

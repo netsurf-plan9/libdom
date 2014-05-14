@@ -73,6 +73,7 @@
 #include <dom/html/html_li_element.h>
 #include <dom/html/html_font_element.h>
 #include <dom/html/html_mod_element.h>
+#include <dom/html/html_anchor_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
