@@ -13,10 +13,10 @@ DIR_SOURCES := \
 	html_pre_element.c html_br_element.c html_label_element.c \
 	html_ulist_element.c html_olist_element.c html_li_element.c \
 	html_font_element.c html_mod_element.c html_anchor_element.c \
-	html_basefont_element.c
+	html_basefont_element.c html_image_element.c 
 
 UNINMPLEMENTED_SOURCES := \
-	 html_image_element.c html_object_element.c \
+	html_object_element.c \
 	html_param_element.c html_applet_element.c html_map_element.c \
 	html_area_element.c html_script_element.c html_table_element.c \
 	html_tablecaption_element.c html_tablecol_element.c html_tablesection_element.c \

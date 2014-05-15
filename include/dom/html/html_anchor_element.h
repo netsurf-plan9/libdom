@@ -64,12 +64,6 @@ dom_exception dom_html_anchor_element_get_rev(
 dom_exception dom_html_anchor_element_set_rev(
 	dom_html_anchor_element *anchor, dom_string *rev);
 
-dom_exception dom_html_anchor_element_get_hreflang(
-	dom_html_anchor_element *anchor, dom_string **hreflang);
-
-dom_exception dom_html_anchor_element_set_hreflang(
-	dom_html_anchor_element *anchor, dom_string *hreflang);
-
 dom_exception dom_html_anchor_element_get_shape(
 	dom_html_anchor_element *anchor, dom_string **shape);
 

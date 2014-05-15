@@ -479,21 +479,29 @@ sub generate_load {
 	my ($self, $a) = @_;
 	my %ats = %$a;
 	my $doc = $ats{"var"};
-
 	$test_index ++;
+	my $var = $self->{"var"};
 	# define the test file path, use HTML if there is, otherwise using XML
 	# Attention: I intend to copy the test files to the program excuting dir
 	print "\tconst char *test$test_index = \"$ats{'href'}.html\";\n\n";
-	print "\t$doc = load_html(test$test_index, $ats{'willBeModified'});";
+	if ($var->{$doc} eq "Node") {
+		print "\t$doc = (dom_node*) load_html(test$test_index, $ats{'willBeModified'});";
+	} else {
+		print "\t$doc = load_html(test$test_index, $ats{'willBeModified'});";
+	}
 	print "\tif ($doc == NULL) {\n";
 	$test_index ++;
 	print "\t\tconst char *test$test_index = \"$ats{'href'}.xml\";\n\n";
-	print "\t\t$doc = load_xml(test$test_index, $ats{'willBeModified'});\n";
+	if ($var->{$doc} eq "Node") {
+		print "\t\t$doc = (dom_node *) load_xml(test$test_index, $ats{'willBeModified'});\n";
+	} else {
+		print "\t\t$doc = load_xml(test$test_index, $ats{'willBeModified'});\n";
+	}
 	print "\t\tif ($doc == NULL)\n";
 	print "\t\t\treturn 1;\n";
 	print "\t\t}\n";
 	print << "__EOF__";
-	exp = dom_document_get_implementation($doc, &doc_impl);
+	exp = dom_document_get_implementation((dom_document *) $doc, &doc_impl);
 	if (exp != DOM_NO_ERR)
 		return exp;
 __EOF__
