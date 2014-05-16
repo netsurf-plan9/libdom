@@ -32,7 +32,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_base_font_element_create(struct dom_html_document *doc,
-		dom_string *namespace, dom_string *base_fontfix,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_base_font_element **ele)
 {
 	struct dom_node_internal *node;
@@ -46,7 +46,7 @@ dom_exception _dom_html_base_font_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_base_font_element_initialise(doc, namespace, base_fontfix, *ele);
+	return _dom_html_base_font_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
@@ -57,12 +57,12 @@ dom_exception _dom_html_base_font_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_base_font_element_initialise(struct dom_html_document *doc,
-		dom_string *namespace, dom_string *base_fontfix,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_base_font_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
 					    doc->memoised[hds_BASEFONT],
-					    namespace, base_fontfix);
+					    namespace, prefix);
 }
 
 /**
