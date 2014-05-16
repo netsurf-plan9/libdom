@@ -46,6 +46,7 @@
 #include "html/html_image_element.h"
 #include "html/html_object_element.h"
 #include "html/html_param_element.h"
+#include "html/html_applet_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -315,6 +316,9 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_PARAM])) {
 		exc = _dom_html_param_element_create(html, namespace, prefix,
 				(dom_html_param_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_APPLET])) {
+		exc = _dom_html_applet_element_create(html, namespace, prefix,
+				(dom_html_applet_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);

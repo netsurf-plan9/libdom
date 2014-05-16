@@ -78,6 +78,7 @@
 #include <dom/html/html_image_element.h>
 #include <dom/html/html_object_element.h>
 #include <dom/html/html_param_element.h>
+#include <dom/html/html_applet_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
