@@ -76,6 +76,7 @@
 #include <dom/html/html_anchor_element.h>
 #include <dom/html/html_basefont_element.h>
 #include <dom/html/html_image_element.h>
+#include <dom/html/html_object_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>

@@ -40,7 +40,7 @@ HTMLHRElement		html_hr_element			DONE
 HTMLModElement		html_mod_element		DONE
 HTMLAnchorElement	html_anchor_element		DONE
 HTMLImageElement	html_image_element		DONE
-HTMLObjectElement	html_object_element		MISSING
+HTMLObjectElement	html_object_element		DONE
 HTMLParamElement	html_param_element		MISSING
 HTMLAppletElement	html_applet_element		MISSING
 HTMLMapElement		html_map_element		MISSING
