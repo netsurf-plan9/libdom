@@ -162,14 +162,23 @@ dom_exception dom_html_map_element_set_##attr(			\
 
 SIMPLE_GET_SET(name);
 
-bool  callback(
-		struct dom_node_internal *node, void *ctx)
+/* The callback function for  _dom_html_collection_create*/
+bool  callback(struct dom_node_internal *node, void *ctx)
 {
-	if(dom_string_caseless_isequal(node->name,((dom_html_document *)ctx)->memoised[hds_AREA])) {
+	if(dom_string_caseless_isequal
+			(node->name,((dom_html_document *)ctx)->memoised[hds_AREA])) {
 		return true;
 	}
 	return false;
 }
+
+/**
+ * Get the areas property
+ *
+ * \param ele		The dom_html_map_element object
+ * \param areas		The returned dom_html_collection object
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
 
 dom_exception dom_html_map_element_get_areas(
 		dom_html_map_element *ele, dom_html_collection **areas)
