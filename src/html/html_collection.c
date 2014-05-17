@@ -25,7 +25,7 @@
  * \param doc   The document
  * \param root  The root element of the collection
  * \param ic    The callback function used to determin whether certain node
- *              beint32_ts to the collection
+ *              belongs to the collection
  * \param col   The result collection object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
