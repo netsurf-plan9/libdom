@@ -174,7 +174,7 @@ dom_exception dom_html_select_element_get_selected_index(
 		dom_html_select_element *ele, int32_t *index)
 {
 	dom_exception err;
-	uint32_t idx, len;
+	uint32_t idx,len;
 	dom_node *option;
 	bool selected;
 	dom_html_options_collection *col;
