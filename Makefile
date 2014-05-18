@@ -123,6 +123,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_applet_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_area_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_map_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_script_element.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_table_caption_element.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR)/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR):$(OUTPUT)

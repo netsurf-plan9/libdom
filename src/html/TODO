@@ -47,7 +47,7 @@ HTMLMapElement		html_map_element		DONE
 HTMLAreaElement		html_area_element		DONE
 HTMLScriptElement	html_script_element		DONE
 HTMLTableElement	html_table_element		MISSING
-HTMLTableCaptionElement	html_tablecaption_element	MISSING
+HTMLTableCaptionElement	html_tablecaption_element	DONE
 HTMLTableColElement	html_tablecol_element		MISSING
 HTMLTableSectionElement	html_tablesection_element	MISSING
 HTMLTableRowElement	html_tablerow_element		MISSING

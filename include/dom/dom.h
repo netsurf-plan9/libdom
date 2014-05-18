@@ -82,6 +82,7 @@
 #include <dom/html/html_area_element.h>
 #include <dom/html/html_map_element.h>
 #include <dom/html/html_script_element.h>
+#include <dom/html/html_tablecaption_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
