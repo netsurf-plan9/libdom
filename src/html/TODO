@@ -45,7 +45,7 @@ HTMLParamElement	html_param_element		DONE
 HTMLAppletElement	html_applet_element		DONE
 HTMLMapElement		html_map_element		DONE
 HTMLAreaElement		html_area_element		DONE
-HTMLScriptElement	html_script_element		MISSING
+HTMLScriptElement	html_script_element		DONE
 HTMLTableElement	html_table_element		MISSING
 HTMLTableCaptionElement	html_tablecaption_element	MISSING
 HTMLTableColElement	html_tablecol_element		MISSING

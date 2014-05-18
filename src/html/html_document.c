@@ -47,6 +47,9 @@
 #include "html/html_object_element.h"
 #include "html/html_param_element.h"
 #include "html/html_applet_element.h"
+#include "html/html_map_element.h"
+#include "html/html_area_element.h"
+#include "html/html_script_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -319,6 +322,15 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_APPLET])) {
 		exc = _dom_html_applet_element_create(html, namespace, prefix,
 				(dom_html_applet_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_MAP])) {
+		exc = _dom_html_map_element_create(html, namespace, prefix,
+				(dom_html_map_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_AREA])) {
+		exc = _dom_html_area_element_create(html, namespace, prefix,
+				(dom_html_area_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_SCRIPT])) {
+		exc = _dom_html_script_element_create(html, namespace, prefix,
+				(dom_html_script_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);

@@ -165,10 +165,13 @@ SIMPLE_GET_SET(name);
 /* The callback function for  _dom_html_collection_create*/
 bool  callback(struct dom_node_internal *node, void *ctx)
 {
-	if(dom_string_caseless_isequal
-			(node->name,((dom_html_document *)ctx)->memoised[hds_AREA])) {
+	if(node->type == DOM_ELEMENT_NODE &&
+			dom_string_caseless_isequal(node->name,
+				((dom_html_document *)ctx)->memoised[hds_AREA])) 
+	{
 		return true;
 	}
+
 	return false;
 }
 
@@ -185,12 +188,8 @@ dom_exception dom_html_map_element_get_areas(
 {
 	dom_html_document *doc
 		= (dom_html_document *) ((dom_node_internal *) ele)->owner;
-	dom_node_internal *root = ((dom_node_internal *) ele);
-
-	 while (root->parent != NULL) {
-		 root = root->parent;
-	 }
-
-	 return _dom_html_collection_create(doc, root,
-			 callback, (void *)doc, areas);
+	
+	/*doc is passed as a parameter to callback to avoid repeated calculations */
+	return _dom_html_collection_create(doc, (dom_node_internal *) ele,
+			callback, (void *) doc, areas);
 }
