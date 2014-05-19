@@ -84,6 +84,7 @@
 #include <dom/html/html_script_element.h>
 #include <dom/html/html_tablecaption_element.h>
 #include <dom/html/html_tablecell_element.h>
+#include <dom/html/html_tablecol_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
