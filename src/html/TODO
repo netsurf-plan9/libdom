@@ -51,7 +51,7 @@ HTMLTableCaptionElement	html_tablecaption_element	DONE
 HTMLTableColElement	html_tablecol_element		MISSING
 HTMLTableSectionElement	html_tablesection_element	MISSING
 HTMLTableRowElement	html_tablerow_element		MISSING
-HTMLTableCellElement	html_tablecell_element		MISSING
+HTMLTableCellElement	html_tablecell_element		DONE
 HTMLFrameSetElement	html_frameset_element		MISSING
 HTMLFrameElement	html_frame_element		MISSING
 HTMLIFrameElement	html_iframe_element		MISSING

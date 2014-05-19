@@ -51,6 +51,7 @@
 #include "html/html_area_element.h"
 #include "html/html_script_element.h"
 #include "html/html_tablecaption_element.h"
+#include "html/html_tablecell_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -335,6 +336,11 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_CAPTION])) {
 		exc = _dom_html_table_caption_element_create(html, namespace, prefix,
 				(dom_html_table_caption_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TD]) ||
+			dom_string_caseless_isequal(tag_name, html->memoised[hds_TH])
+			) {
+		exc = _dom_html_table_cell_element_create(html, tag_name, namespace, prefix,
+				(dom_html_table_cell_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);
