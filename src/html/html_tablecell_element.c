@@ -185,9 +185,13 @@ dom_exception dom_html_table_cell_element_get_cell_index(
 		dom_node_internal *n = ((dom_node_internal *)table_cell)->parent;
 		dom_html_document *doc = (dom_html_document *)(n->owner);
 		int32_t cnt = 0;
-
-		for (n = n->first_child; n != NULL; n = n->next) {
-
+		while(n != NULL) {
+			if(dom_string_caseless_isequal(doc->memoised[hds_TR],n->name)) {
+				break;
+			}
+			n = n->parent;
+		}
+		while(n != NULL) {
 			if(n == (dom_node_internal *)table_cell) {
 				break;
 			} else if((n->type == DOM_ELEMENT_NODE) &&
@@ -195,7 +199,27 @@ dom_exception dom_html_table_cell_element_get_cell_index(
 					 dom_string_caseless_isequal(doc->memoised[hds_TH],n->name))) {
 				cnt += 1;
 			}
+			if(n->first_child != NULL) {
+				n = n->first_child;
+			} else if(n->next != NULL) {
+				n = n->next;
+			} else {
+				/* No children and siblings */
+				struct dom_node_internal *parent = n->parent;
 
+				while (parent !=NULL) {
+					if(n == parent->last_child) {
+						n = parent;
+						parent = parent->parent;
+					} else {
+						break;
+					}
+					
+				}
+				if(parent == NULL) {
+					n = NULL;
+				}
+			}
 		}
 		table_cell->id = cnt;
 	}
