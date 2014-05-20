@@ -197,6 +197,7 @@ dom_exception dom_html_table_cell_element_get_cell_index(
 			} else if((n->type == DOM_ELEMENT_NODE) &&
 					(dom_string_caseless_isequal(doc->memoised[hds_TD],n->name) ||
 					 dom_string_caseless_isequal(doc->memoised[hds_TH],n->name))) {
+				((dom_html_table_cell_element *)n)->id = cnt;
 				cnt += 1;
 			}
 			if(n->first_child != NULL) {
