@@ -126,6 +126,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_script_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_tablecaption_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_tablecell_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_tablecol_element.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_tablesection_element.h
 
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR)/pkgconfig:lib$(COMPONENT).pc.in
 INSTALL_ITEMS := $(INSTALL_ITEMS) /$(LIBDIR):$(OUTPUT)

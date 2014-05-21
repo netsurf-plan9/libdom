@@ -43,6 +43,7 @@ our %special_type = (
 	CharacterData => "dom_characterdata *",
 	CDATASection => "dom_cdata_section *",
         HTMLAnchorElement => "dom_html_anchor_element *",
+	HTMLElement => "dom_html_element *",
 );
 our %special_prefix = (
 	DOMString => "dom_string",

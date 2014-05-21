@@ -48,8 +48,8 @@ HTMLAreaElement		html_area_element		DONE
 HTMLScriptElement	html_script_element		DONE
 HTMLTableElement	html_table_element		MISSING
 HTMLTableCaptionElement	html_tablecaption_element	DONE
-HTMLTableColElement	html_tablecol_element		MISSING
-HTMLTableSectionElement	html_tablesection_element	MISSING
+HTMLTableColElement	html_tablecol_element		DONE
+HTMLTableSectionElement	html_tablesection_element	DONE
 HTMLTableRowElement	html_tablerow_element		MISSING
 HTMLTableCellElement	html_tablecell_element		DONE
 HTMLFrameSetElement	html_frameset_element		MISSING
