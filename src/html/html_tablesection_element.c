@@ -12,6 +12,7 @@
 
 #include "html/html_document.h"
 #include "html/html_tablesection_element.h"
+#include "html/html_tablerow_element.h"
 
 #include "html/html_collection.h"
 #include "html/html_element.h"
@@ -169,8 +170,7 @@ bool table_section_callback(struct dom_node_internal *node, void *ctx)
 {
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_TR]))
-	{
+				((dom_html_document *)ctx)->memoised[hds_TR])) {
 		return true;
 	}
 	return false;
@@ -179,7 +179,7 @@ bool table_section_callback(struct dom_node_internal *node, void *ctx)
 /**
  * Get the rows collection
  *
- * \param element       The dom_html_section_element object
+ * \param element       The dom_html_table_section_element object
  * \param rows		The Status
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
@@ -188,21 +188,20 @@ dom_exception dom_html_table_section_element_get_rows(
 		dom_html_collection **rows)
 {
 	dom_html_document *doc = (dom_html_document *) ((dom_node_internal *) element)->owner;
-	_dom_html_collection_create(doc, (dom_node_internal *)element, 
+	return _dom_html_collection_create(doc, (dom_node_internal *)element, 
 			table_section_callback, (void *)doc, rows);
-	return DOM_NO_ERR;
 }
 
 /**
  * Insert Row before the given Index
  *
- * \param element       The dom_html_section_element object
+ * \param element       The dom_html_table_section_element object
  * \param index         The Index of the Row node to be inserted
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_table_section_element_insert_row(
 		dom_html_table_section_element *element,
-		int32_t index, dom_html_element **newRow) {
+		int32_t index, dom_html_element **new_row) {
 	dom_html_document *doc = (dom_html_document *) ((dom_node_internal *) element)->owner;
 
 	dom_node *node; 		/*< The node at the (index)th position*/
@@ -210,10 +209,10 @@ dom_exception dom_html_table_section_element_insert_row(
 	dom_html_collection *rows; 	/*< The collection of rows in input table_section_element*/
 	uint32_t len; 			/*< The size of the row collection */
 	dom_exception exp;		/*< Variable for getting the exceptions*/
-	exp = _dom_html_element_create(doc, doc->memoised[hds_TR], 
+	exp = _dom_html_table_row_element_create(doc, 
 			((dom_node_internal *)element)->namespace,
 			((dom_node_internal *)element)->prefix,
-			newRow);
+			(dom_html_table_row_element **)new_row);
 	if(exp != DOM_NO_ERR)
 		return exp;
 	
@@ -225,47 +224,26 @@ dom_exception dom_html_table_section_element_insert_row(
 	if(exp != DOM_NO_ERR)
 		return exp;
 	
-	if(index < -1 || (uint32_t)index > len) {
+	if(index < -1 || index > (int32_t)len) {
 		/* Check for index validity */
 		return DOM_INDEX_SIZE_ERR;
-	} else if((index == -1 || (uint32_t)index == len)
-			&&len != 0) {
-		dom_html_collection_item(rows,
-				len-1, &node);
-
-		dom_node_internal *internal_node = (dom_node_internal *)node; /*< The dom_node_internal row object at the (len-1)th position*/
-
-		((dom_node_internal *) *newRow)->next = internal_node->next;
-		((dom_node_internal *) *newRow)->previous = internal_node;
-		internal_node->next = (dom_node_internal *)*newRow;
-	} else if(len != 0) {
+	} else if(index == -1 || index == (int32_t)len) {
+		return _dom_node_append_child((dom_node_internal *)element,
+				(dom_node_internal *)*new_row,
+				(dom_node_internal **)new_row);
+	} else {
 		dom_html_collection_item(rows,
 				index, &node);
-
-		dom_node_internal *internal_node = (dom_node_internal *)node; /*< The dom_node_internal row object at the (index)th position*/
-
-		((dom_node_internal *) *newRow)->next = internal_node;
-		((dom_node_internal *) *newRow)->previous = internal_node->previous;
-		if(internal_node->previous != NULL) {
-			(internal_node->previous)->next = (dom_node_internal *)*newRow;
-			internal_node->previous = (dom_node_internal *)*newRow;
-		}
+		return _dom_node_insert_before((dom_node_internal *)element,
+		                (dom_node_internal *)*new_row, (dom_node_internal *)node,
+				(dom_node_internal **)new_row);
 	}
-
-	/*Adjust parent's pointers*/
-	((dom_node_internal *) *newRow)->parent = (dom_node_internal *)element;
-	if(index == 0)
-		((dom_node_internal *)element)->first_child = (dom_node_internal *)*newRow;
-	if((uint32_t)index == len)
-		((dom_node_internal *)element)->last_child = (dom_node_internal *)*newRow;
-	
-	return DOM_NO_ERR;
 }
 
 /**
  * Delete Row at given Index
  *
- * \param element       The dom_html_section_element object
+ * \param element       The dom_html_table_section_element object
  * \param index		The Index of the Row node to be deleted
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
@@ -289,7 +267,7 @@ dom_exception dom_html_table_section_element_delete_row(
 		return exp;
 	}
 
-	if(index < -1 || (uint32_t)index >= len) {
+	if(index < -1 || index >= (int32_t)len) {
 		/* Check for index validity */
 		return DOM_INDEX_SIZE_ERR;
 	} else if(index == -1) {
@@ -299,20 +277,9 @@ dom_exception dom_html_table_section_element_delete_row(
 		exp = dom_html_collection_item(rows,
 				index, &node);
 	}
-	if(exp != DOM_NO_ERR)
-		return exp;
-
-	dom_node_internal *internal_node = (dom_node_internal *)node;
-
-	/*Fixing the sibling pointers*/
-	if(internal_node->previous != NULL) {
-		(internal_node->previous)->next = internal_node->next;
-	}
-	if(internal_node->next != NULL) {
-		(internal_node->next)->previous = internal_node->previous;
-	}
-
-	_dom_html_element_destroy(internal_node);
+	exp = _dom_node_remove_child((dom_node_internal *)element,
+			(dom_node_internal *)node,
+			(dom_node_internal **)&node);
 
 	return DOM_NO_ERR;
 }

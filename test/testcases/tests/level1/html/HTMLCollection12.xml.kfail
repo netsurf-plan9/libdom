@@ -16,17 +16,20 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 
 -->
 <!DOCTYPE test SYSTEM "dom1.dtd">
-<test xmlns="http://www.w3.org/2001/DOM-Test-Suite/Level-1" name="HTMLCollection03">
+<test xmlns="http://www.w3.org/2001/DOM-Test-Suite/Level-1" name="HTMLCollection12">
 <metadata>
-<title>HTMLCollection03</title>
+<title>HTMLCollection12</title>
 <creator>NIST</creator>
 <description>
-    An individual node may be accessed by either ordinal index, the node's
-    name or id attributes.  (Test id attribute).
+    The namedItem(name) method retrieves a node using a name.  It first   
+    searches for a node with a matching id attribute.  If it doesn't find
+    one, it then searches for a Node with a matching name attribute, but only
+    on those elements that are allowed a name attribute. If there isn't
+    a matching node the method returns null.
 
     Retrieve the first FORM element and create a HTMLCollection by invoking
-    the "element" attribute.  The first SELECT element is further retrieved 
-    using the elements id.
+    the elements attribute.  The method returns null since there is not a 
+    match of the name or id attribute.
 </description>
 <contributor>Rick Rivello</contributor>
 <date qualifier="created">2002-05-01</date>
@@ -36,14 +39,12 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 <var name="testNode" type="Node"/>
 <var name="formNode" type="Node"/>
 <var name="formsnodeList" type="HTMLCollection"/>
-<var name="vname" type="DOMString" />
 <var name="doc" type="Document"/>
 <load var="doc" href="collection" willBeModified="false"/>
 <getElementsByTagName interface="Document" obj="doc" var="nodeList" tagname='"form"'/>
 <assertSize collection="nodeList" size="1" id="Asize"/>
 <item interface="NodeList" obj="nodeList" var="testNode" index="0"/>
 <elements interface="HTMLFormElement" obj="testNode" var="formsnodeList"/>
-<namedItem obj="formsnodeList" var="formNode" name='"selectId"'/>
-<nodeName obj="formNode" var="vname"/>
-<assertEquals actual="vname" expected='"select"' id="nameIndexLink" ignoreCase="auto"/>
+<namedItem obj="formsnodeList" var="formNode" name='"select9"'/>
+<assertNull actual="formNode" id="nameIndexLink" />
 </test>

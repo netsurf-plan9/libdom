@@ -132,7 +132,7 @@ dom_exception dom_html_collection_get_length(dom_html_collection *col,
 			/* No children and siblings */
 			struct dom_node_internal *parent = node->parent;
 
-			while (parent != col->root &&
+			while (node != col->root &&
 					node == parent->last_child) {
 				node = parent;
 				parent = parent->parent;

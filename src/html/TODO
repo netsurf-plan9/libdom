@@ -46,11 +46,11 @@ HTMLAppletElement	html_applet_element		DONE
 HTMLMapElement		html_map_element		DONE
 HTMLAreaElement		html_area_element		DONE
 HTMLScriptElement	html_script_element		DONE
-HTMLTableElement	html_table_element		MISSING
+HTMLTableElement	html_table_element		DONE
 HTMLTableCaptionElement	html_tablecaption_element	DONE
 HTMLTableColElement	html_tablecol_element		DONE
 HTMLTableSectionElement	html_tablesection_element	DONE
-HTMLTableRowElement	html_tablerow_element		MISSING
+HTMLTableRowElement	html_tablerow_element		DONE
 HTMLTableCellElement	html_tablecell_element		DONE
 HTMLFrameSetElement	html_frameset_element		MISSING
 HTMLFrameElement	html_frame_element		MISSING

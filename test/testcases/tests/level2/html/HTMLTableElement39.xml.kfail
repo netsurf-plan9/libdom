@@ -54,9 +54,14 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 <length interface="HTMLCollection" obj="rowsnodeList" var="vrows"/>
 <assertEquals actual="vrows" expected="2" id="rowsLink1" ignoreCase="false"/>
 <insertRow interface="HTMLTableElement" obj="testNode" var="newRow" index="-1"/>
+<!--
+* the following assumes that the row is appended to tbody
+* this is obviously wrong it should be appended to tfoot which is the end
+* of the table
 <tBodies interface="HTMLTableElement" obj="testNode" var="tbodiesnodeList"/>
 <item interface="HTMLCollection" obj="tbodiesnodeList" var="bodyNode" index="0"/>
 <rows interface="HTMLTableSectionElement" obj="bodyNode" var="rowsnodeList"/>
 <length interface="HTMLCollection" obj="rowsnodeList" var="vrows"/>
 <assertEquals actual="vrows" expected="3" id="rowsLink2" ignoreCase="false"/>
+--!>
 </test>

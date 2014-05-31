@@ -10,8 +10,8 @@
 #define dom_internal_html_table_section_element_h_
 
 #include <dom/html/html_tablesection_element.h>
-#include "html/html_element.h"
 
+#include "html/html_element.h"
 
 struct dom_html_table_section_element {
 	struct dom_html_element base;

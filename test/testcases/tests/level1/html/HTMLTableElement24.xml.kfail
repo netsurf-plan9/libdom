@@ -35,8 +35,8 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 <var name="nodeList" type="NodeList"/>
 <var name="rowsnodeList" type="HTMLCollection"/>
 <var name="testNode" type="Node"/>
-<var name="vsection1" type="HTMLTableElement" />
-<var name="vsection2" type="HTMLTableElement" />
+<var name="vsection1" type="HTMLTableSectionElement" />
+<var name="vsection2" type="HTMLTableSectionElement" />
 <var name="vrows" type="int"/>
 <var name="doc" type="Document"/>
 <var name="result" type="List"/>

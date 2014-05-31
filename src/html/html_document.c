@@ -54,6 +54,8 @@
 #include "html/html_tablecell_element.h"
 #include "html/html_tablecol_element.h"
 #include "html/html_tablesection_element.h"
+#include "html/html_table_element.h"
+#include "html/html_tablerow_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -350,9 +352,15 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 				(dom_html_table_col_element **) result);
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_THEAD])||
 			dom_string_caseless_isequal(tag_name, html->memoised[hds_TBODY])||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_TBODY])) {
+			dom_string_caseless_isequal(tag_name, html->memoised[hds_TFOOT])) {
 		exc = _dom_html_table_section_element_create(html, tag_name, namespace, prefix,
 				(dom_html_table_section_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TABLE])) {
+		exc = _dom_html_table_element_create(html, namespace, prefix,
+				(dom_html_table_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TD])) {
+		exc = _dom_html_table_row_element_create(html, namespace, prefix,
+				(dom_html_table_row_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);

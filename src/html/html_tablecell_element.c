@@ -191,6 +191,7 @@ dom_exception dom_html_table_cell_element_get_cell_index(
 			}
 			n = n->parent;
 		}
+		dom_node_internal *root = n;
 		while(n != NULL) {
 			if(n == (dom_node_internal *)table_cell) {
 				break;
@@ -207,18 +208,16 @@ dom_exception dom_html_table_cell_element_get_cell_index(
 			} else {
 				/* No children and siblings */
 				struct dom_node_internal *parent = n->parent;
-
-				while (parent !=NULL) {
-					if(n == parent->last_child) {
-						n = parent;
-						parent = parent->parent;
-					} else {
-						break;
-					}
-					
+				while (n == parent->last_child &&
+						n != root) {
+					n = parent;
+					parent = parent->parent;
 				}
-				if(parent == NULL) {
+
+				if(n == root) {
 					n = NULL;
+				} else {
+					n = n->next;
 				}
 			}
 		}

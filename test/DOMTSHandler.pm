@@ -44,6 +44,10 @@ our %special_type = (
 	CDATASection => "dom_cdata_section *",
         HTMLAnchorElement => "dom_html_anchor_element *",
 	HTMLElement => "dom_html_element *",
+	HTMLTableCaptionElement => "dom_html_table_caption_element *",
+	HTMLTableSectionElement => "dom_html_table_section_element *",
+	HTMLTableElement => "dom_html_table_element *",
+	HTMLTableRowElement => "dom_html_table_row_element *",
 );
 our %special_prefix = (
 	DOMString => "dom_string",
@@ -57,6 +61,20 @@ our %special_prefix = (
         HTMLHRElement => "dom_html_hr_element",
         HTMLBRElement => "dom_html_br_element",
         HTMLLIElement => "dom_html_li_element",
+        HTMLTableCaptionElement => "dom_html_table_caption_element",
+	HTMLTableSectionElement => "dom_html_table_section_element",
+	HTMLIsIndexElement => "dom_html_isindex_element",
+	caption => "dom_html_table_caption_element *",
+	section => "dom_html_table_section_element *",
+	createCaption => "dom_html_element *",
+	createTHead => "dom_html_element *",
+	createTFoot => "dom_html_element *",
+	deleteCaption => "dom_html_element *",
+	deleteTHead => "dom_html_element *",
+	deleteTFoot => "dom_html_element *",
+	insertRow => "dom_html_element *",
+	deleteRow => "dom_html_element *",
+	form => "dom_html_form_element *",
 );
 
 our %unref_prefix = (
@@ -164,9 +182,13 @@ sub new {
 			# The name of the current List/Collection
 			list_name => "",
 			# The number of items of the current List/Collection
+			list_last_name => [],
+			# The number of items of the current List/Collection
 			list_num => 0,
 			# Whether List/Collection has members
 			list_hasmem => 0,
+			# The type of the current List/Collection
+			member_list_declared => 0,
 			# The type of the current List/Collection
 			list_type => "",
 			# Whether we are in exception assertion
@@ -389,6 +411,7 @@ int main(int argc, char **argv)
 		perror("chdir (\\"$self->{chdir})\\"");
 		return 1;
 	}
+	int list_temp[100], count = -1;
 __EOF__
 }
 
@@ -442,7 +465,6 @@ sub generate_list {
 		# Yes, we are in List/Collection declaration
 		# Firstly, enclose the Array declaration
 		print "};\n";
-
 		# Now, we should create the list * for the List/Collection
 		# Note, we should deal with "int" or "string" type with different params.
 		if ($self->{"list_type"} eq "char *") {
@@ -450,18 +472,37 @@ sub generate_list {
 		}
 		if ($self->{"list_type"} eq "int *") {
 			print $self->{"list_name"}." = list_new(INT);\n";
+			while(defined ($x = pop @{$self->{"list_last_name"}})) {
+				print $x." = list_new(INT);\n";
+			}
 		}
+		while(defined($x = pop(@{$self->{"list_last_name"}}))) {
+			print $x." = list_new(DOM_STRING);\n";
+		}
+		$self->{"member_list_declared"} = 1;
 		if ($self->{"list_type"} eq "") {
 			die "A List/Collection has children member but no type is impossible!";
 		}
-		for (my $i = 0; $i < $self->{"list_num"}; $i++) {
-			# Use *(char **) to convert char *[] to char *
-			print "list_add(".$self->{"list_name"}.", *(char **)(".$self->{"list_name"}."Array + $i));\n";
+		if ($self->{"list_type"} eq "int *") {
+			
+			for (my $i = 0; $i < $self->{"list_num"}; $i++) {
+				# Use *(char **) to convert char *[] to char *
+				print "list_add(".$self->{"list_name"}.", (int *)(".$self->{"list_name"}."Array) + $i);\n";
+			}
+		} else {
+			for (my $i = 0; $i < $self->{"list_num"}; $i++) {
+				# Use *(char **) to convert char *[] to char *
+				print "list_add(".$self->{"list_name"}.", *(char **)(".$self->{"list_name"}."Array + $i));\n";
+			}
 		}
 	} else {
 		if ($self->{"list_name"} ne "") {
 			#TODO: generally, we set the list type as dom_string, but it may be dom_node
-			print $self->{"list_name"}." = list_new(DOM_STRING);\n";
+			if( $self->{"member_list_declared"} eq 1) {
+				print $self->{"list_name"}." = list_new(DOM_STRING);\n";
+			} else {
+				push(@{$self->{"list_last_name"}}, $self->{"list_name"});
+			}
 			$self->{"list_type"} = "DOMString";
 		}
 	}
@@ -553,14 +594,19 @@ sub generate_framework_statement {
 			if (exists $ats->{"obj"}) {
 				$obj = $ats->{"obj"};
 			} else {
-				$obj = $ats->{"item"}
+				$obj = $ats->{"item"};
 			}
-
+			
 			if (not $self->{"var"}->{$col} =~ /^(List|Collection)/) {
 				die "Append data to some non-list type!";
 			}
-
-			print "list_add($col, $obj);\n";
+			$type = $self->{"var"}->{$obj};
+			if ($type eq "int") {
+				print "\nlist_temp[++count] =$obj;\n";
+				print "list_add($col, &list_temp[count]);\n\n";
+			} else {
+				print "list_add($col, $obj);\n";
+			}
 		}
 		
 		case [qw(plus subtract mult divide)] {
@@ -681,6 +727,8 @@ sub generate_method {
 
 	$method = to_cmethod($ats{'interface'}, $en);
         my $cast = to_attribute_cast($ats{'interface'});
+	my $get_attribute = $node->getAttribute("name");	
+        my $cast_get_attribute = to_get_attribute_cast($get_attribute);	
 	my $ns = $dd->find("parameters/param", $node);
 	my $params = "${cast}$ats{'obj'}";
 	for ($count = 1; $count <= $ns->size; $count++) {
@@ -746,7 +794,7 @@ sub generate_method {
 			# Indicate that we have created a temp node
 			$temp_node = 1;
 		} else {
-			$params = $params.", (void *) \&$ats{'var'}";
+			$params = $params.", $cast_get_attribute\&$ats{'var'}";
 			$unref = $self->param_unref($ats{'var'});
 		}
 	}
@@ -808,6 +856,8 @@ sub generate_attribute_fetcher {
 
 	my $fetcher = to_attribute_fetcher($ats{'interface'}, "$en");
         my $cast = to_attribute_cast($ats{'interface'});
+	my $get_attribute = $node->getAttribute("name");	
+        my $cast_get_attribute = to_get_attribute_cast($get_attribute);
 	my $unref = 0;
 	my $temp_node = 0;
 	# Deal with the situation like
@@ -833,7 +883,7 @@ sub generate_attribute_fetcher {
 		$temp_node = 1;
 	} else {
 		$unref = $self->param_unref($ats{'var'});
-		print "\texp = $fetcher(${cast}$ats{'obj'}, \&$ats{'var'});\n";
+		print "\texp = $fetcher(${cast}$ats{'obj'}, ${cast_get_attribute}\&$ats{'var'});\n";
 	}
 
 
@@ -1424,7 +1474,26 @@ sub get_prefix {
 	}
 	return $prefix;
 }
+sub to_get_attribute_cast {
+	my $type = shift;
+        my $ret = get_get_attribute_prefix($type);
+	if($ret eq "") {
+		return $ret;
+	}
+        $ret =~ s/h_t_m_l/html/;
+        return "(${ret} *)";
+}
 
+sub get_get_attribute_prefix {
+	my $type = shift;
+
+	if (exists $special_prefix{$type}) {
+		$prefix = $special_prefix{$type};
+	} else {
+		$prefix = "";
+	}
+	return $prefix;
+}
 # This function remain unsed
 sub get_suffix {
 	my $type = shift;

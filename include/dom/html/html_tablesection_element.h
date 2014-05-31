@@ -16,6 +16,8 @@
 #include <dom/html/html_collection.h>
 #include <dom/html/html_element.h>
 
+#include <dom/html/html_tablerow_element.h>
+
 typedef struct dom_html_table_section_element dom_html_table_section_element;
 
 dom_exception dom_html_table_section_element_get_align(
@@ -47,7 +49,7 @@ dom_exception dom_html_table_section_element_get_rows(
 
 dom_exception dom_html_table_section_element_insert_row(
 		dom_html_table_section_element *element,
-		int32_t index, dom_html_element **newRow);
+		int32_t index, dom_html_element **new_row);
 
 dom_exception dom_html_table_section_element_delete_row(
 		dom_html_table_section_element *element,
