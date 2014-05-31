@@ -88,6 +88,7 @@
 #include <dom/html/html_tablesection_element.h>
 #include <dom/html/html_table_element.h>
 #include <dom/html/html_tablerow_element.h>
+#include <dom/html/html_base_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>

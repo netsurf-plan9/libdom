@@ -4,10 +4,10 @@ as far as the test suite is concerned.
 HTMLElement		html_element			DONE
 HTMLHtmlElement		html_html_element		DONE
 HTMLHeadElement		html_head_element		DONE
-HTMLLinkElement		html_link_element		MISSING
+HTMLLinkElement		html_link_element		DONE
 HTMLTitleElement	html_title_element		DONE
-HTMLMetaElement		html_meta_element		MISSING
-HTMLBaseElement		html_base_element		MISSING
+HTMLMetaElement		html_meta_element		DONE
+HTMLBaseElement		html_base_element		DONE
 HTMLIsIndexElement	html_isindex_element		MISSING
 HTMLStyleElement	html_style_element		MISSING
 HTMLBodyElement		html_body_element		MISSING
