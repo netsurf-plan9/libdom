@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 #include "html/html_style_element.h"
+#include "html/html_document.h"
 
 #include "core/node.h"
 #include "utils/utils.h"
@@ -54,13 +55,20 @@ dom_exception _dom_html_style_element_initialise(struct dom_html_document *doc,
 		struct dom_html_style_element *ele)
 {
 	dom_string *name = NULL;
+	dom_string *media_default = NULL;
 	dom_exception err;
 
 	err = dom_string_create((const uint8_t *) "STYLE", SLEN("STYLE"),
 			&name);
 	if (err != DOM_NO_ERR)
 		return err;
+
+	err = dom_string_create((const uint8_t *) "screen", SLEN("screen"),
+			&media_default);
+	if (err != DOM_NO_ERR)
+		return err;
 	
+	ele->media = media_default;
 	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
 	dom_string_unref(name);
 
@@ -119,8 +127,48 @@ dom_exception _dom_html_style_element_copy(dom_node_internal *old,
 	return _dom_html_element_copy(old, copy);
 }
 
+
 /*-----------------------------------------------------------------------*/
 /* Public APIs */
+
+#define SIMPLE_GET(attr)						\
+	dom_exception dom_html_style_element_get_##attr(		\
+		dom_html_style_element *element,			\
+		dom_string **attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_get_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}
+#define SIMPLE_SET(attr)						\
+dom_exception dom_html_style_element_set_##attr(			\
+		dom_html_style_element *element,			\
+		dom_string *attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_set_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}
+
+#define SIMPLE_GET_SET(attr) SIMPLE_GET(attr) SIMPLE_SET(attr)
+SIMPLE_GET_SET(type);
+SIMPLE_SET(media);
 
 /**
  * Get the disabled property
@@ -148,5 +196,38 @@ dom_exception dom_html_style_element_set_disabled(dom_html_style_element *ele,
 {
 	return dom_html_element_set_bool_property(&ele->base, "disabled",
 			SLEN("disabled"), disabled);
+}
+
+/**
+ * Get the media property
+ *
+ * \param ele       The dom_html_style_element object
+ * \param media  The returned status
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception dom_html_style_element_get_media(dom_html_style_element *ele,
+		dom_string **media)
+{
+	dom_html_document *doc;
+	bool has_value = false;
+	dom_exception err;
+	 
+	doc = (dom_html_document *) ((dom_node_internal *) ele)->owner;
+
+	err = dom_element_has_attribute(ele,
+			 doc->memoised[hds_media], &has_value);
+	if(err !=DOM_NO_ERR)
+		return err;
+
+	if(has_value) {
+		return dom_element_get_attribute(ele,
+				doc->memoised[hds_media], media);
+	}
+
+	*media = ele->media;
+	if (*media != NULL)
+		dom_string_ref(*media);
+	return DOM_NO_ERR;
+
 }
 
