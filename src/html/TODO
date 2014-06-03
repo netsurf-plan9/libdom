@@ -13,8 +13,8 @@ HTMLStyleElement	html_style_element		DONE
 HTMLBodyElement		html_body_element		MISSING
 HTMLFormElement		html_form_element		DONE
 HTMLSelectElement	html_select_element		DONE
-HTMLOptGroupElement	html_optgroup_element		MISSING
-HTMLOptionElement	html_option_element		MISSING
+HTMLOptGroupElement	html_optgroup_element		DONE
+HTMLOptionElement	html_option_element		DONE
 HTMLInputElement	html_input_element		MISSING
 HTMLTextAreaElement	html_textarea_element		MISSING
 HTMLButtonElement	html_button_element		MISSING
