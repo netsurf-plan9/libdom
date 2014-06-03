@@ -85,10 +85,10 @@ dom_exception dom_html_input_element_set_read_only(
 	dom_html_input_element *input, bool read_only);
 
 dom_exception dom_html_input_element_get_size(
-	dom_html_input_element *input, dom_string **size);
+	dom_html_input_element *input, int32_t *size);
 
 dom_exception dom_html_input_element_set_size(
-	dom_html_input_element *input, dom_string *size);
+	dom_html_input_element *input, uint32_t size);
 
 dom_exception dom_html_input_element_get_src(
 	dom_html_input_element *input, dom_string **src);

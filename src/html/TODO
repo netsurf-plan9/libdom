@@ -15,7 +15,7 @@ HTMLFormElement		html_form_element		DONE
 HTMLSelectElement	html_select_element		DONE
 HTMLOptGroupElement	html_optgroup_element		DONE
 HTMLOptionElement	html_option_element		DONE
-HTMLInputElement	html_input_element		MISSING
+HTMLInputElement	html_input_element		DONE
 HTMLTextAreaElement	html_textarea_element		MISSING
 HTMLButtonElement	html_button_element		MISSING
 HTMLLabelElement	html_label_element		DONE
