@@ -33,7 +33,7 @@ Add a new option before the selected node using HTMLSelectElement.add.
 <var name="selected" type="int"/>
 <var name="newOpt" type="Element"/>
 <var name="newOptText" type="Text"/>
-<var name="opt" type="Element"/>
+<var name="opt" type="Node"/>
 <var name="optText" type="Text"/>
 <var name="optValue" type="DOMString"/>
 <var name="retNode" type="Node"/>

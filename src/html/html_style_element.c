@@ -35,7 +35,7 @@ dom_exception _dom_html_style_element_create(struct dom_html_document *doc,
 	*ele = malloc(sizeof(dom_html_style_element));
 	if (*ele == NULL)
 		return DOM_NO_MEM_ERR;
-	
+
 	/* Set up vtables */
 	node = (struct dom_node_internal *) *ele;
 	node->base.vtable = &_dom_html_element_vtable;

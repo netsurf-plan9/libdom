@@ -3,7 +3,7 @@ DIR_SOURCES := \
 	html_document.c html_collection.c html_options_collection.c \
 	html_element.c html_html_element.c html_head_element.c \
 	html_link_element.c html_title_element.c html_meta_element.c \
-	html_base_element.c html_isindex_element.c html_style_element.c \
+	html_base_element.c html_style_element.c \
 	html_body_element.c html_form_element.c html_select_element.c \
 	html_button_element.c html_input_element.c html_text_area_element.c \
 	html_opt_group_element.c html_option_element.c html_hr_element.c \
@@ -20,7 +20,7 @@ DIR_SOURCES := \
 	html_table_element.c html_tablerow_element.c 
 
 UNINMPLEMENTED_SOURCES := \
-	html_frameset_element.c \
+	html_frameset_element.c html_isindex_element.c \
 	html_frame_element.c html_iframe_element.c
 
 include $(NSBUILD)/Makefile.subdir

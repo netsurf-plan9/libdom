@@ -12,7 +12,7 @@ HTMLIsIndexElement	html_isindex_element		MISSING
 HTMLStyleElement	html_style_element		DONE
 HTMLBodyElement		html_body_element		MISSING
 HTMLFormElement		html_form_element		DONE
-HTMLSelectElement	html_select_element		MISSING
+HTMLSelectElement	html_select_element		DONE
 HTMLOptGroupElement	html_optgroup_element		MISSING
 HTMLOptionElement	html_option_element		MISSING
 HTMLInputElement	html_input_element		MISSING
