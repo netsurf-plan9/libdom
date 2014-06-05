@@ -160,6 +160,25 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 </exception>
 </raises>
 </method>
+<method name="getElementById" id="ID-36113835">
+<descr>
+<p>Returns the Element whose<code>id</code>is given by elementId. If no such element exists, returns<code>null</code>. Behavior is not defined if more than one element has this<code>id</code>.</p>
+</descr>
+<parameters>
+<param id="ID-9998411" name="elementId" type="DOMString" attr="in">
+<descr>
+<p>The unique<code>id</code>value for an element.</p>
+</descr>
+</param>
+</parameters>
+<returns type="Element">
+<descr>
+<p>The matching element.</p>
+</descr>
+</returns>
+<raises/>
+</method>
+
 <method name="createDocumentFragment" id="ID-35CB04B5">
 <descr>
 <p>Creates an empty<code>DocumentFragment</code>object.</p>
@@ -1560,24 +1579,6 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 <returns type="void">
 <descr>
 <p/>
-</descr>
-</returns>
-<raises/>
-</method>
-<method name="getElementById" id="ID-36113835">
-<descr>
-<p>Returns the Element whose<code>id</code>is given by elementId. If no such element exists, returns<code>null</code>. Behavior is not defined if more than one element has this<code>id</code>.</p>
-</descr>
-<parameters>
-<param id="ID-9998411" name="elementId" type="DOMString" attr="in">
-<descr>
-<p>The unique<code>id</code>value for an element.</p>
-</descr>
-</param>
-</parameters>
-<returns type="Element">
-<descr>
-<p>The matching element.</p>
 </descr>
 </returns>
 <raises/>
@@ -3604,6 +3605,11 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 <attribute type="DOMString" name="src" id="ID-78799535" readonly="no">
 <descr>
 <p>A URI designating the initial frame contents. See the<loc href="http://www.w3.org/TR/REC-html40/present/frames.html#adef-src-FRAME" form="simple" show="embed" actuate="auto">src attribute definition</loc>in HTML 4.0.</p>
+</descr>
+</attribute>
+<attribute readonly="yes" type="Document" name="contentDocument" id="contentDoc">
+<descr>
+<p/>
 </descr>
 </attribute>
 </interface>

@@ -82,6 +82,7 @@ our %unref_prefix = (
 	NamedNodeMap => "dom_namednodemap",
 	NodeList => "dom_nodelist",
         HTMLCollection => "dom_html_collection",
+        HTMLDocument => "dom_html_document",
 );
 
 our %special_method = (

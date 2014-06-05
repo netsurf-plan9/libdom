@@ -58,6 +58,7 @@
 #include "html/html_tablerow_element.h"
 #include "html/html_style_element.h"
 #include "html/html_frameset_element.h"
+#include "html/html_frame_element.h"
 
 #include "core/attr.h"
 #include "core/string.h"
@@ -369,6 +370,9 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FRAMESET])) {
 		exc = _dom_html_frame_set_element_create(html, namespace, prefix,
 				(dom_html_frame_set_element **) result);
+	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FRAME])) {
+		exc = _dom_html_frame_element_create(html, namespace, prefix,
+				(dom_html_frame_element **) result);
 	} else {
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);

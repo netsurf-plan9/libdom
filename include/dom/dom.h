@@ -91,6 +91,7 @@
 #include <dom/html/html_base_element.h>
 #include <dom/html/html_style_element.h>
 #include <dom/html/html_frameset_element.h>
+#include <dom/html/html_frame_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
