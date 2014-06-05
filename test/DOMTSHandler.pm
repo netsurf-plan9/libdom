@@ -728,7 +728,7 @@ sub generate_method {
 	$method = to_cmethod($ats{'interface'}, $en);
         my $cast = to_attribute_cast($ats{'interface'});
 	my $get_attribute = $node->getAttribute("name");	
-        my $cast_get_attribute = to_get_attribute_cast($get_attribute);	
+        my $cast_get_attribute = to_get_attribute_cast($get_attribute, $ats{'interface'});	
 	my $ns = $dd->find("parameters/param", $node);
 	my $params = "${cast}$ats{'obj'}";
 	for ($count = 1; $count <= $ns->size; $count++) {
@@ -857,7 +857,7 @@ sub generate_attribute_fetcher {
 	my $fetcher = to_attribute_fetcher($ats{'interface'}, "$en");
         my $cast = to_attribute_cast($ats{'interface'});
 	my $get_attribute = $node->getAttribute("name");	
-        my $cast_get_attribute = to_get_attribute_cast($get_attribute);
+        my $cast_get_attribute = to_get_attribute_cast($get_attribute, $ats{'interface'});
 	my $unref = 0;
 	my $temp_node = 0;
 	# Deal with the situation like
@@ -1476,7 +1476,8 @@ sub get_prefix {
 }
 sub to_get_attribute_cast {
 	my $type = shift;
-        my $ret = get_get_attribute_prefix($type);
+	my $interface = shift;
+        my $ret = get_get_attribute_prefix($type, $interface);
 	if($ret eq "") {
 		return $ret;
 	}
@@ -1486,12 +1487,15 @@ sub to_get_attribute_cast {
 
 sub get_get_attribute_prefix {
 	my $type = shift;
-
-	if (exists $special_prefix{$type}) {
+	my $interface = shift;
+	if ((($interface eq "HTMLCollection") or ($interface eq "HTMLSelectElement")) and ($type eq "length")) {
+		$prefix = "uint32_t ";
+	} elsif (exists $special_prefix{$type}) {
 		$prefix = $special_prefix{$type};
 	} else {
 		$prefix = "";
 	}
+
 	return $prefix;
 }
 # This function remain unsed
