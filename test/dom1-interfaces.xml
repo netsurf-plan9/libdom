@@ -3667,5 +3667,11 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 <p>Frame width. See the<loc href="http://www.w3.org/TR/REC-html40/present/frames.html#adef-width-IFRAME" form="simple" show="embed" actuate="auto">width attribute definition</loc>in HTML 4.0.</p>
 </descr>
 </attribute>
+<attribute readonly="yes" type="Document" name="contentDocument" id="contentDoc">
+<descr>
+<p/>
+</descr>
+</attribute>
+
 </interface>
 </library>

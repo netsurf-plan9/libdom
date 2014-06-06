@@ -18,10 +18,9 @@ DIR_SOURCES := \
 	html_map_element.c html_script_element.c html_tablecaption_element.c \
 	html_tablecell_element.c html_tablecol_element.c html_tablesection_element.c \
 	html_table_element.c html_tablerow_element.c html_frameset_element.c \
-	html_frame_element.c 
+	html_frame_element.c html_iframe_element.c
 
 UNINMPLEMENTED_SOURCES := \
 	html_isindex_element.c \
-	html_iframe_element.c
 
 include $(NSBUILD)/Makefile.subdir
