@@ -91,6 +91,7 @@ our %special_method = (
 
 our %special_attribute = (
 	namespaceURI => "namespace",
+	URL => "url",
 );
 
 our %no_unref = (
@@ -1210,7 +1211,7 @@ sub generate_assertion {
 				$fragment = $ats->{fragment};
 			}
 			if (exists $ats->{isAbsolute}) {
-				$isAbsolute = $ats->{isAbsolute};
+				$isAbsolute = "\"$ats->{isAbsolute}\"";
 			}
 
 			print "is_uri_equals($scheme, $path, $host, $file, $name, $query, $fragment, $isAbsolute, $actual)"

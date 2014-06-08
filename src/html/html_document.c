@@ -126,16 +126,17 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 	doc->domain = NULL;
 	doc->url = NULL;
 	doc->cookie = NULL;
-	
+	doc->body = NULL;
+
 	doc->memoised = calloc(sizeof(dom_string *), hds_COUNT);
 	if (doc->memoised == NULL) {
 		error = DOM_NO_MEM_ERR;
 		goto out;
 	}
-	
+
 #define HTML_DOCUMENT_STRINGS_ACTION(attr,str)                             \
 	error = dom_string_create_interned((const uint8_t *) #str,	\
-					   SLEN(#str), &doc->memoised[hds_##attr]); \
+			SLEN(#str), &doc->memoised[hds_##attr]); \
 	if (error != DOM_NO_ERR) {					\
 		goto out;						\
 	}
@@ -639,57 +640,193 @@ dom_exception _dom_html_document_get_url(dom_html_document *doc,
 dom_exception _dom_html_document_get_body(dom_html_document *doc,
 		struct dom_html_element **body)
 {
-	UNUSED(doc);
-	UNUSED(body);
+	dom_exception exc = DOM_NO_ERR;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	if (doc->body != NULL) {
+		*body = doc->body;
+	} else {
+		dom_element *node;
+		dom_nodelist *nodes;
+		uint32_t len;
+
+		exc = dom_document_get_elements_by_tag_name(doc,
+				doc->memoised[hds_BODY],
+				&nodes);
+		if (exc != DOM_NO_ERR) {
+			return exc;
+		}
+
+		exc = dom_nodelist_get_length(nodes, &len);
+		if (exc != DOM_NO_ERR) {
+			dom_nodelist_unref(nodes);
+			return exc;
+		}
+
+		if (len == 0) {
+			exc = dom_document_get_elements_by_tag_name(doc,
+					doc->memoised[hds_FRAMESET],
+					&nodes);
+			if (exc != DOM_NO_ERR) {
+				return exc;
+			}
+			exc = dom_nodelist_get_length(nodes, &len);
+			if (exc != DOM_NO_ERR) {
+				dom_nodelist_unref(nodes);
+				return exc;
+			}
+			if(len == 0) {
+				dom_nodelist_unref(nodes);
+				return DOM_NO_ERR;
+			}
+		}
+
+		exc = dom_nodelist_item(nodes, 0, (void *) &node);
+		dom_nodelist_unref(nodes);
+		if (exc != DOM_NO_ERR) {
+			return exc;
+		}
+
+		*body = (dom_html_element *)node;
+		dom_node_unref(node);
+	}
+
+	return exc;
 }
 
 dom_exception _dom_html_document_set_body(dom_html_document *doc,
 		struct dom_html_element *body)
 {
-	UNUSED(doc);
-	UNUSED(body);
+	doc->body = body;
+	return DOM_NO_ERR;
+}
 
-	return DOM_NOT_SUPPORTED_ERR;
+/**
+ * Callback for creating the images collection
+ *
+ * \param node          The dom_node_internal object
+ * \param ctx           The dom_html_document object (void *)
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+bool images_callback(struct dom_node_internal *node, void *ctx)
+{
+	if(node->type == DOM_ELEMENT_NODE &&
+			dom_string_caseless_isequal(node->name,
+				((dom_html_document *)ctx)->memoised[hds_IMG])) {
+		return true;
+	}
+	return false;
 }
 
 dom_exception _dom_html_document_get_images(dom_html_document *doc,
 		struct dom_html_collection **col)
 {
-	UNUSED(doc);
-	UNUSED(col);
+	dom_html_document *root;
+	dom_exception err;
+	err = dom_document_get_document_element(doc, &root);
+	if (err != DOM_NO_ERR)
+		return err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return _dom_html_collection_create(doc, (dom_node_internal *) root, 
+			images_callback, doc, col);
+}
+
+bool applet_callback(struct dom_node_internal * node, void *ctx)
+{
+	if(node->type == DOM_ELEMENT_NODE &&
+			dom_string_caseless_isequal(node->name,
+				((dom_html_document *)ctx)->memoised[hds_APPLET])) {
+		return true;
+	}
+	return false;
+}
+/**
+ * Callback for creating the applets collection
+ *
+ * \param node          The dom_node_internal object
+ * \param ctx           The dom_html_document object (void *)
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+bool applets_callback(struct dom_node_internal *node, void *ctx)
+{
+	if(node->type == DOM_ELEMENT_NODE &&
+			dom_string_caseless_isequal(node->name,
+				((dom_html_document *)ctx)->memoised[hds_OBJECT])) {
+		uint32_t len = 0;
+		dom_html_collection *applets;
+		_dom_html_collection_create(ctx, node,
+				applet_callback, ctx, &applets);
+
+		dom_html_collection_get_length(applets, &len);
+		if(len != 0)
+			return true;
+	}
+	return false;
 }
 
 dom_exception _dom_html_document_get_applets(dom_html_document *doc,
 		struct dom_html_collection **col)
 {
-	UNUSED(doc);
-	UNUSED(col);
+	dom_html_document *root;
+	dom_exception err;
+	err = dom_document_get_document_element(doc, &root);
+	if (err != DOM_NO_ERR)
+		return err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return _dom_html_collection_create(doc, (dom_node_internal *) root, 
+			applets_callback, doc, col);
+}
+
+/**
+ * Callback for creating the links collection
+ *
+ * \param node          The dom_node_internal object
+ * \param ctx           The dom_html_document object (void *)
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+bool links_callback(struct dom_node_internal *node, void *ctx)
+{
+	if(node->type == DOM_ELEMENT_NODE &&
+			(dom_string_caseless_isequal(node->name,
+				((dom_html_document *)ctx)->memoised[hds_A]) ||
+			dom_string_caseless_isequal(node->name,
+				((dom_html_document *)ctx)->memoised[hds_AREA]))
+			 ) {
+		bool has_value = false;
+		dom_exception err;
+
+		err = dom_element_has_attribute(node,
+				((dom_html_document *)ctx)->memoised[hds_href], &has_value);
+		if(err !=DOM_NO_ERR)
+			return err;
+
+		if(has_value)
+			return true;
+	}
+	return false;
 }
 
 dom_exception _dom_html_document_get_links(dom_html_document *doc,
 		struct dom_html_collection **col)
 {
-	UNUSED(doc);
-	UNUSED(col);
+	dom_html_document *root;
+	dom_exception err;
+	err = dom_document_get_document_element(doc, &root);
+	if (err != DOM_NO_ERR)
+		return err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return _dom_html_collection_create(doc, (dom_node_internal *) root,
+			links_callback, doc, col);
 }
 
 static bool __dom_html_document_node_is_form(dom_node_internal *node,
-					     void *ctx)
+		void *ctx)
 {
 	dom_html_document *doc = (dom_html_document *)node->owner;
-	
+
 	UNUSED(ctx);
-	
+
 	return dom_string_caseless_isequal(node->name,
-					   doc->memoised[hds_FORM]);
+			doc->memoised[hds_FORM]);
 }
 
 dom_exception _dom_html_document_get_forms(dom_html_document *doc,
@@ -717,13 +854,43 @@ dom_exception _dom_html_document_get_forms(dom_html_document *doc,
 	return DOM_NO_ERR;
 }
 
+/**
+ * Callback for creating the anchors collection
+ *
+ * \param node          The dom_node_internal object
+ * \param ctx           The dom_html_document object (void *)
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+bool anchors_callback(struct dom_node_internal *node, void *ctx)
+{
+	if(node->type == DOM_ELEMENT_NODE &&
+			dom_string_caseless_isequal(node->name,
+				((dom_html_document *)ctx)->memoised[hds_A])) {
+		bool has_value = false;
+		dom_exception err;
+
+		err = dom_element_has_attribute(node,
+				((dom_html_document *)ctx)->memoised[hds_name], &has_value);
+		if(err !=DOM_NO_ERR)
+			return err;
+
+		if(has_value)
+			return true;
+	}
+	return false;
+}
+
 dom_exception _dom_html_document_get_anchors(dom_html_document *doc,
 		struct dom_html_collection **col)
 {
-	UNUSED(doc);
-	UNUSED(col);
+	dom_html_document *root;
+	dom_exception err;
+	err = dom_document_get_document_element(doc, &root);
+	if (err != DOM_NO_ERR)
+		return err;
 
-	return DOM_NOT_SUPPORTED_ERR;
+	return _dom_html_collection_create(doc, (dom_node_internal *) root,
+			anchors_callback, doc, col);
 }
 
 dom_exception _dom_html_document_get_cookie(dom_html_document *doc,
@@ -731,7 +898,7 @@ dom_exception _dom_html_document_get_cookie(dom_html_document *doc,
 {
 	UNUSED(doc);
 	UNUSED(cookie);
-
+	/*todo implement this after updating client interface */
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
@@ -740,7 +907,7 @@ dom_exception _dom_html_document_set_cookie(dom_html_document *doc,
 {
 	UNUSED(doc);
 	UNUSED(cookie);
-
+	/*todo implement this after updating client interface */
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
@@ -748,13 +915,14 @@ dom_exception _dom_html_document_open(dom_html_document *doc)
 {
 	UNUSED(doc);
 
+	/*todo implement this after updating client interface */
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
 dom_exception _dom_html_document_close(dom_html_document *doc)
 {
 	UNUSED(doc);
-
+	/*todo implement this after updating client interface */
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
@@ -764,6 +932,7 @@ dom_exception _dom_html_document_write(dom_html_document *doc,
 	UNUSED(doc);
 	UNUSED(text);
 
+	/*todo implement this after updating client interface */
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
@@ -773,6 +942,7 @@ dom_exception _dom_html_document_writeln(dom_html_document *doc,
 	UNUSED(doc);
 	UNUSED(text);
 
+	/*todo implement this after _dom_html_document_write */
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
@@ -782,7 +952,7 @@ dom_exception _dom_html_document_get_elements_by_name(dom_html_document *doc,
 	UNUSED(doc);
 	UNUSED(name);
 	UNUSED(list);
-
+	/*todo implement after updating core nodelist interface */
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
