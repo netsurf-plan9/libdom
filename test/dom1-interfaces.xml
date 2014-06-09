@@ -3674,4 +3674,51 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 </attribute>
 
 </interface>
+<interface name="HTMLOptionsCollection" id="ID-75708506">
+<descr>
+<p>An<code>HTMLOptionsCollection</code>is a list of nodes. An individual node may be accessed by either ordinal index or the node's<code>name</code>or<code>id</code>attributes.<emph>Note:</emph>Collections in the HTML DOM are assumed to be<emph>live</emph>meaning that they are automatically updated when the underlying document is changed.</p>
+</descr>
+<attribute readonly="yes" type="unsigned long" name="length" id="ID-40057551">
+<descr>
+<p>This attribute specifies the length or<emph>size</emph>of the list.</p>
+</descr>
+</attribute>
+<method name="item" id="ID-33262535">
+<descr>
+<p>This method retrieves a node specified by ordinal index. Nodes are numbered in tree order (depth-first traversal order).</p>
+</descr>
+<parameters>
+<param id="ID-3496656" name="index" type="unsigned long" attr="in">
+<descr>
+<p>The index of the node to be fetched. The index origin is 0.</p>
+</descr>
+</param>
+</parameters>
+<returns type="Node">
+<descr>
+<p>The<code>Node</code>at the corresponding position upon success. A value of<code>null</code>is returned if the index is out of range.</p>
+</descr>
+</returns>
+<raises/>
+</method>
+<method name="namedItem" id="ID-21069976">
+<descr>
+<p>This method retrieves a<code>Node</code>using a name. It first searches for a<code>Node</code>with a matching<code>id</code>attribute. If it doesn't find one, it then searches for a<code>Node</code>with a matching<code>name</code>attribute, but only on those elements that are allowed a name attribute.</p>
+</descr>
+<parameters>
+<param id="ID-76682631" name="name" type="DOMString" attr="in">
+<descr>
+<p>The name of the<code>Node</code>to be fetched.</p>
+</descr>
+</param>
+</parameters>
+<returns type="Node">
+<descr>
+<p>The<code>Node</code>with a<code>name</code>or<code>id</code>attribute whose value corresponds to the specified string. Upon failure (e.g., no node with this name exists), returns<code>null</code>.</p>
+</descr>
+</returns>
+<raises/>
+</method>
+</interface>
+
 </library>

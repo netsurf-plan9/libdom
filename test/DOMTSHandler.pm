@@ -48,6 +48,7 @@ our %special_type = (
 	HTMLTableSectionElement => "dom_html_table_section_element *",
 	HTMLTableElement => "dom_html_table_element *",
 	HTMLTableRowElement => "dom_html_table_row_element *",
+	HTMLOptionsCollection => "dom_html_options_collection *",
 );
 our %special_prefix = (
 	DOMString => "dom_string",
@@ -1491,7 +1492,7 @@ sub to_get_attribute_cast {
 sub get_get_attribute_prefix {
 	my $type = shift;
 	my $interface = shift;
-	if ((($interface eq "HTMLCollection") or ($interface eq "HTMLSelectElement")) and ($type eq "length")) {
+	if ($type eq "length") {
 		$prefix = "uint32_t ";
 	} elsif (exists $special_prefix{$type}) {
 		$prefix = $special_prefix{$type};
