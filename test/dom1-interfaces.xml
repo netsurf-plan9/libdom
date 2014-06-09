@@ -720,7 +720,31 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 </returns>
 <raises/>
 </method>
+<method name="isSupported" id="notknown">
+<descr>
+<p/>
+</descr>
+<parameters>
+<param name="feature" type="DOMString" attr="in">
+<descr>
+<p/>
+</descr>
+</param>
+<param name="version" type="DOMString" attr="in">
+<descr>
+<p/>
+</descr>
+</param>
+</parameters>
+<returns type="bool">
+<descr>
+<p/>
+</descr>
+</returns>
+<raises/>
+</method>
 </interface>
+
 <interface name="NodeList" id="ID-536297177">
 <descr>
 <p>The<code>NodeList</code>interface provides the abstraction of an ordered collection of nodes, without defining or constraining how this collection is implemented.</p>

@@ -10,7 +10,7 @@ HTMLMetaElement		html_meta_element		DONE
 HTMLBaseElement		html_base_element		DONE
 HTMLIsIndexElement	html_isindex_element		MISSING
 HTMLStyleElement	html_style_element		DONE
-HTMLBodyElement		html_body_element		MISSING
+HTMLBodyElement		html_body_element		DONE
 HTMLFormElement		html_form_element		DONE
 HTMLSelectElement	html_select_element		DONE
 HTMLOptGroupElement	html_optgroup_element		DONE
