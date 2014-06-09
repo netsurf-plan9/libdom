@@ -11,6 +11,7 @@
 #include <libwapcaplet/libwapcaplet.h>
 
 #include "html/html_collection.h"
+#include "html/html_document.h"
 
 #include "core/node.h"
 #include "core/element.h"
@@ -182,7 +183,7 @@ dom_exception dom_html_collection_item(dom_html_collection *col,
 			/* No children and siblings */
 			struct dom_node_internal *parent = n->parent;
 
-			while (parent != col->root &&
+			while (n != col->root &&
 					n == parent->last_child) {
 				n = parent;
 				parent = parent->parent;
@@ -212,8 +213,8 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
 		dom_string *name, struct dom_node **node)
 {
 	struct dom_node_internal *n = col->root;
+	dom_html_document *doc = (dom_html_document *)dom_node_get_owner(n);
 	dom_exception err;
-        
         while (n != NULL) {
 		if (n->type == DOM_ELEMENT_NODE &&
 		    col->ic(n, col->ctx) == true) {
@@ -235,6 +236,22 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
 
 			if (id != NULL)
 				dom_string_unref(id);
+
+			/* Check for Name attr if id not matched/found */
+			dom_string *id_name = NULL;
+			err = _dom_element_get_attribute((dom_element *)n,
+					doc->memoised[hds_name], &id_name);
+			if(err != DOM_NO_ERR) {
+				return err;
+			}
+			if (id_name != NULL && dom_string_isequal(name, id_name)) {
+				*node = (struct dom_node *) n;
+				dom_node_ref(n);
+				dom_string_unref(id_name);
+
+				return DOM_NO_ERR;
+			}
+
 		}
 
 		/* Depth first iterating */
@@ -246,13 +263,13 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
 			/* No children and siblings */
 			struct dom_node_internal *parent = n->parent;
 
-			while (parent != col->root &&
+			while (n != col->root &&
 					n == parent->last_child) {
 				n = parent;
 				parent = parent->parent;
 			}
 			
-			if (parent == col->root)
+			if (n == col->root)
 				n = NULL;
 			else
 				n = n->next;

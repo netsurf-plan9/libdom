@@ -907,6 +907,7 @@ dom_exception _dom_html_document_set_cookie(dom_html_document *doc,
 {
 	UNUSED(doc);
 	UNUSED(cookie);
+
 	/*todo implement this after updating client interface */
 	return DOM_NOT_SUPPORTED_ERR;
 }
