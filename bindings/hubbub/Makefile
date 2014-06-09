@@ -1,7 +1,7 @@
 ifeq ($(WITH_HUBBUB_BINDING),yes)
   DIR_SOURCES := parser.c
 
-  DIR_INSTALL_ITEMS := /include/dom/bindings/hubbub:errors.h;parser.h
+  DIR_INSTALL_ITEMS := /$(INCLUDEDIR)/dom/bindings/hubbub:errors.h;parser.h
 
   # Hubbub
   ifneq ($(PKGCONFIG),)

@@ -47,11 +47,11 @@ include $(NSBUILD)/Makefile.top
 
 # Extra installation rules
 Is := include/dom
-I := /include/dom
+I := /$(INCLUDEDIR)/dom
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/dom.h;$(Is)/functypes.h
 
 Is := include/dom/core
-I := /include/dom/core
+I := /$(INCLUDEDIR)/dom/core
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/attr.h;$(Is)/characterdata.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/cdatasection.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/comment.h
@@ -66,7 +66,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/pi.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/text.h;$(Is)/typeinfo.h
 
 Is := include/dom/events
-I := /include/dom/events
+I := /$(INCLUDEDIR)/dom/events
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/event.h;$(Is)/ui_event.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/custom_event.h;$(Is)/mouse_event.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/keyboard_event.h;$(Is)/text_event.h
@@ -78,7 +78,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/event_listener.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/document_event.h
 
 Is := include/dom/html
-I := /include/dom/html
+I := /$(INCLUDEDIR)/dom/html
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_document.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_collection.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_element.h
