@@ -65,6 +65,8 @@ dom_exception _dom_html_input_element_initialise(struct dom_html_document *doc,
 	ele->default_checked_set = false;
 	ele->default_value = NULL;
 	ele->default_value_set = false;
+	ele->checked = false;
+	ele->checked_set = false;
 
 	return _dom_html_element_initialise(doc, &ele->base,
 					    doc->memoised[hds_INPUT],
@@ -166,6 +168,11 @@ dom_exception dom_html_input_element_set_read_only(dom_html_input_element *ele,
 dom_exception dom_html_input_element_get_checked(dom_html_input_element *ele,
 		bool *checked)
 {
+	if(ele->checked_set) {
+		*checked = ele->checked;
+		return DOM_NO_ERR;
+	}
+
 	return dom_html_element_get_bool_property(&ele->base, "checked",
 			SLEN("checked"), checked);
 }
@@ -447,11 +454,11 @@ dom_exception dom_html_input_element_focus(dom_html_input_element *ele)
 	bool success = false;
 	assert(doc != NULL);
 
-	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
+	/** \this event doesnt bubble and is non-cancelable src:wikipedia*/
 	return _dom_dispatch_generic_event((dom_document *)doc,
 					   (dom_event_target *) ele,
-					   doc->memoised[hds_focus], true,
-					   true, &success);
+					   doc->memoised[hds_focus], false,
+					   false, &success);
 }
 
 /**
@@ -467,11 +474,11 @@ dom_exception dom_html_input_element_select(dom_html_input_element *ele)
 	bool success = false;
 	assert(doc != NULL);
 
-	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
+	/** \this event bubbles and non-cancelable src:wikipedia*/
 	return _dom_dispatch_generic_event((dom_document *)doc,
 					   (dom_event_target *) ele,
 					   doc->memoised[hds_select], true,
-					   true, &success);
+					   false, &success);
 }
 
 /**
@@ -485,13 +492,21 @@ dom_exception dom_html_input_element_click(dom_html_input_element *ele)
 	struct dom_html_document *doc =
 		(dom_html_document *) dom_node_get_owner(ele);
 	bool success = false;
+	dom_exception err;
 	assert(doc != NULL);
 
-	/** \todo Is this is meant to check/uncheck boxes, radios etc */
-	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
-	return _dom_dispatch_generic_event((dom_document *)doc,
+
+	/** \This event bubbles & is cancelable src:Wikipedia*/
+	err = _dom_dispatch_generic_event((dom_document *)doc,
 					   (dom_event_target *) ele,
 					   doc->memoised[hds_click], true,
 					   true, &success);
+	if(err != DOM_NO_ERR)
+		return err;
+
+	ele->checked = true;
+	ele->checked_set = true;
+
+	return DOM_NO_ERR;
 }
 

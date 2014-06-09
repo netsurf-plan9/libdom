@@ -21,6 +21,8 @@ struct dom_html_input_element {
 	bool default_checked_set; /**< Whether default_checked has been set */
 	dom_string *default_value; /**< Initial value */
 	bool default_value_set; /**< Whether default_value has been set */
+	bool checked; /**< Whether the element has been checked by a click */
+	bool checked_set;
 };
 
 /* Create a dom_html_input_element object */

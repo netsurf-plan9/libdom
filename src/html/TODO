@@ -15,9 +15,9 @@ HTMLFormElement		html_form_element		DONE
 HTMLSelectElement	html_select_element		DONE
 HTMLOptGroupElement	html_optgroup_element		DONE
 HTMLOptionElement	html_option_element		DONE
-HTMLInputElement	html_input_element		MISSING
+HTMLInputElement	html_input_element		DONE
 HTMLTextAreaElement	html_textarea_element		DONE
-HTMLButtonElement	html_button_element		MISSING
+HTMLButtonElement	html_button_element		DONE
 HTMLLabelElement	html_label_element		DONE
 HTMLFieldSetElement	html_fieldset_element		DONE
 HTMLLegendElement	html_legend_element		DONE
