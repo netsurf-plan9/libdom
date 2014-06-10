@@ -9,6 +9,7 @@
 #define dom_html_isindex_element_h_
 
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
 struct dom_html_form_element;
 

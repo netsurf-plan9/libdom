@@ -93,6 +93,7 @@
 #include <dom/html/html_frameset_element.h>
 #include <dom/html/html_frame_element.h>
 #include <dom/html/html_iframe_element.h>
+#include <dom/html/html_isindex_element.h>
 
 /* DOM Events header */
 #include <dom/events/events.h>
