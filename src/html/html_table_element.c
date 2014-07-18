@@ -418,12 +418,22 @@ dom_exception dom_html_table_element_delete_caption(
 		dom_html_table_element *element)
 {
 	dom_html_table_caption_element *caption;
-	dom_html_table_element_get_caption(element, &caption);
-	_dom_node_remove_child((dom_node_internal *)element,
-			(dom_node_internal *)caption,
-			(dom_node_internal **)&caption);
-	element->caption = NULL;
-	return DOM_NO_ERR;
+	dom_node *old_caption;
+	dom_exception err;
+
+	err = dom_html_table_element_get_caption(element, &caption);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = dom_node_remove_child(element, caption, &old_caption);
+	if (err == DOM_NO_ERR) {
+		element->caption = NULL;
+		dom_node_unref(old_caption);
+	}
+
+	dom_node_unref(caption);
+
+	return err;
 }
 
 /**
@@ -473,12 +483,22 @@ dom_exception dom_html_table_element_delete_t_foot(
 		dom_html_table_element *element)
 {
 	dom_html_table_section_element *t_foot;
-	dom_html_table_element_get_t_foot(element, &t_foot);
-	_dom_node_remove_child((dom_node_internal *)element,
-			(dom_node_internal *)t_foot,
-			(dom_node_internal **)&t_foot);
-	element->t_foot = NULL;
-	return DOM_NO_ERR;
+	dom_node *old_t_foot;
+	dom_exception err;
+
+	err = dom_html_table_element_get_t_foot(element, &t_foot);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = dom_node_remove_child(element, t_foot, &old_t_foot);
+	if (err == DOM_NO_ERR) {
+		element->t_foot = NULL;
+		dom_node_unref(old_t_foot);
+	}
+
+	dom_node_unref(t_foot);
+
+	return err;
 }
 
 /**
@@ -525,12 +545,22 @@ dom_exception dom_html_table_element_delete_t_head(
 		dom_html_table_element *element)
 {
 	dom_html_table_section_element *t_head;
-	dom_html_table_element_get_t_head(element, &t_head);
-	_dom_node_remove_child((dom_node_internal *)element,
-			(dom_node_internal *)t_head,
-			(dom_node_internal **)&t_head);
-	element->t_head = NULL;
-	return DOM_NO_ERR;
+	dom_node *old_t_head;
+	dom_exception err;
+
+	err = dom_html_table_element_get_t_head(element, &t_head);
+	if (err != DOM_NO_ERR)
+		return err;
+
+	err = dom_node_remove_child(element, t_head, &old_t_head);
+	if (err == DOM_NO_ERR) {
+		element->t_head = NULL;
+		dom_node_unref(old_t_head);
+	}
+
+	dom_node_unref(t_head);
+
+	return err;
 }
 
 /**
