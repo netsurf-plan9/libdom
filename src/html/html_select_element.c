@@ -598,12 +598,14 @@ dom_exception dom_html_select_element_set_tab_index(
 dom_exception dom__html_select_element_add(dom_html_select_element *select,
 		struct dom_html_element *ele, struct dom_html_element *before)
 {
+	dom_exception err;
+	dom_node *inserted;
 
-		return _dom_node_insert_before((dom_node_internal *)select,
-				(dom_node_internal *)ele, (dom_node_internal *)before,
-				(dom_node_internal **)&ele);
-	
+	err = dom_node_insert_before(select, ele, before, &inserted);
+	if (err == DOM_NO_ERR)
+		dom_node_unref(inserted);
 
+	return err;
 }
 
 dom_exception dom_html_select_element_remove(dom_html_select_element *ele,
@@ -611,7 +613,8 @@ dom_exception dom_html_select_element_remove(dom_html_select_element *ele,
 {
 	dom_exception err;
 	uint32_t len;
-	dom_node *option;
+	dom_node *option, *old_option;
+	dom_html_options_collection *col;
 
 	err = dom_html_select_element_get_length(ele, &len);
 	if (err != DOM_NO_ERR)
@@ -620,22 +623,26 @@ dom_exception dom_html_select_element_remove(dom_html_select_element *ele,
 	/* Ensure index is in range */
 	if (index < 0 || index >= (int32_t)len)
 		return DOM_NO_ERR;
-	dom_html_options_collection *col;
 
         err = _dom_html_select_element_make_collection(ele, &col);
         if (err != DOM_NO_ERR)
 		return err;
 	
-	err = dom_html_options_collection_item(col,
-			 index, &option);
-	
+	err = dom_html_options_collection_item(col, index, &option);
 	if (err != DOM_NO_ERR) {
 		dom_html_options_collection_unref(col);
 		return err;
 	}
-	return _dom_node_remove_child(((dom_node_internal *)option)->parent,
-			(dom_node_internal *)option,
-			(dom_node_internal **)&option);
+
+	err = dom_node_remove_child(dom_node_get_parent(option),
+			option, &old_option);
+	if (err == DOM_NO_ERR)
+		dom_node_unref(old_option);
+
+	dom_node_unref(option);
+	dom_html_options_collection_unref(col);
+
+	return err;
 }
 
 /**
