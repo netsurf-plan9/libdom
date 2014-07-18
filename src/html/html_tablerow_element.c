@@ -368,7 +368,7 @@ dom_exception dom_html_table_row_element_delete_cell(
 	exp = dom_html_collection_item(cells, index, &node);
 	if (exp != DOM_NO_ERR) {
 		dom_html_collection_unref(cells);
-		return err;
+		return exp;
 	}
 
 	exp = dom_node_remove_child(element, node, &old_node);
