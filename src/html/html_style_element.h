@@ -15,6 +15,8 @@
 struct dom_html_style_element {
 	struct dom_html_element base;
 			/**< The base class */
+	dom_string *media;
+			/**< The default string value for the media attribute*/
 };
 
 /* Create a dom_html_style_element object */

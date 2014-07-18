@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 
+#include "html/html_document.h"
 #include "html/html_base_element.h"
 
 #include "core/node.h"
@@ -118,3 +119,45 @@ dom_exception _dom_html_base_element_copy(dom_node_internal *old,
 	return _dom_html_element_copy(old, copy);
 }
 
+/*-----------------------------------------------------------------------*/
+/* API functions */
+
+#define SIMPLE_GET(attr)						\
+	dom_exception dom_html_base_element_get_##attr(		\
+		dom_html_base_element *element,			\
+		dom_string **attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_get_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}
+#define SIMPLE_SET(attr)						\
+dom_exception dom_html_base_element_set_##attr(			\
+		dom_html_base_element *element,			\
+		dom_string *attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_set_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}
+
+#define SIMPLE_GET_SET(attr) SIMPLE_GET(attr) SIMPLE_SET(attr)
+
+SIMPLE_GET_SET(href);
+SIMPLE_GET_SET(target);

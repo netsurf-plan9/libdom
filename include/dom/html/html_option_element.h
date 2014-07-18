@@ -28,7 +28,7 @@ dom_exception dom_html_option_element_get_text(
 	dom_html_option_element *option, dom_string **text);
 
 dom_exception dom_html_option_element_get_index(
-	dom_html_option_element *option, unsigned long *index);
+	dom_html_option_element *option, int32_t *index);
 
 dom_exception dom_html_option_element_get_disabled(
 	dom_html_option_element *option, bool *disabled);

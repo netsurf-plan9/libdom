@@ -281,7 +281,7 @@ static bool _dom_is_form_control(struct dom_node_internal *node, void *ctx)
 	
 	assert(node->type == DOM_ELEMENT_NODE);
 	
-        /* Form controls are INPUT TEXTAREA SELECT and BUTTON */
+        /* Form controls are INPUT TEXTAREA SELECT and BUTTON*/
         if (dom_string_caseless_isequal(node->name,
 					doc->memoised[hds_INPUT]))
 		return ((dom_html_input_element *)node)->form == form;

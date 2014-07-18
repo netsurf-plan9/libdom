@@ -438,11 +438,11 @@ dom_exception dom_html_text_area_element_blur(dom_html_text_area_element *ele)
 	bool success = false;
 	assert(doc != NULL);
 
-	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
+	/* This event does not bubble & is Non-cancellable. Mentioned in w3 specs. More research is needed to prove why. */
 	return _dom_dispatch_generic_event((dom_document *) doc,
 					   (dom_event_target *) ele,
-					   doc->memoised[hds_blur], true,
-					   true, &success);
+					   doc->memoised[hds_blur], false,
+					   false, &success);
 }
 
 /**
@@ -458,11 +458,11 @@ dom_exception dom_html_text_area_element_focus(dom_html_text_area_element *ele)
 	bool success = false;
 	assert(doc != NULL);
 
-	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
+	/* This event does not bubble & is Non-cancellable. Mentioned in w3 specs. More research is needed to prove why. */
 	return _dom_dispatch_generic_event((dom_document *)doc,
 					   (dom_event_target *) ele,
-					   doc->memoised[hds_focus], true,
-					   true, &success);
+					   doc->memoised[hds_focus], false,
+					   false, &success);
 }
 
 /**
@@ -478,9 +478,9 @@ dom_exception dom_html_text_area_element_select(dom_html_text_area_element *ele)
 	bool success = false;
 	assert(doc != NULL);
 
-	/** \todo Is this event (a) default (b) bubbling and (c) cancelable? */
+	/* This event bubbles & is non-cancelable. Mentioned in w3 specs. More research is needed to prove why. */
 	return _dom_dispatch_generic_event((dom_document *)doc,
 					   (dom_event_target *) ele,
 					   doc->memoised[hds_select], true,
-					   true, &success);
+					   false, &success);
 }

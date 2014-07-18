@@ -7,9 +7,13 @@
 
 #include <stdlib.h>
 
+#include <dom/html/html_isindex_element.h>
+
+#include "html/html_document.h"
 #include "html/html_isindex_element.h"
 
 #include "core/node.h"
+#include "core/attr.h"
 #include "utils/utils.h"
 
 static struct dom_element_protected_vtable _protect_vtable = {
@@ -22,55 +26,41 @@ static struct dom_element_protected_vtable _protect_vtable = {
 /**
  * Create a dom_html_isindex_element object
  *
- * \param doc   The document object
- * \param form  The form element which contains this element
- * \param ele   The returned element object
+ * \param doc  The document object
+ * \param ele  The returned element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_isindex_element_create(struct dom_html_document *doc,
-		struct dom_html_form_element *form, 
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_isindex_element **ele)
 {
 	struct dom_node_internal *node;
-
 	*ele = malloc(sizeof(dom_html_isindex_element));
 	if (*ele == NULL)
 		return DOM_NO_MEM_ERR;
-	
+
 	/* Set up vtables */
 	node = (struct dom_node_internal *) *ele;
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_isindex_element_initialise(doc, form, *ele);
+	return _dom_html_isindex_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
  * Initialise a dom_html_isindex_element object
  *
- * \param doc   The document object
- * \param form  The form element which contains this element
- * \param ele   The dom_html_isindex_element object
+ * \param doc  The document object
+ * \param ele  The dom_html_isindex_element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_isindex_element_initialise(struct dom_html_document *doc,
-		struct dom_html_form_element *form, 
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_isindex_element *ele)
 {
-	dom_string *name = NULL;
-	dom_exception err;
-
-	UNUSED(form);
-
-	err = dom_string_create((const uint8_t *) "ISINDEX", SLEN("ISINDEX"),
-			&name);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	dom_string_unref(name);
-
-	return err;
+	return _dom_html_element_initialise(doc, &ele->base,
+					    doc->memoised[hds_ISINDEX],
+					    namespace, prefix);
 }
 
 /**
@@ -125,7 +115,46 @@ dom_exception _dom_html_isindex_element_copy(dom_node_internal *old,
 	return _dom_html_element_copy(old, copy);
 }
 
+/*-----------------------------------------------------------------------*/
+/* API functions */
 
+#define SIMPLE_GET(attr)						\
+	dom_exception dom_html_isindex_element_get_##attr(		\
+		dom_html_isindex_element *element,			\
+		dom_string **attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_get_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}
+#define SIMPLE_SET(attr)						\
+dom_exception dom_html_isindex_element_set_##attr(			\
+		dom_html_isindex_element *element,			\
+		dom_string *attr)					\
+	{								\
+		dom_exception ret;					\
+		dom_string *_memo_##attr;				\
+									\
+		_memo_##attr =						\
+			((struct dom_html_document *)			\
+			 ((struct dom_node_internal *)element)->owner)->\
+			memoised[hds_##attr];				\
+									\
+		ret = dom_element_set_attribute(element, _memo_##attr, attr); \
+									\
+		return ret;						\
+	}
+
+#define SIMPLE_GET_SET(attr) SIMPLE_GET(attr) SIMPLE_SET(attr)
+SIMPLE_GET_SET(prompt);
 /*-----------------------------------------------------------------------*/
 /* Public APIs */
 

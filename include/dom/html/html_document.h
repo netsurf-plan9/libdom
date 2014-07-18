@@ -114,7 +114,7 @@ static inline dom_exception dom_html_document_get_body(dom_html_document *doc,
 		get_body(doc, body);
 }
 #define dom_html_document_get_body(d, b) \
-		dom_html_document_get_title((dom_html_document *) (d), \
+		dom_html_document_get_body((dom_html_document *) (d), \
 				(struct dom_html_element **) (b))
 
 static inline dom_exception dom_html_document_set_body(dom_html_document *doc,
@@ -174,7 +174,7 @@ static inline dom_exception dom_html_document_get_anchors(dom_html_document *doc
 		get_anchors(doc, col);
 }
 #define dom_html_document_get_anchors(d, c) \
-		dom_html_document_get_title((dom_html_document *) (d), \
+		dom_html_document_get_anchors((dom_html_document *) (d), \
 				(struct dom_html_collection **) (c))
 
 static inline dom_exception dom_html_document_get_cookie(dom_html_document *doc,
@@ -184,7 +184,7 @@ static inline dom_exception dom_html_document_get_cookie(dom_html_document *doc,
 		get_cookie(doc, cookie);
 }
 #define dom_html_document_get_cookie(d, c) \
-		dom_html_document_get_title((dom_html_document *) (d), (c))
+		dom_html_document_get_cookie((dom_html_document *) (d), (c))
 
 static inline dom_exception dom_html_document_set_cookie(dom_html_document *doc,
 		dom_string *cookie)
@@ -237,8 +237,8 @@ static inline dom_exception dom_html_document_get_elements_by_name(dom_html_docu
 	return ((dom_html_document_vtable *) ((dom_node *) doc)->vtable)->
 		get_elements_by_name(doc, name, list);
 }
-#define dom_html_document_get_elements_by_name(d, n, l) \
-		dom_html_document_get_element_by_name((dom_html_document *) (d), \
+#define dom_html_document_get_element_by_name(d, n, l) \
+		dom_html_document_get_elements_by_name((dom_html_document *) (d), \
 			(n), (struct dom_nodelist **) (l))
 
 #endif

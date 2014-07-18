@@ -255,13 +255,22 @@ dom_exception dom_html_option_element_get_text(
  * \return DOM_NO_ERR on success, appropriate error otherwise.
  */
 dom_exception dom_html_option_element_get_index(
-	dom_html_option_element *option, unsigned long *index)
+	dom_html_option_element *option, int32_t *index)
 {
-	UNUSED(option);
-	UNUSED(index);
+	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(option);
+	int32_t idx = 0;
+	dom_node_internal *n = ((dom_node_internal *)option)->parent;
 
-	/** \todo Implement */
-	return DOM_NOT_SUPPORTED_ERR;
+	for(n = n->first_child;n != NULL; n = n->next) {
+		if((dom_node_internal *)option == n) {
+			*index = idx;
+			break;
+		} else if(dom_string_caseless_isequal(n->name,doc->memoised[hds_OPTION])) {
+			idx += 1;
+		}
+	}
+
+	return DOM_NO_ERR;
 }
 
 /**

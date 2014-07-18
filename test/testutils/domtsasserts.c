@@ -124,7 +124,10 @@ bool is_equals_list(list *expected, list *actual, bool ignoreCase)
 	comparator rcmp = NULL;
 
 	if (expected->type == INT)
+	{
 		cmp = int_comparator;
+		rcmp = int_comparator;
+	}
 	if (expected->type == STRING) {
 		if (actual->type == DOM_STRING) {
 			cmp = ignoreCase? str_icmp : str_cmp;
@@ -139,6 +142,7 @@ bool is_equals_list(list *expected, list *actual, bool ignoreCase)
 	}
 
 	assert(cmp != NULL);
+	assert(rcmp != NULL);
 
 	return list_contains_all(expected, actual, cmp) && list_contains_all(actual, expected, rcmp);
 }

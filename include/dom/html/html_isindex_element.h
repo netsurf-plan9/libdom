@@ -9,6 +9,7 @@
 #define dom_html_isindex_element_h_
 
 #include <dom/core/exceptions.h>
+#include <dom/core/string.h>
 
 struct dom_html_form_element;
 
@@ -22,5 +23,10 @@ typedef struct dom_html_isindex_element dom_html_isindex_element;
 dom_exception dom_html_isindex_element_get_form(dom_html_isindex_element *ele,
 		struct dom_html_form_element **form);
 
+dom_exception dom_html_isindex_element_get_prompt(dom_html_isindex_element *ele,
+		dom_string **prompt);
+
+dom_exception dom_html_isindex_element_set_prompt(dom_html_isindex_element *ele,
+		dom_string *prompt);
 #endif
 
