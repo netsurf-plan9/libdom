@@ -15,12 +15,6 @@
 struct dom_html_table_element {
 	struct dom_html_element base;
 			/**< The base class */
-	dom_html_table_caption_element* caption;
-			/**< The caption associated with the table*/
-	dom_html_table_section_element* t_head;
-			/**< The thead element associated with the table*/
-	dom_html_table_section_element* t_foot;
-			/**< The tfoot element associated with the table*/
 };
 
 /* Create a dom_html_table_element object */
