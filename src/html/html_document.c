@@ -724,7 +724,7 @@ bool images_callback(struct dom_node_internal *node, void *ctx)
 dom_exception _dom_html_document_get_images(dom_html_document *doc,
 		struct dom_html_collection **col)
 {
-	dom_html_document *root;
+	dom_element *root;
 	dom_exception err;
 	err = dom_document_get_document_element(doc, &root);
 	if (err != DOM_NO_ERR)
@@ -770,7 +770,7 @@ bool applets_callback(struct dom_node_internal *node, void *ctx)
 dom_exception _dom_html_document_get_applets(dom_html_document *doc,
 		struct dom_html_collection **col)
 {
-	dom_html_document *root;
+	dom_element *root;
 	dom_exception err;
 	err = dom_document_get_document_element(doc, &root);
 	if (err != DOM_NO_ERR)
@@ -812,7 +812,7 @@ bool links_callback(struct dom_node_internal *node, void *ctx)
 dom_exception _dom_html_document_get_links(dom_html_document *doc,
 		struct dom_html_collection **col)
 {
-	dom_html_document *root;
+	dom_element *root;
 	dom_exception err;
 	err = dom_document_get_document_element(doc, &root);
 	if (err != DOM_NO_ERR)
@@ -887,7 +887,7 @@ bool anchors_callback(struct dom_node_internal *node, void *ctx)
 dom_exception _dom_html_document_get_anchors(dom_html_document *doc,
 		struct dom_html_collection **col)
 {
-	dom_html_document *root;
+	dom_element *root;
 	dom_exception err;
 	err = dom_document_get_document_element(doc, &root);
 	if (err != DOM_NO_ERR)
