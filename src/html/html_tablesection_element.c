@@ -250,37 +250,44 @@ dom_exception dom_html_table_section_element_insert_row(
 dom_exception dom_html_table_section_element_delete_row(
 		dom_html_table_section_element *element,
 		int32_t index) {
-	dom_node *node; 		/*< The node at the (index)th position*/
-
+	dom_node *node, *old_node;	/*< The node at the (index)th position*/
 	dom_html_collection *rows; 	/*< The collection of rows in input table_section_element*/
 	uint32_t len; 			/*< The size of the row collection */
-
 	dom_exception exp;		/*< Temporary variable to store & check the exceptions*/
 
 	exp = dom_html_table_section_element_get_rows(element, &rows);
-	if(exp != DOM_NO_ERR) {
+	if (exp != DOM_NO_ERR) {
 		return exp;
 	}
 
 	exp = dom_html_collection_get_length(rows, &len);
-	if(exp != DOM_NO_ERR) {
+	if (exp != DOM_NO_ERR) {
+		dom_html_collection_unref(rows);
 		return exp;
 	}
 
-	if(index < -1 || index >= (int32_t)len) {
+	if (index < -1 || index >= (int32_t) len || (index == -1 && len == 0)) {
 		/* Check for index validity */
+		dom_html_collection_unref(rows);
 		return DOM_INDEX_SIZE_ERR;
-	} else if(index == -1) {
-		exp = dom_html_collection_item(rows,
-				len-1, &node);
-	} else {
-		exp = dom_html_collection_item(rows,
-				index, &node);
-	}
-	exp = _dom_node_remove_child((dom_node_internal *)element,
-			(dom_node_internal *)node,
-			(dom_node_internal **)&node);
+	} 
 
-	return DOM_NO_ERR;
+	if (index == -1)
+		index = len - 1;
+
+	exp = dom_html_collection_item(rows, index, &node);
+	if (exp != DOM_NO_ERR) {
+		dom_html_collection_unref(rows);
+		return exp;
+	}
+
+	exp = dom_node_remove_child(element, node, &old_node);
+	if (exp == DOM_NO_ERR)
+		dom_node_unref(old_node);
+
+	dom_node_unref(node);
+	dom_html_collection_unref(rows);
+
+	return exp;
 }
 
