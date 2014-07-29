@@ -281,7 +281,10 @@ dom_exception dom_html_frame_element_get_content_document(
 		dom_html_frame_element *ele,
 		dom_document **content_document)
 {
-	*content_document = dom_node_get_owner(ele);
-	return DOM_NO_ERR;
+	/* We don't support creating documents
+	   from within here */
+	UNUSED(ele);
+	UNUSED(content_document);
+	return DOM_NOT_SUPPORTED_ERR;
 }
 
