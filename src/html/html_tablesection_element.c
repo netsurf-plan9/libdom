@@ -217,26 +217,42 @@ dom_exception dom_html_table_section_element_insert_row(
 		return exp;
 	
 	exp = dom_html_table_section_element_get_rows(element, &rows);
-	if(exp != DOM_NO_ERR)
+	if(exp != DOM_NO_ERR) {
+		dom_node_unref(new_row);
+		new_row = NULL;
 		return exp;
+	}
 
 	exp = dom_html_collection_get_length(rows, &len);
-	if(exp != DOM_NO_ERR)
+
+
+	if(exp != DOM_NO_ERR) {
+		dom_node_unref(new_row);
+		new_row = NULL;
+		dom_html_collection_unref(rows);
 		return exp;
+	}
 	
 	if(index < -1 || index > (int32_t)len) {
 		/* Check for index validity */
+		dom_html_collection_unref(rows);
 		return DOM_INDEX_SIZE_ERR;
 	} else if(index == -1 || index == (int32_t)len) {
-		return _dom_node_append_child((dom_node_internal *)element,
-				(dom_node_internal *)*new_row,
-				(dom_node_internal **)new_row);
+		dom_node *new_node;
+		dom_html_collection_unref(rows);
+		return dom_node_append_child(element,
+				*new_row,
+				&new_node);
 	} else {
+		dom_node *new_node;
+
 		dom_html_collection_item(rows,
 				index, &node);
-		return _dom_node_insert_before((dom_node_internal *)element,
-		                (dom_node_internal *)*new_row, (dom_node_internal *)node,
-				(dom_node_internal **)new_row);
+		dom_html_collection_unref(rows);
+
+		return dom_node_insert_before(element,
+		                *new_row, node,
+				&new_node);
 	}
 }
 
