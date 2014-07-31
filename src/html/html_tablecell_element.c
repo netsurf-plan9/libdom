@@ -61,7 +61,6 @@ dom_exception _dom_html_table_cell_element_initialise(struct dom_html_document *
 		dom_string *tag_name, dom_string *namespace, dom_string *prefix,
 		struct dom_html_table_cell_element *ele)
 {
-	ele->id = -1;
 	return _dom_html_element_initialise(doc, &ele->base,
 			tag_name,
 			namespace, prefix);
@@ -181,49 +180,45 @@ SIMPLE_GET_SET(width);
 dom_exception dom_html_table_cell_element_get_cell_index(
 		dom_html_table_cell_element *table_cell, int32_t *cell_index)
 {
-	if(table_cell->id == -1) {
-		dom_node_internal *n = ((dom_node_internal *)table_cell)->parent;
-		dom_html_document *doc = (dom_html_document *)(n->owner);
-		int32_t cnt = 0;
-		while(n != NULL) {
-			if(dom_string_caseless_isequal(doc->memoised[hds_TR],n->name)) {
-				break;
-			}
-			n = n->parent;
+	dom_node_internal *n = ((dom_node_internal *)table_cell)->parent;
+	dom_html_document *doc = (dom_html_document *)(n->owner);
+	int32_t cnt = 0;
+	while(n != NULL) {
+		if(dom_string_caseless_isequal(doc->memoised[hds_TR],n->name)) {
+			break;
 		}
-		dom_node_internal *root = n;
-		while(n != NULL) {
-			if(n == (dom_node_internal *)table_cell) {
-				break;
-			} else if((n->type == DOM_ELEMENT_NODE) &&
-					(dom_string_caseless_isequal(doc->memoised[hds_TD],n->name) ||
-					 dom_string_caseless_isequal(doc->memoised[hds_TH],n->name))) {
-				((dom_html_table_cell_element *)n)->id = cnt;
-				cnt += 1;
-			}
-			if(n->first_child != NULL) {
-				n = n->first_child;
-			} else if(n->next != NULL) {
-				n = n->next;
-			} else {
-				/* No children and siblings */
-				struct dom_node_internal *parent = n->parent;
-				while (n == parent->last_child &&
-						n != root) {
-					n = parent;
-					parent = parent->parent;
-				}
-
-				if(n == root) {
-					n = NULL;
-				} else {
-					n = n->next;
-				}
-			}
-		}
-		table_cell->id = cnt;
+		n = n->parent;
 	}
-	*cell_index = table_cell->id;
+	dom_node_internal *root = n;
+	while(n != NULL) {
+		if(n == (dom_node_internal *)table_cell) {
+			break;
+		} else if((n->type == DOM_ELEMENT_NODE) &&
+				(dom_string_caseless_isequal(doc->memoised[hds_TD],n->name) ||
+				 dom_string_caseless_isequal(doc->memoised[hds_TH],n->name))) {
+			cnt += 1;
+		}
+		if(n->first_child != NULL) {
+			n = n->first_child;
+		} else if(n->next != NULL) {
+			n = n->next;
+		} else {
+			/* No children and siblings */
+			struct dom_node_internal *parent = n->parent;
+			while (n == parent->last_child &&
+					n != root) {
+				n = parent;
+				parent = parent->parent;
+			}
+
+			if(n == root) {
+				n = NULL;
+			} else {
+				n = n->next;
+			}
+		}
+	}
+	*cell_index = cnt;
 	return DOM_NO_ERR;
 }
 
