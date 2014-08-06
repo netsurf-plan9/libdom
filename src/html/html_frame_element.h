@@ -16,8 +16,6 @@
 struct dom_html_frame_element {
 	struct dom_html_element base;
 			/**< The base class */
-	dom_string *scrolling_default;
-	dom_string *frame_border_default;
 };
 
 /* Create a dom_html_frame_element object */

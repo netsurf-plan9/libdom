@@ -63,7 +63,6 @@ dom_exception _dom_html_object_element_initialise(struct dom_html_document *doc,
 		dom_string *namespace, dom_string *prefix,
 		struct dom_html_object_element *ele)
 {
-	ele->form = NULL;
 	return _dom_html_element_initialise(doc, &ele->base,
 			doc->memoised[hds_OBJECT],
 			namespace, prefix);

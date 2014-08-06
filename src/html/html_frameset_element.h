@@ -16,7 +16,6 @@
 struct dom_html_frame_set_element {
 	struct dom_html_element base;
 			/**< The base class */
-	dom_string *cols_rows_default;
 };
 
 /* Create a dom_html_frame_set_element object */

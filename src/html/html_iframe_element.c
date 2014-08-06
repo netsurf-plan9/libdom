@@ -60,26 +60,9 @@ dom_exception _dom_html_iframe_element_initialise(struct dom_html_document *doc,
 		dom_string *namespace, dom_string *prefix,
 		struct dom_html_iframe_element *ele)
 {
-        dom_string *scrolling_default = NULL;
-        dom_exception err;
-        err = dom_string_create((const uint8_t *) "auto", SLEN("auto"), &scrolling_default);
-        if (err != DOM_NO_ERR)
-               return err;
-
-
-        dom_string *frame_border_default = NULL;
-        err = dom_string_create((const uint8_t *) "1", SLEN("1"), &frame_border_default);
-        if (err != DOM_NO_ERR)
-               return err;
-
-	err = _dom_html_element_initialise(doc, &ele->base,
+	return _dom_html_element_initialise(doc, &ele->base,
 					    doc->memoised[hds_IFRAME],
 					    namespace, prefix);
-
-	ele->scrolling_default = scrolling_default;
-	ele->frame_border_default = frame_border_default;
-	
-	return err;
 }
 
 /**
@@ -180,82 +163,16 @@ SIMPLE_GET_SET(name);
 SIMPLE_GET_SET(src);
 SIMPLE_GET_SET(margin_width);
 SIMPLE_GET_SET(margin_height);
-SIMPLE_SET(scrolling);
-SIMPLE_SET(frame_border);
+SIMPLE_GET_SET(scrolling);
+SIMPLE_GET_SET(frame_border);
 SIMPLE_GET_SET(width);
 SIMPLE_GET_SET(height);
 
 
 /**
- * Get the frame_border property
+ * Get the content_document property
  *
- * \param ele		The dom_html_iframe_element object
- * \param iframe_border		The returned status
- * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
- */
-dom_exception dom_html_iframe_element_get_frame_border(
-		dom_html_iframe_element *ele,
-		dom_string **frame_border) 
-{
-	dom_html_document *doc;
-        bool has_value = false;
-        dom_exception err;
-
-        doc = (dom_html_document *) ((dom_node_internal *) ele)->owner;
-
-        err = dom_element_has_attribute(ele,
-                         doc->memoised[hds_frame_border], &has_value);
-        if(err !=DOM_NO_ERR)
-                return err;
-
-        if(has_value) {
-                return dom_element_get_attribute(ele,
-                                doc->memoised[hds_frame_border], frame_border);
-        }
-
-        *frame_border = ele->frame_border_default;
-        if (*frame_border != NULL)
-                dom_string_ref(*frame_border);
-        return DOM_NO_ERR;
-}
-
-/**
- * Get the frame_border property
- *
- * \param ele		The dom_html_iframe_element object
- * \param scrolling		The returned status
- * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
- */
-dom_exception dom_html_iframe_element_get_scrolling(
-		dom_html_iframe_element *ele,
-		dom_string **scrolling)
-{
-	dom_html_document *doc;
-        bool has_value = false;
-        dom_exception err;
-
-        doc = (dom_html_document *) ((dom_node_internal *) ele)->owner;
-
-        err = dom_element_has_attribute(ele,
-                         doc->memoised[hds_scrolling], &has_value);
-        if(err !=DOM_NO_ERR)
-                return err;
-
-        if(has_value) {
-                return dom_element_get_attribute(ele,
-                                doc->memoised[hds_scrolling], scrolling);
-        }
-
-        *scrolling = ele->scrolling_default;
-        if (*scrolling != NULL)
-                dom_string_ref(*scrolling);
-        return DOM_NO_ERR;
-}
-
-/**
- * Get the frame_border property
- *
- * \param ele		The dom_html_iframe_element object
+ * \param ele				The dom_html_iframe_element object
  * \param content_document		The returned status
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
