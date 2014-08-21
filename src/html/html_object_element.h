@@ -16,8 +16,6 @@
 struct dom_html_object_element {
 	struct dom_html_element base;
 			/**< The base class */
-	dom_html_form_element *form;
-			/**< The form associated with object */
 };
 
 /* Create a dom_html_object_element object */

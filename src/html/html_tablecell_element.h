@@ -16,8 +16,6 @@
 struct dom_html_table_cell_element {
 	struct dom_html_element base;
 			/**< The base class */
-	int32_t id;
-			/**< The Index Associated with the cell*/
 };
 
 /* Create a dom_html_table_cell_element object */

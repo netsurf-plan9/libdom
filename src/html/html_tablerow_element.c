@@ -176,10 +176,15 @@ SIMPLE_GET_SET(v_align);
 dom_exception dom_html_table_row_element_get_row_index(
 		dom_html_table_row_element *table_row, int32_t *row_index)
 {
-	dom_node_internal *n = ((dom_node_internal *)table_row)->parent;
+	dom_exception exp;
+	dom_node_internal *n =
+		((dom_node_internal *)table_row)->parent;
 	dom_node_internal *parent = n; 
-	dom_html_document *doc = (dom_html_document *) ((dom_node_internal *) table_row)->owner;
+	dom_html_document *doc =
+		(dom_html_document *) ((dom_node_internal *) table_row)->owner;
+
 	uint32_t count = 0;
+
 	for(n = n->first_child; n != (dom_node_internal *)table_row;
 			n = n->next) {
 		 if(n->type == DOM_ELEMENT_NODE &&
@@ -199,21 +204,42 @@ dom_exception dom_html_table_row_element_get_row_index(
 		n = parent->parent;
 		dom_html_table_section_element *t_head;
 		dom_html_collection *rows;
-		dom_html_table_element_get_t_head(
+		exp = dom_html_table_element_get_t_head(
 				(dom_html_table_element *)(parent->parent),
 				&t_head);
-		dom_html_table_section_element_get_rows(t_head,
+		if (exp != DOM_NO_ERR) {
+			return exp;
+		}
+
+		exp = dom_html_table_section_element_get_rows(t_head,
 				&rows);
+		if (exp != DOM_NO_ERR) {
+			dom_node_unref(t_head);
+			return exp;
+		}
+
 		dom_html_collection_get_length(rows,
 				&len);
+		dom_html_collection_unref(rows);
+
 		count += len;
-		for(n = n->first_child;n != parent && n != NULL;
+
+		for (n = n->first_child;n != parent && n != NULL;
 			n = n->next) {
-		 	if(dom_string_caseless_isequal(n->name, doc->memoised[hds_TBODY])) {
-				dom_html_table_section_element_get_rows(
+			if (dom_string_caseless_isequal(n->name, doc->memoised[hds_TBODY])) {
+				exp = dom_html_table_section_element_get_rows(
 						(dom_html_table_section_element *)n,
 						&rows);
-				dom_html_collection_get_length(rows, &len);
+				if (exp != DOM_NO_ERR) {
+					return exp;
+				}
+
+				exp = dom_html_collection_get_length(rows, &len);
+				dom_html_collection_unref(rows);
+				if (exp != DOM_NO_ERR) {
+					return exp;
+				}
+
 				count += len;
 			}
 		}
@@ -307,26 +333,37 @@ dom_exception dom_html_table_row_element_insert_cell(
 		return exp;
 	
 	exp = dom_html_table_row_element_get_cells(element, &cells);
-	if(exp != DOM_NO_ERR)
+	if(exp != DOM_NO_ERR) {
+		dom_node_unref(*cell);
 		return exp;
+	}
 
 	exp = dom_html_collection_get_length(cells, &len);
-	if(exp != DOM_NO_ERR)
+	if(exp != DOM_NO_ERR) {
+		dom_node_unref(*cell);
 		return exp;
+	}
 	
 	if(index < -1 || index > (int32_t)len) {
 		/* Check for index validity */
+		dom_html_collection_unref (cells);
 		return DOM_INDEX_SIZE_ERR;
 	} else if(index == -1 || index == (int32_t)len) {
-		return _dom_node_append_child((dom_node_internal *)element,
-				(dom_node_internal *)*cell,
-				(dom_node_internal **)cell);
+		dom_node *new_cell;
+		dom_html_collection_unref(cells);
+
+		return dom_node_append_child(element,
+				*cell,
+				&new_cell);
 	} else {
+		dom_node *new_cell;
 		dom_html_collection_item(cells,
 				index, &node);
-		return _dom_node_insert_before((dom_node_internal *)element,
-		                (dom_node_internal *)*cell, (dom_node_internal *)node,
-				(dom_node_internal **)cell);
+		dom_html_collection_unref(cells);
+
+		return dom_node_insert_before(element,
+		                *cell, node,
+				&new_cell);
 	}
 }
 

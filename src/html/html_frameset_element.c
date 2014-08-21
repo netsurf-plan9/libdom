@@ -60,17 +60,9 @@ dom_exception _dom_html_frame_set_element_initialise(struct dom_html_document *d
 		dom_string *namespace, dom_string *prefix,
 		struct dom_html_frame_set_element *ele)
 {
-	dom_string *cols_rows_default = NULL;
-        dom_exception err;
-        err = dom_string_create((const uint8_t *) "100%", SLEN("100%"), &cols_rows_default);
-	if (err != DOM_NO_ERR)
-	       return err;
-
-	err = _dom_html_element_initialise(doc, &ele->base,
+	return _dom_html_element_initialise(doc, &ele->base,
 					    doc->memoised[hds_FRAMESET],
 					    namespace, prefix);
-	ele->cols_rows_default = cols_rows_default;
-	return err;
 }
 
 /**
@@ -165,72 +157,6 @@ dom_exception dom_html_frame_set_element_set_##attr(			\
 
 #define SIMPLE_GET_SET(attr) SIMPLE_GET(attr) SIMPLE_SET(attr)
 
-SIMPLE_SET(rows);
-SIMPLE_SET(cols);
+SIMPLE_GET_SET (rows);
+SIMPLE_GET_SET (cols);
 
-/**
- * Get the rows property
- *
- * \param ele		The dom_html_frame_set_element object
- * \param rows		The returned status
- * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
- */
-dom_exception dom_html_frame_set_element_get_rows(
-		dom_html_frame_set_element *ele,
-		dom_string **rows)                    
-{
-	dom_html_document *doc;
-        bool has_value = false;
-        dom_exception err;
-
-        doc = (dom_html_document *) ((dom_node_internal *) ele)->owner;
-
-        err = dom_element_has_attribute(ele,
-                         doc->memoised[hds_rows], &has_value);
-        if(err !=DOM_NO_ERR)
-                return err;
-
-        if(has_value) {
-                return dom_element_get_attribute(ele,
-                                doc->memoised[hds_rows], rows);
-        }
-
-        *rows = ele->cols_rows_default;
-        if (*rows != NULL)
-                dom_string_ref(*rows);
-
-        return DOM_NO_ERR;
-}
-
-/**
- * Get the cols property
- *
- * \param ele		The dom_html_frame_set_element object
- * \param cols		The returned status
- * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
- */
-dom_exception dom_html_frame_set_element_get_cols(
-		dom_html_frame_set_element *ele,
-		dom_string **cols)                    
-{
-	dom_html_document *doc;
-        bool has_value = false;
-        dom_exception err;
-
-        doc = (dom_html_document *) ((dom_node_internal *) ele)->owner;
-
-        err = dom_element_has_attribute(ele,
-                         doc->memoised[hds_cols], &has_value);
-        if(err !=DOM_NO_ERR)
-                return err;
-
-        if(has_value) {
-                return dom_element_get_attribute(ele,
-                                doc->memoised[hds_cols], cols);
-        }
-
-        *cols = ele->cols_rows_default;
-        if (*cols != NULL)
-                dom_string_ref(*cols);
-        return DOM_NO_ERR;
-}
