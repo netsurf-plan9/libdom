@@ -201,9 +201,10 @@ dom_exception dom_html_table_row_element_get_row_index(
 			(dom_string_caseless_isequal(parent->name, doc->memoised[hds_TBODY]) ||
 			dom_string_caseless_isequal(parent->name, doc->memoised[hds_TFOOT]))) {
 		uint32_t len;
-		n = parent->parent;
 		dom_html_table_section_element *t_head;
 		dom_html_collection *rows;
+
+		n = parent->parent;
 		exp = dom_html_table_element_get_t_head(
 				(dom_html_table_element *)(parent->parent),
 				&t_head);

@@ -183,13 +183,14 @@ dom_exception dom_html_table_cell_element_get_cell_index(
 	dom_node_internal *n = ((dom_node_internal *)table_cell)->parent;
 	dom_html_document *doc = (dom_html_document *)(n->owner);
 	int32_t cnt = 0;
+	dom_node_internal *root;
 	while(n != NULL) {
 		if(dom_string_caseless_isequal(doc->memoised[hds_TR],n->name)) {
 			break;
 		}
 		n = n->parent;
 	}
-	dom_node_internal *root = n;
+	root = n;
 	while(n != NULL) {
 		if(n == (dom_node_internal *)table_cell) {
 			break;

@@ -219,6 +219,7 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
 		if (n->type == DOM_ELEMENT_NODE &&
 		    col->ic(n, col->ctx) == true) {
 			dom_string *id = NULL;
+			dom_string *id_name = NULL;
 
 			err = _dom_element_get_id((struct dom_element *) n,
 					&id);
@@ -238,7 +239,6 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
 				dom_string_unref(id);
 
 			/* Check for Name attr if id not matched/found */
-			dom_string *id_name = NULL;
 			err = _dom_element_get_attribute((dom_element *)n,
 					doc->memoised[hds_name], &id_name);
 			if(err != DOM_NO_ERR) {

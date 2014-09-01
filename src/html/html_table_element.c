@@ -207,10 +207,12 @@ dom_exception dom_html_table_element_set_caption(
 	dom_node_internal *check_node = ((dom_node_internal *)caption);
 	dom_html_document *doc = (dom_html_document *)(((dom_node_internal *)table)->owner);
 	dom_exception exp;
-	if(check_node == NULL) {
+	dom_node *new_caption;
+
+	if (check_node == NULL) {
 		return DOM_HIERARCHY_REQUEST_ERR;
 	}
-	if(!dom_string_caseless_isequal(doc->memoised[hds_CAPTION],
+	if (!dom_string_caseless_isequal(doc->memoised[hds_CAPTION],
 				check_node->name)) {
 		return DOM_HIERARCHY_REQUEST_ERR;
 	}
@@ -220,8 +222,6 @@ dom_exception dom_html_table_element_set_caption(
 		return exp;
 
 	/* Create a new caption */
-        dom_node *new_caption;
-
 	return dom_node_append_child(table, caption,
 			&new_caption);
 }
@@ -262,6 +262,7 @@ dom_exception dom_html_table_element_set_t_head(
 	dom_node_internal *check_node = ((dom_node_internal *)t_head);
 	dom_html_document *doc = (dom_html_document *)(((dom_node_internal *)table)->owner);
 	dom_exception exp;
+	dom_node *new_t_head;
 
 	if (check_node == NULL) {
 		return DOM_HIERARCHY_REQUEST_ERR;
@@ -273,8 +274,6 @@ dom_exception dom_html_table_element_set_t_head(
 	exp = dom_html_table_element_delete_t_head(table);
 	if(exp != DOM_NO_ERR)
 		return exp;
-
-	dom_node *new_t_head;
 
 	return dom_node_append_child(table,
 			t_head, &new_t_head);
@@ -318,6 +317,7 @@ dom_exception dom_html_table_element_set_t_foot(
 	dom_node_internal *check_node = ((dom_node_internal *)t_foot); /*< temporary node to check for raised exceptions */
 	dom_html_document *doc = (dom_html_document *)(((dom_node_internal *)table)->owner);
 	dom_exception exp;
+	dom_node *new_t_foot;
 
 	if(check_node == NULL) {
 		return DOM_HIERARCHY_REQUEST_ERR;
@@ -330,8 +330,6 @@ dom_exception dom_html_table_element_set_t_foot(
 	exp = dom_html_table_element_delete_t_foot(table);
 	if(exp != DOM_NO_ERR)
 		return exp;
-
-	dom_node *new_t_foot;
 
 	return dom_node_append_child(table, t_foot,
 				&new_t_foot);
@@ -728,13 +726,14 @@ dom_exception dom_html_table_element_insert_row(
 			*row = (dom_html_element *)new_row;
 		}
 	} else {
+		uint32_t window_len = 0, section_len;
+		dom_html_table_section_element *t_head;
+		dom_html_table_section_element *t_foot;
+		dom_node_internal *n;
+
 		if(index ==-1) {
 			index = (int32_t)len;
 		}
-
-		dom_html_table_section_element *t_head;
-		dom_html_table_section_element *t_foot;
-		uint32_t window_len = 0, section_len;
 
 		exp = dom_html_table_element_get_t_head(element, &t_head);
 		if (exp != DOM_NO_ERR)
@@ -763,7 +762,7 @@ dom_exception dom_html_table_element_insert_row(
 
 		window_len += section_len;
 
-		dom_node_internal *n = (dom_node_internal *)element;
+		n = (dom_node_internal *)element;
 
 		dom_html_collection_unref(rows);
 
@@ -846,15 +845,17 @@ dom_exception dom_html_table_element_delete_row(
 		dom_html_collection_unref(rows);
 		return DOM_INDEX_SIZE_ERR;
 	} else {
+		uint32_t window_len = 0, section_len;
+		dom_html_table_section_element *t_head;
+		dom_html_table_section_element *t_foot;
+		dom_node_internal *n;
+
 		if(index ==-1) {
 			index = (int32_t)len-1;
 		}
 
 		dom_html_collection_unref(rows);
 
-		dom_html_table_section_element *t_head;
-		dom_html_table_section_element *t_foot;
-		uint32_t window_len = 0, section_len;
 		exp = dom_html_table_element_get_t_head(element, &t_head);
 		if(exp != DOM_NO_ERR)
 			return exp;
@@ -876,7 +877,7 @@ dom_exception dom_html_table_element_delete_row(
 					index-window_len);
 		}
 		window_len += section_len;
-		dom_node_internal *n = (dom_node_internal *)element;
+		n = (dom_node_internal *)element;
 
 		for (n = n->first_child; n != NULL; n = n->next) {
 			if((n->type == DOM_ELEMENT_NODE) &&
