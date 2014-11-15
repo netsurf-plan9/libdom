@@ -748,7 +748,7 @@ bool applet_callback(struct dom_node_internal * node, void *ctx)
  *
  * \param node          The dom_node_internal object
  * \param ctx           The dom_html_document object (void *)
- * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ * \return true if node is an applet object
  */
 bool applets_callback(struct dom_node_internal *node, void *ctx)
 {
