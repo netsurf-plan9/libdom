@@ -631,7 +631,6 @@ dom_exception dom_html_table_element_create_t_body(
 	exp = dom_html_table_element_get_t_bodies(element,
 			&t_bodies);
 	if(exp != DOM_NO_ERR) {
-		dom_html_collection_unref(t_bodies);
 		return exp;
 	}
 	exp = dom_html_collection_get_length(t_bodies,
@@ -652,6 +651,7 @@ dom_exception dom_html_table_element_create_t_body(
 				t_body);
 		if(exp != DOM_NO_ERR) {
 			dom_node_unref(*t_body);
+			dom_html_collection_unref(t_bodies);
 			return exp;
 		}
 
