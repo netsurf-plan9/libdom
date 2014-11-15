@@ -757,10 +757,11 @@ bool applets_callback(struct dom_node_internal *node, void *ctx)
 				((dom_html_document *)ctx)->memoised[hds_OBJECT])) {
 		uint32_t len = 0;
 		dom_html_collection *applets;
-		_dom_html_collection_create(ctx, node,
-				applet_callback, ctx, &applets);
-
+		if (_dom_html_collection_create(ctx, node,
+				applet_callback, ctx, &applets) != DOM_NO_ERR)
+			return false;
 		dom_html_collection_get_length(applets, &len);
+		dom_html_collection_unref(applets);
 		if(len != 0)
 			return true;
 	}
