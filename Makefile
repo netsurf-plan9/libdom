@@ -16,11 +16,11 @@ WARNFLAGS := -Wall -W -Wundef -Wpointer-arith -Wcast-align \
 	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes \
 	-Wmissing-declarations -Wnested-externs
 # BeOS/Haiku standard library headers generate warnings
-ifneq ($(BUILD),i586-pc-haiku)
+ifneq ($(HOST),i586-pc-haiku)
   WARNFLAGS := $(WARNFLAGS) -Werror
 endif
 # AmigaOS needs this to avoid warnings
-ifeq ($(findstring amigaos,$(BUILD)),amigaos)
+ifeq ($(findstring amigaos,$(HOST)),amigaos)
   CFLAGS := -U__STRICT_ANSI__ $(CFLAGS)
 endif
 CFLAGS := -D_BSD_SOURCE -I$(CURDIR)/include/ \
