@@ -1,3 +1,9 @@
+#!/bin/make
+#
+# Makefile for libdom
+#
+# Copyright 2009-1015 John-Mark Bell <jmb@netsurf-browser.org>
+
 # Component settings
 COMPONENT := dom
 COMPONENT_VERSION := 0.1.2
@@ -19,12 +25,14 @@ WARNFLAGS := -Wall -W -Wundef -Wpointer-arith -Wcast-align \
 ifneq ($(HOST),i586-pc-haiku)
   WARNFLAGS := $(WARNFLAGS) -Werror
 endif
+
 # AmigaOS needs this to avoid warnings
 ifeq ($(findstring amigaos,$(HOST)),amigaos)
   CFLAGS := -U__STRICT_ANSI__ $(CFLAGS)
 endif
-CFLAGS := -D_BSD_SOURCE -I$(CURDIR)/include/ \
-	-I$(CURDIR)/src -I$(CURDIR)/binding $(WARNFLAGS) $(CFLAGS)
+CFLAGS := -D_BSD_SOURCE -D_DEFAULT_SOURCE \
+	-I$(CURDIR)/include/ -I$(CURDIR)/src -I$(CURDIR)/binding \
+	$(WARNFLAGS) $(CFLAGS)
 # Some gcc2 versions choke on -std=c99, and it doesn't know about it anyway
 ifneq ($(GCCVER),2)
   CFLAGS := -std=c99 $(CFLAGS)
