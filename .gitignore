@@ -1,6 +1,6 @@
 Makefile.config.override
 build-*
-build/docs
+docs/html
 examples/dom-structure-dump
 test/level*.c
 test/INDEX
