@@ -21,6 +21,7 @@
 void __assert2(const char *expr, const char *function,
 		const char *file, int line);
 
+#undef assert
 #define assert(expr) \
   ((void) ((expr) || (__assert2 (#expr, __func__, __FILE__, __LINE__), 0)))
 
