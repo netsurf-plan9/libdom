@@ -109,6 +109,13 @@ dom_exception _dom_event_target_remove_event_listener(
 			if (dom_string_isequal(le->type, type) &&
 					le->listener == listener &&
 					le->capture == capture) {
+				if (le->list.next == &le->list) {
+					eti->listeners = NULL;
+				} else {
+					eti->listeners =
+						(struct listener_entry *)
+						le->list.next;
+				}
 				list_del(&le->list);
 				dom_event_listener_unref(le->listener);
 				dom_string_unref(le->type);
@@ -117,7 +124,7 @@ dom_exception _dom_event_target_remove_event_listener(
 			}
 
 			le = (struct listener_entry *) le->list.next;
-		} while (le != eti->listeners);
+		} while (eti->listeners != NULL && le != eti->listeners);
 	}
 
 	return DOM_NO_ERR;
