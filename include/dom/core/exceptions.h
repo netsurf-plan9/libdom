@@ -11,13 +11,13 @@
 /**
  * Class of a DOM exception.
  *
- * The top 16 bits of a dom_exception are a bitfield 
+ * The top 8 bits of a dom_exception are unused, the next 8 bits are a bitfield
  * indicating which class the exception belongs to.
  */
 typedef enum {
 	DOM_EXCEPTION_CLASS_NORMAL = 0,
-	DOM_EXCEPTION_CLASS_EVENT = (1<<30),
-	DOM_EXCEPTION_CLASS_INTERNAL = (1<<31)
+	DOM_EXCEPTION_CLASS_EVENT = (1<<16),
+	DOM_EXCEPTION_CLASS_INTERNAL = (1<<17)
 } dom_exception_class;
 
 /* The DOM spec says that this is actually an unsigned short */
