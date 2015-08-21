@@ -2360,9 +2360,6 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 		return DOM_UNSPECIFIED_EVENT_TYPE_ERR;
 	}
 
-	if (evt->doc == NULL)
-		return DOM_NOT_SUPPORTED_ERR;
-	
 	doc = dom_node_get_owner(et);
 	if (doc == NULL) {
 		/* TODO: In the progress of parsing, many Nodes in the DTD has

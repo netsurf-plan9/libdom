@@ -31,7 +31,7 @@ dom_exception __dom_dispatch_node_change_event(dom_document *doc,
 	dom_string *type = NULL;
 	dom_exception err;
 
-	err = _dom_mutation_event_create(doc, &evt);
+	err = _dom_mutation_event_create(&evt);
 	if (err != DOM_NO_ERR)
 		return err;
 	
@@ -77,7 +77,7 @@ dom_exception __dom_dispatch_node_change_document_event(dom_document *doc,
 	dom_string *type = NULL;
 	dom_exception err;
 
-	err = _dom_mutation_event_create(doc, &evt);
+	err = _dom_mutation_event_create(&evt);
 	if (err != DOM_NO_ERR)
 		return err;
 
@@ -128,7 +128,7 @@ dom_exception __dom_dispatch_attr_modified_event(dom_document *doc,
 	dom_string *type = NULL;
 	dom_exception err;
 
-	err = _dom_mutation_event_create(doc, &evt);
+	err = _dom_mutation_event_create(&evt);
 	if (err != DOM_NO_ERR)
 		return err;
 	
@@ -172,7 +172,7 @@ dom_exception __dom_dispatch_characterdata_modified_event(
 	dom_string *type = NULL;
 	dom_exception err;
 
-	err = _dom_mutation_event_create(doc, &evt);
+	err = _dom_mutation_event_create(&evt);
 	if (err != DOM_NO_ERR)
 		return err;
 	
@@ -208,7 +208,7 @@ dom_exception __dom_dispatch_subtree_modified_event(dom_document *doc,
 	dom_string *type = NULL;
 	dom_exception err;
 
-	err = _dom_mutation_event_create(doc, &evt);
+	err = _dom_mutation_event_create(&evt);
 	if (err != DOM_NO_ERR)
 		return err;
 	
@@ -248,7 +248,9 @@ dom_exception _dom_dispatch_generic_event(dom_document *doc,
 	struct dom_event *evt;
 	dom_exception err;
 
-	err = _dom_event_create(doc, &evt);
+	UNUSED(doc);
+
+	err = _dom_event_create(&evt);
 	if (err != DOM_NO_ERR)
 		return err;
 	

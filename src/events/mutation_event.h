@@ -26,15 +26,13 @@ struct dom_mutation_event {
 };
 
 /* Constructor */
-dom_exception _dom_mutation_event_create(struct dom_document *doc, 
-		struct dom_mutation_event **evt);
+dom_exception _dom_mutation_event_create(struct dom_mutation_event **evt);
 
 /* Destructor */
 void _dom_mutation_event_destroy(struct dom_mutation_event *evt);
 
 /* Initialise function */
-dom_exception _dom_mutation_event_initialise(struct dom_document *doc, 
-		struct dom_mutation_event *evt);
+dom_exception _dom_mutation_event_initialise(struct dom_mutation_event *evt);
 
 /* Finalise function */
 void _dom_mutation_event_finalise(struct dom_mutation_event *evt);

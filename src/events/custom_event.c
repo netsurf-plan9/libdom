@@ -18,8 +18,7 @@ static struct dom_event_private_vtable _event_vtable = {
 };
 
 /* Constructor */
-dom_exception _dom_custom_event_create(struct dom_document *doc, 
-		struct dom_custom_event **evt)
+dom_exception _dom_custom_event_create(struct dom_custom_event **evt)
 {
 	*evt = malloc(sizeof(dom_custom_event));
 	if (*evt == NULL) 
@@ -27,7 +26,7 @@ dom_exception _dom_custom_event_create(struct dom_document *doc,
 	
 	((struct dom_event *) *evt)->vtable = &_event_vtable;
 
-	return _dom_custom_event_initialise(doc, *evt);
+	return _dom_custom_event_initialise(*evt);
 }
 
 /* Destructor */
@@ -39,11 +38,10 @@ void _dom_custom_event_destroy(struct dom_custom_event *evt)
 }
 
 /* Initialise function */
-dom_exception _dom_custom_event_initialise(struct dom_document *doc, 
-		struct dom_custom_event *evt)
+dom_exception _dom_custom_event_initialise(struct dom_custom_event *evt)
 {
 	evt->detail = NULL;
-	return _dom_event_initialise(doc, &evt->base);
+	return _dom_event_initialise(&evt->base);
 }
 
 /* Finalise function */

@@ -24,7 +24,7 @@ struct dom_mouse_multi_wheel_event {
 };
 
 /* Constructor */
-dom_exception _dom_mouse_multi_wheel_event_create(struct dom_document *doc, 
+dom_exception _dom_mouse_multi_wheel_event_create(
 		struct dom_mouse_multi_wheel_event **evt);
 
 /* Destructor */
@@ -32,7 +32,7 @@ void _dom_mouse_multi_wheel_event_destroy(
 		struct dom_mouse_multi_wheel_event *evt);
 
 /* Initialise function */
-dom_exception _dom_mouse_multi_wheel_event_initialise(struct dom_document *doc,
+dom_exception _dom_mouse_multi_wheel_event_initialise(
 		struct dom_mouse_multi_wheel_event *evt);
 
 /* Finalise function */

@@ -20,8 +20,7 @@ static struct dom_event_private_vtable _event_vtable = {
 };
 
 /* Constructor */
-dom_exception _dom_mouse_event_create(struct dom_document *doc, 
-		struct dom_mouse_event **evt)
+dom_exception _dom_mouse_event_create(struct dom_mouse_event **evt)
 {
 	*evt = malloc(sizeof(dom_mouse_event));
 	if (*evt == NULL) 
@@ -29,7 +28,7 @@ dom_exception _dom_mouse_event_create(struct dom_document *doc,
 	
 	((struct dom_event *) *evt)->vtable = &_event_vtable;
 
-	return _dom_mouse_event_initialise(doc, *evt);
+	return _dom_mouse_event_initialise(*evt);
 }
 
 /* Destructor */
@@ -41,12 +40,11 @@ void _dom_mouse_event_destroy(struct dom_mouse_event *evt)
 }
 
 /* Initialise function */
-dom_exception _dom_mouse_event_initialise(struct dom_document *doc, 
-		struct dom_mouse_event *evt)
+dom_exception _dom_mouse_event_initialise(struct dom_mouse_event *evt)
 {
 	evt->modifier_state = 0;
 
-	return _dom_ui_event_initialise(doc, (dom_ui_event *) evt);
+	return _dom_ui_event_initialise((dom_ui_event *) evt);
 }
 
 /* The virtual destroy function */

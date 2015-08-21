@@ -43,21 +43,18 @@ static const char *__event_types[] = {
 /**
  * Initialise this DocumentEvent
  *
- * \param doc      The document object
  * \param dei      The DocumentEvent internal object
  * \param actions  The default action fetcher, the browser should provide such
  *                 a function to Event module.
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_document_event_internal_initialise(struct dom_document *doc,
+dom_exception _dom_document_event_internal_initialise(
 		dom_document_event_internal *dei, 
 		dom_events_default_action_fetcher actions,
 		void *actions_ctx)
 {
 	lwc_error err;
 	int i;
-
-	UNUSED(doc);
 
 	for (i = 0; i < DOM_EVENT_COUNT; i++) {
 		err = lwc_intern_string(__event_types[i],
@@ -73,12 +70,9 @@ dom_exception _dom_document_event_internal_initialise(struct dom_document *doc,
 }
 
 /* Finalise this DocumentEvent */
-void _dom_document_event_internal_finalise(struct dom_document *doc,
-		dom_document_event_internal *dei)
+void _dom_document_event_internal_finalise(dom_document_event_internal *dei)
 {
 	int i;
-
-	UNUSED(doc);
 
 	for (i = 0; i < DOM_EVENT_COUNT; i++) {
 		if (dei->event_types[i] != NULL)
@@ -100,17 +94,17 @@ void _dom_document_event_internal_finalise(struct dom_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_document_event_create_event(dom_document_event *de,
-		dom_string *type, struct dom_event **evt)
+		dom_string *type,
+		struct dom_event **evt)
 {
 	lwc_string *t = NULL;
 	dom_exception err;
-	struct dom_document *doc = de;
 	int i, et = 0;
 	dom_document_event_internal *dei;
 
 	err = dom_string_intern(type, &t);
 	if (err != DOM_NO_ERR)
-		return err;
+	       return err;
 
 	assert(t != NULL);
 	
@@ -125,41 +119,39 @@ dom_exception _dom_document_event_create_event(dom_document_event *de,
 
 	switch (et) {
 		case DOM_EVENT:
-			err = _dom_event_create(doc, evt);
+			err = _dom_event_create(evt);
 			break;
 		case DOM_CUSTOM_EVENT:
-			err = _dom_custom_event_create(doc,
-					(dom_custom_event **) evt);
+			err = _dom_custom_event_create((dom_custom_event **) evt);
 			break;
 		case DOM_UI_EVENT:
-			err = _dom_ui_event_create(doc, (dom_ui_event **) evt);
+			err = _dom_ui_event_create((dom_ui_event **) evt);
 			break;
 		case DOM_TEXT_EVENT:
-			err = _dom_text_event_create(doc,
-					(dom_text_event **) evt);
+			err = _dom_text_event_create((dom_text_event **) evt);
 			break;
 		case DOM_KEYBOARD_EVENT:
-			err = _dom_keyboard_event_create(doc,
+			err = _dom_keyboard_event_create(
 					(dom_keyboard_event **) evt);
 			break;
 		case DOM_MOUSE_EVENT:
-			err = _dom_mouse_event_create(doc,
+			err = _dom_mouse_event_create(
 					(dom_mouse_event **) evt);
 			break;
 		case DOM_MOUSE_MULTI_WHEEL_EVENT:
-			err = _dom_mouse_multi_wheel_event_create(doc, 
+			err = _dom_mouse_multi_wheel_event_create(
 					(dom_mouse_multi_wheel_event **) evt);
 			break;
 		case DOM_MOUSE_WHEEL_EVENT:
-			err = _dom_mouse_wheel_event_create(doc,
+			err = _dom_mouse_wheel_event_create(
 					(dom_mouse_wheel_event **) evt);
 			break;
 		case DOM_MUTATION_EVENT:
-			err = _dom_mutation_event_create(doc,
+			err = _dom_mutation_event_create(
 					(dom_mutation_event **) evt);
 			break;
 		case DOM_MUTATION_NAME_EVENT:
-			err = _dom_mutation_name_event_create(doc, 
+			err = _dom_mutation_name_event_create(
 					(dom_mutation_name_event **) evt);
 			break;
 	}
@@ -180,8 +172,7 @@ dom_exception _dom_document_event_create_event(dom_document_event *de,
  * DOM_NO_SUPPORTED_ERR.
  */
 dom_exception _dom_document_event_can_dispatch(dom_document_event *de,
-		dom_string *namespace, dom_string *type,
-		bool *can)
+		dom_string *namespace, dom_string *type, bool *can)
 {
 	UNUSED(de);
 	UNUSED(namespace);

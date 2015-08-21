@@ -27,6 +27,9 @@ void _dom_event_ref(dom_event *evt);
 void _dom_event_unref(dom_event *evt);
 #define dom_event_unref(n) _dom_event_unref((dom_event *) (n))
 
+dom_exception _dom_event_create(dom_event **evt);
+#define dom_event_create(n) _dom_event_create((dom_event **) (n))
+
 dom_exception _dom_event_get_type(dom_event *evt, dom_string **type);
 #define dom_event_get_type(e, t) _dom_event_get_type((dom_event *) (e), \
 		(dom_string **) (t))

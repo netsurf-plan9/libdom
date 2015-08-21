@@ -52,13 +52,13 @@ typedef struct dom_document_event_internal dom_document_event_internal;
  */
 
 /* Initialise this DocumentEvent */
-dom_exception _dom_document_event_internal_initialise(struct dom_document *doc,
+dom_exception _dom_document_event_internal_initialise(
 		dom_document_event_internal *dei, 
 		dom_events_default_action_fetcher actions,
 		void *actions_ctx);
 
 /* Finalise this DocumentEvent */
-void _dom_document_event_internal_finalise(struct dom_document *doc,
+void _dom_document_event_internal_finalise(
 		dom_document_event_internal *dei);
 
 #endif

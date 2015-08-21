@@ -32,15 +32,13 @@ struct dom_keyboard_event {
 };
 
 /* Constructor */
-dom_exception _dom_keyboard_event_create(struct dom_document *doc, 
-		struct dom_keyboard_event **evt);
+dom_exception _dom_keyboard_event_create(struct dom_keyboard_event **evt);
 
 /* Destructor */
 void _dom_keyboard_event_destroy(struct dom_keyboard_event *evt);
 
 /* Initialise function */
-dom_exception _dom_keyboard_event_initialise(struct dom_document *doc, 
-		struct dom_keyboard_event *evt);
+dom_exception _dom_keyboard_event_initialise(struct dom_keyboard_event *evt);
 
 /* Finalise function */
 void _dom_keyboard_event_finalise(struct dom_keyboard_event *evt);

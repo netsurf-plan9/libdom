@@ -36,9 +36,6 @@ struct dom_event {
 
 	dom_string *namespace;	/**< The namespace of this event */
 
-	dom_document *doc;
-			/**< The document which created this event */
-
 	bool stop; 		/**< Whether stopPropagation is called */
 	bool stop_now;	/**< Whether stopImmediatePropagation is called */
 	bool prevent_default;
@@ -53,14 +50,11 @@ struct dom_event {
 	bool in_dispatch;	/**< Whether this event is in dispatch */
 };
 
-/* Constructor */
-dom_exception _dom_event_create(dom_document *doc, dom_event **evt);
-
 /* Destructor */
 void _dom_event_destroy(dom_event *evt);
 
 /* Initialise function */
-dom_exception _dom_event_initialise(dom_document *doc, dom_event *evt);
+dom_exception _dom_event_initialise(dom_event *evt);
 
 /* Finalise function */
 void _dom_event_finalise(dom_event *evt);

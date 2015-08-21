@@ -21,7 +21,7 @@ static struct dom_event_private_vtable _event_vtable = {
 };
 
 /* Constructor */
-dom_exception _dom_mouse_multi_wheel_event_create(struct dom_document *doc, 
+dom_exception _dom_mouse_multi_wheel_event_create(
 		struct dom_mouse_multi_wheel_event **evt)
 {
 	*evt = malloc(sizeof(dom_mouse_multi_wheel_event));
@@ -30,7 +30,7 @@ dom_exception _dom_mouse_multi_wheel_event_create(struct dom_document *doc,
 	
 	((struct dom_event *) *evt)->vtable = &_event_vtable;
 
-	return _dom_mouse_multi_wheel_event_initialise(doc, *evt);
+	return _dom_mouse_multi_wheel_event_initialise(*evt);
 }
 
 /* Destructor */
@@ -43,10 +43,10 @@ void _dom_mouse_multi_wheel_event_destroy(
 }
 
 /* Initialise function */
-dom_exception _dom_mouse_multi_wheel_event_initialise(struct dom_document *doc,
+dom_exception _dom_mouse_multi_wheel_event_initialise(
 		struct dom_mouse_multi_wheel_event *evt)
 {
-	return _dom_mouse_event_initialise(doc, (dom_mouse_event *) evt);
+	return _dom_mouse_event_initialise((dom_mouse_event *) evt);
 }
 
 /* The virtual destroy function */

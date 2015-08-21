@@ -8,7 +8,6 @@
 #include <stdlib.h>
 
 #include "events/mutation_event.h"
-#include "core/document.h"
 
 static void _virtual_dom_mutation_event_destroy(struct dom_event *evt);
 
@@ -17,8 +16,7 @@ static struct dom_event_private_vtable _event_vtable = {
 };
 
 /* Constructor */
-dom_exception _dom_mutation_event_create(struct dom_document *doc, 
-		struct dom_mutation_event **evt)
+dom_exception _dom_mutation_event_create(struct dom_mutation_event **evt)
 {
 	*evt = malloc(sizeof(dom_mutation_event));
 	if (*evt == NULL) 
@@ -26,7 +24,7 @@ dom_exception _dom_mutation_event_create(struct dom_document *doc,
 	
 	((struct dom_event *) *evt)->vtable = &_event_vtable;
 
-	return _dom_mutation_event_initialise(doc, *evt);
+	return _dom_mutation_event_initialise(*evt);
 }
 
 /* Destructor */
@@ -38,15 +36,14 @@ void _dom_mutation_event_destroy(struct dom_mutation_event *evt)
 }
 
 /* Initialise function */
-dom_exception _dom_mutation_event_initialise(struct dom_document *doc, 
-		struct dom_mutation_event *evt)
+dom_exception _dom_mutation_event_initialise(struct dom_mutation_event *evt)
 {
 	evt->related_node = NULL;
 	evt->prev_value = NULL;
 	evt->new_value = NULL;
 	evt->attr_name = NULL;
 
-	return _dom_event_initialise(doc, &evt->base);
+	return _dom_event_initialise(&evt->base);
 }
 
 /* Finalise function */

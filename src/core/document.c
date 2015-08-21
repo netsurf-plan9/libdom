@@ -266,7 +266,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	}
 
 	/* We should not pass a NULL when all things hook up */
-	return _dom_document_event_internal_initialise(doc, &doc->dei, daf, daf_ctx);
+	return _dom_document_event_internal_initialise(&doc->dei, daf, daf_ctx);
 }
 
 
@@ -309,7 +309,7 @@ bool _dom_document_finalise(dom_document *doc)
 	dom_string_unref(doc->_memo_domcharacterdatamodified);
 	dom_string_unref(doc->_memo_domsubtreemodified);
 	
-	_dom_document_event_internal_finalise(doc, &doc->dei);
+	_dom_document_event_internal_finalise(&doc->dei);
 
 	return true;
 }

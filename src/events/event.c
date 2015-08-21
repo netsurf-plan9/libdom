@@ -23,7 +23,7 @@ static struct dom_event_private_vtable _event_vtable = {
 };
 
 /* Constructor */
-dom_exception _dom_event_create(dom_document *doc, dom_event **evt)
+dom_exception _dom_event_create(dom_event **evt)
 {
 	*evt = (dom_event *) malloc(sizeof(dom_event));
 	if (*evt == NULL) 
@@ -31,7 +31,7 @@ dom_exception _dom_event_create(dom_document *doc, dom_event **evt)
 	
 	(*evt)->vtable = &_event_vtable;
 
-	return _dom_event_initialise(doc, *evt);
+	return _dom_event_initialise(*evt);
 }
 
 /* Destructor */
@@ -43,11 +43,10 @@ void _dom_event_destroy(dom_event *evt)
 }
 
 /* Initialise function */
-dom_exception _dom_event_initialise(dom_document *doc, dom_event *evt)
+dom_exception _dom_event_initialise(dom_event *evt)
 {
 	assert(doc != NULL);
 
-	evt->doc = doc;
 	evt->stop = false;
 	evt->stop_now = false;
 	evt->prevent_default = false;

@@ -30,15 +30,13 @@ struct dom_mouse_event {
 };
 
 /* Constructor */
-dom_exception _dom_mouse_event_create(struct dom_document *doc, 
-		struct dom_mouse_event **evt);
+dom_exception _dom_mouse_event_create(struct dom_mouse_event **evt);
 
 /* Destructor */
 void _dom_mouse_event_destroy(struct dom_mouse_event *evt);
 
 /* Initialise function */
-dom_exception _dom_mouse_event_initialise(struct dom_document *doc, 
-		struct dom_mouse_event *evt);
+dom_exception _dom_mouse_event_initialise(struct dom_mouse_event *evt);
 
 /* Finalise function */
 #define _dom_mouse_event_finalise _dom_ui_event_finalise
