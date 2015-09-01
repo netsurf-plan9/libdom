@@ -45,8 +45,6 @@ void _dom_event_destroy(dom_event *evt)
 /* Initialise function */
 dom_exception _dom_event_initialise(dom_event *evt)
 {
-	assert(doc != NULL);
-
 	evt->stop = false;
 	evt->stop_now = false;
 	evt->prevent_default = false;
@@ -237,8 +235,6 @@ dom_exception _dom_event_prevent_default(dom_event *evt)
 dom_exception _dom_event_init(dom_event *evt, dom_string *type, 
 		bool bubble, bool cancelable)
 {
-	assert(evt->doc != NULL);
-
 	evt->type = dom_string_ref(type);
 	evt->bubble = bubble;
 	evt->cancelable = cancelable;
@@ -317,8 +313,6 @@ dom_exception _dom_event_is_default_prevented(dom_event *evt, bool *prevented)
 dom_exception _dom_event_init_ns(dom_event *evt, dom_string *namespace,
 		dom_string *type, bool bubble, bool cancelable)
 {
-	assert(evt->doc != NULL);
-
 	evt->type = dom_string_ref(type);
 
 	evt->namespace = dom_string_ref(namespace);
