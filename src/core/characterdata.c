@@ -48,14 +48,14 @@ dom_characterdata *_dom_characterdata_create(void)
 /**
  * Initialise a character data node
  *
- * \param node   The node to initialise
+ * \param cdata  The character data node to initialise
  * \param doc    The document which owns the node
  * \param type   The node type required
  * \param name   The node name, or NULL
  * \param value  The node value, or NULL
  * \return DOM_NO_ERR on success.
  *
- * ::doc, ::name and ::value will have their reference counts increased.
+ * \p doc, \p name and \p value will have their reference counts increased.
  */
 dom_exception _dom_characterdata_initialise(struct dom_characterdata *cdata,
 		struct dom_document *doc, dom_node_type type,
@@ -70,7 +70,7 @@ dom_exception _dom_characterdata_initialise(struct dom_characterdata *cdata,
  *
  * \param cdata  The node to finalise
  *
- * The contents of ::cdata will be cleaned up. ::cdata will not be freed.
+ * The contents of \p cdata will be cleaned up. \p cdata will not be freed.
  */
 void _dom_characterdata_finalise(struct dom_characterdata *cdata)
 {
@@ -115,7 +115,7 @@ dom_exception _dom_characterdata_get_data(struct dom_characterdata *cdata,
  * \param cdata  Node to set the content of
  * \param data   New value for node
  * \return DOM_NO_ERR                      on success,
- *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
+ *         DOM_NO_MODIFICATION_ALLOWED_ERR if \p cdata is readonly.
  *
  * The new content will have its reference count increased, so the caller
  * should unref it after the call (as the caller should have already claimed
@@ -180,9 +180,9 @@ dom_exception _dom_characterdata_get_length(struct dom_characterdata *cdata,
  * \param count   The number of characters to extract
  * \param data    Pointer to location to receive substring
  * \return DOM_NO_ERR         on success,
- *         DOM_INDEX_SIZE_ERR if ::offset is negative or greater than the 
- *                            number of characters in ::cdata or 
- *                            ::count is negative.
+ *         DOM_INDEX_SIZE_ERR if \p offset is negative or greater than the 
+ *                            number of characters in \p cdata or 
+ *                            \p count is negative.
  *
  * The returned string will have its reference count increased. It is
  * the responsibility of the caller to unref the string once it has
@@ -223,7 +223,7 @@ dom_exception _dom_characterdata_substring_data(
  * \param cdata  The node to append data to
  * \param data   The data to append
  * \return DOM_NO_ERR                      on success,
- *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
+ *         DOM_NO_MODIFICATION_ALLOWED_ERR if \p cdata is readonly.
  */
 dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
 		dom_string *data)
@@ -269,10 +269,10 @@ dom_exception _dom_characterdata_append_data(struct dom_characterdata *cdata,
  * \param offset  The character offset to insert at
  * \param data    The data to insert
  * \return DOM_NO_ERR                      on success,
- *         DOM_INDEX_SIZE_ERR              if ::offset is negative or greater 
+ *         DOM_INDEX_SIZE_ERR              if \p offset is negative or greater 
  *                                         than the number of characters in 
- *                                         ::cdata,
- *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
+ *                                         \p cdata,
+ *         DOM_NO_MODIFICATION_ALLOWED_ERR if \p cdata is readonly.
  */
 dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
 		uint32_t offset, dom_string *data)
@@ -331,10 +331,10 @@ dom_exception _dom_characterdata_insert_data(struct dom_characterdata *cdata,
  * \param offset  The character offset to start deletion from
  * \param count   The number of characters to delete
  * \return DOM_NO_ERR                      on success,
- *         DOM_INDEX_SIZE_ERR              if ::offset is negative or greater 
+ *         DOM_INDEX_SIZE_ERR              if \p offset is negative or greater 
  *                                         than the number of characters in 
- *                                         ::cdata or ::count is negative,
- *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
+ *                                         \p cdata or \p count is negative,
+ *         DOM_NO_MODIFICATION_ALLOWED_ERR if \p cdata is readonly.
  */
 dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
 		uint32_t offset, uint32_t count)
@@ -400,10 +400,10 @@ dom_exception _dom_characterdata_delete_data(struct dom_characterdata *cdata,
  * \param count   The number of characters to replace
  * \param data    The replacement data
  * \return DOM_NO_ERR                      on success,
- *         DOM_INDEX_SIZE_ERR              if ::offset is negative or greater 
+ *         DOM_INDEX_SIZE_ERR              if \p offset is negative or greater 
  *                                         than the number of characters in 
- *                                         ::cdata or ::count is negative,
- *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::cdata is readonly.
+ *                                         \p cdata or \p count is negative,
+ *         DOM_NO_MODIFICATION_ALLOWED_ERR if \p cdata is readonly.
  */
 dom_exception _dom_characterdata_replace_data(struct dom_characterdata *cdata,
 		uint32_t offset, uint32_t count,

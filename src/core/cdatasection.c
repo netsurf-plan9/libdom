@@ -31,10 +31,9 @@ static struct dom_node_protect_vtable cdata_section_protect_vtable = {
  * \param name    The name of the node to create
  * \param value   The text content of the node
  * \param result  Pointer to location to receive created node
- * \return DOM_NO_ERR                on success,
- *         DOM_NO_MEM_ERR            on memory exhaustion.
+ * \return DOM_NO_ERR on success or DOM_NO_MEM_ERR on memory exhaustion.
  *
- * ::doc, ::name and ::value will have their reference counts increased.
+ * \p doc, \p name and \p value will have their reference counts increased.
  *
  * The returned node will already be referenced.
  */
@@ -72,7 +71,7 @@ dom_exception _dom_cdata_section_create(dom_document *doc,
  *
  * \param cdata  The cdata section to destroy
  *
- * The contents of ::cdata will be destroyed and ::cdata will be freed.
+ * The contents of \p cdata will be destroyed and \p cdata will be freed.
  */
 void _dom_cdata_section_destroy(dom_cdata_section *cdata)
 {

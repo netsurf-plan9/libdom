@@ -81,8 +81,8 @@ static struct dom_node_protect_vtable attr_protect_vtable = {
  * \return DOM_NO_ERR     on success,
  *         DOM_NO_MEM_ERR on memory exhaustion.
  *
- * ::doc and ::name will have their reference counts increased. The 
- * caller should make sure that ::name is a valid NCName here.
+ * \p doc and \p name will have their reference counts increased. The 
+ * caller should make sure that \p name is a valid NCName here.
  *
  * The returned attribute will already be referenced.
  */
@@ -172,7 +172,7 @@ void _dom_attr_finalise(dom_attr *attr)
  *
  * \param attr  The attribute to destroy
  *
- * The contents of ::attr will be destroyed and ::attr will be freed
+ * The contents of \p attr will be destroyed and \p attr will be freed
  */
 void _dom_attr_destroy(struct dom_attr *attr)
 {

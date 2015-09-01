@@ -407,9 +407,9 @@ dom_exception _dom_document_get_document_element(dom_document *doc,
  * \param tag_name  The name of the element
  * \param result    Pointer to location to receive result
  * \return DOM_NO_ERR                on success,
- *         DOM_INVALID_CHARACTER_ERR if ::tag_name is invalid.
+ *         DOM_INVALID_CHARACTER_ERR if \p tag_name is invalid.
  *
- * ::doc and ::tag_name will have their reference counts increased.
+ * \p doc and \p tag_name will have their reference counts increased.
  *
  * The returned node will have its reference count increased. It is
  * the responsibility of the caller to unref the node once it has
@@ -548,7 +548,7 @@ dom_exception _dom_document_create_cdata_section(dom_document *doc,
  * \param data    The data for the node
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR                on success,
- *         DOM_INVALID_CHARACTER_ERR if ::target is invalid,
+ *         DOM_INVALID_CHARACTER_ERR if \p target is invalid,
  *         DOM_NOT_SUPPORTED_ERR     if this is an HTML document.
  *
  * The returned node will have its reference count increased. It is
@@ -573,7 +573,7 @@ dom_exception _dom_document_create_processing_instruction(
  * \param name    The name of the attribute
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR                on success,
- *         DOM_INVALID_CHARACTER_ERR if ::name is invalid.
+ *         DOM_INVALID_CHARACTER_ERR if \p name is invalid.
  *
  * The constructed attribute will always be classified as 'specified'.
  *
@@ -597,7 +597,7 @@ dom_exception _dom_document_create_attribute(dom_document *doc,
  * \param name    The name of the entity to reference
  * \param result  Pointer to location to receive result
  * \return DOM_NO_ERR                on success,
- *         DOM_INVALID_CHARACTER_ERR if ::name is invalid,
+ *         DOM_INVALID_CHARACTER_ERR if \p name is invalid,
  *         DOM_NOT_SUPPORTED_ERR     if this is an HTML document.
  *
  * The returned node will have its reference count increased. It is
@@ -643,7 +643,7 @@ dom_exception _dom_document_get_elements_by_tag_name(dom_document *doc,
  * \param result  Pointer to location to receive imported node in this document.
  * \return DOM_NO_ERR                on success,
  *         DOM_INVALID_CHARACTER_ERR if any of the names are invalid,
- *         DOM_NOT_SUPPORTED_ERR     if the type of ::node is unsupported
+ *         DOM_NOT_SUPPORTED_ERR     if the type of \p node is unsupported
  *
  * The returned node will have its reference count increased. It is
  * the responsibility of the caller to unref the node once it has
@@ -666,20 +666,20 @@ dom_exception _dom_document_import_node(dom_document *doc,
  * \param qname      The qualified name of the element
  * \param result     Pointer to location to receive result
  * \return DOM_NO_ERR                on success,
- *         DOM_INVALID_CHARACTER_ERR if ::qname is invalid,
- *         DOM_NAMESPACE_ERR         if ::qname is malformed, or it has a
- *                                   prefix and ::namespace is NULL, or
- *                                   ::qname has a prefix "xml" and
- *                                   ::namespace is not
+ *         DOM_INVALID_CHARACTER_ERR if \p qname is invalid,
+ *         DOM_NAMESPACE_ERR         if \p qname is malformed, or it has a
+ *                                   prefix and \p namespace is NULL, or
+ *                                   \p qname has a prefix "xml" and
+ *                                   \p namespace is not
  *                                   "http://www.w3.org/XML/1998/namespace",
- *                                   or ::qname has a prefix "xmlns" and
- *                                   ::namespace is not
+ *                                   or \p qname has a prefix "xmlns" and
+ *                                   \p namespace is not
  *                                   "http://www.w3.org/2000/xmlns", or
- *                                   ::namespace is
+ *                                   \p namespace is
  *                                   "http://www.w3.org/2000/xmlns" and
- *                                   ::qname is not (or is not prefixed by)
+ *                                   \p qname is not (or is not prefixed by)
  *                                   "xmlns",
- *         DOM_NOT_SUPPORTED_ERR     if ::doc does not support the "XML"
+ *         DOM_NOT_SUPPORTED_ERR     if \p doc does not support the "XML"
  *                                   feature.
  *
  * The returned node will have its reference count increased. It is
@@ -731,20 +731,20 @@ dom_exception _dom_document_create_element_ns(dom_document *doc,
  * \param qname      The qualified name of the attribute
  * \param result     Pointer to location to receive result
  * \return DOM_NO_ERR                on success,
- *         DOM_INVALID_CHARACTER_ERR if ::qname is invalid,
- *         DOM_NAMESPACE_ERR         if ::qname is malformed, or it has a
- *                                   prefix and ::namespace is NULL, or
- *                                   ::qname has a prefix "xml" and
- *                                   ::namespace is not
+ *         DOM_INVALID_CHARACTER_ERR if \p qname is invalid,
+ *         DOM_NAMESPACE_ERR         if \p qname is malformed, or it has a
+ *                                   prefix and \p namespace is NULL, or
+ *                                   \p qname has a prefix "xml" and
+ *                                   \p namespace is not
  *                                   "http://www.w3.org/XML/1998/namespace",
- *                                   or ::qname has a prefix "xmlns" and
- *                                   ::namespace is not
+ *                                   or \p qname has a prefix "xmlns" and
+ *                                   \p namespace is not
  *                                   "http://www.w3.org/2000/xmlns", or
- *                                   ::namespace is
+ *                                   \p namespace is
  *                                   "http://www.w3.org/2000/xmlns" and
- *                                   ::qname is not (or is not prefixed by)
+ *                                   \p qname is not (or is not prefixed by)
  *                                   "xmlns",
- *         DOM_NOT_SUPPORTED_ERR     if ::doc does not support the "XML"
+ *         DOM_NOT_SUPPORTED_ERR     if \p doc does not support the "XML"
  *                                   feature.
  *
  * The returned node will have its reference count increased. It is
@@ -1043,8 +1043,8 @@ dom_exception _dom_document_set_uri(dom_document *doc,
  * \param node    The node to adopt
  * \param result  Pointer to location to receive adopted node
  * \return DOM_NO_ERR                      on success,
- *         DOM_NO_MODIFICATION_ALLOWED_ERR if ::node is readonly,
- *         DOM_NOT_SUPPORTED_ERR           if ::node is of type Document or
+ *         DOM_NO_MODIFICATION_ALLOWED_ERR if \p node is readonly,
+ *         DOM_NOT_SUPPORTED_ERR           if \p node is of type Document or
  *                                         DocumentType
  *
  * The returned node will have its reference count increased. It is
@@ -1150,22 +1150,22 @@ dom_exception _dom_document_normalize(dom_document *doc)
  * \param qname      The new qualified name for the node
  * \param result     Pointer to location to receive renamed node
  * \return DOM_NO_ERR                on success,
- *         DOM_INVALID_CHARACTER_ERR if ::tag_name is invalid,
- *         DOM_WRONG_DOCUMENT_ERR    if ::node was created in a different
+ *         DOM_INVALID_CHARACTER_ERR if \p tag_name is invalid,
+ *         DOM_WRONG_DOCUMENT_ERR    if \p node was created in a different
  *                                   document
- *         DOM_NAMESPACE_ERR         if ::qname is malformed, or it has a
- *                                   prefix and ::namespace is NULL, or
- *                                   ::qname has a prefix "xml" and
- *                                   ::namespace is not
+ *         DOM_NAMESPACE_ERR         if \p qname is malformed, or it has a
+ *                                   prefix and \p namespace is NULL, or
+ *                                   \p qname has a prefix "xml" and
+ *                                   \p namespace is not
  *                                   "http://www.w3.org/XML/1998/namespace",
- *                                   or ::qname has a prefix "xmlns" and
- *                                   ::namespace is not
+ *                                   or \p qname has a prefix "xmlns" and
+ *                                   \p namespace is not
  *                                   "http://www.w3.org/2000/xmlns", or
- *                                   ::namespace is
+ *                                   \p namespace is
  *                                   "http://www.w3.org/2000/xmlns" and
- *                                   ::qname is not (or is not prefixed by)
+ *                                   \p qname is not (or is not prefixed by)
  *                                   "xmlns",
- *         DOM_NOT_SUPPORTED_ERR     if ::doc does not support the "XML"
+ *         DOM_NOT_SUPPORTED_ERR     if \p doc does not support the "XML"
  *                                   feature.
  *
  * The returned node will have its reference count increased. It is

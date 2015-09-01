@@ -440,6 +440,7 @@ expat_xmlparser_unknown_data_handler(void *_parser,
  * \param int_enc  Desired charset of document buffer (UTF-8 or UTF-16)
  * \param msg      Informational message function
  * \param mctx     Pointer to client-specific private data
+ * \param document DOM Document
  * \return Pointer to instance, or NULL on memory exhaustion
  *
  * int_enc is ignored due to it being made of bees.
@@ -547,7 +548,7 @@ dom_xml_parser_destroy(dom_xml_parser *parser)
  * \param parser  The XML parser instance to use for parsing
  * \param data    Pointer to data chunk
  * \param len     Byte length of data chunk
- * \return DOM_XML_OK on success, DOM_XML_EXTERNAL_ERR | <expat error> on failure
+ * \return DOM_XML_OK on success, DOM_XML_EXTERNAL_ERR | expat error on failure
  */
 dom_xml_error
 dom_xml_parser_parse_chunk(dom_xml_parser *parser, uint8_t *data, size_t len)
@@ -568,7 +569,7 @@ dom_xml_parser_parse_chunk(dom_xml_parser *parser, uint8_t *data, size_t len)
  * Notify parser that datastream is empty
  *
  * \param parser  The XML parser instance to notify
- * \return DOM_XML_OK on success, DOM_XML_EXTERNAL_ERR | <expat error> on failure
+ * \return DOM_XML_OK on success, DOM_XML_EXTERNAL_ERR | expat error on failure
  *
  * This will force any remaining data through the parser
  */

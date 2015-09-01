@@ -285,7 +285,7 @@ dom_exception dom_html_collection_named_item(dom_html_collection *col,
 /**
  * Claim a reference on this collection
  *
- * \pram col  The collection object
+ * \param col  The collection object
  */
 void dom_html_collection_ref(dom_html_collection *col)
 {
@@ -298,7 +298,7 @@ void dom_html_collection_ref(dom_html_collection *col)
 /**
  * Relese a reference on this collection
  *
- * \pram col  The collection object
+ * \param col  The collection object
  */
 void dom_html_collection_unref(dom_html_collection *col)
 {

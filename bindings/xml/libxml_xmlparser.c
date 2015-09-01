@@ -160,7 +160,7 @@ static void *dom_xml_alloc(void *ptr, size_t len, void *pw)
  * \param mctx     Pointer to client-specific private data
  * \return Pointer to instance, or NULL on memory exhaustion
  *
- * Neither ::enc nor ::int_enc are used here.
+ * Neither \p enc nor \p int_enc are used here.
  * libxml only supports a UTF-8 document buffer and forcibly setting the
  * parser encoding is not yet implemented
  */
@@ -257,7 +257,7 @@ void dom_xml_parser_destroy(dom_xml_parser *parser)
  * \param parser  The XML parser instance to use for parsing
  * \param data    Pointer to data chunk
  * \param len     Byte length of data chunk
- * \return DOM_XML_OK on success, DOM_XML_EXTERNAL_ERR | <libxml error> on failure
+ * \return DOM_XML_OK on success, DOM_XML_EXTERNAL_ERR | libxml error on failure
  */
 dom_xml_error dom_xml_parser_parse_chunk(dom_xml_parser *parser,
 		uint8_t *data, size_t len)
@@ -278,7 +278,7 @@ dom_xml_error dom_xml_parser_parse_chunk(dom_xml_parser *parser,
  * Notify parser that datastream is empty
  *
  * \param parser  The XML parser instance to notify
- * \return DOM_XML_OK on success, DOM_XML_EXTERNAL_ERR | <libxml error> on failure
+ * \return DOM_XML_OK on success, DOM_XML_EXTERNAL_ERR | libxml error on failure
  *
  * This will force any remaining data through the parser
  */
@@ -386,8 +386,8 @@ void xml_parser_end_document(void *ctx)
  * \param nb_defaulted   The number of defaulted attributes
  * \param attributes     Array of nb_attributes attribute values
  *
- * The number of non-defaulted attributes is ::nb_attributes - ::nb_defaulted
- * The defaulted attributes are at the end of the array ::attributes.
+ * The number of non-defaulted attributes is \p nb_attributes - \p nb_defaulted
+ * The defaulted attributes are at the end of the array \p attributes.
  */
 void xml_parser_start_element_ns(void *ctx, const xmlChar *localname,
 		const xmlChar *prefix, const xmlChar *URI,
