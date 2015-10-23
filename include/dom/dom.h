@@ -15,6 +15,7 @@
 #define dom_dom_h_
 
 /* Base library headers */
+#include <dom/inttypes.h>
 #include <dom/functypes.h>
 
 /* DOM core headers */
