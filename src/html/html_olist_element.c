@@ -116,7 +116,7 @@ dom_exception dom_html_olist_element_set_compact(
  * \param o_list	The dom_html_olist_element object
  */
 dom_exception dom_html_olist_element_get_start(
-		        dom_html_olist_element *o_list, int32_t *start)
+		        dom_html_olist_element *o_list, dom_long *start)
 {
 	return dom_html_element_get_int32_t_property(&o_list->base, "start",
 			SLEN("start"), start);
@@ -128,7 +128,7 @@ dom_exception dom_html_olist_element_get_start(
  * \param o_list	The dom_html_olist_element object
  */
 dom_exception dom_html_olist_element_set_start(
-		        dom_html_olist_element *o_list, uint32_t start)
+		        dom_html_olist_element *o_list, dom_long start)
 {
 	return dom_html_element_set_int32_t_property(&o_list->base, "start",
 			SLEN("start"), start);
