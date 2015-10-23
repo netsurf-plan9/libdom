@@ -67,6 +67,7 @@ our %special_prefix = (
 	HTMLIsIndexElement => "dom_html_isindex_element",
         HTMLIFrameElement => "dom_html_iframe_element",
         HTMLOListElement => "dom_html_olist_element",
+        HTMLDListElement => "dom_html_dlist_element",
 	caption => "dom_html_table_caption_element *",
 	section => "dom_html_table_section_element *",
 	createCaption => "dom_html_element *",

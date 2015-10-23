@@ -262,8 +262,8 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 		exc = _dom_html_hr_element_create(html, namespace, prefix,
 				(dom_html_hr_element **) result);
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_DL])) {
-		exc = _dom_html_d_list_element_create(html, namespace, prefix,
-				(dom_html_d_list_element **) result);
+		exc = _dom_html_dlist_element_create(html, namespace, prefix,
+				(dom_html_dlist_element **) result);
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_DIRECTORY])) {
 		exc = _dom_html_directory_element_create(html, namespace, prefix,
 				(dom_html_directory_element **) result);
