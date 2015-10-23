@@ -304,8 +304,8 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 		exc = _dom_html_u_list_element_create(html, namespace, prefix,
 				(dom_html_u_list_element **) result);
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OL])) {
-		exc = _dom_html_o_list_element_create(html, namespace, prefix,
-				(dom_html_o_list_element **) result);
+		exc = _dom_html_olist_element_create(html, namespace, prefix,
+				(dom_html_olist_element **) result);
 	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LI])) {
 		exc = _dom_html_li_element_create(html, namespace, prefix,
 				(dom_html_li_element **) result);
