@@ -10,13 +10,15 @@
 #define dom_html_table_cell_element_h_
 
 #include <stdbool.h>
+
+#include <dom/inttypes.h>
 #include <dom/core/exceptions.h>
 #include <dom/core/string.h>
 
 typedef struct dom_html_table_cell_element dom_html_table_cell_element;
 
 dom_exception dom_html_table_cell_element_get_cell_index(
-	dom_html_table_cell_element *table_cell, int32_t *cell_index);
+	dom_html_table_cell_element *table_cell, dom_long *cell_index);
 
 dom_exception dom_html_table_cell_element_get_abbr(
 	dom_html_table_cell_element *table_cell, dom_string **abbr);
@@ -85,16 +87,16 @@ dom_exception dom_html_table_cell_element_set_width(
 	dom_html_table_cell_element *table_cell, dom_string *width);
 
 dom_exception dom_html_table_cell_element_get_col_span(
-	dom_html_table_cell_element *table_cell, int32_t *col_span);
+	dom_html_table_cell_element *table_cell, dom_ulong *col_span);
 
 dom_exception dom_html_table_cell_element_set_col_span(
-	dom_html_table_cell_element *table_cell, uint32_t col_span);
+	dom_html_table_cell_element *table_cell, dom_ulong col_span);
 
 dom_exception dom_html_table_cell_element_get_row_span(
-	dom_html_table_cell_element *table_cell, int32_t *row_span);
+	dom_html_table_cell_element *table_cell, dom_ulong *row_span);
 
 dom_exception dom_html_table_cell_element_set_row_span(
-	dom_html_table_cell_element *table_cell, uint32_t row_span);
+	dom_html_table_cell_element *table_cell, dom_ulong row_span);
 
 dom_exception dom_html_table_cell_element_get_no_wrap(
 		        dom_html_table_cell_element *ele, bool *no_wrap);

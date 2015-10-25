@@ -29,7 +29,7 @@ The value of attribute rowspan of the tablecell element is read and checked agai
 </metadata>
 <var name="nodeList" type="NodeList"/>
 <var name="testNode" type="Node"/>
-<var name="vrowspan" type="int" />
+<var name="vrowspan" type="unsigned long" />
 <var name="doc" type="Node"/>
 <load var="doc" href="tablecell" willBeModified="false"/>
 <getElementsByTagName interface="Document" obj="doc" var="nodeList" tagname='"td"'/>

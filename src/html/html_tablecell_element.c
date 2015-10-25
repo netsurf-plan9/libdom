@@ -178,7 +178,7 @@ SIMPLE_GET_SET(width);
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_table_cell_element_get_cell_index(
-		dom_html_table_cell_element *table_cell, int32_t *cell_index)
+		dom_html_table_cell_element *table_cell, dom_long *cell_index)
 {
 	dom_node_internal *n = ((dom_node_internal *)table_cell)->parent;
 	dom_html_document *doc = (dom_html_document *)(n->owner);
@@ -231,9 +231,9 @@ dom_exception dom_html_table_cell_element_get_cell_index(
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_table_cell_element_get_col_span(
-		dom_html_table_cell_element *table_cell, int32_t *col_span)
+		dom_html_table_cell_element *table_cell, dom_ulong *col_span)
 {
-	return dom_html_element_get_int32_t_property(&table_cell->base, "colspan",
+	return dom_html_element_get_dom_ulong_property(&table_cell->base, "colspan",
 			SLEN("colspan"), col_span);
 }
 
@@ -245,9 +245,9 @@ dom_exception dom_html_table_cell_element_get_col_span(
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_table_cell_element_set_col_span(
-		dom_html_table_cell_element *table_cell, uint32_t col_span)
+		dom_html_table_cell_element *table_cell, dom_ulong col_span)
 {
-	return dom_html_element_set_int32_t_property(&table_cell->base, "colspan",
+	return dom_html_element_set_dom_ulong_property(&table_cell->base, "colspan",
 			SLEN("colspan"), col_span);
 }
 
@@ -259,9 +259,9 @@ dom_exception dom_html_table_cell_element_set_col_span(
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_table_cell_element_get_row_span(
-		dom_html_table_cell_element *table_cell, int32_t *row_span)
+		dom_html_table_cell_element *table_cell, dom_ulong *row_span)
 {
-	return dom_html_element_get_int32_t_property(&table_cell->base, "rowspan",
+	return dom_html_element_get_dom_ulong_property(&table_cell->base, "rowspan",
 			SLEN("rowspan"), row_span);
 }
 
@@ -273,9 +273,9 @@ dom_exception dom_html_table_cell_element_get_row_span(
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception dom_html_table_cell_element_set_row_span(
-		dom_html_table_cell_element *table_cell, uint32_t row_span)
+		dom_html_table_cell_element *table_cell, dom_ulong row_span)
 {
-	return dom_html_element_set_int32_t_property(&table_cell->base, "rowspan",
+	return dom_html_element_set_dom_ulong_property(&table_cell->base, "rowspan",
 			SLEN("rowspan"), row_span);
 }
 
