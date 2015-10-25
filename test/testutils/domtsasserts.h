@@ -35,6 +35,7 @@ bool is_same_unsigned_int32_t(uint32_t excepted, uint32_t actual);
 
 bool is_equals_int(int excepted, int actual, bool dummy);
 bool is_equals_unsigned_int32_t(uint32_t excepted, uint32_t actual, bool dummy);
+bool is_equals_unsigned_long(dom_ulong excepted, dom_ulong actual, bool dummy);
 bool is_equals_bool(bool excepted, bool actual, bool dummy);
 bool is_equals_string(const char *excepted, dom_string *actual, 
 		bool ignoreCase);

@@ -31,7 +31,7 @@ our %special_type = (
 	# Some of the type are not defined now!
 	boolean => "bool ",
 	int => "int32_t ",
-	"unsigned long" => "uint32_t ",
+	"unsigned long" => "dom_ulong ",
 	DOMString => "dom_string *",
 	List => "list *",
 	Collection => "list *",
@@ -101,6 +101,7 @@ our %no_unref = (
 	"boolean" => 1,
 	"int" => 1,
 	"unsigned int" => 1,
+	"unsigned long" => 1,
 	"List" => 1,
 	"Collection" => 1,
 );

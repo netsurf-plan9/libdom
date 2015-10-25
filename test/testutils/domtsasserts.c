@@ -76,6 +76,13 @@ bool is_equals_unsigned_int32_t(uint32_t expected, uint32_t actual, bool dummy)
 	return expected == actual;
 }
 
+bool is_equals_unsigned_long(dom_ulong expected, dom_ulong actual, bool dummy)
+{
+	UNUSED(dummy);
+
+	return expected == actual;
+}
+
 /**
  * Test whether two string are equal
  * 
