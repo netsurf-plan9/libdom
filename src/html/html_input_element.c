@@ -362,16 +362,16 @@ SIMPLE_GET_SET(use_map);
 SIMPLE_GET_SET(value);
 
 dom_exception dom_html_input_element_get_size(
-	dom_html_input_element *input, int32_t *size)
+	dom_html_input_element *input, dom_ulong *size)
 {
-	return dom_html_element_get_int32_t_property(&input->base, "size",
+	return dom_html_element_get_dom_ulong_property(&input->base, "size",
 			SLEN("size"), size);
 }
 
 dom_exception dom_html_input_element_set_size(
-	dom_html_input_element *input, uint32_t size)
+	dom_html_input_element *input, dom_ulong size)
 {
-	return dom_html_element_set_int32_t_property(&input->base, "size",
+	return dom_html_element_set_dom_ulong_property(&input->base, "size",
 			SLEN("size"), size);
 }
 dom_exception dom_html_input_element_get_tab_index(
