@@ -412,3 +412,92 @@ cleanup:
 fail:
 	return err;
 }
+
+/**
+ * Get the a dom_ulong property
+ *
+ * \param ele   The dom_html_element object
+ * \param name  The name of the attribute
+ * \param len   The length of ::name
+ * \param value   The returned value, or -1 if prop. not set
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception dom_html_element_get_dom_ulong_property(dom_html_element *ele,
+		const char *name, uint32_t len, dom_ulong *value)
+{
+	dom_string *str = NULL, *s2 = NULL;
+	dom_attr *a = NULL;
+	dom_exception err;
+
+	err = dom_string_create((const uint8_t *) name, len, &str);
+	if (err != DOM_NO_ERR)
+		goto fail;
+
+	err = dom_element_get_attribute_node(ele, str, &a);
+	if (err != DOM_NO_ERR)
+		goto cleanup1;
+
+	if (a != NULL) {
+		err = dom_node_get_text_content(a, &s2);
+		if (err == DOM_NO_ERR) {
+			char *s3 = _strndup(dom_string_data(s2),
+					    dom_string_byte_length(s2));
+			if (s3 != NULL) {
+				*value = strtoul(s3, NULL, 0);
+				free(s3);
+			} else {
+				err = DOM_NO_MEM_ERR;
+			}
+			dom_string_unref(s2);
+		}
+	} else {
+		/* Property is not set on this node */
+		*value = -1;
+	}
+
+	dom_node_unref(a);
+
+cleanup1:
+	dom_string_unref(str);
+
+fail:
+	return err;
+}
+
+/**
+ * Set a dom_ulong property
+ *
+ * \param ele   The dom_html_element object
+ * \param name  The name of the attribute
+ * \param len   The length of ::name
+ * \param value   The value
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception dom_html_element_set_dom_ulong_property(dom_html_element *ele,
+		const char *name, uint32_t len, dom_ulong value)
+{
+	dom_string *str = NULL, *svalue = NULL;
+	dom_exception err;
+	char numbuffer[32];
+
+	err = dom_string_create((const uint8_t *) name, len, &str);
+	if (err != DOM_NO_ERR)
+		goto fail;
+
+	if (snprintf(numbuffer, 32, "%u", value) == 32)
+		numbuffer[31] = '\0';
+
+	err = dom_string_create((const uint8_t *) numbuffer,
+				strlen(numbuffer), &svalue);
+	if (err != DOM_NO_ERR)
+		goto cleanup;
+
+	err = dom_element_set_attribute(ele, svalue, str);
+
+	dom_string_unref(svalue);
+cleanup:
+	dom_string_unref(str);
+
+fail:
+	return err;
+}

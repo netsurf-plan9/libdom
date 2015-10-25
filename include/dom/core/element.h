@@ -10,6 +10,7 @@
 
 #include <stdbool.h>
 
+#include <dom/inttypes.h>
 #include <dom/core/exceptions.h>
 #include <dom/core/node.h>
 

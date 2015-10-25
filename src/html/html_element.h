@@ -122,6 +122,11 @@ dom_exception dom_html_element_get_int32_t_property(dom_html_element *ele,
 dom_exception dom_html_element_set_int32_t_property(dom_html_element *ele,
 		const char *name, uint32_t len, uint32_t value);
 
+dom_exception dom_html_element_get_dom_ulong_property(dom_html_element *ele,
+		const char *name, uint32_t len, dom_ulong *value);
+dom_exception dom_html_element_set_dom_ulong_property(dom_html_element *ele,
+		const char *name, uint32_t len, dom_ulong value);
+
 extern struct dom_html_element_vtable _dom_html_element_vtable;
 
 #endif
