@@ -9,15 +9,17 @@
 #define dom_html_pre_element_h_
 
 #include <stdbool.h>
+
+#include <dom/inttypes.h>
 #include <dom/core/exceptions.h>
 #include <dom/core/string.h>
 
 typedef struct dom_html_pre_element dom_html_pre_element;
 
 dom_exception dom_html_pre_element_get_width(
-	dom_html_pre_element *element, int32_t *width);
+	dom_html_pre_element *element, dom_long *width);
 
 dom_exception dom_html_pre_element_set_width(
-	dom_html_pre_element *element, uint32_t width);
+	dom_html_pre_element *element, dom_long width);
 
 #endif

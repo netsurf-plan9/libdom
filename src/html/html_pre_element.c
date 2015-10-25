@@ -92,7 +92,7 @@ void _dom_html_pre_element_destroy(struct dom_html_pre_element *ele)
  * \param pre	The dom_html_pre_element object
  */
 dom_exception dom_html_pre_element_get_width(
-		        dom_html_pre_element *pre, int32_t *width)
+		        dom_html_pre_element *pre, dom_long *width)
 {
 	return dom_html_element_get_int32_t_property(&pre->base, "width",
 			SLEN("width"), width);
@@ -104,7 +104,7 @@ dom_exception dom_html_pre_element_get_width(
  * \param pre	The dom_html_pre_element object
  */
 dom_exception dom_html_pre_element_set_width(
-		        dom_html_pre_element *pre, uint32_t width)
+		        dom_html_pre_element *pre, dom_long width)
 {
 	return dom_html_element_set_int32_t_property(&pre->base, "width",
 			SLEN("width"), width);
