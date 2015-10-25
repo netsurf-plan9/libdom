@@ -92,7 +92,7 @@ void _dom_html_li_element_destroy(struct dom_html_li_element *ele)
  * \param li	The dom_html_li_element object
  */
 dom_exception dom_html_li_element_get_value(
-		        dom_html_li_element *li, int32_t *value)
+		        dom_html_li_element *li, dom_long *value)
 {
 	return dom_html_element_get_int32_t_property(&li->base, "value",
 			SLEN("value"), value);
@@ -104,7 +104,7 @@ dom_exception dom_html_li_element_get_value(
  * \param li	The dom_html_li_element object
  */
 dom_exception dom_html_li_element_set_value(
-		        dom_html_li_element *li, uint32_t value)
+		        dom_html_li_element *li, dom_long value)
 {
 	return dom_html_element_set_int32_t_property(&li->base, "value",
 			SLEN("value"), value);
