@@ -30,7 +30,7 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 </metadata>
 <var name="nodeList" type="NodeList"/>
 <var name="testNode" type="Node"/>
-<var name="vheight" type="int"/>
+<var name="vheight" type="unsigned long"/>
 <var name="doc" type="Node"/>
 <load var="doc" href="img" willBeModified="false"/>
 <getElementsByTagName interface="Document" obj="doc" var="nodeList" tagname="&quot;img&quot;"/>

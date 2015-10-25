@@ -167,58 +167,58 @@ SIMPLE_GET_SET(src);
 SIMPLE_GET_SET(use_map);
 
 dom_exception dom_html_image_element_get_height(
-	dom_html_image_element *image, int32_t *height)
+	dom_html_image_element *image, dom_ulong *height)
 {
-	return dom_html_element_get_int32_t_property(&image->base, "height",
+	return dom_html_element_get_dom_ulong_property(&image->base, "height",
 			SLEN("height"), height);
 }
 
 dom_exception dom_html_image_element_set_height(
-	dom_html_image_element *image, uint32_t height)
+	dom_html_image_element *image, dom_ulong height)
 {
-	return dom_html_element_set_int32_t_property(&image->base, "height",
+	return dom_html_element_set_dom_ulong_property(&image->base, "height",
 			SLEN("height"), height);
 }
 
 dom_exception dom_html_image_element_get_hspace(
-	dom_html_image_element *image, int32_t *hspace)
+	dom_html_image_element *image, dom_ulong *hspace)
 {
-	return dom_html_element_get_int32_t_property(&image->base, "hspace",
+	return dom_html_element_get_dom_ulong_property(&image->base, "hspace",
 			SLEN("hspace"), hspace);
 }
 
 dom_exception dom_html_image_element_set_hspace(
-	dom_html_image_element *image, uint32_t hspace)
+	dom_html_image_element *image, dom_ulong hspace)
 {
-	return dom_html_element_set_int32_t_property(&image->base, "hspace",
+	return dom_html_element_set_dom_ulong_property(&image->base, "hspace",
 			SLEN("hspace"), hspace);
 }
 
 dom_exception dom_html_image_element_get_vspace(
-	dom_html_image_element *image, int32_t *vspace)
+	dom_html_image_element *image, dom_ulong *vspace)
 {
-	return dom_html_element_get_int32_t_property(&image->base, "vspace",
+	return dom_html_element_get_dom_ulong_property(&image->base, "vspace",
 			SLEN("cspace"), vspace);
 }
 
 dom_exception dom_html_image_element_set_vspace(
-	dom_html_image_element *image, uint32_t vspace)
+	dom_html_image_element *image, dom_ulong vspace)
 {
-	return dom_html_element_set_int32_t_property(&image->base, "vspace",
+	return dom_html_element_set_dom_ulong_property(&image->base, "vspace",
 			SLEN("vsapce"), vspace);
 }
 
 dom_exception dom_html_image_element_get_width(
-	dom_html_image_element *image, int32_t *width)
+	dom_html_image_element *image, dom_ulong *width)
 {
-	return dom_html_element_get_int32_t_property(&image->base, "width",
+	return dom_html_element_get_dom_ulong_property(&image->base, "width",
 			SLEN("width"), width);
 }
 
 dom_exception dom_html_image_element_set_width(
-	dom_html_image_element *image, uint32_t width)
+	dom_html_image_element *image, dom_ulong width)
 {
-	return dom_html_element_set_int32_t_property(&image->base, "width",
+	return dom_html_element_set_dom_ulong_property(&image->base, "width",
 			SLEN("width"), width);
 }
 

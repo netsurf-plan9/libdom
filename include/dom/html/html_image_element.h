@@ -10,6 +10,7 @@
 #define dom_html_image_element_h_
 
 #include <stdbool.h>
+#include <dom/inttypes.h>
 #include <dom/core/exceptions.h>
 #include <dom/core/string.h>
 
@@ -59,28 +60,28 @@ dom_exception dom_html_image_element_set_use_map(
 	dom_html_image_element *image, dom_string *use_map);
 
 dom_exception dom_html_image_element_get_height(
-	dom_html_image_element *image, int32_t *height);
+	dom_html_image_element *image, dom_ulong *height);
 
 dom_exception dom_html_image_element_set_height(
-	dom_html_image_element *image, uint32_t height);
+	dom_html_image_element *image, dom_ulong height);
 
 dom_exception dom_html_image_element_get_hspace(
-	dom_html_image_element *image, int32_t *hspace);
+	dom_html_image_element *image, dom_ulong *hspace);
 
 dom_exception dom_html_image_element_set_hspace(
-	dom_html_image_element *image, uint32_t hspace);
+	dom_html_image_element *image, dom_ulong hspace);
 
 dom_exception dom_html_image_element_get_vspace(
-	dom_html_image_element *image, int32_t *vspace);
+	dom_html_image_element *image, dom_ulong *vspace);
 
 dom_exception dom_html_image_element_set_vspace(
-	dom_html_image_element *image, uint32_t vspace);
+	dom_html_image_element *image, dom_ulong vspace);
 
 dom_exception dom_html_image_element_get_width(
-	dom_html_image_element *image, int32_t *width);
+	dom_html_image_element *image, dom_ulong *width);
 
 dom_exception dom_html_image_element_set_width(
-	dom_html_image_element *image, uint32_t width);
+	dom_html_image_element *image, dom_ulong width);
 
 dom_exception dom_html_image_element_get_is_map(
 	dom_html_image_element *ele, bool *is_map);
