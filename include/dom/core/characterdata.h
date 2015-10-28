@@ -8,6 +8,7 @@
 #ifndef dom_core_characterdata_h_
 #define dom_core_characterdata_h_
 
+#include <dom/inttypes.h>
 #include <dom/core/exceptions.h>
 #include <dom/core/node.h>
 
@@ -63,7 +64,7 @@ static inline dom_exception dom_characterdata_set_data(
 		(struct dom_characterdata *) (c), (d))
 
 static inline dom_exception dom_characterdata_get_length(
-		struct dom_characterdata *cdata, uint32_t *length)
+		struct dom_characterdata *cdata, dom_ulong *length)
 {
 	return ((dom_characterdata_vtable *) ((dom_node *) cdata)->vtable)->
 			dom_characterdata_get_length(cdata, length);

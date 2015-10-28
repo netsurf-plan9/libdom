@@ -32,7 +32,7 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 <var name="nameNode" type="Node"/>
 <var name="child" type="CharacterData"/>
 <var name="childValue" type="DOMString"/>
-<var name="childLength" type="int"/>
+<var name="childLength" type="unsigned long"/>
 <load var="doc" href="staff" willBeModified="false"/>
 <getElementsByTagName interface="Document" obj="doc" tagname="&quot;name&quot;" var="elementList"/>
 <item interface="NodeList" obj="elementList" index="0" var="nameNode"/>
