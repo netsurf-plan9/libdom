@@ -2461,19 +2461,12 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	if (dei->actions == NULL)
 		goto cleanup;
 
-	/* The end callback of default action */
-	if (evt->prevent_default != true) {
-		dom_default_action_callback cb = dei->actions(evt->type,
-				DOM_DEFAULT_ACTION_END, &pw);
-		if (cb != NULL) {
-			cb(evt, pw);
-		}
-	}
-
-	/* The prevented callback of default action */
-	if (evt->prevent_default != true) {
-		dom_default_action_callback cb = dei->actions(evt->type,
-				DOM_DEFAULT_ACTION_PREVENTED, &pw);
+	if (dei->actions != NULL) {
+		dom_default_action_phase phase = DOM_DEFAULT_ACTION_END;
+		if (evt->prevent_default == true)
+			phase = DOM_DEFAULT_ACTION_PREVENTED;
+		dom_default_action_callback cb = dei->actions(evt->type, phase,
+							      &pw);
 		if (cb != NULL) {
 			cb(evt, pw);
 		}
