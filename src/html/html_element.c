@@ -142,6 +142,79 @@ SIMPLE_GET_SET(lang,lang)
 SIMPLE_GET_SET(dir,dir)
 SIMPLE_GET_SET(class_name,class)
 
+dom_exception _dom_html_element_get_attribute(
+		struct dom_element *element,
+		dom_string *name, dom_string **value)
+{
+	dom_exception exc;
+	dom_string *lower_case_name;
+
+	exc = dom_string_tolower(name, true, &lower_case_name);
+	if (exc != DOM_NO_ERR) {
+		return exc;
+	}
+
+	exc = _dom_element_get_attribute(element, lower_case_name, value);
+	dom_string_unref(lower_case_name);
+
+	return exc;
+}
+
+dom_exception _dom_html_element_set_attribute(
+		struct dom_element *element,
+		dom_string *name, dom_string *value)
+{
+	dom_exception exc;
+	dom_string *lower_case_name;
+
+	exc = dom_string_tolower(name, true, &lower_case_name);
+	if (exc != DOM_NO_ERR) {
+		return exc;
+	}
+
+	exc = _dom_element_set_attribute(element, lower_case_name, value);
+	dom_string_unref(lower_case_name);
+
+	return exc;
+}
+
+dom_exception _dom_html_element_remove_attribute(
+		struct dom_element *element,
+		dom_string *name)
+{
+	dom_exception exc;
+	dom_string *lower_case_name;
+
+	exc = dom_string_tolower(name, true, &lower_case_name);
+	if (exc != DOM_NO_ERR) {
+		return exc;
+	}
+
+	exc = _dom_element_remove_attribute(element, lower_case_name);
+	dom_string_unref(lower_case_name);
+
+	return exc;
+}
+
+dom_exception _dom_html_element_has_attribute(
+		struct dom_element *element,
+		dom_string *name, bool *result)
+{
+	dom_exception exc;
+	dom_string *lower_case_name;
+
+	exc = dom_string_tolower(name, true, &lower_case_name);
+	if (exc != DOM_NO_ERR) {
+		return exc;
+	}
+
+	exc = _dom_element_has_attribute(element, lower_case_name, result);
+	dom_string_unref(lower_case_name);
+
+	return exc;
+}
+
+
 /**
  * Retrieve a list of descendant elements of an element which match a given
  * tag name (caselessly)
