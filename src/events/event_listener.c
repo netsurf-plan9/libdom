@@ -19,7 +19,7 @@
  * \param listener  The returned EventListener
  * \return DOM_NO_ERR on success, DOM_NO_MEM_ERR on memory exhaustion.
  */
-dom_exception dom_event_listener_create(struct dom_document *doc,
+dom_exception dom_event_listener_create(
 		handle_event handler, void *pw, dom_event_listener **listener)
 {
 	dom_event_listener *ret = malloc(sizeof(dom_event_listener));
@@ -29,7 +29,6 @@ dom_exception dom_event_listener_create(struct dom_document *doc,
 	ret->handler = handler;
 	ret->pw = pw;
 	ret->refcnt = 1;
-	ret->doc = doc;
 
 	*listener = ret;
 
