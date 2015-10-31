@@ -192,6 +192,34 @@ dom_exception dom_html_script_element_set_defer(dom_html_script_element *ele,
 }
 
 /**
+ * Get the async property
+ *
+ * \param ele The dom_html_script_element object
+ * \param async If the script is asynchronous
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception dom_html_script_element_get_async(dom_html_script_element *ele,
+		                bool *async)
+{
+	        return dom_html_element_get_bool_property(&ele->base, "async",
+				                        SLEN("async"), async);
+}
+
+/**
+ * Set the async property
+ *
+ * \param ele The dom_html_script_element object
+ * \param async If the script is asynchronous
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception dom_html_script_element_set_async(dom_html_script_element *ele,
+		                bool async)
+{
+	        return dom_html_element_set_bool_property(&ele->base, "async",
+				                        SLEN("async"), async);
+}
+
+/**
  * Get the text property
  *
  * \param ele		The dom_html_script_element object
