@@ -2489,6 +2489,14 @@ cleanup:
 	}
 	free(targets);
 
+	if (dei->actions != NULL) {
+		dom_default_action_callback cb = dei->actions(evt->type,
+				DOM_DEFAULT_ACTION_FINISHED, &pw);
+		if (cb != NULL) {
+			cb(evt, pw);
+		}
+	}
+
 	return ret;
 }
 

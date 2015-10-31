@@ -67,7 +67,8 @@ typedef void (*dom_default_action_callback)(struct dom_event *evt, void *pw);
 typedef enum {
 	DOM_DEFAULT_ACTION_STARTED = 0,
 	DOM_DEFAULT_ACTION_PREVENTED,
-	DOM_DEFAULT_ACTION_END
+	DOM_DEFAULT_ACTION_END,
+	DOM_DEFAULT_ACTION_FINISHED
 } dom_default_action_phase;
 
 /**
