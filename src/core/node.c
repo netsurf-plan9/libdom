@@ -2341,7 +2341,7 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	dom_exception err, ret = DOM_NO_ERR;
 	dom_node_internal *target = (dom_node_internal *) et;
 	dom_document *doc;
-	dom_document_event_internal *dei;
+	dom_document_event_internal *dei = NULL;
 	dom_event_target **targets;
 	uint32_t ntargets, ntargets_allocated, targetnr;
 	void *pw;
@@ -2482,7 +2482,7 @@ cleanup:
 	}
 	free(targets);
 
-	if (dei->actions != NULL) {
+	if (dei != NULL && dei->actions != NULL) {
 		dom_default_action_callback cb = dei->actions(evt->type,
 				DOM_DEFAULT_ACTION_FINISHED, &pw);
 		if (cb != NULL) {
