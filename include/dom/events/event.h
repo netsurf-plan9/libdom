@@ -43,6 +43,11 @@ dom_exception _dom_event_get_current_target(dom_event *evt,
 #define dom_event_get_current_target(e, c) _dom_event_get_current_target(\
 		(dom_event *) (e), (dom_event_target **) (c))
 
+dom_exception _dom_event_get_event_phase(dom_event *evt,
+		dom_event_flow_phase *phase);
+#define dom_event_get_event_phase(e, p) _dom_event_get_event_phase(	\
+		(dom_event *) (e), (dom_event_flow_phase *) (p))
+
 dom_exception _dom_event_get_bubbles(dom_event *evt, bool *bubbles);
 #define dom_event_get_bubbles(e, b) _dom_event_get_bubbles((dom_event *) (e), \
 		(bool *) (b))

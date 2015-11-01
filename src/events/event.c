@@ -160,6 +160,20 @@ dom_exception _dom_event_get_current_target(dom_event *evt,
 }
 
 /**
+ * Get the current phase of this event
+ *
+ * \param evt    The Event object
+ * \param phase  The returned value
+ * \return DOM_NO_ERR.
+ */
+dom_exception _dom_event_get_event_phase(dom_event *evt,
+		dom_event_flow_phase *phase)
+{
+	*phase = evt->phase;
+	return DOM_NO_ERR;
+}
+
+/**
  * Get whether this event can bubble
  *
  * \param evt      The Event object
