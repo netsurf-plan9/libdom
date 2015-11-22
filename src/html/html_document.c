@@ -73,7 +73,7 @@ static struct dom_html_document_vtable html_document_vtable = {
 			{
 				DOM_NODE_EVENT_TARGET_VTABLE
 			},
-			DOM_NODE_VTABLE,
+			DOM_NODE_VTABLE_DOCUMENT,
 		},
 		DOM_DOCUMENT_VTABLE_HTML
 	},
