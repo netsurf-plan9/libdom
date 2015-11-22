@@ -19,18 +19,24 @@
 #include "utils/utils.h"
 #include "utils/validate.h"
 
+static void event_target_destroy_listener(struct listener_entry *e)
+{
+	list_del(&e->list);
+	dom_event_listener_unref(e->listener);
+	dom_string_unref(e->type);
+	free(e);
+}
 static void event_target_destroy_listeners(struct listener_entry *list)
 {
-	struct listener_entry *next = NULL;
+	struct listener_entry *next;
 
-	for (; list != next; list = next) {
+	while (list != (struct listener_entry *) list->list.next) {
 		next = (struct listener_entry *) list->list.next;
-
-		list_del(&list->list);
-		dom_event_listener_unref(list->listener);
-		dom_string_unref(list->type);
-		free(list);
+		event_target_destroy_listener(list);
+		list = next;
 	}
+
+	event_target_destroy_listener(list);
 }
 
 /* Initialise this EventTarget */
@@ -45,8 +51,10 @@ dom_exception _dom_event_target_internal_initialise(
 /* Finalise this EventTarget */
 void _dom_event_target_internal_finalise(dom_event_target_internal *eti)
 {
-	if (eti->listeners != NULL)
+	if (eti->listeners != NULL) {
 		event_target_destroy_listeners(eti->listeners);
+		eti->listeners = NULL;
+	}
 }
 
 /*-------------------------------------------------------------------------*/
