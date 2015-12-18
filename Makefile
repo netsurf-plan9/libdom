@@ -2,11 +2,11 @@
 #
 # Makefile for libdom
 #
-# Copyright 2009-1015 John-Mark Bell <jmb@netsurf-browser.org>
+# Copyright 2009-2015 John-Mark Bell <jmb@netsurf-browser.org>
 
 # Component settings
 COMPONENT := dom
-COMPONENT_VERSION := 0.1.2
+COMPONENT_VERSION := 0.2.0
 # Default to a static library
 COMPONENT_TYPE ?= lib-static
 
