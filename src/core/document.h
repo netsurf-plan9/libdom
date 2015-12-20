@@ -243,30 +243,6 @@ dom_exception _dom_document_set_text_content(dom_node_internal *node,
 	_dom_node_set_user_data, \
 	_dom_node_get_user_data
 
-/** \todo Unused! */
-/**
- * The internal used vtable for document
- */
-struct dom_document_protected_vtable {
-	struct dom_node_protect_vtable base;
-	dom_exception (*dom_document_get_base)(dom_document *doc,
-			dom_string **base_uri);
-			/* Get the document's base uri */
-};
-
-typedef struct dom_document_protected_vtable dom_document_protected_vtable;
-
-/* Get the document's base URI */
-static inline dom_exception dom_document_get_base(dom_document *doc,
-		dom_string **base_uri)
-{
-	dom_node_internal *node = (dom_node_internal *) doc;
-	return ((dom_document_protected_vtable *) node->vtable)->
-			dom_document_get_base(doc, base_uri);
-}
-#define dom_document_get_base(d, b) dom_document_get_base( \
-		(dom_document *) (d), (dom_string **) (b))
-
 /* Following comes the protected vtable  */
 void _dom_document_destroy(dom_node_internal *node);
 dom_exception _dom_document_copy(dom_node_internal *old, 

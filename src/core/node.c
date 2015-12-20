@@ -1370,7 +1370,7 @@ dom_exception _dom_node_get_base(dom_node_internal *node,
 	struct dom_document *doc = node->owner;
 	assert(doc != NULL);
 
-	return dom_document_get_base(doc, result);
+	return _dom_document_get_uri(doc, result);
 }
 
 /**
