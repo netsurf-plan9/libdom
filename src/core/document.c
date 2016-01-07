@@ -124,25 +124,36 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	if (err != DOM_NO_ERR)
 		return err;
 
+	err = dom_string_create_interned((const uint8_t *) "about:blank",
+			SLEN("about:blank"), &doc->uri);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
 	doc->nodelists = NULL;
 
 	err = _dom_node_initialise(&doc->base, doc, DOM_DOCUMENT_NODE,
 			name, NULL, NULL, NULL);
 	dom_string_unref(name);
-        if (err != DOM_NO_ERR)
-          return err;
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->uri);
+		return err;
+	}
 
 	list_init(&doc->pending_nodes);
 
 	err = dom_string_create_interned((const uint8_t *) "id",
 					 SLEN("id"), &doc->id_name);
-	if (err != DOM_NO_ERR)
+	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->uri);
 		return err;
+	}
 	doc->quirks = DOM_DOCUMENT_QUIRKS_MODE_NONE;
 
 	err = dom_string_create_interned((const uint8_t *) "class",
 			SLEN("class"), &doc->class_string);
 	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		return err;
 	}
@@ -150,6 +161,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	err = dom_string_create_interned((const uint8_t *) "script",
 			SLEN("script"), &doc->script_string);
 	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		dom_string_unref(doc->class_string);
 		return err;
@@ -161,6 +173,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	err = dom_string_create_interned((const uint8_t *) " ", 0,
 					 &doc->_memo_empty);
 	if (err != DOM_NO_ERR) {
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		dom_string_unref(doc->class_string);
 		dom_string_unref(doc->script_string);
@@ -172,6 +185,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 					 &doc->_memo_domnodeinserted);
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		dom_string_unref(doc->class_string);
 		dom_string_unref(doc->script_string);
@@ -184,6 +198,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	if (err != DOM_NO_ERR) {
 		dom_string_unref(doc->_memo_domnodeinserted);
 		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		dom_string_unref(doc->class_string);
 		dom_string_unref(doc->script_string);
@@ -197,6 +212,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 		dom_string_unref(doc->_memo_domnoderemoved);
 		dom_string_unref(doc->_memo_domnodeinserted);
 		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		dom_string_unref(doc->class_string);
 		dom_string_unref(doc->script_string);
@@ -211,6 +227,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 		dom_string_unref(doc->_memo_domnoderemoved);
 		dom_string_unref(doc->_memo_domnodeinserted);
 		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		dom_string_unref(doc->class_string);
 		dom_string_unref(doc->script_string);
@@ -226,6 +243,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 		dom_string_unref(doc->_memo_domnoderemoved);
 		dom_string_unref(doc->_memo_domnodeinserted);
 		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		dom_string_unref(doc->class_string);
 		dom_string_unref(doc->script_string);
@@ -242,6 +260,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 		dom_string_unref(doc->_memo_domnoderemoved);
 		dom_string_unref(doc->_memo_domnodeinserted);
 		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		dom_string_unref(doc->class_string);
 		dom_string_unref(doc->script_string);
@@ -259,6 +278,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 		dom_string_unref(doc->_memo_domnoderemoved);
 		dom_string_unref(doc->_memo_domnodeinserted);
 		dom_string_unref(doc->_memo_empty);
+		dom_string_unref(doc->uri);
 		dom_string_unref(doc->id_name);
 		dom_string_unref(doc->class_string);
 		dom_string_unref(doc->script_string);
