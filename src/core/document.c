@@ -127,6 +127,7 @@ dom_exception _dom_document_initialise(dom_document *doc,
 	err = dom_string_create_interned((const uint8_t *) "about:blank",
 			SLEN("about:blank"), &doc->uri);
 	if (err != DOM_NO_ERR) {
+		dom_string_unref(name);
 		return err;
 	}
 
