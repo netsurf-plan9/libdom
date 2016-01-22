@@ -319,6 +319,7 @@ bool _dom_document_finalise(dom_document *doc)
 	if (doc->id_name != NULL)
 		dom_string_unref(doc->id_name);
 
+	dom_string_unref(doc->uri);
 	dom_string_unref(doc->class_string);
 	dom_string_unref(doc->script_string);
 	dom_string_unref(doc->_memo_empty);
