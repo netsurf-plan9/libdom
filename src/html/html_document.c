@@ -257,195 +257,228 @@ dom_exception _dom_html_document_copy(dom_node_internal *old,
 static inline dom_html_element_type _dom_html_document_get_element_type(
 		dom_html_document *html, dom_string *tag_name_upper)
 {
-	if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_HTML])) {
-		return DOM_HTML_ELEMENT_TYPE_HTML;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_HEAD])) {
-		return DOM_HTML_ELEMENT_TYPE_HEAD;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_META])) {
-		return DOM_HTML_ELEMENT_TYPE_META;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BASE])) {
-		return DOM_HTML_ELEMENT_TYPE_BASE;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TITLE])) {
-		return DOM_HTML_ELEMENT_TYPE_TITLE;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BODY])) {
-		return DOM_HTML_ELEMENT_TYPE_BODY;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_DIV])) {
-		return DOM_HTML_ELEMENT_TYPE_DIV;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FORM])) {
-		return DOM_HTML_ELEMENT_TYPE_FORM;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_LINK])) {
-		return DOM_HTML_ELEMENT_TYPE_LINK;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BUTTON])) {
-		return DOM_HTML_ELEMENT_TYPE_BUTTON;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_INPUT])) {
-		return DOM_HTML_ELEMENT_TYPE_INPUT;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TEXTAREA])) {
-		return DOM_HTML_ELEMENT_TYPE_TEXTAREA;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_OPTGROUP])) {
-		return DOM_HTML_ELEMENT_TYPE_OPTGROUP;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_OPTION])) {
-		return DOM_HTML_ELEMENT_TYPE_OPTION;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_SELECT])) {
-		return DOM_HTML_ELEMENT_TYPE_SELECT;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_HR])) {
-		return DOM_HTML_ELEMENT_TYPE_HR;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_DL])) {
-		return DOM_HTML_ELEMENT_TYPE_DL;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_DIRECTORY])) {
-		return DOM_HTML_ELEMENT_TYPE_DIRECTORY;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_MENU])) {
-		return DOM_HTML_ELEMENT_TYPE_MENU;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FIELDSET])) {
-		return DOM_HTML_ELEMENT_TYPE_FIELDSET;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_LEGEND])) {
-		return DOM_HTML_ELEMENT_TYPE_LEGEND;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_P])) {
-		return DOM_HTML_ELEMENT_TYPE_P;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_H1])) {
-		return DOM_HTML_ELEMENT_TYPE_H1;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_H2])) {
-		return DOM_HTML_ELEMENT_TYPE_H2;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_H3])) {
-		return DOM_HTML_ELEMENT_TYPE_H3;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_H4])) {
-		return DOM_HTML_ELEMENT_TYPE_H4;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_H5])) {
-		return DOM_HTML_ELEMENT_TYPE_H5;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_H6])) {
-		return DOM_HTML_ELEMENT_TYPE_H6;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE])) {
-		return DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_Q])) {
-		return DOM_HTML_ELEMENT_TYPE_Q;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_PRE])) {
-		return DOM_HTML_ELEMENT_TYPE_PRE;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BR])) {
-		return DOM_HTML_ELEMENT_TYPE_BR;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_LABEL])) {
-		return DOM_HTML_ELEMENT_TYPE_LABEL;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_UL])) {
-		return DOM_HTML_ELEMENT_TYPE_UL;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_OL])) {
-		return DOM_HTML_ELEMENT_TYPE_OL;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_LI])) {
-		return DOM_HTML_ELEMENT_TYPE_LI;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FONT])) {
-		return DOM_HTML_ELEMENT_TYPE_FONT;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_DEL])) {
-		return DOM_HTML_ELEMENT_TYPE_DEL;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_INS])) {
-		return DOM_HTML_ELEMENT_TYPE_INS;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_A])) {
-		return DOM_HTML_ELEMENT_TYPE_A;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BASEFONT])) {
-		return DOM_HTML_ELEMENT_TYPE_BASEFONT;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_IMG])) {
-		return DOM_HTML_ELEMENT_TYPE_IMG;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_OBJECT])) {
-		return DOM_HTML_ELEMENT_TYPE_OBJECT;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_PARAM])) {
-		return DOM_HTML_ELEMENT_TYPE_PARAM;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_APPLET])) {
-		return DOM_HTML_ELEMENT_TYPE_APPLET;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_MAP])) {
-		return DOM_HTML_ELEMENT_TYPE_MAP;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_AREA])) {
-		return DOM_HTML_ELEMENT_TYPE_AREA;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_SCRIPT])) {
-		return DOM_HTML_ELEMENT_TYPE_SCRIPT;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_CAPTION])) {
-		return DOM_HTML_ELEMENT_TYPE_CAPTION;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TD])) {
-		return DOM_HTML_ELEMENT_TYPE_TD;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TH])) {
-		return DOM_HTML_ELEMENT_TYPE_TH;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_COL])) {
-		return DOM_HTML_ELEMENT_TYPE_COL;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_COLGROUP])) {
-		return DOM_HTML_ELEMENT_TYPE_COLGROUP;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_THEAD])) {
-		return DOM_HTML_ELEMENT_TYPE_THEAD;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TBODY])) {
-		return DOM_HTML_ELEMENT_TYPE_TBODY;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TFOOT])) {
-		return DOM_HTML_ELEMENT_TYPE_TFOOT;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TABLE])) {
-		return DOM_HTML_ELEMENT_TYPE_TABLE;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TR])) {
-		return DOM_HTML_ELEMENT_TYPE_TR;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_STYLE])) {
-		return DOM_HTML_ELEMENT_TYPE_STYLE;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FRAMESET])) {
-		return DOM_HTML_ELEMENT_TYPE_FRAMESET;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FRAME])) {
-		return DOM_HTML_ELEMENT_TYPE_FRAME;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_IFRAME])) {
-		return DOM_HTML_ELEMENT_TYPE_IFRAME;
-	} else if (dom_string_isequal(tag_name_upper,
-			html->elements[DOM_HTML_ELEMENT_TYPE_ISINDEX])) {
-		return DOM_HTML_ELEMENT_TYPE_ISINDEX;
+	size_t len = dom_string_byte_length(tag_name_upper);
+
+	switch (len) {
+	case 1:
+		if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_P])) {
+			return  DOM_HTML_ELEMENT_TYPE_P;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_A])) {
+			return  DOM_HTML_ELEMENT_TYPE_A;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_Q])) {
+			return  DOM_HTML_ELEMENT_TYPE_Q;
+		}
+		break;
+	case 2:
+		if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_H1])) {
+			return  DOM_HTML_ELEMENT_TYPE_H1;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_H2])) {
+			return  DOM_HTML_ELEMENT_TYPE_H2;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_H3])) {
+			return  DOM_HTML_ELEMENT_TYPE_H3;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_H4])) {
+			return  DOM_HTML_ELEMENT_TYPE_H4;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_H5])) {
+			return  DOM_HTML_ELEMENT_TYPE_H5;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_H6])) {
+			return  DOM_HTML_ELEMENT_TYPE_H6;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_HR])) {
+			return  DOM_HTML_ELEMENT_TYPE_HR;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_DL])) {
+			return  DOM_HTML_ELEMENT_TYPE_DL;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_UL])) {
+			return  DOM_HTML_ELEMENT_TYPE_UL;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_OL])) {
+			return  DOM_HTML_ELEMENT_TYPE_OL;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_LI])) {
+			return  DOM_HTML_ELEMENT_TYPE_LI;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_TD])) {
+			return  DOM_HTML_ELEMENT_TYPE_TD;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_TH])) {
+			return  DOM_HTML_ELEMENT_TYPE_TH;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_TR])) {
+			return  DOM_HTML_ELEMENT_TYPE_TR;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_BR])) {
+			return  DOM_HTML_ELEMENT_TYPE_BR;
+		}
+		break;
+	case 3:
+		if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_DIV])) {
+			return  DOM_HTML_ELEMENT_TYPE_DIV;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_PRE])) {
+			return  DOM_HTML_ELEMENT_TYPE_PRE;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_DEL])) {
+			return  DOM_HTML_ELEMENT_TYPE_DEL;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_INS])) {
+			return  DOM_HTML_ELEMENT_TYPE_INS;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_IMG])) {
+			return  DOM_HTML_ELEMENT_TYPE_IMG;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_COL])) {
+			return  DOM_HTML_ELEMENT_TYPE_COL;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_MAP])) {
+			return  DOM_HTML_ELEMENT_TYPE_MAP;
+		}
+		break;
+	case 4:
+		if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_HTML])) {
+			return  DOM_HTML_ELEMENT_TYPE_HTML;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_HEAD])) {
+			return  DOM_HTML_ELEMENT_TYPE_HEAD;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_META])) {
+			return  DOM_HTML_ELEMENT_TYPE_META;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_BASE])) {
+			return  DOM_HTML_ELEMENT_TYPE_BASE;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_BODY])) {
+			return  DOM_HTML_ELEMENT_TYPE_BODY;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_FORM])) {
+			return  DOM_HTML_ELEMENT_TYPE_FORM;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_LINK])) {
+			return  DOM_HTML_ELEMENT_TYPE_LINK;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_MENU])) {
+			return  DOM_HTML_ELEMENT_TYPE_MENU;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_FONT])) {
+			return  DOM_HTML_ELEMENT_TYPE_FONT;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_AREA])) {
+			return  DOM_HTML_ELEMENT_TYPE_AREA;
+		}
+		break;
+	case 5:
+		if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_TITLE])) {
+			return  DOM_HTML_ELEMENT_TYPE_TITLE;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_INPUT])) {
+			return  DOM_HTML_ELEMENT_TYPE_INPUT;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_FRAME])) {
+			return  DOM_HTML_ELEMENT_TYPE_FRAME;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_THEAD])) {
+			return  DOM_HTML_ELEMENT_TYPE_THEAD;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_TBODY])) {
+			return  DOM_HTML_ELEMENT_TYPE_TBODY;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_TFOOT])) {
+			return  DOM_HTML_ELEMENT_TYPE_TFOOT;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_TABLE])) {
+			return  DOM_HTML_ELEMENT_TYPE_TABLE;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_STYLE])) {
+			return  DOM_HTML_ELEMENT_TYPE_STYLE;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_LABEL])) {
+			return  DOM_HTML_ELEMENT_TYPE_LABEL;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_PARAM])) {
+			return  DOM_HTML_ELEMENT_TYPE_PARAM;
+		}
+		break;
+	case 6:
+		if (dom_string_isequal(tag_name_upper,html->elements[
+				DOM_HTML_ELEMENT_TYPE_BUTTON])) {
+			return  DOM_HTML_ELEMENT_TYPE_BUTTON;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_OPTION])) {
+			return  DOM_HTML_ELEMENT_TYPE_OPTION;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_SCRIPT])) {
+			return  DOM_HTML_ELEMENT_TYPE_SCRIPT;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_IFRAME])) {
+			return  DOM_HTML_ELEMENT_TYPE_IFRAME;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_LEGEND])) {
+			return  DOM_HTML_ELEMENT_TYPE_LEGEND;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_SELECT])) {
+			return  DOM_HTML_ELEMENT_TYPE_SELECT;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_OBJECT])) {
+			return  DOM_HTML_ELEMENT_TYPE_OBJECT;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_APPLET])) {
+			return  DOM_HTML_ELEMENT_TYPE_APPLET;
+		}
+		break;
+	case 7:
+		if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_CAPTION])) {
+			return  DOM_HTML_ELEMENT_TYPE_CAPTION;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_ISINDEX])) {
+			return  DOM_HTML_ELEMENT_TYPE_ISINDEX;
+		}
+		break;
+	case 8:
+		if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_TEXTAREA])) {
+			return  DOM_HTML_ELEMENT_TYPE_TEXTAREA;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_OPTGROUP])) {
+			return  DOM_HTML_ELEMENT_TYPE_OPTGROUP;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_BASEFONT])) {
+			return  DOM_HTML_ELEMENT_TYPE_BASEFONT;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_FIELDSET])) {
+			return  DOM_HTML_ELEMENT_TYPE_FIELDSET;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_COLGROUP])) {
+			return  DOM_HTML_ELEMENT_TYPE_COLGROUP;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_FRAMESET])) {
+			return  DOM_HTML_ELEMENT_TYPE_FRAMESET;
+		}
+		break;
+	case 9:
+		if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_DIRECTORY])) {
+			return  DOM_HTML_ELEMENT_TYPE_DIRECTORY;
+		}
+		break;
+	case 10:
+		if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE])) {
+			return  DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE;
+		}
+		break;
 	}
 
 	return DOM_HTML_ELEMENT_TYPE__UNKNOWN;
