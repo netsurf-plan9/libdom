@@ -246,248 +246,435 @@ dom_exception _dom_html_document_copy(dom_node_internal *old,
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
+/**
+ * Get html element type from an uppercased tag name string
+ *
+ * \param html            The html document that the html element belongs to
+ * \param tag_name_upper  Upper cased string containing tag name
+ */
+static inline dom_html_element_type _dom_html_document_get_element_type(
+		dom_html_document *html, dom_string *tag_name_upper)
+{
+	if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_HTML])) {
+		return DOM_HTML_ELEMENT_TYPE_HTML;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_HEAD])) {
+		return DOM_HTML_ELEMENT_TYPE_HEAD;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TITLE])) {
+		return DOM_HTML_ELEMENT_TYPE_TITLE;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BODY])) {
+		return DOM_HTML_ELEMENT_TYPE_BODY;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FORM])) {
+		return DOM_HTML_ELEMENT_TYPE_FORM;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_LINK])) {
+		return DOM_HTML_ELEMENT_TYPE_LINK;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BUTTON])) {
+		return DOM_HTML_ELEMENT_TYPE_BUTTON;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_INPUT])) {
+		return DOM_HTML_ELEMENT_TYPE_INPUT;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TEXTAREA])) {
+		return DOM_HTML_ELEMENT_TYPE_TEXTAREA;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_OPTGROUP])) {
+		return DOM_HTML_ELEMENT_TYPE_OPTGROUP;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_OPTION])) {
+		return DOM_HTML_ELEMENT_TYPE_OPTION;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_SELECT])) {
+		return DOM_HTML_ELEMENT_TYPE_SELECT;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_HR])) {
+		return DOM_HTML_ELEMENT_TYPE_HR;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_DL])) {
+		return DOM_HTML_ELEMENT_TYPE_DL;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_DIRECTORY])) {
+		return DOM_HTML_ELEMENT_TYPE_DIRECTORY;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_MENU])) {
+		return DOM_HTML_ELEMENT_TYPE_MENU;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FIELDSET])) {
+		return DOM_HTML_ELEMENT_TYPE_FIELDSET;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_LEGEND])) {
+		return DOM_HTML_ELEMENT_TYPE_LEGEND;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_P])) {
+		return DOM_HTML_ELEMENT_TYPE_P;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_H1])) {
+		return DOM_HTML_ELEMENT_TYPE_H1;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_H2])) {
+		return DOM_HTML_ELEMENT_TYPE_H2;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_H3])) {
+		return DOM_HTML_ELEMENT_TYPE_H3;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_H4])) {
+		return DOM_HTML_ELEMENT_TYPE_H4;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_H5])) {
+		return DOM_HTML_ELEMENT_TYPE_H5;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_H6])) {
+		return DOM_HTML_ELEMENT_TYPE_H6;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_Q])) {
+		return DOM_HTML_ELEMENT_TYPE_Q;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_PRE])) {
+		return DOM_HTML_ELEMENT_TYPE_PRE;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BR])) {
+		return DOM_HTML_ELEMENT_TYPE_BR;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_LABEL])) {
+		return DOM_HTML_ELEMENT_TYPE_LABEL;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_UL])) {
+		return DOM_HTML_ELEMENT_TYPE_UL;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_OL])) {
+		return DOM_HTML_ELEMENT_TYPE_OL;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_LI])) {
+		return DOM_HTML_ELEMENT_TYPE_LI;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FONT])) {
+		return DOM_HTML_ELEMENT_TYPE_FONT;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_DEL])) {
+		return DOM_HTML_ELEMENT_TYPE_DEL;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_INS])) {
+		return DOM_HTML_ELEMENT_TYPE_INS;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_A])) {
+		return DOM_HTML_ELEMENT_TYPE_A;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BASEFONT])) {
+		return DOM_HTML_ELEMENT_TYPE_BASEFONT;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_IMG])) {
+		return DOM_HTML_ELEMENT_TYPE_IMG;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_OBJECT])) {
+		return DOM_HTML_ELEMENT_TYPE_OBJECT;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_PARAM])) {
+		return DOM_HTML_ELEMENT_TYPE_PARAM;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_APPLET])) {
+		return DOM_HTML_ELEMENT_TYPE_APPLET;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_MAP])) {
+		return DOM_HTML_ELEMENT_TYPE_MAP;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_AREA])) {
+		return DOM_HTML_ELEMENT_TYPE_AREA;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_SCRIPT])) {
+		return DOM_HTML_ELEMENT_TYPE_SCRIPT;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_CAPTION])) {
+		return DOM_HTML_ELEMENT_TYPE_CAPTION;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TD])) {
+		return DOM_HTML_ELEMENT_TYPE_TD;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TH])) {
+		return DOM_HTML_ELEMENT_TYPE_TH;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_COL])) {
+		return DOM_HTML_ELEMENT_TYPE_COL;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_COLGROUP])) {
+		return DOM_HTML_ELEMENT_TYPE_COLGROUP;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_THEAD])) {
+		return DOM_HTML_ELEMENT_TYPE_THEAD;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TBODY])) {
+		return DOM_HTML_ELEMENT_TYPE_TBODY;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TFOOT])) {
+		return DOM_HTML_ELEMENT_TYPE_TFOOT;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TABLE])) {
+		return DOM_HTML_ELEMENT_TYPE_TABLE;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TR])) {
+		return DOM_HTML_ELEMENT_TYPE_TR;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_STYLE])) {
+		return DOM_HTML_ELEMENT_TYPE_STYLE;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FRAMESET])) {
+		return DOM_HTML_ELEMENT_TYPE_FRAMESET;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FRAME])) {
+		return DOM_HTML_ELEMENT_TYPE_FRAME;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_IFRAME])) {
+		return DOM_HTML_ELEMENT_TYPE_IFRAME;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_ISINDEX])) {
+		return DOM_HTML_ELEMENT_TYPE_ISINDEX;
+	}
+
+	return DOM_HTML_ELEMENT_TYPE__UNKNOWN;
+}
+
 /* Overloaded methods inherited from super class */
 
 /** Internal method to support both kinds of create method */
 static dom_exception
-_dom_html_document_create_element_internal(dom_html_document *html,
-					   dom_string *in_tag_name,
-					   dom_string *namespace,
-					   dom_string *prefix,
-					   dom_html_element **result)
+_dom_html_document_create_element_internal(
+		dom_html_document *html,
+		dom_string *in_tag_name,
+		dom_string *namespace,
+		dom_string *prefix,
+		dom_html_element **result)
 {
 	dom_exception exc;
 	dom_string *tag_name;
+	dom_html_element_type type;
 
 	exc = dom_string_toupper(in_tag_name, true, &tag_name);
 	if (exc != DOM_NO_ERR)
 		return exc;
 
-	if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_HTML])) {
+	type = _dom_html_document_get_element_type(html, tag_name);
+
+	switch(type) {
+	case DOM_HTML_ELEMENT_TYPE__COUNT:
+		assert(type != DOM_HTML_ELEMENT_TYPE__COUNT);
+		break;
+	case DOM_HTML_ELEMENT_TYPE_HTML:
 		exc = _dom_html_html_element_create(html, namespace, prefix,
 				(dom_html_html_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_HEAD])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_HEAD:
 		exc = _dom_html_head_element_create(html, namespace, prefix,
 				(dom_html_head_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TITLE])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_TITLE:
 		exc = _dom_html_title_element_create(html, namespace, prefix,
 				(dom_html_title_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BODY])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_BODY:
 		exc = _dom_html_body_element_create(html, namespace, prefix,
 				(dom_html_body_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FORM])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_FORM:
 		exc = _dom_html_form_element_create(html, namespace, prefix,
 				(dom_html_form_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_LINK])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_LINK:
 		exc = _dom_html_link_element_create(html, namespace, prefix,
 				(dom_html_link_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BUTTON])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_BUTTON:
 		exc = _dom_html_button_element_create(html, namespace, prefix,
 				(dom_html_button_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_INPUT])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_INPUT:
 		exc = _dom_html_input_element_create(html, namespace, prefix,
 				(dom_html_input_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TEXTAREA])) {
-		exc = _dom_html_text_area_element_create(html, namespace, prefix,
-				(dom_html_text_area_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_OPTGROUP])) {
-		exc = _dom_html_opt_group_element_create(html, namespace, prefix,
-				(dom_html_opt_group_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_OPTION])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_TEXTAREA:
+		exc = _dom_html_text_area_element_create(html, namespace,
+				prefix, (dom_html_text_area_element **) result);
+		break;
+	case DOM_HTML_ELEMENT_TYPE_OPTGROUP:
+		exc = _dom_html_opt_group_element_create(html, namespace,
+				prefix, (dom_html_opt_group_element **) result);
+		break;
+	case DOM_HTML_ELEMENT_TYPE_OPTION:
 		exc = _dom_html_option_element_create(html, namespace, prefix,
 				(dom_html_option_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_SELECT])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_SELECT:
 		exc = _dom_html_select_element_create(html, namespace, prefix,
 				(dom_html_select_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_HR])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_HR:
 		exc = _dom_html_hr_element_create(html, namespace, prefix,
 				(dom_html_hr_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_DL])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_DL:
 		exc = _dom_html_dlist_element_create(html, namespace, prefix,
 				(dom_html_dlist_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_DIRECTORY])) {
-		exc = _dom_html_directory_element_create(html, namespace, prefix,
-				(dom_html_directory_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_MENU])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_DIRECTORY:
+		exc = _dom_html_directory_element_create(html, namespace,
+				prefix, (dom_html_directory_element **) result);
+		break;
+	case DOM_HTML_ELEMENT_TYPE_MENU:
 		exc = _dom_html_menu_element_create(html, namespace, prefix,
 				(dom_html_menu_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FIELDSET])) {
-		exc = _dom_html_field_set_element_create(html, namespace, prefix,
-				(dom_html_field_set_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_LEGEND])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_FIELDSET:
+		exc = _dom_html_field_set_element_create(html, namespace,
+				prefix, (dom_html_field_set_element **) result);
+		break;
+	case DOM_HTML_ELEMENT_TYPE_LEGEND:
 		exc = _dom_html_legend_element_create(html, namespace, prefix,
 				(dom_html_legend_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_P])) {
-		exc = _dom_html_paragraph_element_create(html, namespace, prefix,
-				(dom_html_paragraph_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_H1]) ||
-			dom_string_caseless_isequal(tag_name,
-				html->elements[DOM_HTML_ELEMENT_TYPE_H2]) ||
-			dom_string_caseless_isequal(tag_name,
-				html->elements[DOM_HTML_ELEMENT_TYPE_H3]) ||
-			dom_string_caseless_isequal(tag_name,
-				html->elements[DOM_HTML_ELEMENT_TYPE_H4]) ||
-			dom_string_caseless_isequal(tag_name,
-				html->elements[DOM_HTML_ELEMENT_TYPE_H5]) ||
-			dom_string_caseless_isequal(tag_name,
-				html->elements[DOM_HTML_ELEMENT_TYPE_H6])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_P:
+		exc = _dom_html_paragraph_element_create(html, namespace,
+				prefix, (dom_html_paragraph_element **) result);
+		break;
+	case DOM_HTML_ELEMENT_TYPE_H1:
+	case DOM_HTML_ELEMENT_TYPE_H2:
+	case DOM_HTML_ELEMENT_TYPE_H3:
+	case DOM_HTML_ELEMENT_TYPE_H4:
+	case DOM_HTML_ELEMENT_TYPE_H5:
+	case DOM_HTML_ELEMENT_TYPE_H6:
 		exc = _dom_html_heading_element_create(html, tag_name,
 				namespace, prefix,
 				(dom_html_heading_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_Q])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_Q:
 		exc = _dom_html_quote_element_create(html, namespace, prefix,
 				(dom_html_quote_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_PRE])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_PRE:
 		exc = _dom_html_pre_element_create(html, namespace, prefix,
 				(dom_html_pre_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BR])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_BR:
 		exc = _dom_html_br_element_create(html, namespace, prefix,
 				(dom_html_br_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_LABEL])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_LABEL:
 		exc = _dom_html_label_element_create(html, namespace, prefix,
 				(dom_html_label_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_UL])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_UL:
 		exc = _dom_html_u_list_element_create(html, namespace, prefix,
 				(dom_html_u_list_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_OL])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_OL:
 		exc = _dom_html_olist_element_create(html, namespace, prefix,
 				(dom_html_olist_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_LI])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_LI:
 		exc = _dom_html_li_element_create(html, namespace, prefix,
 				(dom_html_li_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FONT])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_FONT:
 		exc = _dom_html_font_element_create(html, namespace, prefix,
 				(dom_html_font_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_DEL]) ||
-			dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_INS])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_DEL:
+	case DOM_HTML_ELEMENT_TYPE_INS:
 		exc = _dom_html_mod_element_create(html, tag_name, namespace, 
 				prefix, (dom_html_mod_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_A])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_A:
 		exc = _dom_html_anchor_element_create(html, namespace, prefix,
 				(dom_html_anchor_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_BASEFONT])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_BASEFONT:
 		exc = _dom_html_base_font_element_create(html,
 				namespace, prefix,
 				(dom_html_base_font_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_IMG])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_IMG:
 		exc = _dom_html_image_element_create(html, namespace, prefix,
 				(dom_html_image_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_OBJECT])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_OBJECT:
 		exc = _dom_html_object_element_create(html, namespace, prefix,
 				(dom_html_object_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_PARAM])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_PARAM:
 		exc = _dom_html_param_element_create(html, namespace, prefix,
 				(dom_html_param_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_APPLET])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_APPLET:
 		exc = _dom_html_applet_element_create(html, namespace, prefix,
 				(dom_html_applet_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_MAP])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_MAP:
 		exc = _dom_html_map_element_create(html, namespace, prefix,
 				(dom_html_map_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_AREA])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_AREA:
 		exc = _dom_html_area_element_create(html, namespace, prefix,
 				(dom_html_area_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_SCRIPT])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_SCRIPT:
 		exc = _dom_html_script_element_create(html, namespace, prefix,
 				(dom_html_script_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_CAPTION])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_CAPTION:
 		exc = _dom_html_table_caption_element_create(html,
 				namespace, prefix,
 				(dom_html_table_caption_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TD]) ||
-			dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TH])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_TD:
+	case DOM_HTML_ELEMENT_TYPE_TH:
 		exc = _dom_html_table_cell_element_create(html, tag_name,
 				namespace, prefix,
 				(dom_html_table_cell_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_COL])||
-			dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_COLGROUP])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_COL:
+	case DOM_HTML_ELEMENT_TYPE_COLGROUP:
 		exc = _dom_html_table_col_element_create(html, tag_name,
 				namespace, prefix,
 				(dom_html_table_col_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_THEAD])||
-			dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TBODY])||
-			dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TFOOT])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_THEAD:
+	case DOM_HTML_ELEMENT_TYPE_TBODY:
+	case DOM_HTML_ELEMENT_TYPE_TFOOT:
 		exc = _dom_html_table_section_element_create(html, tag_name,
 				namespace, prefix,
 				(dom_html_table_section_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TABLE])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_TABLE:
 		exc = _dom_html_table_element_create(html, namespace, prefix,
 				(dom_html_table_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_TD])) {
-		exc = _dom_html_table_row_element_create(html, namespace, prefix,
-				(dom_html_table_row_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_STYLE])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_STYLE:
 		exc = _dom_html_style_element_create(html,
 				(dom_html_style_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FRAMESET])) {
-		exc = _dom_html_frame_set_element_create(html, namespace, prefix,
-				(dom_html_frame_set_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_FRAME])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_FRAMESET:
+		exc = _dom_html_frame_set_element_create(html, namespace,
+				prefix, (dom_html_frame_set_element **) result);
+		break;
+	case DOM_HTML_ELEMENT_TYPE_FRAME:
 		exc = _dom_html_frame_element_create(html, namespace, prefix,
 				(dom_html_frame_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_IFRAME])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_IFRAME:
 		exc = _dom_html_iframe_element_create(html, namespace, prefix,
 				(dom_html_iframe_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name,
-			html->elements[DOM_HTML_ELEMENT_TYPE_ISINDEX])) {
+		break;
+	case DOM_HTML_ELEMENT_TYPE_ISINDEX:
 		exc = _dom_html_isindex_element_create(html, namespace, prefix,
 				(dom_html_isindex_element **) result);
-	} else {
+		break;
+	default:
+	case DOM_HTML_ELEMENT_TYPE__UNKNOWN:
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);
+		break;
 	}
 
 	dom_string_unref(tag_name);
