@@ -701,7 +701,6 @@ _dom_html_document_create_element_internal(
 		exc = _dom_html_isindex_element_create(html, namespace, prefix,
 				(dom_html_isindex_element **) result);
 		break;
-	default:
 	case DOM_HTML_ELEMENT_TYPE__UNKNOWN:
 		exc =  _dom_html_element_create(html, tag_name, namespace,
 						prefix, result);
