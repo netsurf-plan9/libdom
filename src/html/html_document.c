@@ -263,6 +263,9 @@ static inline dom_html_element_type _dom_html_document_get_element_type(
 			html->elements[DOM_HTML_ELEMENT_TYPE_HEAD])) {
 		return DOM_HTML_ELEMENT_TYPE_HEAD;
 	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_META])) {
+		return DOM_HTML_ELEMENT_TYPE_META;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
 			html->elements[DOM_HTML_ELEMENT_TYPE_TITLE])) {
 		return DOM_HTML_ELEMENT_TYPE_TITLE;
 	} else if (dom_string_caseless_isequal(tag_name_upper,
@@ -476,6 +479,10 @@ _dom_html_document_create_element_internal(
 	case DOM_HTML_ELEMENT_TYPE_HEAD:
 		exc = _dom_html_head_element_create(html, namespace, prefix,
 				(dom_html_head_element **) result);
+		break;
+	case DOM_HTML_ELEMENT_TYPE_META:
+		exc = _dom_html_meta_element_create(html, namespace, prefix,
+				(dom_html_meta_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_TITLE:
 		exc = _dom_html_title_element_create(html, namespace, prefix,
