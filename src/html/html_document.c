@@ -650,6 +650,10 @@ _dom_html_document_create_element_internal(
 		exc = _dom_html_table_element_create(html, namespace, prefix,
 				(dom_html_table_element **) result);
 		break;
+	case DOM_HTML_ELEMENT_TYPE_TR:
+		exc = _dom_html_table_row_element_create(html, namespace,
+				prefix, (dom_html_table_row_element **) result);
+		break;
 	case DOM_HTML_ELEMENT_TYPE_STYLE:
 		exc = _dom_html_style_element_create(html,
 				(dom_html_style_element **) result);
