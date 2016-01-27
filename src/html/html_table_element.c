@@ -65,7 +65,7 @@ dom_exception _dom_html_table_element_initialise(struct dom_html_document *doc,
 		struct dom_html_table_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-			doc->memoised[hds_TABLE],
+			doc->elements[DOM_HTML_ELEMENT_TYPE_TABLE],
 			namespace, prefix);
 }
 
@@ -183,7 +183,9 @@ dom_exception dom_html_table_element_get_caption(
 
 	for (node_tmp = node_tmp->first_child; node_tmp != NULL; node_tmp = node_tmp->next) {
 		if((node_tmp->type == DOM_ELEMENT_NODE) &&
-				dom_string_caseless_isequal(doc->memoised[hds_CAPTION],node_tmp->name)) {
+				dom_string_caseless_isequal(
+				doc->elements[DOM_HTML_ELEMENT_TYPE_CAPTION],
+				node_tmp->name)) {
 			break;
 		}
 	}
@@ -212,8 +214,9 @@ dom_exception dom_html_table_element_set_caption(
 	if (check_node == NULL) {
 		return DOM_HIERARCHY_REQUEST_ERR;
 	}
-	if (!dom_string_caseless_isequal(doc->memoised[hds_CAPTION],
-				check_node->name)) {
+	if (!dom_string_caseless_isequal(
+			doc->elements[DOM_HTML_ELEMENT_TYPE_CAPTION],
+			check_node->name)) {
 		return DOM_HIERARCHY_REQUEST_ERR;
 	}
 
@@ -239,7 +242,9 @@ dom_exception dom_html_table_element_get_t_head(
 
 	for (node_tmp = node_tmp->first_child; node_tmp != NULL; node_tmp = node_tmp->next) {
 		if((node_tmp->type == DOM_ELEMENT_NODE) &&
-				dom_string_caseless_isequal(doc->memoised[hds_THEAD],node_tmp->name)) {
+				dom_string_caseless_isequal(
+				doc->elements[DOM_HTML_ELEMENT_TYPE_THEAD],
+				node_tmp->name)) {
 			break;
 		}
 	}
@@ -267,7 +272,9 @@ dom_exception dom_html_table_element_set_t_head(
 	if (check_node == NULL) {
 		return DOM_HIERARCHY_REQUEST_ERR;
 	}
-	if (!dom_string_caseless_isequal(doc->memoised[hds_CAPTION],check_node->name)) {
+	if (!dom_string_caseless_isequal(
+			doc->elements[DOM_HTML_ELEMENT_TYPE_CAPTION],
+			check_node->name)) {
 		return DOM_HIERARCHY_REQUEST_ERR;
 	}
 
@@ -293,8 +300,9 @@ dom_exception dom_html_table_element_get_t_foot(
 
 	for (node_tmp = node_tmp->first_child; node_tmp != NULL; node_tmp = node_tmp->next) {
 		if ((node_tmp->type == DOM_ELEMENT_NODE) &&
-				dom_string_caseless_isequal(doc->memoised[hds_TFOOT],
-					node_tmp->name)) {
+				dom_string_caseless_isequal(
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TFOOT],
+				node_tmp->name)) {
 			break;
 		}
 	}
@@ -323,7 +331,9 @@ dom_exception dom_html_table_element_set_t_foot(
 		return DOM_HIERARCHY_REQUEST_ERR;
 	}
 
-	if(!dom_string_caseless_isequal(doc->memoised[hds_TFOOT],check_node->name)) {
+	if(!dom_string_caseless_isequal(
+			doc->elements[DOM_HTML_ELEMENT_TYPE_TFOOT],
+			check_node->name)) {
 		return DOM_HIERARCHY_REQUEST_ERR;
 	}
 
@@ -345,9 +355,10 @@ dom_exception dom_html_table_element_set_t_foot(
  */
 bool table_rows_callback(struct dom_node_internal *node, void *ctx)
 {
+	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_TR])) {
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TR])) {
 		return true;
 	}
 	return false;
@@ -378,9 +389,10 @@ dom_exception dom_html_table_element_get_rows(
  */
 bool table_t_bodies_callback(struct dom_node_internal *node, void *ctx)
 {
+	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE && 
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_TBODY])) {
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TBODY])) {
 		return true;
 	}
 	return false;
@@ -492,7 +504,7 @@ dom_exception dom_html_table_element_create_t_foot(
 		dom_node *new_t_foot;
 
 		exp = _dom_html_table_section_element_create(doc,
-				doc->memoised[hds_TFOOT],
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TFOOT],
 				((dom_node_internal *)element)->namespace,
 				((dom_node_internal *)element)->prefix,
 				(dom_html_table_section_element **)t_foot);
@@ -565,7 +577,7 @@ dom_exception dom_html_table_element_create_t_head(
 		dom_node *new_t_head;
 
 		exp = _dom_html_table_section_element_create(doc,
-				doc->memoised[hds_THEAD],
+				doc->elements[DOM_HTML_ELEMENT_TYPE_THEAD],
 				((dom_node_internal *)element)->namespace,
 				((dom_node_internal *)element)->prefix,
 				(dom_html_table_section_element **)t_head);
@@ -643,7 +655,7 @@ dom_exception dom_html_table_element_create_t_body(
 		dom_node *new_t_body;
 
 		exp = _dom_html_table_section_element_create(doc,
-				doc->memoised[hds_TBODY],
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TBODY],
 				((dom_node_internal *)element)->namespace,
 				((dom_node_internal *)element)->prefix,
 				t_body);
@@ -768,7 +780,9 @@ dom_exception dom_html_table_element_insert_row(
 
 		for (n = n->first_child; n != NULL; n = n->next) {
 			if((n->type == DOM_ELEMENT_NODE) &&
-					dom_string_caseless_isequal(doc->memoised[hds_TBODY],n->name)) {
+					dom_string_caseless_isequal(
+					doc->elements[DOM_HTML_ELEMENT_TYPE_TBODY],
+					n->name)) {
 
 				exp = dom_html_table_section_element_get_rows((dom_html_table_section_element *)n, &rows);
 				exp = dom_html_collection_get_length(rows, &section_len);
@@ -881,7 +895,9 @@ dom_exception dom_html_table_element_delete_row(
 
 		for (n = n->first_child; n != NULL; n = n->next) {
 			if((n->type == DOM_ELEMENT_NODE) &&
-					dom_string_caseless_isequal(doc->memoised[hds_TBODY],n->name)) {
+					dom_string_caseless_isequal(
+					doc->elements[DOM_HTML_ELEMENT_TYPE_TBODY],
+					n->name)) {
 				exp = dom_html_table_section_element_get_rows
 					((dom_html_table_section_element *)n, &rows);
 				if(exp != DOM_NO_ERR) {

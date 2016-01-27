@@ -49,7 +49,8 @@ dom_exception _dom_html_table_row_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_table_row_element_initialise(doc, namespace, prefix, *ele);
+	return _dom_html_table_row_element_initialise(doc,
+			namespace, prefix, *ele);
 }
 
 /**
@@ -64,7 +65,7 @@ dom_exception _dom_html_table_row_element_initialise(struct dom_html_document *d
 		struct dom_html_table_row_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-			doc->memoised[hds_TR],
+			doc->elements[DOM_HTML_ELEMENT_TYPE_TR],
 			namespace, prefix);
 }
 
@@ -185,21 +186,26 @@ dom_exception dom_html_table_row_element_get_row_index(
 
 	uint32_t count = 0;
 
-	for(n = n->first_child; n != (dom_node_internal *)table_row;
+	for (n = n->first_child; n != (dom_node_internal *)table_row;
 			n = n->next) {
-		 if(n->type == DOM_ELEMENT_NODE &&
-				 dom_string_caseless_isequal(n->name,doc->memoised[hds_TR])) {
+		if(n->type == DOM_ELEMENT_NODE &&
+				dom_string_caseless_isequal(n->name,
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TR])) {
 			count += 1;
-		 }
+		}
 	}
 
-	if(dom_string_caseless_isequal((parent->parent)->name, doc->memoised[hds_TABLE]) &&
-			dom_string_caseless_isequal(parent->name, doc->memoised[hds_THEAD])
-			) {
+	if (dom_string_caseless_isequal((parent->parent)->name,
+			doc->elements[DOM_HTML_ELEMENT_TYPE_TABLE]) &&
+			dom_string_caseless_isequal(parent->name,
+			doc->elements[DOM_HTML_ELEMENT_TYPE_THEAD])) {
 		*row_index = count;
-	}else if(dom_string_caseless_isequal((parent->parent)->name, doc->memoised[hds_TABLE]) && 
-			(dom_string_caseless_isequal(parent->name, doc->memoised[hds_TBODY]) ||
-			dom_string_caseless_isequal(parent->name, doc->memoised[hds_TFOOT]))) {
+	} else if (dom_string_caseless_isequal((parent->parent)->name,
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TABLE]) &&
+				(dom_string_caseless_isequal(parent->name,
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TBODY]) ||
+				dom_string_caseless_isequal(parent->name,
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TFOOT]))) {
 		uint32_t len;
 		dom_html_table_section_element *t_head;
 		dom_html_collection *rows;
@@ -227,7 +233,8 @@ dom_exception dom_html_table_row_element_get_row_index(
 
 		for (n = n->first_child;n != parent && n != NULL;
 			n = n->next) {
-			if (dom_string_caseless_isequal(n->name, doc->memoised[hds_TBODY])) {
+			if (dom_string_caseless_isequal(n->name,
+					doc->elements[DOM_HTML_ELEMENT_TYPE_TBODY])) {
 				exp = dom_html_table_section_element_get_rows(
 						(dom_html_table_section_element *)n,
 						&rows);
@@ -265,12 +272,13 @@ dom_exception dom_html_table_row_element_get_section_row_index(
 	dom_node_internal *n = ((dom_node_internal *)table_row)->parent;
 	dom_html_document *doc = (dom_html_document *) ((dom_node_internal *) table_row)->owner;
 	int32_t count = 0;
-	for(n = n->first_child; n != (dom_node_internal *)table_row;
+	for (n = n->first_child; n != (dom_node_internal *)table_row;
 			n = n->next) {
-		 if(n->type == DOM_ELEMENT_NODE &&
-				 dom_string_caseless_isequal(n->name, doc->memoised[hds_TR])) {
+		if (n->type == DOM_ELEMENT_NODE &&
+				dom_string_caseless_isequal(n->name,
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TR])) {
 			count += 1;
-		 }
+		}
 	}
 	*section_row_index = count;
 	return DOM_NO_ERR;
@@ -285,9 +293,10 @@ dom_exception dom_html_table_row_element_get_section_row_index(
  */
 bool table_cells_callback(struct dom_node_internal *node, void *ctx)
 {
-	if(node->type == DOM_ELEMENT_NODE && 
+	dom_html_document *doc = ctx;
+	if (node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_TD])) {
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TD])) {
 		return true;
 	}
 	return false;
@@ -323,33 +332,34 @@ dom_exception dom_html_table_row_element_insert_cell(
 
 	dom_node *node; 		/*< The node at the (index)th position*/
 
-	dom_html_collection *cells; 	/*< The collection of cells in input table_row_element*/
+	dom_html_collection *cells;	/*< The collection of cells in input table_row_element*/
 	uint32_t len; 			/*< The size of the cell collection */
 	dom_exception exp;		/*< Variable for getting the exceptions*/
-	exp = _dom_html_element_create(doc, doc->memoised[hds_TD], 
+	exp = _dom_html_element_create(doc,
+			doc->elements[DOM_HTML_ELEMENT_TYPE_TD],
 			((dom_node_internal *)element)->namespace,
 			((dom_node_internal *)element)->prefix,
 			cell);
-	if(exp != DOM_NO_ERR)
+	if (exp != DOM_NO_ERR)
 		return exp;
 	
 	exp = dom_html_table_row_element_get_cells(element, &cells);
-	if(exp != DOM_NO_ERR) {
+	if (exp != DOM_NO_ERR) {
 		dom_node_unref(*cell);
 		return exp;
 	}
 
 	exp = dom_html_collection_get_length(cells, &len);
-	if(exp != DOM_NO_ERR) {
+	if (exp != DOM_NO_ERR) {
 		dom_node_unref(*cell);
 		return exp;
 	}
 	
-	if(index < -1 || index > (int32_t)len) {
+	if (index < -1 || index > (int32_t)len) {
 		/* Check for index validity */
 		dom_html_collection_unref (cells);
 		return DOM_INDEX_SIZE_ERR;
-	} else if(index == -1 || index == (int32_t)len) {
+	} else if (index == -1 || index == (int32_t)len) {
 		dom_node *new_cell;
 		dom_html_collection_unref(cells);
 
@@ -363,8 +373,7 @@ dom_exception dom_html_table_row_element_insert_cell(
 		dom_html_collection_unref(cells);
 
 		return dom_node_insert_before(element,
-		                *cell, node,
-				&new_cell);
+				*cell, node, &new_cell);
 	}
 }
 

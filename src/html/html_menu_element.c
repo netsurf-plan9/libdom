@@ -61,8 +61,8 @@ dom_exception _dom_html_menu_element_initialise(struct dom_html_document *doc,
 		struct dom_html_menu_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_MENU],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_MENU],
+			namespace, prefix);
 }
 
 /**

@@ -41,7 +41,7 @@ dom_exception _dom_html_options_collection_create(struct dom_html_document *doc,
 		return DOM_NO_MEM_ERR;
 	
 	return _dom_html_options_collection_initialise(doc, *col, root,
-						       ic, ctx);
+			ic, ctx);
 }
 
 /**

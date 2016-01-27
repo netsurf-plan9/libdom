@@ -64,7 +64,7 @@ dom_exception _dom_html_object_element_initialise(struct dom_html_document *doc,
 		struct dom_html_object_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-			doc->memoised[hds_OBJECT],
+			doc->elements[DOM_HTML_ELEMENT_TYPE_OBJECT],
 			namespace, prefix);
 }
 
@@ -240,7 +240,7 @@ dom_exception dom_html_object_element_get_form(
 	while (form_tmp != NULL) {
 		if (form_tmp->type == DOM_ELEMENT_NODE &&
 				dom_string_caseless_isequal(form_tmp->name,
-					doc->memoised[hds_FORM]))
+					doc->elements[DOM_HTML_ELEMENT_TYPE_FORM]))
 			break;
 
 		form_tmp = form_tmp->parent;

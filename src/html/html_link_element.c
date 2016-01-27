@@ -59,8 +59,8 @@ dom_exception _dom_html_link_element_initialise(struct dom_html_document *doc,
 		struct dom_html_link_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_LINK],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_LINK],
+			namespace, prefix);
 }
 
 /**

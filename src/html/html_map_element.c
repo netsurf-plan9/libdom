@@ -63,8 +63,8 @@ dom_exception _dom_html_map_element_initialise(struct dom_html_document *doc,
 		struct dom_html_map_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_MAP],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_MAP],
+			namespace, prefix);
 }
 
 /**
@@ -163,11 +163,11 @@ dom_exception dom_html_map_element_set_##attr(			\
 SIMPLE_GET_SET(name);
 
 /* The callback function for  _dom_html_collection_create*/
-bool  callback(struct dom_node_internal *node, void *ctx)
+bool callback(struct dom_node_internal *node, void *ctx)
 {
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_AREA])) 
+				((dom_html_document *)ctx)->elements[DOM_HTML_ELEMENT_TYPE_AREA]))
 	{
 		return true;
 	}

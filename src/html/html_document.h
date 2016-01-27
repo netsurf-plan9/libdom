@@ -28,6 +28,8 @@ struct dom_html_document {
 	
 	/** Cached strings for html objects to use */
 	dom_string **memoised;
+	/** Cached strings for HTML element names */
+	dom_string **elements;
 };
 
 #include "html_document_strings.h"

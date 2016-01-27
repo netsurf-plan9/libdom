@@ -46,7 +46,8 @@ dom_exception _dom_html_iframe_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_iframe_element_initialise(doc, namespace, prefix, *ele);
+	return _dom_html_iframe_element_initialise(doc,
+			namespace, prefix, *ele);
 }
 
 /**
@@ -61,8 +62,8 @@ dom_exception _dom_html_iframe_element_initialise(struct dom_html_document *doc,
 		struct dom_html_iframe_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_IFRAME],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_IFRAME],
+			namespace, prefix);
 }
 
 /**

@@ -28,6 +28,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_base_element_create(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_base_element **ele)
 {
 	struct dom_node_internal *node;
@@ -41,7 +42,7 @@ dom_exception _dom_html_base_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_base_element_initialise(doc, *ele);
+	return _dom_html_base_element_initialise(doc, namespace, prefix, *ele);
 }
 
 /**
@@ -52,19 +53,12 @@ dom_exception _dom_html_base_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_base_element_initialise(struct dom_html_document *doc,
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_base_element *ele)
 {
-	dom_string *name = NULL;
-	dom_exception err;
-
-	err = dom_string_create((const uint8_t *) "BASE", SLEN("BASE"), &name);
-	if (err != DOM_NO_ERR)
-		return err;
-	
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	dom_string_unref(name);
-
-	return err;
+	return _dom_html_element_initialise(doc, &ele->base,
+			doc->elements[DOM_HTML_ELEMENT_TYPE_BASE],
+			namespace, prefix);
 }
 
 /**

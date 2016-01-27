@@ -61,8 +61,8 @@ dom_exception _dom_html_script_element_initialise(struct dom_html_document *doc,
 		struct dom_html_script_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_SCRIPT],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_SCRIPT],
+			namespace, prefix);
 }
 
 /**
