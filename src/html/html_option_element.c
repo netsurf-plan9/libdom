@@ -66,8 +66,8 @@ dom_exception _dom_html_option_element_initialise(struct dom_html_document *doc,
 	ele->default_selected_set = false;
 
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_OPTION],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_OPTION],
+			namespace, prefix);
 }
 
 /**
@@ -106,7 +106,7 @@ dom_exception dom_html_option_element_get_form(
 	while (select != NULL) {
 		if (select->type == DOM_ELEMENT_NODE &&
 				dom_string_caseless_isequal(select->name,
-						doc->memoised[hds_SELECT]))
+						doc->elements[DOM_HTML_ELEMENT_TYPE_SELECT]))
 			break;
 
 		select = select->parent;
@@ -265,7 +265,7 @@ dom_exception dom_html_option_element_get_index(
 		if((dom_node_internal *)option == n) {
 			*index = idx;
 			break;
-		} else if(dom_string_caseless_isequal(n->name,doc->memoised[hds_OPTION])) {
+		} else if(dom_string_caseless_isequal(n->name,doc->elements[DOM_HTML_ELEMENT_TYPE_OPTION])) {
 			idx += 1;
 		}
 	}

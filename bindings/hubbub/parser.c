@@ -55,7 +55,8 @@ struct dom_hubbub_parser {
 };
 
 /* Forward declaration to break reference loop */
-static hubbub_error add_attributes(void *parser, void *node, const hubbub_attribute *attributes, uint32_t n_attributes);
+static hubbub_error add_attributes(void *parser, void *node,
+		const hubbub_attribute *attributes, uint32_t n_attributes);
 
 
 
@@ -479,7 +480,7 @@ static hubbub_error form_associate(void *parser, void *form, void *node)
 	
 	/* Determine the kind of the node we have here. */
 	if (dom_string_caseless_isequal(ele->name,
-					doc->memoised[hds_BUTTON])) {
+			doc->elements[DOM_HTML_ELEMENT_TYPE_BUTTON])) {
 		err = _dom_html_button_element_set_form(
 			(dom_html_button_element *)node, form_ele);
 		if (err != DOM_NO_ERR) {
@@ -488,7 +489,7 @@ static hubbub_error form_associate(void *parser, void *form, void *node)
 			return HUBBUB_UNKNOWN;
 		}
 	} else if (dom_string_caseless_isequal(ele->name,
-					       doc->memoised[hds_INPUT])) {
+			doc->elements[DOM_HTML_ELEMENT_TYPE_INPUT])) {
 		err = _dom_html_input_element_set_form(
 			(dom_html_input_element *)node, form_ele);
 		if (err != DOM_NO_ERR) {
@@ -497,7 +498,7 @@ static hubbub_error form_associate(void *parser, void *form, void *node)
 			return HUBBUB_UNKNOWN;
 		}
 	} else if (dom_string_caseless_isequal(ele->name,
-					       doc->memoised[hds_SELECT])) {
+			doc->elements[DOM_HTML_ELEMENT_TYPE_SELECT])) {
 		err = _dom_html_select_element_set_form(
 			(dom_html_select_element *)node, form_ele);
 		if (err != DOM_NO_ERR) {
@@ -506,7 +507,7 @@ static hubbub_error form_associate(void *parser, void *form, void *node)
 			return HUBBUB_UNKNOWN;
 		}
 	} else if (dom_string_caseless_isequal(ele->name,
-					       doc->memoised[hds_TEXTAREA])) {
+			doc->elements[DOM_HTML_ELEMENT_TYPE_TEXTAREA])) {
 		err = _dom_html_text_area_element_set_form(
 			(dom_html_text_area_element *)node, form_ele);
 		if (err != DOM_NO_ERR) {

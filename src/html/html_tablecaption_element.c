@@ -61,8 +61,8 @@ dom_exception _dom_html_table_caption_element_initialise(struct dom_html_documen
 		struct dom_html_table_caption_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_CAPTION],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_CAPTION],
+			namespace, prefix);
 }
 
 /**

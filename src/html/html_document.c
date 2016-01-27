@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <dom/html/html_elements.h>
+
 #include "html/html_document.h"
 #include "html/html_element.h"
 #include "html/html_collection.h"
@@ -134,10 +136,16 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 		error = DOM_NO_MEM_ERR;
 		goto out;
 	}
+	doc->elements = calloc(sizeof(dom_string *),
+			DOM_HTML_ELEMENT_TYPE__COUNT);
+	if (doc->elements == NULL) {
+		error = DOM_NO_MEM_ERR;
+		goto out;
+	}
 
-#define HTML_DOCUMENT_STRINGS_ACTION(attr,str)                             \
+#define HTML_DOCUMENT_STRINGS_ACTION(attr,str)				\
 	error = dom_string_create_interned((const uint8_t *) #str,	\
-			SLEN(#str), &doc->memoised[hds_##attr]); \
+			SLEN(#str), &doc->memoised[hds_##attr]);	\
 	if (error != DOM_NO_ERR) {					\
 		goto out;						\
 	}
@@ -145,15 +153,38 @@ dom_exception _dom_html_document_initialise(dom_html_document *doc,
 #include "html_document_strings.h"
 #undef HTML_DOCUMENT_STRINGS_ACTION
 
+#define DOM_HTML_ELEMENT_STRINGS_ENTRY(tag)				\
+	error = dom_string_create_interned((const uint8_t *) #tag,	\
+			SLEN(#tag),					\
+			&doc->elements[DOM_HTML_ELEMENT_TYPE_##tag]);	\
+	if (error != DOM_NO_ERR) {					\
+		goto out;						\
+	}
+
+#include <dom/html/html_elements.h>
+#undef DOM_HTML_ELEMENT_STRINGS_ENTRY
+
 out:
-	if (doc->memoised != NULL && error != DOM_NO_ERR) {
-		for(sidx = 0; sidx < hds_COUNT; ++sidx) {
-			if (doc->memoised[sidx] != NULL) {
-				dom_string_unref(doc->memoised[sidx]);
+	if (error != DOM_NO_ERR) {
+		if (doc->memoised != NULL) {
+			for(sidx = 0; sidx < hds_COUNT; ++sidx) {
+				if (doc->memoised[sidx] != NULL) {
+					dom_string_unref(doc->memoised[sidx]);
+				}
 			}
+			free(doc->memoised);
+			doc->memoised = NULL;
 		}
-		free(doc->memoised);
-		doc->memoised = NULL;
+		if (doc->elements != NULL) {
+			for(sidx = 0; sidx < DOM_HTML_ELEMENT_TYPE__COUNT;
+					++sidx) {
+				if (doc->elements[sidx] != NULL) {
+					dom_string_unref(doc->elements[sidx]);
+				}
+			}
+			free(doc->elements);
+			doc->elements = NULL;
+		}
 	}
 	return error;
 }
@@ -184,6 +215,16 @@ bool _dom_html_document_finalise(dom_html_document *doc)
 		doc->memoised = NULL;
 	}
 	
+	if (doc->elements != NULL) {
+		for(sidx = 0; sidx < DOM_HTML_ELEMENT_TYPE__COUNT; ++sidx) {
+			if (doc->elements[sidx] != NULL) {
+				dom_string_unref(doc->elements[sidx]);
+			}
+		}
+		free(doc->elements);
+		doc->elements = NULL;
+	}
+
 	return _dom_document_finalise(&doc->base);
 }
 
@@ -222,164 +263,226 @@ _dom_html_document_create_element_internal(dom_html_document *html,
 	if (exc != DOM_NO_ERR)
 		return exc;
 
-	if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HTML])) {
+	if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_HTML])) {
 		exc = _dom_html_html_element_create(html, namespace, prefix,
 				(dom_html_html_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HEAD])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_HEAD])) {
 		exc = _dom_html_head_element_create(html, namespace, prefix,
 				(dom_html_head_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TITLE])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TITLE])) {
 		exc = _dom_html_title_element_create(html, namespace, prefix,
 				(dom_html_title_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_BODY])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BODY])) {
 		exc = _dom_html_body_element_create(html, namespace, prefix,
 				(dom_html_body_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FORM])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FORM])) {
 		exc = _dom_html_form_element_create(html, namespace, prefix,
 				(dom_html_form_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LINK])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_LINK])) {
 		exc = _dom_html_link_element_create(html, namespace, prefix,
 				(dom_html_link_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_BUTTON])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BUTTON])) {
 		exc = _dom_html_button_element_create(html, namespace, prefix,
 				(dom_html_button_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_INPUT])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_INPUT])) {
 		exc = _dom_html_input_element_create(html, namespace, prefix,
 				(dom_html_input_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TEXTAREA])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TEXTAREA])) {
 		exc = _dom_html_text_area_element_create(html, namespace, prefix,
 				(dom_html_text_area_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OPTGROUP])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_OPTGROUP])) {
 		exc = _dom_html_opt_group_element_create(html, namespace, prefix,
 				(dom_html_opt_group_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OPTION])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_OPTION])) {
 		exc = _dom_html_option_element_create(html, namespace, prefix,
 				(dom_html_option_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_SELECT])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_SELECT])) {
 		exc = _dom_html_select_element_create(html, namespace, prefix,
 				(dom_html_select_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_HR])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_HR])) {
 		exc = _dom_html_hr_element_create(html, namespace, prefix,
 				(dom_html_hr_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_DL])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_DL])) {
 		exc = _dom_html_dlist_element_create(html, namespace, prefix,
 				(dom_html_dlist_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_DIRECTORY])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_DIRECTORY])) {
 		exc = _dom_html_directory_element_create(html, namespace, prefix,
 				(dom_html_directory_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_MENU])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_MENU])) {
 		exc = _dom_html_menu_element_create(html, namespace, prefix,
 				(dom_html_menu_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FIELDSET])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FIELDSET])) {
 		exc = _dom_html_field_set_element_create(html, namespace, prefix,
 				(dom_html_field_set_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LEGEND])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_LEGEND])) {
 		exc = _dom_html_legend_element_create(html, namespace, prefix,
 				(dom_html_legend_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_P])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_P])) {
 		exc = _dom_html_paragraph_element_create(html, namespace, prefix,
 				(dom_html_paragraph_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_H1]) ||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_H2]) ||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_H3]) ||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_H4]) ||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_H5]) ||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_H6])
-			) {
-		exc = _dom_html_heading_element_create(html, tag_name, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_H1]) ||
+			dom_string_caseless_isequal(tag_name,
+				html->elements[DOM_HTML_ELEMENT_TYPE_H2]) ||
+			dom_string_caseless_isequal(tag_name,
+				html->elements[DOM_HTML_ELEMENT_TYPE_H3]) ||
+			dom_string_caseless_isequal(tag_name,
+				html->elements[DOM_HTML_ELEMENT_TYPE_H4]) ||
+			dom_string_caseless_isequal(tag_name,
+				html->elements[DOM_HTML_ELEMENT_TYPE_H5]) ||
+			dom_string_caseless_isequal(tag_name,
+				html->elements[DOM_HTML_ELEMENT_TYPE_H6])) {
+		exc = _dom_html_heading_element_create(html, tag_name,
+				namespace, prefix,
 				(dom_html_heading_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_Q])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_Q])) {
 		exc = _dom_html_quote_element_create(html, namespace, prefix,
 				(dom_html_quote_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_PRE])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_PRE])) {
 		exc = _dom_html_pre_element_create(html, namespace, prefix,
 				(dom_html_pre_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_BR])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BR])) {
 		exc = _dom_html_br_element_create(html, namespace, prefix,
 				(dom_html_br_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LABEL])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_LABEL])) {
 		exc = _dom_html_label_element_create(html, namespace, prefix,
 				(dom_html_label_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_UL])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_UL])) {
 		exc = _dom_html_u_list_element_create(html, namespace, prefix,
 				(dom_html_u_list_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OL])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_OL])) {
 		exc = _dom_html_olist_element_create(html, namespace, prefix,
 				(dom_html_olist_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_LI])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_LI])) {
 		exc = _dom_html_li_element_create(html, namespace, prefix,
 				(dom_html_li_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FONT])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FONT])) {
 		exc = _dom_html_font_element_create(html, namespace, prefix,
 				(dom_html_font_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_DEL]) ||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_INS])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_DEL]) ||
+			dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_INS])) {
 		exc = _dom_html_mod_element_create(html, tag_name, namespace, 
 				prefix, (dom_html_mod_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_A])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_A])) {
 		exc = _dom_html_anchor_element_create(html, namespace, prefix,
 				(dom_html_anchor_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_BASEFONT])) {
-		exc = _dom_html_base_font_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BASEFONT])) {
+		exc = _dom_html_base_font_element_create(html,
+				namespace, prefix,
 				(dom_html_base_font_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_IMG])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_IMG])) {
 		exc = _dom_html_image_element_create(html, namespace, prefix,
 				(dom_html_image_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_OBJECT])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_OBJECT])) {
 		exc = _dom_html_object_element_create(html, namespace, prefix,
 				(dom_html_object_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_PARAM])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_PARAM])) {
 		exc = _dom_html_param_element_create(html, namespace, prefix,
 				(dom_html_param_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_APPLET])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_APPLET])) {
 		exc = _dom_html_applet_element_create(html, namespace, prefix,
 				(dom_html_applet_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_MAP])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_MAP])) {
 		exc = _dom_html_map_element_create(html, namespace, prefix,
 				(dom_html_map_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_AREA])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_AREA])) {
 		exc = _dom_html_area_element_create(html, namespace, prefix,
 				(dom_html_area_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_SCRIPT])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_SCRIPT])) {
 		exc = _dom_html_script_element_create(html, namespace, prefix,
 				(dom_html_script_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_CAPTION])) {
-		exc = _dom_html_table_caption_element_create(html, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_CAPTION])) {
+		exc = _dom_html_table_caption_element_create(html,
+				namespace, prefix,
 				(dom_html_table_caption_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TD]) ||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_TH])
-			) {
-		exc = _dom_html_table_cell_element_create(html, tag_name, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TD]) ||
+			dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TH])) {
+		exc = _dom_html_table_cell_element_create(html, tag_name,
+				namespace, prefix,
 				(dom_html_table_cell_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_COL])||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_COLGROUP])
-			) {
-		exc = _dom_html_table_col_element_create(html, tag_name, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_COL])||
+			dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_COLGROUP])) {
+		exc = _dom_html_table_col_element_create(html, tag_name,
+				namespace, prefix,
 				(dom_html_table_col_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_THEAD])||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_TBODY])||
-			dom_string_caseless_isequal(tag_name, html->memoised[hds_TFOOT])) {
-		exc = _dom_html_table_section_element_create(html, tag_name, namespace, prefix,
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_THEAD])||
+			dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TBODY])||
+			dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TFOOT])) {
+		exc = _dom_html_table_section_element_create(html, tag_name,
+				namespace, prefix,
 				(dom_html_table_section_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TABLE])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TABLE])) {
 		exc = _dom_html_table_element_create(html, namespace, prefix,
 				(dom_html_table_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_TD])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_TD])) {
 		exc = _dom_html_table_row_element_create(html, namespace, prefix,
 				(dom_html_table_row_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_STYLE])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_STYLE])) {
 		exc = _dom_html_style_element_create(html,
 				(dom_html_style_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FRAMESET])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FRAMESET])) {
 		exc = _dom_html_frame_set_element_create(html, namespace, prefix,
 				(dom_html_frame_set_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_FRAME])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_FRAME])) {
 		exc = _dom_html_frame_element_create(html, namespace, prefix,
 				(dom_html_frame_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_IFRAME])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_IFRAME])) {
 		exc = _dom_html_iframe_element_create(html, namespace, prefix,
 				(dom_html_iframe_element **) result);
-	} else if (dom_string_caseless_isequal(tag_name, html->memoised[hds_ISINDEX])) {
+	} else if (dom_string_caseless_isequal(tag_name,
+			html->elements[DOM_HTML_ELEMENT_TYPE_ISINDEX])) {
 		exc = _dom_html_isindex_element_create(html, namespace, prefix,
 				(dom_html_isindex_element **) result);
 	} else {
@@ -576,8 +679,8 @@ dom_exception _dom_html_document_get_title(dom_html_document *doc,
 		uint32_t len;
 		
 		exc = dom_document_get_elements_by_tag_name(doc,
-							    doc->memoised[hds_TITLE],
-							    &nodes);
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TITLE],
+				&nodes);
 		if (exc != DOM_NO_ERR) {
 			return exc;
 		}
@@ -654,7 +757,7 @@ dom_exception _dom_html_document_get_body(dom_html_document *doc,
 		uint32_t len;
 
 		exc = dom_document_get_elements_by_tag_name(doc,
-				doc->memoised[hds_BODY],
+				doc->elements[DOM_HTML_ELEMENT_TYPE_BODY],
 				&nodes);
 		if (exc != DOM_NO_ERR) {
 			return exc;
@@ -668,7 +771,7 @@ dom_exception _dom_html_document_get_body(dom_html_document *doc,
 
 		if (len == 0) {
 			exc = dom_document_get_elements_by_tag_name(doc,
-					doc->memoised[hds_FRAMESET],
+					doc->elements[DOM_HTML_ELEMENT_TYPE_FRAMESET],
 					&nodes);
 			if (exc != DOM_NO_ERR) {
 				return exc;
@@ -713,9 +816,10 @@ dom_exception _dom_html_document_set_body(dom_html_document *doc,
  */
 bool images_callback(struct dom_node_internal *node, void *ctx)
 {
+	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_IMG])) {
+				doc->elements[DOM_HTML_ELEMENT_TYPE_IMG])) {
 		return true;
 	}
 	return false;
@@ -736,9 +840,10 @@ dom_exception _dom_html_document_get_images(dom_html_document *doc,
 
 bool applet_callback(struct dom_node_internal * node, void *ctx)
 {
+	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_APPLET])) {
+				doc->elements[DOM_HTML_ELEMENT_TYPE_APPLET])) {
 		return true;
 	}
 	return false;
@@ -752,9 +857,10 @@ bool applet_callback(struct dom_node_internal * node, void *ctx)
  */
 bool applets_callback(struct dom_node_internal *node, void *ctx)
 {
+	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_OBJECT])) {
+				doc->elements[DOM_HTML_ELEMENT_TYPE_OBJECT])) {
 		uint32_t len = 0;
 		dom_html_collection *applets;
 		if (_dom_html_collection_create(ctx, node,
@@ -790,17 +896,18 @@ dom_exception _dom_html_document_get_applets(dom_html_document *doc,
  */
 bool links_callback(struct dom_node_internal *node, void *ctx)
 {
+	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE &&
 			(dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_A]) ||
+				doc->elements[DOM_HTML_ELEMENT_TYPE_A]) ||
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_AREA]))
+				doc->elements[DOM_HTML_ELEMENT_TYPE_AREA]))
 			 ) {
 		bool has_value = false;
 		dom_exception err;
 
 		err = dom_element_has_attribute(node,
-				((dom_html_document *)ctx)->memoised[hds_href], &has_value);
+				doc->memoised[hds_href], &has_value);
 		if(err !=DOM_NO_ERR)
 			return err;
 
@@ -831,7 +938,7 @@ static bool __dom_html_document_node_is_form(dom_node_internal *node,
 	UNUSED(ctx);
 
 	return dom_string_caseless_isequal(node->name,
-			doc->memoised[hds_FORM]);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_FORM]);
 }
 
 dom_exception _dom_html_document_get_forms(dom_html_document *doc,
@@ -868,14 +975,15 @@ dom_exception _dom_html_document_get_forms(dom_html_document *doc,
  */
 bool anchors_callback(struct dom_node_internal *node, void *ctx)
 {
+	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_A])) {
+				doc->elements[DOM_HTML_ELEMENT_TYPE_A])) {
 		bool has_value = false;
 		dom_exception err;
 
 		err = dom_element_has_attribute(node,
-				((dom_html_document *)ctx)->memoised[hds_name], &has_value);
+				doc->memoised[hds_name], &has_value);
 		if(err !=DOM_NO_ERR)
 			return err;
 

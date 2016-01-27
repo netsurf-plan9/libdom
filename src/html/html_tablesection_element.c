@@ -50,7 +50,8 @@ dom_exception _dom_html_table_section_element_create(struct dom_html_document *d
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_table_section_element_initialise(doc, tag_name, namespace, prefix, *ele);
+	return _dom_html_table_section_element_initialise(doc, tag_name,
+			namespace, prefix, *ele);
 }
 
 /**
@@ -168,9 +169,10 @@ SIMPLE_GET_SET(v_align);
 /* The callback function for  _dom_html_collection_create*/
 bool table_section_callback(struct dom_node_internal *node, void *ctx)
 {
+	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,
-				((dom_html_document *)ctx)->memoised[hds_TR])) {
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TR])) {
 		return true;
 	}
 	return false;

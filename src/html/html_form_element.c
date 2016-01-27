@@ -70,8 +70,8 @@ dom_exception _dom_html_form_element_initialise(struct dom_html_document *doc,
 	dom_exception err;
 
 	err = _dom_html_element_initialise(doc, &ele->base,
-					   doc->memoised[hds_FORM],
-					   namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_FORM],
+			namespace, prefix);
 	
 	return err;
 }
@@ -283,16 +283,16 @@ static bool _dom_is_form_control(struct dom_node_internal *node, void *ctx)
 	
         /* Form controls are INPUT TEXTAREA SELECT and BUTTON*/
         if (dom_string_caseless_isequal(node->name,
-					doc->memoised[hds_INPUT]))
+					doc->elements[DOM_HTML_ELEMENT_TYPE_INPUT]))
 		return ((dom_html_input_element *)node)->form == form;
 	if (dom_string_caseless_isequal(node->name,
-					doc->memoised[hds_TEXTAREA]))
+					doc->elements[DOM_HTML_ELEMENT_TYPE_TEXTAREA]))
 		return ((dom_html_text_area_element *)node)->form == form;
 	if (dom_string_caseless_isequal(node->name,
-					doc->memoised[hds_SELECT]))
+					doc->elements[DOM_HTML_ELEMENT_TYPE_SELECT]))
 		return ((dom_html_select_element *)node)->form == form;
 	if (dom_string_caseless_isequal(node->name,
-					doc->memoised[hds_BUTTON])) {
+					doc->elements[DOM_HTML_ELEMENT_TYPE_BUTTON])) {
 		return ((dom_html_button_element *)node)->form == form;
 	}
 

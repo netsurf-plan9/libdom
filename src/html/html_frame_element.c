@@ -61,8 +61,8 @@ dom_exception _dom_html_frame_element_initialise(struct dom_html_document *doc,
 		struct dom_html_frame_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_FRAME],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_FRAME],
+			namespace, prefix);
 }
 
 /**
@@ -97,7 +97,7 @@ dom_exception dom_html_frame_element_get_no_resize(dom_html_frame_element *ele,
 		                bool *no_resize)
 {
 	        return dom_html_element_get_bool_property(&ele->base, "noresize",
-				                        SLEN("noresize"), no_resize);
+				SLEN("noresize"), no_resize);
 }
 
 /**
@@ -111,7 +111,7 @@ dom_exception dom_html_frame_element_set_no_resize(dom_html_frame_element *ele,
 		                bool no_resize)
 {
 	        return dom_html_element_set_bool_property(&ele->base, "noresize",
-				                        SLEN("noresize"), no_resize);
+				SLEN("noresize"), no_resize);
 }
 
 /*------------------------------------------------------------------------*/

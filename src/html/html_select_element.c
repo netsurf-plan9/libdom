@@ -65,7 +65,7 @@ dom_exception _dom_html_select_element_initialise(struct dom_html_document *doc,
 	ele->form = NULL;
 
 	return _dom_html_element_initialise(doc, &ele->base,
-			doc->memoised[hds_SELECT],
+			doc->elements[DOM_HTML_ELEMENT_TYPE_SELECT],
 			namespace, prefix);
 }
 
@@ -695,7 +695,8 @@ bool is_option(struct dom_node_internal *node, void *ctx)
 	dom_html_select_element *ele = ctx;
 	dom_html_document *doc = (dom_html_document *) dom_node_get_owner(ele);
 
-	if (dom_string_isequal(node->name, doc->memoised[hds_OPTION]))
+	if (dom_string_isequal(node->name,
+			doc->elements[DOM_HTML_ELEMENT_TYPE_OPTION]))
 		return true;
 
 	return false;

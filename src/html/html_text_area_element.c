@@ -67,8 +67,8 @@ dom_exception _dom_html_text_area_element_initialise(struct dom_html_document *d
 	ele->value_set = false;
 
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_TEXTAREA],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_TEXTAREA],
+			namespace, prefix);
 }
 
 /**

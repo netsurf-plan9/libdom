@@ -63,8 +63,8 @@ dom_exception _dom_html_legend_element_initialise(struct dom_html_document *doc,
 		struct dom_html_legend_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_LEGEND],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_LEGEND],
+			namespace, prefix);
 }
 
 /**
@@ -106,7 +106,7 @@ dom_exception dom_html_legend_element_get_form(
 	while (field_set != NULL) {
 		if (field_set->type == DOM_ELEMENT_NODE &&
 				dom_string_caseless_isequal(field_set->name,
-						doc->memoised[hds_FIELDSET]))
+						doc->elements[DOM_HTML_ELEMENT_TYPE_FIELDSET]))
 			break;
 
 		field_set = field_set->parent;

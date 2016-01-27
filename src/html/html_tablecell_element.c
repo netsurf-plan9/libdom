@@ -47,7 +47,8 @@ dom_exception _dom_html_table_cell_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_table_cell_element_initialise(doc, tag_name, namespace, prefix, *ele);
+	return _dom_html_table_cell_element_initialise(doc, tag_name,
+			namespace, prefix, *ele);
 }
 
 /**
@@ -185,7 +186,9 @@ dom_exception dom_html_table_cell_element_get_cell_index(
 	int32_t cnt = 0;
 	dom_node_internal *root;
 	while(n != NULL) {
-		if(dom_string_caseless_isequal(doc->memoised[hds_TR],n->name)) {
+		if(dom_string_caseless_isequal(
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TR],
+				n->name)) {
 			break;
 		}
 		n = n->parent;
@@ -195,8 +198,12 @@ dom_exception dom_html_table_cell_element_get_cell_index(
 		if(n == (dom_node_internal *)table_cell) {
 			break;
 		} else if((n->type == DOM_ELEMENT_NODE) &&
-				(dom_string_caseless_isequal(doc->memoised[hds_TD],n->name) ||
-				 dom_string_caseless_isequal(doc->memoised[hds_TH],n->name))) {
+				(dom_string_caseless_isequal(
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TD],
+				n->name) ||
+				dom_string_caseless_isequal(
+				doc->elements[DOM_HTML_ELEMENT_TYPE_TH],
+				n->name))) {
 			cnt += 1;
 		}
 		if(n->first_child != NULL) {
@@ -233,8 +240,8 @@ dom_exception dom_html_table_cell_element_get_cell_index(
 dom_exception dom_html_table_cell_element_get_col_span(
 		dom_html_table_cell_element *table_cell, dom_ulong *col_span)
 {
-	return dom_html_element_get_dom_ulong_property(&table_cell->base, "colspan",
-			SLEN("colspan"), col_span);
+	return dom_html_element_get_dom_ulong_property(&table_cell->base,
+			"colspan", SLEN("colspan"), col_span);
 }
 
 /**
@@ -247,8 +254,8 @@ dom_exception dom_html_table_cell_element_get_col_span(
 dom_exception dom_html_table_cell_element_set_col_span(
 		dom_html_table_cell_element *table_cell, dom_ulong col_span)
 {
-	return dom_html_element_set_dom_ulong_property(&table_cell->base, "colspan",
-			SLEN("colspan"), col_span);
+	return dom_html_element_set_dom_ulong_property(&table_cell->base,
+			"colspan", SLEN("colspan"), col_span);
 }
 
 /**
@@ -261,8 +268,8 @@ dom_exception dom_html_table_cell_element_set_col_span(
 dom_exception dom_html_table_cell_element_get_row_span(
 		dom_html_table_cell_element *table_cell, dom_ulong *row_span)
 {
-	return dom_html_element_get_dom_ulong_property(&table_cell->base, "rowspan",
-			SLEN("rowspan"), row_span);
+	return dom_html_element_get_dom_ulong_property(&table_cell->base,
+			"rowspan", SLEN("rowspan"), row_span);
 }
 
 /**
@@ -275,8 +282,8 @@ dom_exception dom_html_table_cell_element_get_row_span(
 dom_exception dom_html_table_cell_element_set_row_span(
 		dom_html_table_cell_element *table_cell, dom_ulong row_span)
 {
-	return dom_html_element_set_dom_ulong_property(&table_cell->base, "rowspan",
-			SLEN("rowspan"), row_span);
+	return dom_html_element_set_dom_ulong_property(&table_cell->base,
+			"rowspan", SLEN("rowspan"), row_span);
 }
 
 /**

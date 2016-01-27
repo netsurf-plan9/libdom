@@ -69,8 +69,8 @@ dom_exception _dom_html_input_element_initialise(struct dom_html_document *doc,
 	ele->checked_set = false;
 
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_INPUT],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_INPUT],
+			namespace, prefix);
 }
 
 /**

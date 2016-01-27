@@ -63,8 +63,7 @@ dom_exception _dom_html_heading_element_initialise(struct dom_html_document *doc
 		dom_string *prefix, struct dom_html_heading_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    tag_name, namespace,
-					    prefix);
+			tag_name, namespace, prefix);
 }
 
 /**

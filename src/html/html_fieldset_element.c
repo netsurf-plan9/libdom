@@ -61,8 +61,8 @@ dom_exception _dom_html_field_set_element_initialise(struct dom_html_document *d
 		struct dom_html_field_set_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_FIELDSET],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_FIELDSET],
+			namespace, prefix);
 }
 
 /**
@@ -136,7 +136,7 @@ dom_exception dom_html_field_set_element_get_form(
 	while (form_tmp != NULL) {
 		if (form_tmp->type == DOM_ELEMENT_NODE &&
 				dom_string_caseless_isequal(form_tmp->name,
-						doc->memoised[hds_FORM]))
+						doc->elements[DOM_HTML_ELEMENT_TYPE_FORM]))
 			break;
 
 		form_tmp = form_tmp->parent;

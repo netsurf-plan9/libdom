@@ -46,7 +46,8 @@ dom_exception _dom_html_table_col_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_table_col_element_initialise(doc, tag_name, namespace, prefix, *ele);
+	return _dom_html_table_col_element_initialise(doc, tag_name,
+			namespace, prefix, *ele);
 }
 
 /**
@@ -61,8 +62,7 @@ dom_exception _dom_html_table_col_element_initialise(struct dom_html_document *d
 		struct dom_html_table_col_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    tag_name,
-					    namespace, prefix);
+			tag_name, namespace, prefix);
 }
 
 /**

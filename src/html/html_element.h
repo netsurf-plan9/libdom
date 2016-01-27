@@ -9,6 +9,7 @@
 #define dom_internal_html_element_h_
 
 #include <dom/html/html_element.h>
+#include <dom/html/html_elements.h>
 
 #include "core/element.h"
 

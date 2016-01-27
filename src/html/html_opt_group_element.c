@@ -61,8 +61,8 @@ dom_exception _dom_html_opt_group_element_initialise(struct dom_html_document *d
 		struct dom_html_opt_group_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-					    doc->memoised[hds_OPTGROUP],
-					    namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_OPTGROUP],
+			namespace, prefix);
 }
 
 /**

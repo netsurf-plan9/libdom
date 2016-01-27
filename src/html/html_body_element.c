@@ -30,7 +30,7 @@ static struct dom_element_protected_vtable _protect_vtable = {
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_body_element_create(struct dom_html_document *doc,
-		dom_string *namespace, dom_string *prefix,                            
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_body_element **ele)
 {
 	struct dom_node_internal *node;
@@ -55,11 +55,12 @@ dom_exception _dom_html_body_element_create(struct dom_html_document *doc,
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
 dom_exception _dom_html_body_element_initialise(struct dom_html_document *doc,
-		dom_string *namespace, dom_string *prefix,                            
+		dom_string *namespace, dom_string *prefix,
 		struct dom_html_body_element *ele)
 {
 	return _dom_html_element_initialise(doc, &ele->base,
-			doc->memoised[hds_BODY], namespace, prefix);
+			doc->elements[DOM_HTML_ELEMENT_TYPE_BODY],
+			namespace, prefix);
 }
 
 /**
