@@ -16,6 +16,7 @@
 #include "html/html_html_element.h"
 #include "html/html_head_element.h"
 #include "html/html_body_element.h"
+#include "html/html_base_element.h"
 #include "html/html_div_element.h"
 #include "html/html_link_element.h"
 #include "html/html_title_element.h"
@@ -266,6 +267,9 @@ static inline dom_html_element_type _dom_html_document_get_element_type(
 			html->elements[DOM_HTML_ELEMENT_TYPE_META])) {
 		return DOM_HTML_ELEMENT_TYPE_META;
 	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BASE])) {
+		return DOM_HTML_ELEMENT_TYPE_BASE;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
 			html->elements[DOM_HTML_ELEMENT_TYPE_TITLE])) {
 		return DOM_HTML_ELEMENT_TYPE_TITLE;
 	} else if (dom_string_caseless_isequal(tag_name_upper,
@@ -483,6 +487,10 @@ _dom_html_document_create_element_internal(
 	case DOM_HTML_ELEMENT_TYPE_META:
 		exc = _dom_html_meta_element_create(html, namespace, prefix,
 				(dom_html_meta_element **) result);
+		break;
+	case DOM_HTML_ELEMENT_TYPE_BASE:
+		exc = _dom_html_base_element_create(html, namespace, prefix,
+				(dom_html_base_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_TITLE:
 		exc = _dom_html_title_element_create(html, namespace, prefix,
