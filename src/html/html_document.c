@@ -342,6 +342,9 @@ static inline dom_html_element_type _dom_html_document_get_element_type(
 		} else if (dom_string_isequal(tag_name_upper, html->elements[
 				DOM_HTML_ELEMENT_TYPE_MAP])) {
 			return  DOM_HTML_ELEMENT_TYPE_MAP;
+		} else if (dom_string_isequal(tag_name_upper, html->elements[
+				DOM_HTML_ELEMENT_TYPE_DIR])) {
+			return  DOM_HTML_ELEMENT_TYPE_DIR;
 		}
 		break;
 	case 4:
@@ -467,12 +470,6 @@ static inline dom_html_element_type _dom_html_document_get_element_type(
 			return  DOM_HTML_ELEMENT_TYPE_FRAMESET;
 		}
 		break;
-	case 9:
-		if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_DIRECTORY])) {
-			return  DOM_HTML_ELEMENT_TYPE_DIRECTORY;
-		}
-		break;
 	case 10:
 		if (dom_string_isequal(tag_name_upper, html->elements[
 				DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE])) {
@@ -577,7 +574,7 @@ _dom_html_document_create_element_internal(
 		exc = _dom_html_dlist_element_create(html, namespace, prefix,
 				(dom_html_dlist_element **) result);
 		break;
-	case DOM_HTML_ELEMENT_TYPE_DIRECTORY:
+	case DOM_HTML_ELEMENT_TYPE_DIR:
 		exc = _dom_html_directory_element_create(html, namespace,
 				prefix, (dom_html_directory_element **) result);
 		break;
