@@ -331,6 +331,9 @@ static inline dom_html_element_type _dom_html_document_get_element_type(
 			html->elements[DOM_HTML_ELEMENT_TYPE_H6])) {
 		return DOM_HTML_ELEMENT_TYPE_H6;
 	} else if (dom_string_caseless_isequal(tag_name_upper,
+			html->elements[DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE])) {
+		return DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE;
+	} else if (dom_string_caseless_isequal(tag_name_upper,
 			html->elements[DOM_HTML_ELEMENT_TYPE_Q])) {
 		return DOM_HTML_ELEMENT_TYPE_Q;
 	} else if (dom_string_caseless_isequal(tag_name_upper,
@@ -548,6 +551,7 @@ _dom_html_document_create_element_internal(
 				namespace, prefix,
 				(dom_html_heading_element **) result);
 		break;
+	case DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE:
 	case DOM_HTML_ELEMENT_TYPE_Q:
 		exc = _dom_html_quote_element_create(html, namespace, prefix,
 				(dom_html_quote_element **) result);
