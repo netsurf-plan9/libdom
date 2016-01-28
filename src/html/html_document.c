@@ -606,7 +606,8 @@ _dom_html_document_create_element_internal(
 		break;
 	case DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE:
 	case DOM_HTML_ELEMENT_TYPE_Q:
-		exc = _dom_html_quote_element_create(html, namespace, prefix,
+		exc = _dom_html_quote_element_create(html, tag_name,
+				namespace, prefix,
 				(dom_html_quote_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_PRE:
