@@ -29,12 +29,12 @@ static bool is_option(struct dom_node_internal *node, void *ctx);
 /**
  * Create a dom_html_select_element object
  *
- * \param doc  The document object
- * \param ele  The returned element object
+ * \param params  The html element creation parameters
+ * \param ele     The returned element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_select_element_create(struct dom_html_document *doc,
-		dom_string *namespace, dom_string *prefix,
+dom_exception _dom_html_select_element_create(
+		struct dom_html_element_create_params *params,
 		struct dom_html_select_element **ele)
 {
 	struct dom_node_internal *node;
@@ -48,25 +48,23 @@ dom_exception _dom_html_select_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_select_element_initialise(doc, namespace, prefix, *ele);
+	return _dom_html_select_element_initialise(params, *ele);
 }
 
 /**
  * Initialise a dom_html_select_element object
  *
- * \param doc  The document object
- * \param ele  The dom_html_select_element object
+ * \param params  The html element creation parameters
+ * \param ele     The dom_html_select_element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_select_element_initialise(struct dom_html_document *doc,
-		dom_string *namespace, dom_string *prefix,
+dom_exception _dom_html_select_element_initialise(
+		struct dom_html_element_create_params *params,
 		struct dom_html_select_element *ele)
 {
 	ele->form = NULL;
 
-	return _dom_html_element_initialise(doc, &ele->base,
-			doc->elements[DOM_HTML_ELEMENT_TYPE_SELECT],
-			namespace, prefix);
+	return _dom_html_element_initialise(params, &ele->base);
 }
 
 /**

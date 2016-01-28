@@ -493,106 +493,110 @@ _dom_html_document_create_element_internal(
 		dom_html_element **result)
 {
 	dom_exception exc;
-	dom_string *tag_name;
 	dom_html_element_type type;
+	struct dom_html_element_create_params params;
 
-	exc = dom_string_toupper(in_tag_name, true, &tag_name);
+	exc = dom_string_toupper(in_tag_name, true, &params.name);
 	if (exc != DOM_NO_ERR)
 		return exc;
 
-	type = _dom_html_document_get_element_type(html, tag_name);
+	type = _dom_html_document_get_element_type(html, params.name);
+
+	params.doc = html;
+	params.namespace = namespace;
+	params.prefix = prefix;
 
 	switch(type) {
 	case DOM_HTML_ELEMENT_TYPE__COUNT:
 		assert(type != DOM_HTML_ELEMENT_TYPE__COUNT);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_HTML:
-		exc = _dom_html_html_element_create(html, namespace, prefix,
+		exc = _dom_html_html_element_create(&params,
 				(dom_html_html_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_HEAD:
-		exc = _dom_html_head_element_create(html, namespace, prefix,
+		exc = _dom_html_head_element_create(&params,
 				(dom_html_head_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_META:
-		exc = _dom_html_meta_element_create(html, namespace, prefix,
+		exc = _dom_html_meta_element_create(&params,
 				(dom_html_meta_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_BASE:
-		exc = _dom_html_base_element_create(html, namespace, prefix,
+		exc = _dom_html_base_element_create(&params,
 				(dom_html_base_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_TITLE:
-		exc = _dom_html_title_element_create(html, namespace, prefix,
+		exc = _dom_html_title_element_create(&params,
 				(dom_html_title_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_BODY:
-		exc = _dom_html_body_element_create(html, namespace, prefix,
+		exc = _dom_html_body_element_create(&params,
 				(dom_html_body_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_DIV:
-		exc = _dom_html_div_element_create(html, namespace, prefix,
+		exc = _dom_html_div_element_create(&params,
 				(dom_html_div_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_FORM:
-		exc = _dom_html_form_element_create(html, namespace, prefix,
+		exc = _dom_html_form_element_create(&params,
 				(dom_html_form_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_LINK:
-		exc = _dom_html_link_element_create(html, namespace, prefix,
+		exc = _dom_html_link_element_create(&params,
 				(dom_html_link_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_BUTTON:
-		exc = _dom_html_button_element_create(html, namespace, prefix,
+		exc = _dom_html_button_element_create(&params,
 				(dom_html_button_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_INPUT:
-		exc = _dom_html_input_element_create(html, namespace, prefix,
+		exc = _dom_html_input_element_create(&params,
 				(dom_html_input_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_TEXTAREA:
-		exc = _dom_html_text_area_element_create(html, namespace,
-				prefix, (dom_html_text_area_element **) result);
+		exc = _dom_html_text_area_element_create(&params,
+				(dom_html_text_area_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_OPTGROUP:
-		exc = _dom_html_opt_group_element_create(html, namespace,
-				prefix, (dom_html_opt_group_element **) result);
+		exc = _dom_html_opt_group_element_create(&params,
+				(dom_html_opt_group_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_OPTION:
-		exc = _dom_html_option_element_create(html, namespace, prefix,
+		exc = _dom_html_option_element_create(&params,
 				(dom_html_option_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_SELECT:
-		exc = _dom_html_select_element_create(html, namespace, prefix,
+		exc = _dom_html_select_element_create(&params,
 				(dom_html_select_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_HR:
-		exc = _dom_html_hr_element_create(html, namespace, prefix,
+		exc = _dom_html_hr_element_create(&params,
 				(dom_html_hr_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_DL:
-		exc = _dom_html_dlist_element_create(html, namespace, prefix,
+		exc = _dom_html_dlist_element_create(&params,
 				(dom_html_dlist_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_DIR:
-		exc = _dom_html_directory_element_create(html, namespace,
-				prefix, (dom_html_directory_element **) result);
+		exc = _dom_html_directory_element_create(&params,
+				(dom_html_directory_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_MENU:
-		exc = _dom_html_menu_element_create(html, namespace, prefix,
+		exc = _dom_html_menu_element_create(&params,
 				(dom_html_menu_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_FIELDSET:
-		exc = _dom_html_field_set_element_create(html, namespace,
-				prefix, (dom_html_field_set_element **) result);
+		exc = _dom_html_field_set_element_create(&params,
+				(dom_html_field_set_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_LEGEND:
-		exc = _dom_html_legend_element_create(html, namespace, prefix,
+		exc = _dom_html_legend_element_create(&params,
 				(dom_html_legend_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_P:
-		exc = _dom_html_paragraph_element_create(html, namespace,
-				prefix, (dom_html_paragraph_element **) result);
+		exc = _dom_html_paragraph_element_create(&params,
+				(dom_html_paragraph_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_H1:
 	case DOM_HTML_ELEMENT_TYPE_H2:
@@ -600,145 +604,138 @@ _dom_html_document_create_element_internal(
 	case DOM_HTML_ELEMENT_TYPE_H4:
 	case DOM_HTML_ELEMENT_TYPE_H5:
 	case DOM_HTML_ELEMENT_TYPE_H6:
-		exc = _dom_html_heading_element_create(html, tag_name,
-				namespace, prefix,
+		exc = _dom_html_heading_element_create(&params,
 				(dom_html_heading_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE:
 	case DOM_HTML_ELEMENT_TYPE_Q:
-		exc = _dom_html_quote_element_create(html, tag_name,
-				namespace, prefix,
+		exc = _dom_html_quote_element_create(&params,
 				(dom_html_quote_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_PRE:
-		exc = _dom_html_pre_element_create(html, namespace, prefix,
+		exc = _dom_html_pre_element_create(&params,
 				(dom_html_pre_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_BR:
-		exc = _dom_html_br_element_create(html, namespace, prefix,
+		exc = _dom_html_br_element_create(&params,
 				(dom_html_br_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_LABEL:
-		exc = _dom_html_label_element_create(html, namespace, prefix,
+		exc = _dom_html_label_element_create(&params,
 				(dom_html_label_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_UL:
-		exc = _dom_html_u_list_element_create(html, namespace, prefix,
+		exc = _dom_html_u_list_element_create(&params,
 				(dom_html_u_list_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_OL:
-		exc = _dom_html_olist_element_create(html, namespace, prefix,
+		exc = _dom_html_olist_element_create(&params,
 				(dom_html_olist_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_LI:
-		exc = _dom_html_li_element_create(html, namespace, prefix,
+		exc = _dom_html_li_element_create(&params,
 				(dom_html_li_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_FONT:
-		exc = _dom_html_font_element_create(html, namespace, prefix,
+		exc = _dom_html_font_element_create(&params,
 				(dom_html_font_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_DEL:
 	case DOM_HTML_ELEMENT_TYPE_INS:
-		exc = _dom_html_mod_element_create(html, tag_name, namespace, 
-				prefix, (dom_html_mod_element **) result);
+		exc = _dom_html_mod_element_create(&params,
+				(dom_html_mod_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_A:
-		exc = _dom_html_anchor_element_create(html, namespace, prefix,
+		exc = _dom_html_anchor_element_create(&params,
 				(dom_html_anchor_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_BASEFONT:
-		exc = _dom_html_base_font_element_create(html,
-				namespace, prefix,
+		exc = _dom_html_base_font_element_create(&params,
 				(dom_html_base_font_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_IMG:
-		exc = _dom_html_image_element_create(html, namespace, prefix,
+		exc = _dom_html_image_element_create(&params,
 				(dom_html_image_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_OBJECT:
-		exc = _dom_html_object_element_create(html, namespace, prefix,
+		exc = _dom_html_object_element_create(&params,
 				(dom_html_object_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_PARAM:
-		exc = _dom_html_param_element_create(html, namespace, prefix,
+		exc = _dom_html_param_element_create(&params,
 				(dom_html_param_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_APPLET:
-		exc = _dom_html_applet_element_create(html, namespace, prefix,
+		exc = _dom_html_applet_element_create(&params,
 				(dom_html_applet_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_MAP:
-		exc = _dom_html_map_element_create(html, namespace, prefix,
+		exc = _dom_html_map_element_create(&params,
 				(dom_html_map_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_AREA:
-		exc = _dom_html_area_element_create(html, namespace, prefix,
+		exc = _dom_html_area_element_create(&params,
 				(dom_html_area_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_SCRIPT:
-		exc = _dom_html_script_element_create(html, namespace, prefix,
+		exc = _dom_html_script_element_create(&params,
 				(dom_html_script_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_CAPTION:
-		exc = _dom_html_table_caption_element_create(html,
-				namespace, prefix,
+		exc = _dom_html_table_caption_element_create(&params,
 				(dom_html_table_caption_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_TD:
 	case DOM_HTML_ELEMENT_TYPE_TH:
-		exc = _dom_html_table_cell_element_create(html, tag_name,
-				namespace, prefix,
+		exc = _dom_html_table_cell_element_create(&params,
 				(dom_html_table_cell_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_COL:
 	case DOM_HTML_ELEMENT_TYPE_COLGROUP:
-		exc = _dom_html_table_col_element_create(html, tag_name,
-				namespace, prefix,
+		exc = _dom_html_table_col_element_create(&params,
 				(dom_html_table_col_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_THEAD:
 	case DOM_HTML_ELEMENT_TYPE_TBODY:
 	case DOM_HTML_ELEMENT_TYPE_TFOOT:
-		exc = _dom_html_table_section_element_create(html, tag_name,
-				namespace, prefix,
+		exc = _dom_html_table_section_element_create(&params,
 				(dom_html_table_section_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_TABLE:
-		exc = _dom_html_table_element_create(html, namespace, prefix,
+		exc = _dom_html_table_element_create(&params,
 				(dom_html_table_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_TR:
-		exc = _dom_html_table_row_element_create(html, namespace,
-				prefix, (dom_html_table_row_element **) result);
+		exc = _dom_html_table_row_element_create(&params,
+				(dom_html_table_row_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_STYLE:
-		exc = _dom_html_style_element_create(html,
+		exc = _dom_html_style_element_create(&params,
 				(dom_html_style_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_FRAMESET:
-		exc = _dom_html_frame_set_element_create(html, namespace,
-				prefix, (dom_html_frame_set_element **) result);
+		exc = _dom_html_frame_set_element_create(&params,
+				(dom_html_frame_set_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_FRAME:
-		exc = _dom_html_frame_element_create(html, namespace, prefix,
+		exc = _dom_html_frame_element_create(&params,
 				(dom_html_frame_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_IFRAME:
-		exc = _dom_html_iframe_element_create(html, namespace, prefix,
+		exc = _dom_html_iframe_element_create(&params,
 				(dom_html_iframe_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_ISINDEX:
-		exc = _dom_html_isindex_element_create(html, namespace, prefix,
+		exc = _dom_html_isindex_element_create(&params,
 				(dom_html_isindex_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE__UNKNOWN:
-		exc =  _dom_html_element_create(html, tag_name, namespace,
-						prefix, result);
+		exc =  _dom_html_element_create(&params,
+				result);
 		break;
 	}
 
-	dom_string_unref(tag_name);
+	dom_string_unref(params.name);
 
 	return exc;
 }

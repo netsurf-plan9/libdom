@@ -24,13 +24,20 @@ struct dom_html_element {
 			/**< The base class */
 };
 
-dom_exception _dom_html_element_create(struct dom_html_document *doc,
-		dom_string *name, dom_string *namespace,
-		dom_string *prefix, dom_html_element **result);
+struct dom_html_element_create_params {
+	struct dom_html_document *doc;
+	dom_string *name;
+	dom_string *namespace;
+	dom_string *prefix;
+};
 
-dom_exception _dom_html_element_initialise(struct dom_html_document *doc,
-		struct dom_html_element *el, dom_string *name, 
-		dom_string *namespace, dom_string *prefix);
+dom_exception _dom_html_element_create(
+		struct dom_html_element_create_params *params,
+		dom_html_element **result);
+
+dom_exception _dom_html_element_initialise(
+		struct dom_html_element_create_params *params,
+		struct dom_html_element *el);
 
 void _dom_html_element_finalise(struct dom_html_element *ele);
 

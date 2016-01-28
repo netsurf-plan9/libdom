@@ -38,9 +38,9 @@ static struct dom_element_protected_vtable _dom_html_element_protect_vtable = {
 	DOM_ELEMENT_PROTECT_VTABLE
 };
 
-dom_exception _dom_html_element_create(struct dom_html_document *doc,
-		dom_string *name, dom_string *namespace,
-		dom_string *prefix, struct dom_html_element **result)
+dom_exception _dom_html_element_create(
+		struct dom_html_element_create_params *params,
+		struct dom_html_element **result)
 {
 	dom_exception error;
 	dom_html_element *el;
@@ -52,8 +52,7 @@ dom_exception _dom_html_element_create(struct dom_html_document *doc,
 	el->base.base.base.vtable = &_dom_html_element_vtable;
 	el->base.base.vtable = &_dom_html_element_protect_vtable;
 
-	error = _dom_html_element_initialise(doc, el, name, namespace,
-			prefix);
+	error = _dom_html_element_initialise(params, el);
 	if (error != DOM_NO_ERR) {
 		free(el);
 		return error;
@@ -64,13 +63,14 @@ dom_exception _dom_html_element_create(struct dom_html_document *doc,
 	return DOM_NO_ERR;
 }
 
-dom_exception _dom_html_element_initialise(struct dom_html_document *doc,
-		struct dom_html_element *el, dom_string *name, 
-		dom_string *namespace, dom_string *prefix)
+dom_exception _dom_html_element_initialise(
+		struct dom_html_element_create_params *params,
+		struct dom_html_element *el)
 {
 	dom_exception err;
 
-	err = _dom_element_initialise(&doc->base, &el->base, name, namespace, prefix);
+	err = _dom_element_initialise(&params->doc->base, &el->base,
+			params->name, params->namespace, params->prefix);
 	if (err != DOM_NO_ERR)
 		return err;
 	
