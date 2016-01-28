@@ -124,6 +124,8 @@ dom_exception _dom_html_element_get_class_name(dom_html_element *element,
                                        dom_string **class_name);
 dom_exception _dom_html_element_set_class_name(dom_html_element *element,
                                        dom_string *class_name);
+dom_exception _dom_html_element_get_tag_type(const dom_html_element *element,
+                                       dom_html_element_type *type);
 
 #define DOM_HTML_ELEMENT_VTABLE \
 	_dom_html_element_get_id, \
@@ -135,7 +137,8 @@ dom_exception _dom_html_element_set_class_name(dom_html_element *element,
 	_dom_html_element_get_dir, \
 	_dom_html_element_set_dir, \
 	_dom_html_element_get_class_name, \
-	_dom_html_element_set_class_name
+	_dom_html_element_set_class_name, \
+	_dom_html_element_get_tag_type
 
 /* Some common functions used by all child classes */
 dom_exception dom_html_element_get_bool_property(dom_html_element *ele,

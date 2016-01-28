@@ -282,6 +282,24 @@ dom_exception _dom_html_element_get_elements_by_tag_name_ns(
 	return err;
 }
 
+/**
+ * Retrieve an HTML element's tag type.
+ *
+ * \param element  The element to get the tag type of.
+ * \param type     Updated to the tag type of the element.
+ * \return DOM_NO_ERR
+ *
+ * Elements with non-standard tags will be DOM_HTML_ELEMENT_TYPE__UNKNOWN.
+ */
+dom_exception _dom_html_element_get_tag_type(
+		const struct dom_html_element *element,
+		dom_html_element_type *type)
+{
+	*type = element->type;
+
+	return DOM_NO_ERR;
+}
+
 /*-----------------------------------------------------------------------*/
 /* Common functions */
 

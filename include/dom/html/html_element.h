@@ -9,6 +9,7 @@
 #define dom_html_element_h_
 
 #include <dom/core/element.h>
+#include <dom/html/html_elements.h>
 
 typedef struct dom_html_element dom_html_element;
 
@@ -45,6 +46,12 @@ typedef struct dom_html_element_vtable {
 	dom_exception (*dom_html_element_set_class_name)(
 			struct dom_html_element *element,
 			dom_string *class_name);
+
+	/* This is for providing clients with a convienent way to deal
+	 * with html elements with a specific tag name. */
+	dom_exception (*dom_html_element_get_tag_type)(
+			const struct dom_html_element *element,
+			dom_html_element_type *type);
 } dom_html_element_vtable;
 
 static inline dom_exception dom_html_element_get_id(
@@ -138,6 +145,17 @@ static inline dom_exception dom_html_element_set_class_name(
 #define dom_html_element_set_class_name(e, class_name) \
 		dom_html_element_set_class_name((dom_html_element *) (e), \
 		(class_name))
+
+static inline dom_exception dom_html_element_get_tag_type(
+		const struct dom_html_element *element,
+		dom_html_element_type *type)
+{
+	return ((dom_html_element_vtable *) ((dom_node *) element)->vtable)->
+		dom_html_element_get_tag_type(element, type);
+}
+#define dom_html_element_get_tag_type(e, type) \
+		dom_html_element_get_tag_type((const dom_html_element *) (e), \
+		(type))
 
 #endif
 
