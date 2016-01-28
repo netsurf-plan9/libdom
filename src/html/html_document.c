@@ -493,22 +493,20 @@ _dom_html_document_create_element_internal(
 		dom_html_element **result)
 {
 	dom_exception exc;
-	dom_html_element_type type;
 	struct dom_html_element_create_params params;
 
 	exc = dom_string_toupper(in_tag_name, true, &params.name);
 	if (exc != DOM_NO_ERR)
 		return exc;
 
-	type = _dom_html_document_get_element_type(html, params.name);
-
+	params.type = _dom_html_document_get_element_type(html, params.name);
 	params.doc = html;
 	params.namespace = namespace;
 	params.prefix = prefix;
 
-	switch(type) {
+	switch(params.type) {
 	case DOM_HTML_ELEMENT_TYPE__COUNT:
-		assert(type != DOM_HTML_ELEMENT_TYPE__COUNT);
+		assert(params.type != DOM_HTML_ELEMENT_TYPE__COUNT);
 		break;
 	case DOM_HTML_ELEMENT_TYPE_HTML:
 		exc = _dom_html_html_element_create(&params,
@@ -730,8 +728,7 @@ _dom_html_document_create_element_internal(
 				(dom_html_isindex_element **) result);
 		break;
 	case DOM_HTML_ELEMENT_TYPE__UNKNOWN:
-		exc =  _dom_html_element_create(&params,
-				result);
+		exc = _dom_html_element_create(&params, result);
 		break;
 	}
 

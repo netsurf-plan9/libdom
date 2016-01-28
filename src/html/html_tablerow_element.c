@@ -334,6 +334,7 @@ dom_exception dom_html_table_row_element_insert_cell(
 	dom_exception exp;		/*< Variable for getting the exceptions*/
 
 	struct dom_html_element_create_params params = {
+		.type = DOM_HTML_ELEMENT_TYPE_TD,
 		.doc = doc,
 		.name = doc->elements[DOM_HTML_ELEMENT_TYPE_TD],
 		.namespace = ((dom_node_internal *)element)->namespace,

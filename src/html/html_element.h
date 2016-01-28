@@ -22,9 +22,11 @@ struct dom_html_document;
 struct dom_html_element {
 	struct dom_element base;
 			/**< The base class */
+	dom_html_element_type type;
 };
 
 struct dom_html_element_create_params {
+	dom_html_element_type type;
 	struct dom_html_document *doc;
 	dom_string *name;
 	dom_string *namespace;

@@ -435,6 +435,7 @@ dom_exception dom_html_table_element_create_caption(
 				((dom_node_internal *) element)->owner;
 
 		struct dom_html_element_create_params params = {
+			.type = DOM_HTML_ELEMENT_TYPE_CAPTION,
 			.doc = doc,
 			.name = doc->elements[DOM_HTML_ELEMENT_TYPE_CAPTION],
 			.namespace = ((dom_node_internal *)element)->namespace,
@@ -507,6 +508,7 @@ dom_exception dom_html_table_element_create_t_foot(
 				((dom_node_internal *) element)->owner;
 
 		struct dom_html_element_create_params params = {
+			.type = DOM_HTML_ELEMENT_TYPE_TFOOT,
 			.doc = doc,
 			.name = doc->elements[DOM_HTML_ELEMENT_TYPE_TFOOT],
 			.namespace = ((dom_node_internal *)element)->namespace,
@@ -584,6 +586,7 @@ dom_exception dom_html_table_element_create_t_head(
 				((dom_node_internal *) element)->owner;
 
 		struct dom_html_element_create_params params = {
+			.type = DOM_HTML_ELEMENT_TYPE_THEAD,
 			.doc = doc,
 			.name = doc->elements[DOM_HTML_ELEMENT_TYPE_THEAD],
 			.namespace = ((dom_node_internal *)element)->namespace,
@@ -666,6 +669,7 @@ dom_exception dom_html_table_element_create_t_body(
 				((dom_node_internal *) element)->owner;
 
 		struct dom_html_element_create_params params = {
+			.type = DOM_HTML_ELEMENT_TYPE_TBODY,
 			.doc = doc,
 			.name = doc->elements[DOM_HTML_ELEMENT_TYPE_TBODY],
 			.namespace = ((dom_node_internal *)element)->namespace,
@@ -711,6 +715,7 @@ dom_exception dom_html_table_element_insert_row(
 		((dom_node_internal *) element)->owner;
 
 	struct dom_html_element_create_params params = {
+		.type = DOM_HTML_ELEMENT_TYPE_TR,
 		.doc = doc,
 		.name = doc->elements[DOM_HTML_ELEMENT_TYPE_TR],
 		.namespace = ((dom_node_internal *)element)->namespace,

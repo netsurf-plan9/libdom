@@ -69,6 +69,8 @@ dom_exception _dom_html_element_initialise(
 {
 	dom_exception err;
 
+	el->type = params->type;
+
 	err = _dom_element_initialise(&params->doc->base, &el->base,
 			params->name, params->namespace, params->prefix);
 	if (err != DOM_NO_ERR)
