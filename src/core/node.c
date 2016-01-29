@@ -2377,8 +2377,6 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 		/** \todo Report memory exhaustion? */
 		return DOM_NO_ERR;
 	}
-	targets[ntargets++] = (dom_event_target *)dom_node_ref(et);
-	target = target->parent;
 
 	while (target != NULL) {
 		if (ntargets == ntargets_allocated) {
@@ -2412,7 +2410,7 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	}
 
 	/* The capture phase */
-	for (targetnr = ntargets; targetnr > 1; --targetnr) {
+	for (targetnr = ntargets; targetnr > 0; --targetnr) {
 		dom_node_internal *node =
 			(dom_node_internal *) targets[targetnr - 1];
 
@@ -2443,7 +2441,7 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	/* Bubbling phase */
 	evt->phase = DOM_BUBBLING_PHASE;
 
-	for (targetnr = 1; targetnr < ntargets; ++targetnr) {
+	for (targetnr = 0; targetnr < ntargets; ++targetnr) {
 		dom_node_internal *node =
 			(dom_node_internal *) targets[targetnr];
 		err = _dom_event_target_dispatch(targets[targetnr],
