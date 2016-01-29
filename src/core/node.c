@@ -2408,15 +2408,30 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 
 	/* Add interested event listeners to array */
 	for (; target != NULL; target = target->parent) {
-		if (target->eti.listeners == NULL) {
+		struct listener_entry *le = target->eti.listeners;
+		bool target_has_listener = false;
+
+		if (le == NULL) {
 			/* This event target isn't listening to anything */
 			continue;
 		}
 
-		/* OK, add the event target to the array */
-		/* TODO: We could check that the event type string matches
-		 *       the types that registered listeners are listening for.
-		 */
+		/* Check whether the event target is listening for this
+		 * event type */
+		do {
+			if (dom_string_isequal(le->type, evt->type)) {
+				target_has_listener = true;
+				break;
+			}
+			le = (struct listener_entry *) le->list.next;
+		} while (le != target->eti.listeners);
+
+		if (target_has_listener == false) {
+			continue;
+		}
+
+		/* The event target is listening for this event type,
+		 * so add it to the array. */
 		if (ntargets == ntargets_allocated) {
 			err = _dom_event_targets_expand(&ntargets_allocated,
 					&targets);
