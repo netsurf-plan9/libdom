@@ -2320,7 +2320,6 @@ dom_exception _dom_node_remove_event_listener_ns(dom_event_target *et,
  * Dispatch an event into the implementation's event model
  *
  * \param et       The EventTarget object
- * \param eti      Internal EventTarget
  * \param evt      The event object
  * \param success  Indicates whether any of the listeners which handled the 
  *                 event called Event.preventDefault(). If 
