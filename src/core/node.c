@@ -2316,6 +2316,39 @@ dom_exception _dom_node_remove_event_listener_ns(dom_event_target *et,
 			namespace, type, listener, capture);
 }
 
+
+/** Helper for allocating/expanding array of event targets */
+static inline dom_exception _dom_event_targets_expand(
+		uint32_t *ntargets_allocated,
+		dom_event_target ***targets)
+{
+	dom_event_target **t = *targets;
+	uint32_t size = *ntargets_allocated;
+
+	if (t == NULL) {
+		/* Create the event target list */
+		size = 64;
+		t = calloc(sizeof(*t), size);
+		if (targets == NULL) {
+			return DOM_NO_MEM_ERR;
+		}
+	} else {
+		/* Extend events target list */
+		dom_event_target **tmp = realloc(t, size * 2 * sizeof(*t));
+		if (tmp == NULL) {
+			return DOM_NO_MEM_ERR;
+		}
+		memset(tmp + size, 0, size * sizeof(*tmp));
+		t = tmp;
+		size *= 2;
+	}
+
+	*ntargets_allocated = size;
+	*targets = t;
+
+	return DOM_NO_ERR;
+}
+
 /**
  * Dispatch an event into the implementation's event model
  *
@@ -2368,29 +2401,31 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 	
 	*success = true;
 
-	/* Compose the event target list */
+	/* Initialise array of targets for capture/bubbling phases */
+	targets = NULL;
+	ntargets_allocated = 0;
 	ntargets = 0;
-	ntargets_allocated = 64;
-	targets = calloc(sizeof(*targets), ntargets_allocated);
-	if (targets == NULL) {
-		/** \todo Report memory exhaustion? */
-		return DOM_NO_ERR;
-	}
 
-	while (target != NULL) {
+	/* Add interested event listeners to array */
+	for (; target != NULL; target = target->parent) {
+		if (target->eti.listeners == NULL) {
+			/* This event target isn't listening to anything */
+			continue;
+		}
+
+		/* OK, add the event target to the array */
+		/* TODO: We could check that the event type string matches
+		 *       the types that registered listeners are listening for.
+		 */
 		if (ntargets == ntargets_allocated) {
-			dom_event_target **newtargets = realloc(
-				targets,
-				ntargets_allocated * 2 * sizeof(*targets));
-			if (newtargets == NULL)
+			err = _dom_event_targets_expand(&ntargets_allocated,
+					&targets);
+			if (err != DOM_NO_ERR) {
+				ret = err;
 				goto cleanup;
-			memset(newtargets + ntargets_allocated,
-			       0, ntargets_allocated * sizeof(*newtargets));
-			targets = newtargets;
-			ntargets_allocated *= 2;
+			}
 		}
 		targets[ntargets++] = (dom_event_target *)dom_node_ref(target);
-		target = target->parent;
 	}
 
 	/* Fill the target of the event */
@@ -2462,8 +2497,8 @@ dom_exception _dom_node_dispatch_event(dom_event_target *et,
 		dom_default_action_phase phase = DOM_DEFAULT_ACTION_END;
 		if (evt->prevent_default == true)
 			phase = DOM_DEFAULT_ACTION_PREVENTED;
-		dom_default_action_callback cb = dei->actions(evt->type, phase,
-							      &pw);
+		dom_default_action_callback cb = dei->actions(
+				evt->type, phase, &pw);
 		if (cb != NULL) {
 			cb(evt, pw);
 		}
@@ -2477,7 +2512,9 @@ cleanup:
 	while (ntargets--) {
 		dom_node_unref(targets[ntargets]);
 	}
-	free(targets);
+	if (targets != NULL) {
+		free(targets);
+	}
 
 	if (dei != NULL && dei->actions != NULL) {
 		dom_default_action_callback cb = dei->actions(evt->type,
