@@ -90,6 +90,7 @@ I := /$(INCLUDEDIR)/dom/html
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_document.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_collection.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_element.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_elements.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_html_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_head_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_link_element.h

@@ -31,12 +31,12 @@ static struct dom_element_protected_vtable _protect_vtable = {
 /**
  * Create a dom_html_table_section_element object
  *
- * \table_section doc  The document object
- * \table_section ele  The returned element object
+ * \param params  The html element creation parameters
+ * \param ele     The returned element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_table_section_element_create(struct dom_html_document *doc,
-		dom_string *tag_name, dom_string *namespace, dom_string *prefix,
+dom_exception _dom_html_table_section_element_create(
+		struct dom_html_element_create_params *params,
 		struct dom_html_table_section_element **ele)
 {
 	struct dom_node_internal *node;
@@ -50,24 +50,21 @@ dom_exception _dom_html_table_section_element_create(struct dom_html_document *d
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_table_section_element_initialise(doc, tag_name,
-			namespace, prefix, *ele);
+	return _dom_html_table_section_element_initialise(params, *ele);
 }
 
 /**
  * Initialise a dom_html_table_section_element object
  *
- * \table_section doc  The document object
- * \table_section ele  The dom_html_table_section_element object
+ * \param params  The html element creation parameters
+ * \param ele     The dom_html_table_section_element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_table_section_element_initialise(struct dom_html_document *doc,
-		dom_string *tag_name, dom_string *namespace, dom_string *prefix,
+dom_exception _dom_html_table_section_element_initialise(
+		struct dom_html_element_create_params *params,
 		struct dom_html_table_section_element *ele)
 {
-	return _dom_html_element_initialise(doc, &ele->base,
-			tag_name,
-			namespace, prefix);
+	return _dom_html_element_initialise(params, &ele->base);
 }
 
 /**
@@ -211,9 +208,16 @@ dom_exception dom_html_table_section_element_insert_row(
 	dom_html_collection *rows; 	/*< The collection of rows in input table_section_element*/
 	uint32_t len; 			/*< The size of the row collection */
 	dom_exception exp;		/*< Variable for getting the exceptions*/
-	exp = _dom_html_table_row_element_create(doc, 
-			((dom_node_internal *)element)->namespace,
-			((dom_node_internal *)element)->prefix,
+
+	struct dom_html_element_create_params params = {
+		.type = DOM_HTML_ELEMENT_TYPE_TR,
+		.doc = doc,
+		.name = doc->elements[DOM_HTML_ELEMENT_TYPE_TR],
+		.namespace = ((dom_node_internal *)element)->namespace,
+		.prefix = ((dom_node_internal *)element)->prefix
+	};
+
+	exp = _dom_html_table_row_element_create(&params,
 			(dom_html_table_row_element **)new_row);
 	if(exp != DOM_NO_ERR)
 		return exp;

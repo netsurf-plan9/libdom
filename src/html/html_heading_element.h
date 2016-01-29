@@ -19,14 +19,14 @@ struct dom_html_heading_element {
 };
 
 /* Create a dom_html_heading_element object */
-dom_exception _dom_html_heading_element_create(struct dom_html_document *doc,
-		dom_string *tag_name, dom_string *namespace, 
-		dom_string *prefix, struct dom_html_heading_element **ele);
+dom_exception _dom_html_heading_element_create(
+		struct dom_html_element_create_params *params,
+		struct dom_html_heading_element **ele);
 
 /* Initialise a dom_html_heading_element object */
-dom_exception _dom_html_heading_element_initialise(struct dom_html_document *doc,
-		dom_string *tag_name, dom_string *namespace, 
-		dom_string *prefix, struct dom_html_heading_element *ele);
+dom_exception _dom_html_heading_element_initialise(
+		struct dom_html_element_create_params *params,
+		struct dom_html_heading_element *ele);
 
 /* Finalise a dom_html_heading_element object */
 void _dom_html_heading_element_finalise(struct dom_html_heading_element *ele);

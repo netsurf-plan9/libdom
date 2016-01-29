@@ -30,12 +30,12 @@ static struct dom_element_protected_vtable _protect_vtable = {
 /**
  * Create a dom_html_table_row_element table_row
  *
- * \param doc  The document table_row
- * \param ele  The returned element table_row
+ * \param params  The html element creation parameters
+ * \param ele     The returned element table_row
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_table_row_element_create(struct dom_html_document *doc,
-		dom_string *namespace, dom_string *prefix,
+dom_exception _dom_html_table_row_element_create(
+		struct dom_html_element_create_params *params,
 		struct dom_html_table_row_element **ele)
 {
 	struct dom_node_internal *node;
@@ -49,24 +49,21 @@ dom_exception _dom_html_table_row_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_table_row_element_initialise(doc,
-			namespace, prefix, *ele);
+	return _dom_html_table_row_element_initialise(params, *ele);
 }
 
 /**
  * Initialise a dom_html_table_row_element table_row
  *
- * \param doc  The document table_row
- * \param ele  The dom_html_table_row_element table_row
+ * \param params  The html element creation parameters
+ * \param ele     The dom_html_table_row_element table_row
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_table_row_element_initialise(struct dom_html_document *doc,
-		dom_string *namespace, dom_string *prefix,
+dom_exception _dom_html_table_row_element_initialise(
+		struct dom_html_element_create_params *params,
 		struct dom_html_table_row_element *ele)
 {
-	return _dom_html_element_initialise(doc, &ele->base,
-			doc->elements[DOM_HTML_ELEMENT_TYPE_TR],
-			namespace, prefix);
+	return _dom_html_element_initialise(params, &ele->base);
 }
 
 /**
@@ -335,11 +332,16 @@ dom_exception dom_html_table_row_element_insert_cell(
 	dom_html_collection *cells;	/*< The collection of cells in input table_row_element*/
 	uint32_t len; 			/*< The size of the cell collection */
 	dom_exception exp;		/*< Variable for getting the exceptions*/
-	exp = _dom_html_element_create(doc,
-			doc->elements[DOM_HTML_ELEMENT_TYPE_TD],
-			((dom_node_internal *)element)->namespace,
-			((dom_node_internal *)element)->prefix,
-			cell);
+
+	struct dom_html_element_create_params params = {
+		.type = DOM_HTML_ELEMENT_TYPE_TD,
+		.doc = doc,
+		.name = doc->elements[DOM_HTML_ELEMENT_TYPE_TD],
+		.namespace = ((dom_node_internal *)element)->namespace,
+		.prefix = ((dom_node_internal *)element)->prefix
+	};
+
+	exp = _dom_html_element_create(&params, cell);
 	if (exp != DOM_NO_ERR)
 		return exp;
 	

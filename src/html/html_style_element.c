@@ -23,11 +23,12 @@ static struct dom_element_protected_vtable _protect_vtable = {
 /**
  * Create a dom_html_style_element object
  *
- * \param doc  The document object
- * \param ele  The returned element object
+ * \param params  The html element creation parameters
+ * \param ele     The returned element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_style_element_create(struct dom_html_document *doc,
+dom_exception _dom_html_style_element_create(
+		struct dom_html_element_create_params *params,
 		struct dom_html_style_element **ele)
 {
 	struct dom_node_internal *node;
@@ -41,31 +42,21 @@ dom_exception _dom_html_style_element_create(struct dom_html_document *doc,
 	node->base.vtable = &_dom_html_element_vtable;
 	node->vtable = &_protect_vtable;
 
-	return _dom_html_style_element_initialise(doc, *ele);
+	return _dom_html_style_element_initialise(params, *ele);
 }
 
 /**
  * Initialise a dom_html_style_element object
  *
- * \param doc  The document object
- * \param ele  The dom_html_style_element object
+ * \param params  The html element creation parameters
+ * \param ele     The dom_html_style_element object
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception _dom_html_style_element_initialise(struct dom_html_document *doc,
+dom_exception _dom_html_style_element_initialise(
+		struct dom_html_element_create_params *params,
 		struct dom_html_style_element *ele)
 {
-	dom_string *name = NULL;
-	dom_exception err;
-
-	err = dom_string_create((const uint8_t *) "STYLE", SLEN("STYLE"),
-			&name);
-	if (err != DOM_NO_ERR)
-		return err;
-
-	err = _dom_html_element_initialise(doc, &ele->base, name, NULL, NULL);
-	dom_string_unref(name);
-
-	return err;
+	return _dom_html_element_initialise(params, &ele->base);
 }
 
 /**

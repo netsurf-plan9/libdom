@@ -22,15 +22,24 @@ struct dom_html_document;
 struct dom_html_element {
 	struct dom_element base;
 			/**< The base class */
+	dom_html_element_type type;
 };
 
-dom_exception _dom_html_element_create(struct dom_html_document *doc,
-		dom_string *name, dom_string *namespace,
-		dom_string *prefix, dom_html_element **result);
+struct dom_html_element_create_params {
+	dom_html_element_type type;
+	struct dom_html_document *doc;
+	dom_string *name;
+	dom_string *namespace;
+	dom_string *prefix;
+};
 
-dom_exception _dom_html_element_initialise(struct dom_html_document *doc,
-		struct dom_html_element *el, dom_string *name, 
-		dom_string *namespace, dom_string *prefix);
+dom_exception _dom_html_element_create(
+		struct dom_html_element_create_params *params,
+		dom_html_element **result);
+
+dom_exception _dom_html_element_initialise(
+		struct dom_html_element_create_params *params,
+		struct dom_html_element *el);
 
 void _dom_html_element_finalise(struct dom_html_element *ele);
 
@@ -115,6 +124,8 @@ dom_exception _dom_html_element_get_class_name(dom_html_element *element,
                                        dom_string **class_name);
 dom_exception _dom_html_element_set_class_name(dom_html_element *element,
                                        dom_string *class_name);
+dom_exception _dom_html_element_get_tag_type(const dom_html_element *element,
+                                       dom_html_element_type *type);
 
 #define DOM_HTML_ELEMENT_VTABLE \
 	_dom_html_element_get_id, \
@@ -126,7 +137,8 @@ dom_exception _dom_html_element_set_class_name(dom_html_element *element,
 	_dom_html_element_get_dir, \
 	_dom_html_element_set_dir, \
 	_dom_html_element_get_class_name, \
-	_dom_html_element_set_class_name
+	_dom_html_element_set_class_name, \
+	_dom_html_element_get_tag_type
 
 /* Some common functions used by all child classes */
 dom_exception dom_html_element_get_bool_property(dom_html_element *ele,
