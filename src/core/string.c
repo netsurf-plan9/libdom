@@ -935,8 +935,7 @@ dom_string_toupper(dom_string *source, bool ascii_only, dom_string **upper)
 	const uint8_t *orig_s = (const uint8_t *) dom_string_data(source);
 	const size_t nbytes = dom_string_byte_length(source);
 	uint8_t *copy_s;
-	size_t index = 0, clen;
-	parserutils_error err;
+	size_t index = 0;
 	dom_exception exc;
 	
 	if (ascii_only == false)
@@ -948,21 +947,11 @@ dom_string_toupper(dom_string *source, bool ascii_only, dom_string **upper)
 	memcpy(copy_s, orig_s, nbytes);
 	
 	while (index < nbytes) {
-		err = parserutils_charset_utf8_char_byte_length(orig_s + index,
-								&clen);
-		if (err != PARSERUTILS_OK) {
-			free(copy_s);
-			/** \todo Find a better exception */
-			return DOM_NO_MEM_ERR;
+		if (orig_s[index] >= 'a' && orig_s[index] <= 'z') {
+			copy_s[index] -= 'a' - 'A';
 		}
 		
-		if (clen == 1) {
-			if (orig_s[index] >= 'a' &&
-			    orig_s[index] <= 'z')
-				copy_s[index] -= 'a' - 'A';
-		}
-		
-		index += clen;
+		index++;
 	}
 	
 	if (((dom_string_internal*)source)->type == DOM_STRING_CDATA) {
@@ -992,8 +981,7 @@ dom_string_tolower(dom_string *source, bool ascii_only, dom_string **lower)
 	const uint8_t *orig_s = (const uint8_t *) dom_string_data(source);
 	const size_t nbytes = dom_string_byte_length(source);
 	uint8_t *copy_s;
-	size_t index = 0, clen;
-	parserutils_error err;
+	size_t index = 0;
 	dom_exception exc;
 	
 	if (ascii_only == false)
@@ -1005,21 +993,11 @@ dom_string_tolower(dom_string *source, bool ascii_only, dom_string **lower)
 	memcpy(copy_s, orig_s, nbytes);
 	
 	while (index < nbytes) {
-		err = parserutils_charset_utf8_char_byte_length(orig_s + index,
-								&clen);
-		if (err != PARSERUTILS_OK) {
-			free(copy_s);
-			/** \todo Find a better exception */
-			return DOM_NO_MEM_ERR;
+		if (orig_s[index] >= 'A' && orig_s[index] <= 'Z') {
+			copy_s[index] += 'a' - 'A';
 		}
-		
-		if (clen == 1) {
-			if (orig_s[index] >= 'A' &&
-			    orig_s[index] <= 'Z')
-				copy_s[index] += 'a' - 'A';
-		}
-		
-		index += clen;
+
+		index++;
 	}
 	
 	if (((dom_string_internal*)source)->type == DOM_STRING_CDATA) {
