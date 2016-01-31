@@ -978,35 +978,57 @@ dom_string_toupper(dom_string *source, bool ascii_only, dom_string **upper)
 dom_exception
 dom_string_tolower(dom_string *source, bool ascii_only, dom_string **lower)
 {
-	const uint8_t *orig_s = (const uint8_t *) dom_string_data(source);
-	const size_t nbytes = dom_string_byte_length(source);
-	uint8_t *copy_s;
-	size_t index = 0;
-	dom_exception exc;
-	
+	dom_string_internal *isource = (dom_string_internal *)source;
+	dom_exception exc = DOM_NO_ERR;
+
 	if (ascii_only == false)
 		return DOM_NOT_SUPPORTED_ERR;
-	
-	copy_s = malloc(nbytes);
-	if (copy_s == NULL)
-		return DOM_NO_MEM_ERR;
-	memcpy(copy_s, orig_s, nbytes);
-	
-	while (index < nbytes) {
-		if (orig_s[index] >= 'A' && orig_s[index] <= 'Z') {
-			copy_s[index] += 'a' - 'A';
+
+	if (isource->type == DOM_STRING_CDATA) {
+		const uint8_t *orig_s = (const uint8_t *)
+				dom_string_data(source);
+		const size_t nbytes = dom_string_byte_length(source);
+		size_t index = 0;
+		uint8_t *copy_s;
+
+		copy_s = malloc(nbytes);
+		if (copy_s == NULL)
+			return DOM_NO_MEM_ERR;
+		memcpy(copy_s, orig_s, nbytes);
+
+		while (index < nbytes) {
+			if (orig_s[index] >= 'A' && orig_s[index] <= 'Z') {
+				copy_s[index] += 'a' - 'A';
+			}
+
+			index++;
+		}
+		exc = dom_string_create(copy_s, nbytes, lower);
+
+		free(copy_s);
+	} else {
+		bool equal;
+		lwc_error err;
+		lwc_string *l;
+
+		err = lwc_string_tolower(isource->data.intern, &l);
+		if (err != lwc_error_ok) {
+			return DOM_NO_MEM_ERR;
 		}
 
-		index++;
+		if (lwc_string_isequal(isource->data.intern, l, &equal) ==
+				lwc_error_ok && equal == true) {
+			/* String is already lower case. */
+			*lower = dom_string_ref(source);
+		} else {
+			/* TODO: create dom_string wrapper around existing
+			 *       lwc string. */
+			exc = dom_string_create_interned(
+					(const uint8_t *)lwc_string_data(l),
+					lwc_string_length(l), lower);
+		}
+		lwc_string_unref(l);
 	}
-	
-	if (((dom_string_internal*)source)->type == DOM_STRING_CDATA) {
-		exc = dom_string_create(copy_s, nbytes, lower);
-	} else {
-		exc = dom_string_create_interned(copy_s, nbytes, lower);
-	}
-	
-	free(copy_s);
 	
 	return exc;
 }
