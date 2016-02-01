@@ -248,238 +248,276 @@ dom_exception _dom_html_document_copy(dom_node_internal *old,
 	return DOM_NOT_SUPPORTED_ERR;
 }
 
+#define RETURN_IF_MATCH(_x, _y) \
+	if (dom_string_isequal(_x, html->elements[_y])) { return _y; }
+
 /**
  * Get html element type from an uppercased tag name string
  *
  * \param html            The html document that the html element belongs to
- * \param tag_name_upper  Upper cased string containing tag name
+ * \param upper  Upper cased string containing tag name
  */
 static inline dom_html_element_type _dom_html_document_get_element_type(
-		dom_html_document *html, dom_string *tag_name_upper)
+		dom_html_document *html, dom_string *upper)
 {
-	size_t len = dom_string_byte_length(tag_name_upper);
+	size_t len = dom_string_byte_length(upper);
 
 	switch (len) {
 	case 1:
-		if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_P])) {
-			return  DOM_HTML_ELEMENT_TYPE_P;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_A])) {
-			return  DOM_HTML_ELEMENT_TYPE_A;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_Q])) {
-			return  DOM_HTML_ELEMENT_TYPE_Q;
-		}
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_P)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_A)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_B)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_I)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_S)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_U)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_Q)
 		break;
 	case 2:
-		if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_H1])) {
-			return  DOM_HTML_ELEMENT_TYPE_H1;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_H2])) {
-			return  DOM_HTML_ELEMENT_TYPE_H2;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_H3])) {
-			return  DOM_HTML_ELEMENT_TYPE_H3;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_H4])) {
-			return  DOM_HTML_ELEMENT_TYPE_H4;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_H5])) {
-			return  DOM_HTML_ELEMENT_TYPE_H5;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_H6])) {
-			return  DOM_HTML_ELEMENT_TYPE_H6;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_HR])) {
-			return  DOM_HTML_ELEMENT_TYPE_HR;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_DL])) {
-			return  DOM_HTML_ELEMENT_TYPE_DL;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_UL])) {
-			return  DOM_HTML_ELEMENT_TYPE_UL;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_OL])) {
-			return  DOM_HTML_ELEMENT_TYPE_OL;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_LI])) {
-			return  DOM_HTML_ELEMENT_TYPE_LI;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_TD])) {
-			return  DOM_HTML_ELEMENT_TYPE_TD;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_TH])) {
-			return  DOM_HTML_ELEMENT_TYPE_TH;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_TR])) {
-			return  DOM_HTML_ELEMENT_TYPE_TR;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_BR])) {
-			return  DOM_HTML_ELEMENT_TYPE_BR;
-		}
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_EM)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_LI)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_H1)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_H2)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_H3)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_H4)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_H5)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_H6)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_HR)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DD)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DL)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_UL)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_OL)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TD)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TH)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TR)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_BR)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_RP)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_RT)
 		break;
 	case 3:
-		if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_DIV])) {
-			return  DOM_HTML_ELEMENT_TYPE_DIV;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_PRE])) {
-			return  DOM_HTML_ELEMENT_TYPE_PRE;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_DEL])) {
-			return  DOM_HTML_ELEMENT_TYPE_DEL;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_INS])) {
-			return  DOM_HTML_ELEMENT_TYPE_INS;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_IMG])) {
-			return  DOM_HTML_ELEMENT_TYPE_IMG;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_COL])) {
-			return  DOM_HTML_ELEMENT_TYPE_COL;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_MAP])) {
-			return  DOM_HTML_ELEMENT_TYPE_MAP;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_DIR])) {
-			return  DOM_HTML_ELEMENT_TYPE_DIR;
-		}
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DIV)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_IMG)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_PRE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DEL)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_INS)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_COL)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_MAP)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DIR)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SUB)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SUP)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DFN)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_KBD)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_NAV)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_VAR)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_BDI)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_BDO)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_WBR)
 		break;
 	case 4:
-		if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_HTML])) {
-			return  DOM_HTML_ELEMENT_TYPE_HTML;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_HEAD])) {
-			return  DOM_HTML_ELEMENT_TYPE_HEAD;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_META])) {
-			return  DOM_HTML_ELEMENT_TYPE_META;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_BASE])) {
-			return  DOM_HTML_ELEMENT_TYPE_BASE;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_BODY])) {
-			return  DOM_HTML_ELEMENT_TYPE_BODY;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_FORM])) {
-			return  DOM_HTML_ELEMENT_TYPE_FORM;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_LINK])) {
-			return  DOM_HTML_ELEMENT_TYPE_LINK;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_MENU])) {
-			return  DOM_HTML_ELEMENT_TYPE_MENU;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_FONT])) {
-			return  DOM_HTML_ELEMENT_TYPE_FONT;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_AREA])) {
-			return  DOM_HTML_ELEMENT_TYPE_AREA;
-		}
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_META)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_CODE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SPAN)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FORM)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_LINK)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_MENU)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FONT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_ABBR)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_CITE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DATA)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_HTML)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_BODY)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_HEAD)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_AREA)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_MAIN)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_MARK)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_RUBY)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SAMP)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_BASE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TIME)
 		break;
 	case 5:
-		if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_TITLE])) {
-			return  DOM_HTML_ELEMENT_TYPE_TITLE;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_INPUT])) {
-			return  DOM_HTML_ELEMENT_TYPE_INPUT;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_FRAME])) {
-			return  DOM_HTML_ELEMENT_TYPE_FRAME;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_THEAD])) {
-			return  DOM_HTML_ELEMENT_TYPE_THEAD;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_TBODY])) {
-			return  DOM_HTML_ELEMENT_TYPE_TBODY;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_TFOOT])) {
-			return  DOM_HTML_ELEMENT_TYPE_TFOOT;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_TABLE])) {
-			return  DOM_HTML_ELEMENT_TYPE_TABLE;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_STYLE])) {
-			return  DOM_HTML_ELEMENT_TYPE_STYLE;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_LABEL])) {
-			return  DOM_HTML_ELEMENT_TYPE_LABEL;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_PARAM])) {
-			return  DOM_HTML_ELEMENT_TYPE_PARAM;
-		}
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_INPUT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TABLE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_STYLE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_THEAD)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TBODY)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TFOOT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_LABEL)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_PARAM)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TITLE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FRAME)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_AUDIO)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_ASIDE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_EMBED)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_METER)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SMALL)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TRACK)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_VIDEO)
 		break;
 	case 6:
-		if (dom_string_isequal(tag_name_upper,html->elements[
-				DOM_HTML_ELEMENT_TYPE_BUTTON])) {
-			return  DOM_HTML_ELEMENT_TYPE_BUTTON;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_OPTION])) {
-			return  DOM_HTML_ELEMENT_TYPE_OPTION;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_SCRIPT])) {
-			return  DOM_HTML_ELEMENT_TYPE_SCRIPT;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_IFRAME])) {
-			return  DOM_HTML_ELEMENT_TYPE_IFRAME;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_LEGEND])) {
-			return  DOM_HTML_ELEMENT_TYPE_LEGEND;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_SELECT])) {
-			return  DOM_HTML_ELEMENT_TYPE_SELECT;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_OBJECT])) {
-			return  DOM_HTML_ELEMENT_TYPE_OBJECT;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_APPLET])) {
-			return  DOM_HTML_ELEMENT_TYPE_APPLET;
-		}
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_BUTTON)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_OPTION)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SCRIPT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_IFRAME)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_LEGEND)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SELECT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_OBJECT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_APPLET)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_CANVAS)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DIALOG)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FIGURE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FOOTER)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_HEADER)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_HGROUP)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_KEYGEN)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_OUTPUT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SOURCE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_STRONG)
 		break;
 	case 7:
-		if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_CAPTION])) {
-			return  DOM_HTML_ELEMENT_TYPE_CAPTION;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_ISINDEX])) {
-			return  DOM_HTML_ELEMENT_TYPE_ISINDEX;
-		}
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_CAPTION)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_ISINDEX)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_ADDRESS)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_ARTICLE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DETAILS)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_PICTURE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SECTION)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_SUMMARY)
 		break;
 	case 8:
-		if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_TEXTAREA])) {
-			return  DOM_HTML_ELEMENT_TYPE_TEXTAREA;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_OPTGROUP])) {
-			return  DOM_HTML_ELEMENT_TYPE_OPTGROUP;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_BASEFONT])) {
-			return  DOM_HTML_ELEMENT_TYPE_BASEFONT;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_FIELDSET])) {
-			return  DOM_HTML_ELEMENT_TYPE_FIELDSET;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_COLGROUP])) {
-			return  DOM_HTML_ELEMENT_TYPE_COLGROUP;
-		} else if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_FRAMESET])) {
-			return  DOM_HTML_ELEMENT_TYPE_FRAMESET;
-		}
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TEXTAREA)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_OPTGROUP)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_BASEFONT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FIELDSET)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_COLGROUP)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FRAMESET)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DATALIST)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_MENUITEM)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_NOSCRIPT)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_PROGRESS)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_TEMPLATE)
 		break;
 	case 10:
-		if (dom_string_isequal(tag_name_upper, html->elements[
-				DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE])) {
-			return  DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE;
-		}
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_BLOCKQUOTE)
+		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FIGCAPTION)
 		break;
 	}
 
 	return DOM_HTML_ELEMENT_TYPE__UNKNOWN;
 }
+
+#undef RETURN_IF_MATCH
 
 /* Overloaded methods inherited from super class */
 
@@ -685,6 +723,10 @@ _dom_html_document_create_element_internal(
 		break;
 	case DOM_HTML_ELEMENT_TYPE_TD:
 	case DOM_HTML_ELEMENT_TYPE_TH:
+		/* TODO: Should be:
+		 * HTMLTableDataCellElement : HTMLTableCellElement : HTMLElement
+		 * HTMLTableHeaderCellElement : HTMLTableCellElement : HTMLElement
+		 */
 		exc = _dom_html_table_cell_element_create(&params,
 				(dom_html_table_cell_element **) result);
 		break;
@@ -727,7 +769,69 @@ _dom_html_document_create_element_internal(
 		exc = _dom_html_isindex_element_create(&params,
 				(dom_html_isindex_element **) result);
 		break;
+	case DOM_HTML_ELEMENT_TYPE_DATA:
+	case DOM_HTML_ELEMENT_TYPE_SPAN:
+	case DOM_HTML_ELEMENT_TYPE_TIME:
+	case DOM_HTML_ELEMENT_TYPE_AUDIO:
+	case DOM_HTML_ELEMENT_TYPE_EMBED:
+	case DOM_HTML_ELEMENT_TYPE_METER:
+	case DOM_HTML_ELEMENT_TYPE_TRACK:
+	case DOM_HTML_ELEMENT_TYPE_VIDEO:
+	case DOM_HTML_ELEMENT_TYPE_CANVAS:
+	case DOM_HTML_ELEMENT_TYPE_DIALOG:
+	case DOM_HTML_ELEMENT_TYPE_KEYGEN:
+	case DOM_HTML_ELEMENT_TYPE_OUTPUT:
+	case DOM_HTML_ELEMENT_TYPE_SOURCE:
+	case DOM_HTML_ELEMENT_TYPE_DETAILS:
+	case DOM_HTML_ELEMENT_TYPE_PICTURE:
+	case DOM_HTML_ELEMENT_TYPE_DATALIST:
+	case DOM_HTML_ELEMENT_TYPE_MENUITEM:
+	case DOM_HTML_ELEMENT_TYPE_PROGRESS:
+	case DOM_HTML_ELEMENT_TYPE_TEMPLATE:
+		/* TODO: LibDOM implementation of these specialisations */
+		/* For now, fall through to HTMLElement */
+	case DOM_HTML_ELEMENT_TYPE_B:
+	case DOM_HTML_ELEMENT_TYPE_I:
+	case DOM_HTML_ELEMENT_TYPE_S:
+	case DOM_HTML_ELEMENT_TYPE_U:
+	case DOM_HTML_ELEMENT_TYPE_DD:
+	case DOM_HTML_ELEMENT_TYPE_DT:
+	case DOM_HTML_ELEMENT_TYPE_EM:
+	case DOM_HTML_ELEMENT_TYPE_RP:
+	case DOM_HTML_ELEMENT_TYPE_RT:
+	case DOM_HTML_ELEMENT_TYPE_BDI:
+	case DOM_HTML_ELEMENT_TYPE_BDO:
+	case DOM_HTML_ELEMENT_TYPE_DFN:
+	case DOM_HTML_ELEMENT_TYPE_KBD:
+	case DOM_HTML_ELEMENT_TYPE_NAV:
+	case DOM_HTML_ELEMENT_TYPE_SUB:
+	case DOM_HTML_ELEMENT_TYPE_SUP:
+	case DOM_HTML_ELEMENT_TYPE_VAR:
+	case DOM_HTML_ELEMENT_TYPE_WBR:
+	case DOM_HTML_ELEMENT_TYPE_ABBR:
+	case DOM_HTML_ELEMENT_TYPE_CITE:
+	case DOM_HTML_ELEMENT_TYPE_CODE:
+	case DOM_HTML_ELEMENT_TYPE_MAIN:
+	case DOM_HTML_ELEMENT_TYPE_MARK:
+	case DOM_HTML_ELEMENT_TYPE_RUBY:
+	case DOM_HTML_ELEMENT_TYPE_SAMP:
+	case DOM_HTML_ELEMENT_TYPE_ASIDE:
+	case DOM_HTML_ELEMENT_TYPE_SMALL:
+	case DOM_HTML_ELEMENT_TYPE_FIGURE:
+	case DOM_HTML_ELEMENT_TYPE_FOOTER:
+	case DOM_HTML_ELEMENT_TYPE_HEADER:
+	case DOM_HTML_ELEMENT_TYPE_HGROUP:
+	case DOM_HTML_ELEMENT_TYPE_STRONG:
+	case DOM_HTML_ELEMENT_TYPE_ADDRESS:
+	case DOM_HTML_ELEMENT_TYPE_ARTICLE:
+	case DOM_HTML_ELEMENT_TYPE_SECTION:
+	case DOM_HTML_ELEMENT_TYPE_SUMMARY:
+	case DOM_HTML_ELEMENT_TYPE_NOSCRIPT:
+	case DOM_HTML_ELEMENT_TYPE_FIGCAPTION:
+		/* These have no specialisation: use HTMLElement */
+		/* Fall through */
 	case DOM_HTML_ELEMENT_TYPE__UNKNOWN:
+		/* Create generic HTMLElement */
 		exc = _dom_html_element_create(&params, result);
 		break;
 	}
