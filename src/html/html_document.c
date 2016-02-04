@@ -451,6 +451,8 @@ static inline dom_html_element_type _dom_html_document_get_element_type(
 		else
 		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_DIALOG)
 		else
+		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_CENTER)
+		else
 		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FIGURE)
 		else
 		RETURN_IF_MATCH(upper, DOM_HTML_ELEMENT_TYPE_FOOTER)
@@ -817,6 +819,7 @@ _dom_html_document_create_element_internal(
 	case DOM_HTML_ELEMENT_TYPE_SAMP:
 	case DOM_HTML_ELEMENT_TYPE_ASIDE:
 	case DOM_HTML_ELEMENT_TYPE_SMALL:
+	case DOM_HTML_ELEMENT_TYPE_CENTER:
 	case DOM_HTML_ELEMENT_TYPE_FIGURE:
 	case DOM_HTML_ELEMENT_TYPE_FOOTER:
 	case DOM_HTML_ELEMENT_TYPE_HEADER:
