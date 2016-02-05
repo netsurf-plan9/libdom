@@ -58,5 +58,4 @@ dom_exception _dom_html_table_row_element_copy_internal(
 				(dom_html_table_row_element *) (n))
 
 #endif
-bool table_cells_callback(struct dom_node_internal *node, void *ctx);
 

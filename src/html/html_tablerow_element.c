@@ -317,7 +317,7 @@ dom_exception dom_html_table_row_element_get_section_row_index(
  * \param ctx		The dom_html_document object (void *)
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-bool table_cells_callback(struct dom_node_internal *node, void *ctx)
+static bool table_cells_callback(struct dom_node_internal *node, void *ctx)
 {
 	dom_html_document *doc = ctx;
 	if (node->type == DOM_ELEMENT_NODE &&
