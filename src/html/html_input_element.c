@@ -335,6 +335,18 @@ dom_exception _dom_html_input_element_copy_internal(
 		return err;
 	}
 
+	/* TODO: We don't seem to keep a ref to form element, so just
+	 *       copy the pointer for now. */
+	new->form = old->form;
+
+	new->default_checked = old->default_checked;
+	new->default_checked_set = old->default_checked_set;
+	new->default_value = old->default_value == NULL ?
+			NULL : dom_string_ref(old->default_value);
+	new->default_value_set = old->default_value_set;
+	new->checked = old->checked;
+	new->checked_set = old->checked_set;
+
 	return DOM_NO_ERR;
 }
 
