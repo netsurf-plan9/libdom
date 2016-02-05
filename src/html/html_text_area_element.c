@@ -333,6 +333,15 @@ dom_exception _dom_html_text_area_element_copy_internal(
 		return err;
 	}
 
+	/* TODO: We don't seem to keep a ref to form element, so just
+	 *       copy the pointer for now. */
+	new->form = old->form;
+
+	new->default_value = dom_string_ref(old->default_value);
+	new->default_value_set = old->default_value_set;
+	new->value = dom_string_ref(old->value);
+	new->value_set = old->value_set;
+
 	return DOM_NO_ERR;
 }
 
