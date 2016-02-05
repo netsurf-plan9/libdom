@@ -1541,11 +1541,6 @@ dom_exception _dom_element_copy_internal(dom_element *old, dom_element *new)
 	dom_exception err;
 	uint32_t classnr;
 
-	err = dom_node_copy_internal(old, new);
-	if (err != DOM_NO_ERR) {
-		return err;
-	}
-
 	if (old->attributes != NULL) {
 		/* Copy the attribute list */
 		new->attributes = _dom_element_attr_list_clone(
@@ -1557,6 +1552,10 @@ dom_exception _dom_element_copy_internal(dom_element *old, dom_element *new)
 	if (old->n_classes > 0) {
 		new->n_classes = old->n_classes;
 		new->classes = malloc(sizeof(lwc_string *) * new->n_classes);
+		if (new->classes == NULL) {
+			err = DOM_NO_MEM_ERR;
+			goto error;
+		}
 		for (classnr = 0; classnr < new->n_classes; ++classnr)
 			new->classes[classnr] =
 				lwc_string_ref(old->classes[classnr]);
@@ -1565,12 +1564,21 @@ dom_exception _dom_element_copy_internal(dom_element *old, dom_element *new)
 		new->classes = NULL;
 	}
 
+	err = dom_node_copy_internal(old, new);
+	if (err != DOM_NO_ERR) {
+		goto error;
+	}
+
 	new->id_ns = NULL;
 	new->id_name = NULL;
 
 	/* TODO: deal with dom_type_info, it get no definition ! */
 
 	return DOM_NO_ERR;
+
+error:
+	free(new->classes);
+	return err;
 }
 
 
