@@ -1540,18 +1540,18 @@ dom_exception _dom_element_copy(dom_node_internal *old,
 	} else {
 		e->attributes = NULL;
 	}
-        
-        if (olde->n_classes > 0) {
+
+	if (olde->n_classes > 0) {
 		e->n_classes = olde->n_classes;
 		e->classes = malloc(sizeof(lwc_string *) * e->n_classes);
 		for (classnr = 0; classnr < e->n_classes; ++classnr)
 			e->classes[classnr] = 
 				lwc_string_ref(olde->classes[classnr]);
-        } else {
+	} else {
 		e->n_classes = 0;
 		e->classes = NULL;
-        }
-        
+	}
+
 	e->id_ns = NULL;
 	e->id_name = NULL;
 
