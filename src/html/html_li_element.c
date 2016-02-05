@@ -133,10 +133,39 @@ void _dom_virtual_html_li_element_destroy(dom_node_internal *node)
 }
 
 /* The virtual copy function, see src/core/node.c for detail */
-dom_exception _dom_html_li_element_copy(dom_node_internal *old,
-		                dom_node_internal **copy)
+dom_exception _dom_html_li_element_copy(
+		dom_node_internal *old, dom_node_internal **copy)
 {
-	        return _dom_html_element_copy(old, copy);
+	dom_html_li_element *new_node;
+	dom_exception err;
+
+	new_node = malloc(sizeof(dom_html_li_element));
+	if (new_node == NULL)
+		return DOM_NO_MEM_ERR;
+
+	err = dom_html_li_element_copy_internal(old, new_node);
+	if (err != DOM_NO_ERR) {
+		free(new_node);
+		return err;
+	}
+
+	*copy = (dom_node_internal *) new_node;
+
+	return DOM_NO_ERR;
+}
+
+dom_exception _dom_html_li_element_copy_internal(
+		dom_html_li_element *old,
+		dom_html_li_element *new)
+{
+	dom_exception err;
+
+	err = dom_html_element_copy_internal(old, new);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	return DOM_NO_ERR;
 }
 
 /*-----------------------------------------------------------------------*/
