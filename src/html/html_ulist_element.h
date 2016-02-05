@@ -49,4 +49,13 @@ dom_exception _dom_html_u_list_element_copy(dom_node_internal *old,
 	_dom_virtual_html_u_list_element_destroy, \
 	_dom_html_u_list_element_copy
 
+/* Helper functions*/
+dom_exception _dom_html_u_list_element_copy_internal(
+		dom_html_u_list_element *old,
+		dom_html_u_list_element *new);
+#define dom_html_u_list_element_copy_internal(o, n) \
+		_dom_html_u_list_element_copy_internal( \
+				(dom_html_u_list_element *) (o), \
+				(dom_html_u_list_element *) (n))
+
 #endif

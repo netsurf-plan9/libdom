@@ -54,6 +54,15 @@ dom_exception _dom_html_text_area_element_copy(dom_node_internal *old,
 	_dom_virtual_html_text_area_element_destroy, \
 	_dom_html_text_area_element_copy
 
+/* Helper functions*/
+dom_exception _dom_html_text_area_element_copy_internal(
+		dom_html_text_area_element *old,
+		dom_html_text_area_element *new);
+#define dom_html_text_area_element_copy_internal(o, n) \
+		_dom_html_text_area_element_copy_internal( \
+				(dom_html_text_area_element *) (o), \
+				(dom_html_text_area_element *) (n))
+
 /* Internal function for bindings */
 
 dom_exception _dom_html_text_area_element_set_form(

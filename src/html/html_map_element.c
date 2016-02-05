@@ -112,10 +112,39 @@ void _dom_virtual_html_map_element_destroy(dom_node_internal *node)
 }
 
 /* The virtual copy function, see src/core/node.c for detail */
-dom_exception _dom_html_map_element_copy(dom_node_internal *old,
-		                dom_node_internal **copy)
+dom_exception _dom_html_map_element_copy(
+		dom_node_internal *old, dom_node_internal **copy)
 {
-	return _dom_html_element_copy(old, copy);
+	dom_html_map_element *new_node;
+	dom_exception err;
+
+	new_node = malloc(sizeof(dom_html_map_element));
+	if (new_node == NULL)
+		return DOM_NO_MEM_ERR;
+
+	err = dom_html_map_element_copy_internal(old, new_node);
+	if (err != DOM_NO_ERR) {
+		free(new_node);
+		return err;
+	}
+
+	*copy = (dom_node_internal *) new_node;
+
+	return DOM_NO_ERR;
+}
+
+dom_exception _dom_html_map_element_copy_internal(
+		dom_html_map_element *old,
+		dom_html_map_element *new)
+{
+	dom_exception err;
+
+	err = dom_html_element_copy_internal(old, new);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	return DOM_NO_ERR;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -161,7 +190,7 @@ dom_exception dom_html_map_element_set_##attr(			\
 SIMPLE_GET_SET(name);
 
 /* The callback function for  _dom_html_collection_create*/
-bool callback(struct dom_node_internal *node, void *ctx)
+static bool callback(struct dom_node_internal *node, void *ctx)
 {
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,

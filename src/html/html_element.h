@@ -156,6 +156,12 @@ dom_exception dom_html_element_get_dom_ulong_property(dom_html_element *ele,
 dom_exception dom_html_element_set_dom_ulong_property(dom_html_element *ele,
 		const char *name, uint32_t len, dom_ulong value);
 
+/* Helper functions*/
+dom_exception _dom_html_element_copy_internal(dom_html_element *old,
+		dom_html_element *new);
+#define dom_html_element_copy_internal(o, n) _dom_html_element_copy_internal( \
+		(dom_html_element *) (o), (dom_html_element *) (n))
+
 extern struct dom_html_element_vtable _dom_html_element_vtable;
 
 #endif

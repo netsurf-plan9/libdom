@@ -48,10 +48,13 @@ dom_exception _dom_html_table_element_copy(dom_node_internal *old,
 	_dom_virtual_html_table_element_destroy, \
 	_dom_html_table_element_copy
 
-#endif
+/* Helper functions*/
+dom_exception _dom_html_table_element_copy_internal(
+		dom_html_table_element *old,
+		dom_html_table_element *new);
+#define dom_html_table_element_copy_internal(o, n) \
+		_dom_html_table_element_copy_internal( \
+				(dom_html_table_element *) (o), \
+				(dom_html_table_element *) (n))
 
-bool table_rows_callback(struct dom_node_internal *node, void *ctx);
-bool table_t_bodies_callback(struct dom_node_internal *node, void *ctx);
-dom_exception dom_html_table_element_create_t_body(
-		dom_html_table_element *element,
-		dom_html_table_section_element **t_body);
+#endif

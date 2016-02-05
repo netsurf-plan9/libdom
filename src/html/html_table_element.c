@@ -113,10 +113,39 @@ void _dom_virtual_html_table_element_destroy(dom_node_internal *node)
 }
 
 /* The virtual copy function, see src/core/node.c for detail */
-dom_exception _dom_html_table_element_copy(dom_node_internal *old,
-		dom_node_internal **copy)
+dom_exception _dom_html_table_element_copy(
+		dom_node_internal *old, dom_node_internal **copy)
 {
-	return _dom_html_element_copy(old, copy);
+	dom_html_table_element *new_node;
+	dom_exception err;
+
+	new_node = malloc(sizeof(dom_html_table_element));
+	if (new_node == NULL)
+		return DOM_NO_MEM_ERR;
+
+	err = dom_html_table_element_copy_internal(old, new_node);
+	if (err != DOM_NO_ERR) {
+		free(new_node);
+		return err;
+	}
+
+	*copy = (dom_node_internal *) new_node;
+
+	return DOM_NO_ERR;
+}
+
+dom_exception _dom_html_table_element_copy_internal(
+		dom_html_table_element *old,
+		dom_html_table_element *new)
+{
+	dom_exception err;
+
+	err = dom_html_element_copy_internal(old, new);
+	if (err != DOM_NO_ERR) {
+		return err;
+	}
+
+	return DOM_NO_ERR;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -351,7 +380,7 @@ dom_exception dom_html_table_element_set_t_foot(
  * \param ctx		The dom_html_document object (void *)
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-bool table_rows_callback(struct dom_node_internal *node, void *ctx)
+static bool table_rows_callback(struct dom_node_internal *node, void *ctx)
 {
 	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE &&
@@ -385,7 +414,7 @@ dom_exception dom_html_table_element_get_rows(
  * \param ctx		The dom_html_document object (void *)
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-bool table_t_bodies_callback(struct dom_node_internal *node, void *ctx)
+static bool table_t_bodies_callback(struct dom_node_internal *node, void *ctx)
 {
 	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE && 
@@ -403,6 +432,7 @@ bool table_t_bodies_callback(struct dom_node_internal *node, void *ctx)
  * \param t_bodies	The Status
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
+
 dom_exception dom_html_table_element_get_t_bodies(
 		dom_html_table_element *element,
 		dom_html_collection **t_bodies)
@@ -645,7 +675,7 @@ dom_exception dom_html_table_element_delete_t_head(
  * \param t_head	The Status
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception dom_html_table_element_create_t_body(
+static dom_exception dom_html_table_element_create_t_body(
 		dom_html_table_element *element,
 		dom_html_table_section_element **t_body)
 {

@@ -50,5 +50,14 @@ dom_exception _dom_html_object_element_copy(dom_node_internal *old,
 	_dom_virtual_html_object_element_destroy, \
 	_dom_html_object_element_copy
 
+/* Helper functions*/
+dom_exception _dom_html_object_element_copy_internal(
+		dom_html_object_element *old,
+		dom_html_object_element *new);
+#define dom_html_object_element_copy_internal(o, n) \
+		_dom_html_object_element_copy_internal( \
+				(dom_html_object_element *) (o), \
+				(dom_html_object_element *) (n))
+
 #endif
 

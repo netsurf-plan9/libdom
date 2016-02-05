@@ -55,5 +55,14 @@ dom_exception _dom_html_button_element_copy(dom_node_internal *old,
 dom_exception _dom_html_button_element_set_form(
 	dom_html_button_element *button, dom_html_form_element *form);
 
+/* Helper functions*/
+dom_exception _dom_html_button_element_copy_internal(
+		dom_html_button_element *old,
+		dom_html_button_element *new);
+#define dom_html_button_element_copy_internal(o, n) \
+		_dom_html_button_element_copy_internal( \
+				(dom_html_button_element *) (o), \
+				(dom_html_button_element *) (n))
+
 #endif
 
