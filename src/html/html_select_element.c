@@ -145,6 +145,12 @@ dom_exception _dom_html_select_element_copy_internal(
 		return err;
 	}
 
+	/* TODO: We don't seem to keep a ref to form element, so just
+	 *       copy the pointer for now. */
+	new->form = old->form;
+
+	new->selected = old->selected;
+
 	return DOM_NO_ERR;
 }
 
