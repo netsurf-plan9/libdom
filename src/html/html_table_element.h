@@ -58,7 +58,3 @@ dom_exception _dom_html_table_element_copy_internal(
 				(dom_html_table_element *) (n))
 
 #endif
-
-dom_exception dom_html_table_element_create_t_body(
-		dom_html_table_element *element,
-		dom_html_table_section_element **t_body);

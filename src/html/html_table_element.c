@@ -432,6 +432,7 @@ static bool table_t_bodies_callback(struct dom_node_internal *node, void *ctx)
  * \param t_bodies	The Status
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
+
 dom_exception dom_html_table_element_get_t_bodies(
 		dom_html_table_element *element,
 		dom_html_collection **t_bodies)
@@ -674,7 +675,7 @@ dom_exception dom_html_table_element_delete_t_head(
  * \param t_head	The Status
  * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
  */
-dom_exception dom_html_table_element_create_t_body(
+static dom_exception dom_html_table_element_create_t_body(
 		dom_html_table_element *element,
 		dom_html_table_section_element **t_body)
 {
