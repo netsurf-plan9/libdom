@@ -174,6 +174,10 @@ dom_exception _dom_html_button_element_copy_internal(
 		return err;
 	}
 
+	/* TODO: We don't seem to keep a ref to form element, so just
+	 *       copy the pointer for now. */
+	new->form = old->form;
+
 	return DOM_NO_ERR;
 }
 
