@@ -59,5 +59,4 @@ dom_exception _dom_html_table_section_element_copy_internal(
 				(dom_html_table_section_element *) (n))
 
 #endif
-bool table_section_callback(struct dom_node_internal *node, void *ctx);
 

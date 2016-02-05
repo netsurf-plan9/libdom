@@ -193,7 +193,7 @@ SIMPLE_GET_SET(ch_off);
 SIMPLE_GET_SET(v_align);
 
 /* The callback function for  _dom_html_collection_create*/
-bool table_section_callback(struct dom_node_internal *node, void *ctx)
+static bool table_section_callback(struct dom_node_internal *node, void *ctx)
 {
 	dom_html_document *doc = ctx;
 	if(node->type == DOM_ELEMENT_NODE &&
