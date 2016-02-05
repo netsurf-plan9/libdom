@@ -477,6 +477,9 @@ dom_exception _dom_html_option_element_copy_internal(
 		return err;
 	}
 
+	new->default_selected = old->default_selected;
+	new->default_selected_set = old->default_selected_set;
+
 	return DOM_NO_ERR;
 }
 
