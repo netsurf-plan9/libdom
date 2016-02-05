@@ -49,6 +49,15 @@ dom_exception _dom_html_table_section_element_copy(dom_node_internal *old,
 	_dom_virtual_html_table_section_element_destroy, \
 	_dom_html_table_section_element_copy
 
+/* Helper functions*/
+dom_exception _dom_html_table_section_element_copy_internal(
+		dom_html_table_section_element *old,
+		dom_html_table_section_element *new);
+#define dom_html_table_section_element_copy_internal(o, n) \
+		_dom_html_table_section_element_copy_internal( \
+				(dom_html_table_section_element *) (o), \
+				(dom_html_table_section_element *) (n))
+
 #endif
 bool table_section_callback(struct dom_node_internal *node, void *ctx);
 
