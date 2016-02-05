@@ -190,7 +190,7 @@ dom_exception dom_html_map_element_set_##attr(			\
 SIMPLE_GET_SET(name);
 
 /* The callback function for  _dom_html_collection_create*/
-bool callback(struct dom_node_internal *node, void *ctx)
+static bool callback(struct dom_node_internal *node, void *ctx)
 {
 	if(node->type == DOM_ELEMENT_NODE &&
 			dom_string_caseless_isequal(node->name,

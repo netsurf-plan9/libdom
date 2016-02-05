@@ -59,5 +59,3 @@ dom_exception _dom_html_map_element_copy_internal(
 				(dom_html_map_element *) (n))
 
 #endif
-
-bool callback(struct dom_node_internal *node, void *ctx);
