@@ -231,6 +231,11 @@ dom_exception _dom_element_copy(dom_node_internal *old,
 	_dom_element_copy
 
 /* Helper functions*/
+dom_exception _dom_element_copy_internal(dom_element *old,
+		dom_element *new);
+#define dom_element_copy_internal(o, n) _dom_element_copy_internal( \
+		(dom_element *) (o), (dom_element *) (n))
+
 dom_exception _dom_element_get_id(struct dom_element *ele, dom_string **id);
 
 extern struct dom_element_vtable _dom_element_vtable;
