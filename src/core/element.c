@@ -1172,7 +1172,7 @@ dom_exception _dom_element_get_classes(struct dom_element *element,
 		*n_classes = element->n_classes;
 
 		for (classnr = 0; classnr < element->n_classes; classnr++)
-			lwc_string_ref((*classes)[classnr]);
+			(void) lwc_string_ref((*classes)[classnr]);
 
 	} else {
 		*n_classes = 0;
