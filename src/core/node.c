@@ -2329,7 +2329,7 @@ static inline dom_exception _dom_event_targets_expand(
 		/* Create the event target list */
 		size = 64;
 		t = calloc(sizeof(*t), size);
-		if (targets == NULL) {
+		if (t == NULL) {
 			return DOM_NO_MEM_ERR;
 		}
 	} else {
