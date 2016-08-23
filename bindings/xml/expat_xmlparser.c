@@ -292,44 +292,12 @@ expat_xmlparser_external_entity_ref_handler(XML_Parser parser,
 					    const XML_Char *system_id,
 					    const XML_Char *public_id)
 {
-	FILE *fh;
-	XML_Parser subparser;
-	unsigned char data[1024];
-	size_t len;
-	enum XML_Status status;
-
+	UNUSED(parser);
+	UNUSED(context);
 	UNUSED(base);
+	UNUSED(system_id);
 	UNUSED(public_id);
 
-	if (system_id == NULL)
-		return XML_STATUS_OK;
-
-	fh = fopen(system_id, "r");
-
-	if (fh == NULL)
-		return XML_STATUS_OK;
-
-	subparser = XML_ExternalEntityParserCreate(parser,
-						   context,
-						   NULL);
-
-	if (subparser == NULL) {
-		fclose(fh);
-		return XML_STATUS_OK;
-	}
-
-	/* Parse the file bit by bit */
-	while ((len = fread(data, 1, 1024, fh)) > 0) {
-		status = XML_Parse(subparser, (const char *)data, len, 0);
-		if (status != XML_STATUS_OK) {
-			XML_ParserFree(subparser);
-			fclose(fh);
-			return XML_STATUS_OK;
-		}
-	}
-	XML_Parse(subparser, "", 0, 1);
-	XML_ParserFree(subparser);
-	fclose(fh);
 	return XML_STATUS_OK;
 }
 
