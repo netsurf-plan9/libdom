@@ -359,6 +359,11 @@ expat_xmlparser_comment_handler(void *_parser,
 	dom_string *data;
 	dom_exception err;
 
+        if (parser->current == NULL) {
+                /* not currently building a node so cannot have comment */
+                return;
+        }
+
 	/* Create DOM string data for comment */
 	err = dom_string_create((const uint8_t *)_comment,
 			strlen((const char *) _comment), &data);
