@@ -45,6 +45,11 @@ expat_xmlparser_start_element_handler(void *_parser,
 	dom_string *namespace = NULL;
 	const XML_Char *ns_sep = strchr(name, '\n');
 
+        if (parser->current == NULL) {
+                /* not currently building a node so cannot add elemnt to it */
+                return;
+        }
+
 	if (ns_sep != NULL) {
 		err = dom_string_create_interned((const uint8_t *)name,
 						 ns_sep - name,
@@ -174,6 +179,13 @@ expat_xmlparser_end_element_handler(void *_parser,
 
 	UNUSED(name);
 
+        if (parser->current == NULL) {
+                /* not currently building a node so cannot end elemnt
+                 * addition to it.
+                 */
+                return;
+        }
+
 	err = dom_node_get_parent_node(parser->current, &parent);
 
 	if (err != DOM_NO_ERR) {
@@ -212,6 +224,11 @@ expat_xmlparser_cdata_handler(void *_parser,
 	dom_exception err;
 	struct dom_node *cdata, *ins_cdata, *lastchild = NULL;
 	dom_node_type ntype = 0;
+
+        if (parser->current == NULL) {
+                /* not currently building a node so cannot add cdata to it */
+                return;
+        }
 
 	err = dom_string_create((const uint8_t *)s, len, &data);
 	if (err != DOM_NO_ERR) {
