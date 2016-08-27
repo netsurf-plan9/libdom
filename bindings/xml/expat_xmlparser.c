@@ -45,10 +45,7 @@ expat_xmlparser_start_element_handler(void *_parser,
 	dom_string *namespace = NULL;
 	const XML_Char *ns_sep = strchr(name, '\n');
 
-        if (parser->current == NULL) {
-                /* not currently building a node so cannot add elemnt to it */
-                return;
-        }
+	assert(parser->current);
 
 	if (ns_sep != NULL) {
 		err = dom_string_create_interned((const uint8_t *)name,
@@ -179,14 +176,18 @@ expat_xmlparser_end_element_handler(void *_parser,
 
 	UNUSED(name);
 
-        if (parser->current == NULL) {
-                /* not currently building a node so cannot end elemnt
-                 * addition to it.
-                 */
-                return;
-        }
+	assert(parser->current);
 
 	err = dom_node_get_parent_node(parser->current, &parent);
+
+	if (parent == NULL || parent == (dom_node *)parser->doc) {
+		/* The XML has tried to close more than it should */
+		if (parent != NULL)
+			dom_node_unref(parent);
+		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
+			    "Attempted to close more than was opened.");
+		return;
+	}
 
 	if (err != DOM_NO_ERR) {
 		parser->msg(DOM_MSG_CRITICAL, parser->mctx,
@@ -225,10 +226,7 @@ expat_xmlparser_cdata_handler(void *_parser,
 	struct dom_node *cdata, *ins_cdata, *lastchild = NULL;
 	dom_node_type ntype = 0;
 
-        if (parser->current == NULL) {
-                /* not currently building a node so cannot add cdata to it */
-                return;
-        }
+	assert(parser->current);
 
 	err = dom_string_create((const uint8_t *)s, len, &data);
 	if (err != DOM_NO_ERR) {
@@ -359,10 +357,7 @@ expat_xmlparser_comment_handler(void *_parser,
 	dom_string *data;
 	dom_exception err;
 
-        if (parser->current == NULL) {
-                /* not currently building a node so cannot have comment */
-                return;
-        }
+	assert(parser->current);
 
 	/* Create DOM string data for comment */
 	err = dom_string_create((const uint8_t *)_comment,
@@ -558,8 +553,8 @@ void
 dom_xml_parser_destroy(dom_xml_parser *parser)
 {
 	XML_ParserFree(parser->parser);
-	if (parser->current != NULL)
-		dom_node_unref(parser->current);
+	assert(parser->current);
+	dom_node_unref(parser->current);
 	dom_node_unref(parser->doc);
 	free(parser);
 }
