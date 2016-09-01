@@ -1393,23 +1393,23 @@ dom_exception _dom_find_element_by_id(dom_node_internal *root,
 		}
 
 		if (node->first_child != NULL) {
-			/* Has children */
+			/* Move to child */
 			node = node->first_child;
-		} else if (node->next != NULL) {
-			/* No children, but has siblings */
-			node = node->next;
 		} else {
-			/* No children or siblings. 
-			 * Find first unvisited relation. */
-			dom_node_internal *parent = node->parent;
-
-			while (parent != root &&
-					node == parent->last_child) {
-				node = parent;
-				parent = parent->parent;
+			while (node != NULL) {
+				if (node->next != NULL) {
+					/* Move to next sibling */
+					node = node->next;
+					break;
+				} else if (node->parent != root) {
+					/* Move back up to ancestors to
+					 * get to next siblings */
+					node = node->parent;
+				} else {
+					/* No more nodes below root. */
+					node = NULL;
+				}
 			}
-
-			node = node->next;
 		}
 	}
 
