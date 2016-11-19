@@ -337,3 +337,16 @@ dom_exception _dom_event_init_ns(dom_event *evt, dom_string *namespace,
 	return DOM_NO_ERR;
 }
 
+/**
+ * Return whether or not the event is in dispatch currently.
+ *
+ * \param evt The event object
+ * \param result Pointer to result object
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_in_dispatch(dom_event *evt, bool *result)
+{
+	*result = evt->in_dispatch;
+
+	return DOM_NO_ERR;
+}

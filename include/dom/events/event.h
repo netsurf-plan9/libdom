@@ -97,4 +97,12 @@ dom_exception _dom_event_init_ns(dom_event *evt, dom_string *namespace,
 		(dom_event *) (e), (dom_string *) (n), \
 		(dom_string *) (t), (bool) (b), (bool) (c))
 
+dom_exception _dom_event_in_dispatch(dom_event *evt, bool *result);
+#define dom_event_in_dispatch(e,r) _dom_event_in_dispatch(	\
+		(dom_event *) (e), (bool *) (r))
+
+dom_exception _dom_event_is_initialised(dom_event *evt, bool *result);
+#define dom_event_is_initialised(e,r) _dom_event_is_initialised(	\
+		(dom_event *) (e), (bool *) (r))
+
 #endif
