@@ -56,6 +56,7 @@ dom_exception _dom_event_initialise(dom_event *evt)
 
 	evt->refcnt = 1;
 	evt->in_dispatch = false;
+	evt->is_initialised = false;
 
 	return DOM_NO_ERR;
 }
@@ -252,6 +253,7 @@ dom_exception _dom_event_init(dom_event *evt, dom_string *type,
 	evt->type = dom_string_ref(type);
 	evt->bubble = bubble;
 	evt->cancelable = cancelable;
+	evt->is_initialised = true;
 
 	evt->timestamp = time(NULL);
 
@@ -333,6 +335,7 @@ dom_exception _dom_event_init_ns(dom_event *evt, dom_string *namespace,
 
 	evt->bubble = bubble;
 	evt->cancelable = cancelable;
+	evt->is_initialised = true;
 
 	return DOM_NO_ERR;
 }
@@ -347,6 +350,20 @@ dom_exception _dom_event_init_ns(dom_event *evt, dom_string *namespace,
 dom_exception _dom_event_in_dispatch(dom_event *evt, bool *result)
 {
 	*result = evt->in_dispatch;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Return whether or not the event is currently initialised.
+ *
+ * \param evt The event object
+ * \param result Pointer to result object
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_is_initialised(dom_event *evt, bool *result)
+{
+	*result = evt->is_initialised;
 
 	return DOM_NO_ERR;
 }

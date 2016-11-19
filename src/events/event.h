@@ -48,6 +48,7 @@ struct dom_event {
 	struct dom_event_private_vtable *vtable;
 			/**< The private virtual function table of Event */
 	bool in_dispatch;	/**< Whether this event is in dispatch */
+	bool is_initialised;	/**< Whether this event is initialised */
 };
 
 /* Destructor */
