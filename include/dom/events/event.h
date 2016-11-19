@@ -105,4 +105,12 @@ dom_exception _dom_event_is_initialised(dom_event *evt, bool *result);
 #define dom_event_is_initialised(e,r) _dom_event_is_initialised(	\
 		(dom_event *) (e), (bool *) (r))
 
+dom_exception _dom_event_get_is_trusted(dom_event *evt, bool *result);
+#define dom_event_get_is_trusted(e,r) _dom_event_get_is_trusted(	\
+		(dom_event *) (e), (bool *) (r))
+
+dom_exception _dom_event_set_is_trusted(dom_event *evt, bool trusted);
+#define dom_event_set_is_trusted(e,t) _dom_event_set_is_trusted(	\
+		(dom_event *) (e), (bool) (t))
+
 #endif

@@ -49,6 +49,7 @@ struct dom_event {
 			/**< The private virtual function table of Event */
 	bool in_dispatch;	/**< Whether this event is in dispatch */
 	bool is_initialised;	/**< Whether this event is initialised */
+	bool is_trusted;	/**< Whether this event is trusted */
 };
 
 /* Destructor */

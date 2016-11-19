@@ -57,6 +57,7 @@ dom_exception _dom_event_initialise(dom_event *evt)
 	evt->refcnt = 1;
 	evt->in_dispatch = false;
 	evt->is_initialised = false;
+	evt->is_trusted = false;
 
 	return DOM_NO_ERR;
 }
@@ -364,6 +365,34 @@ dom_exception _dom_event_in_dispatch(dom_event *evt, bool *result)
 dom_exception _dom_event_is_initialised(dom_event *evt, bool *result)
 {
 	*result = evt->is_initialised;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Return whether or not the event is currently trusted.
+ *
+ * \param evt The event object
+ * \param result Pointer to result object
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_get_is_trusted(dom_event *evt, bool *result)
+{
+	*result = evt->is_trusted;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Set whether or not the event is currently trusted.
+ *
+ * \param evt The event object
+ * \param trusted Whether or not the event is to be trusted
+ * \return DOM_NO_ERR on success, appropriate dom_exception on failure.
+ */
+dom_exception _dom_event_set_is_trusted(dom_event *evt, bool trusted)
+{
+	evt->is_trusted = trusted;
 
 	return DOM_NO_ERR;
 }
