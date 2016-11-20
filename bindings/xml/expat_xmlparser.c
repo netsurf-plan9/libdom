@@ -319,6 +319,19 @@ expat_xmlparser_external_entity_ref_handler(XML_Parser parser,
 	if (system_id == NULL)
 		return XML_STATUS_OK;
 
+	/* If the ID is a network URI, return (see bug 2313 and below) */
+	if ((strncmp(system_id, "http://", 7) == 0) ||
+		(strncmp(system_id, "https://", 8) == 0)) {
+		return XML_STATUS_OK;
+	}
+
+	/*\todo This needs fixing.  Our system_id, if not
+	 * absolute, needs to be made absolute relative to
+	 * base before being opened.  It should also be
+	 * passed back to the client to be opened, as network
+	 * addresses need special handling and local files
+	 * should also have the file:// scheme, so fopen is
+	 * not necessarily going to work. */
 	fh = fopen(system_id, "r");
 
 	if (fh == NULL)
