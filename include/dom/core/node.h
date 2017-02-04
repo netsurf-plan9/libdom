@@ -68,7 +68,7 @@ typedef enum {
 	DOM_NOTATION_NODE		= 12,
 
 	/* And a count of the number of node types */
-	DOM_NODE_TYPE_COUNT		= DOM_NOTATION_NODE
+	DOM_NODE_TYPE_COUNT
 } dom_node_type;
 
 typedef struct dom_node_internal dom_node_internal;

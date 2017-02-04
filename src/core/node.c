@@ -1933,6 +1933,7 @@ bool _dom_node_permitted_child(const dom_node_internal *parent,
 	case DOM_COMMENT_NODE:
 	case DOM_DOCUMENT_TYPE_NODE:
 	case DOM_NOTATION_NODE:
+	case DOM_NODE_TYPE_COUNT:
 		valid = false;
 		break;
 
