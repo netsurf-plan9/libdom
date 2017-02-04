@@ -99,6 +99,9 @@ dom_exception _dom_event_target_add_event_listener(
 /**
  * Remove an EventListener from the EventTarget
  *
+ * (LibDOM extension: If type is NULL, remove all listener registrations
+ * regardless of type and cature)
+ *
  * \param et        The EventTarget object
  * \param type      The event type this listener is registered for 
  * \param listener  The listener object
@@ -114,9 +117,15 @@ dom_exception _dom_event_target_remove_event_listener(
 		struct listener_entry *le = eti->listeners;
 
 		do {
-			if (dom_string_isequal(le->type, type) &&
-					le->listener == listener &&
-					le->capture == capture) {
+			bool matches;
+			if (type == NULL) {
+				matches = (le->listener == listener);
+			} else {
+				matches = dom_string_isequal(le->type, type) &&
+					(le->listener == listener) &&
+					(le->capture == capture);
+			}
+			if (matches) {
 				if (le->list.next == &le->list) {
 					eti->listeners = NULL;
 				} else {
