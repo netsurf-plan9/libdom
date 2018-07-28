@@ -21,6 +21,7 @@ libdom requires the following tools:
  - A C99 capable C compiler
  - GNU make or compatible
  - Perl (for the testcases)
+   `sudo apt-get install libxml-xpath-perl`
 
 LibDOM also requires the following libraries to be installed:
 
