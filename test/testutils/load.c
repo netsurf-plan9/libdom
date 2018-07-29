@@ -101,7 +101,7 @@ dom_document *load_html(const char *file, bool willBeModified)
 	int handle;
 	int readed;
 	dom_hubbub_error error;
-	dom_document *ret;
+	dom_document *ret = NULL;
 	uint8_t buffer[1024];
 	dom_hubbub_parser_params params;
 
@@ -118,6 +118,8 @@ dom_document *load_html(const char *file, bool willBeModified)
 	error = dom_hubbub_parser_create(&params, &parser, &ret);
 	if (error != DOM_HUBBUB_OK) {
 		fprintf(stderr, "Can't create Hubbub Parser\n");
+		if (ret != NULL)
+			dom_node_unref(ret);
 		return NULL;
 	}
 
@@ -125,6 +127,8 @@ dom_document *load_html(const char *file, bool willBeModified)
 	if (handle == -1) {
 		dom_hubbub_parser_destroy(parser);
 		/* fprintf(stderr, "Can't open test input file: %s\n", file); */
+		if (ret != NULL)
+			dom_node_unref(ret);
 		return NULL;
 	}
 
@@ -133,6 +137,8 @@ dom_document *load_html(const char *file, bool willBeModified)
 	if (error != DOM_HUBBUB_OK) {
 		dom_hubbub_parser_destroy(parser);
 		fprintf(stderr, "Parsing errors occur\n");
+		if (ret != NULL)
+			dom_node_unref(ret);
 		return NULL;
 	}
 
@@ -142,6 +148,8 @@ dom_document *load_html(const char *file, bool willBeModified)
 		if (error != DOM_HUBBUB_OK) {
 			dom_hubbub_parser_destroy(parser);
 			fprintf(stderr, "Parsing errors occur\n");
+			if (ret != NULL)
+				dom_node_unref(ret);
 			return NULL;
 		}
 	}
@@ -150,6 +158,8 @@ dom_document *load_html(const char *file, bool willBeModified)
 	if (error != DOM_HUBBUB_OK) {
 		dom_hubbub_parser_destroy(parser);
 		fprintf(stderr, "Parsing error when construct DOM\n");
+		if (ret != NULL)
+			dom_node_unref(ret);
 		return NULL;
 	}
 
