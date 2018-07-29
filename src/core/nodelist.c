@@ -298,6 +298,9 @@ dom_exception dom_nodelist_get_length(dom_nodelist *list, uint32_t *length)
  *
  * The returned node will have had its reference count increased. The client
  * should unref the node once it has finished with it.
+ *
+ * NOTE: If \ref node contains a node pointer already, it will *NOT* be
+ * unreffed.  Managing the lifetime of that is up to the caller.
  */
 dom_exception _dom_nodelist_item(dom_nodelist *list,
 		uint32_t index, dom_node **node)
