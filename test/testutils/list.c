@@ -100,6 +100,10 @@ bool list_remove(struct list* list, void* data)
 			} else {
 				prevElt->next = nextElt;
 			}
+			if (list->type == DOM_STRING)
+				dom_string_unref((dom_string *) elt->data);
+			if (list->type == NODE)
+				dom_node_unref(elt->data);
 			free(elt);
 			list->size--;
 			found = true;
@@ -164,7 +168,7 @@ bool list_contains_all(struct list* superList, struct list* subList,
 		subElt = subElt->next;
 	}
 
-	free(superListClone);
+	list_destroy(superListClone);
 	
 	return found;
 }
