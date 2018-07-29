@@ -381,21 +381,32 @@ dom_exception walk_logic_adjacent_text_in_order(
 			assert(node->last_child == NULL);
 			if (opt == COLLECT) {
 				err = dom_characterdata_get_data(node, &data);
-				if (err == DOM_NO_ERR)
+				if (err != DOM_NO_ERR)
 					return err;
 
 				tmp = *ret;
 				if (order == LEFT) {
-					err = dom_string_concat(data, tmp, ret);
-					if (err == DOM_NO_ERR)
-						return err;
+					if (tmp != NULL) {
+						err = dom_string_concat(data, tmp, ret);
+						if (err != DOM_NO_ERR)
+							return err;
+					} else {
+						dom_string_ref(data);
+						*ret = data;
+					}
 				} else if (order == RIGHT) {
-					err = dom_string_concat(tmp, data, ret);
-					if (err == DOM_NO_ERR)
-						return err;
+					if (tmp != NULL) {
+						err = dom_string_concat(tmp, data, ret);
+						if (err != DOM_NO_ERR)
+							return err;
+					} else {
+						dom_string_ref(data);
+						*ret = data;
+					}
 				}
 
-				dom_string_unref(tmp);
+				if (tmp != NULL)
+					dom_string_unref(tmp);
 				dom_string_unref(data);
 
 				*cont = true;
