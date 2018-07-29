@@ -44,6 +44,7 @@ bool _get_next_domnodelist(dom_nodelist *list, unsigned int *iterator, dom_node 
 {
 	dom_exception err;
 	uint32_t len;
+	dom_node *old = *ret;
 
 	err = dom_nodelist_get_length(list, &len);
 	if (err != DOM_NO_ERR)
@@ -55,6 +56,12 @@ bool _get_next_domnodelist(dom_nodelist *list, unsigned int *iterator, dom_node 
 	err = dom_nodelist_item(list, (*iterator), ret);
 	if (err != DOM_NO_ERR)
 		return false;
+	
+	/* NOTE: If we change the API of dom_nodelist_item to release the ref
+	 * then we should remove this
+	 */
+	if (old != NULL)
+		dom_node_unref(old);
 	
 	(*iterator)++;
 	return true;
