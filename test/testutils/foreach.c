@@ -93,6 +93,7 @@ bool _get_next_domnamednodemap(dom_namednodemap *map, unsigned int *iterator, do
 {
 	dom_exception err;
 	uint32_t len;
+	dom_node *old = *ret;
 
 	err = dom_namednodemap_get_length(map, &len);
 	if (err != DOM_NO_ERR)
@@ -104,7 +105,10 @@ bool _get_next_domnamednodemap(dom_namednodemap *map, unsigned int *iterator, do
 	err = dom_namednodemap_item(map, (*iterator), ret);
 	if (err != DOM_NO_ERR)
 		return false;
-	
+
+	if (old != NULL)
+		dom_node_unref(old);
+
 	(*iterator)++;	
 
 	return true;
