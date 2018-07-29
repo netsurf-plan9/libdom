@@ -49,9 +49,9 @@ def dom_node_pending_offset():
     return gdb.parse_and_eval("(int)&((struct dom_node_internal *)0)->pending_list")
 
 def dom_print_node(node, prefix = ""):
-    print("%s%s @ %s [%s]%s" % (prefix, dom_node_type(node), 
+    print(("%s%s @ %s [%s]%s" % (prefix, dom_node_type(node),
                                 node.address, dom_node_refcnt(node),
-                                dom_node_name(node)))
+                                dom_node_name(node))))
 
 def dom_walk_tree(node, prefix = ""):
     dom_print_node(node, prefix)
@@ -61,12 +61,12 @@ def dom_walk_tree(node, prefix = ""):
         current = current['next'].dereference()
 
 def dom_document_show(doc):
-    print "Node Tree:"
+    print("Node Tree:")
     node = dom_node_at(doc.address)
     dom_walk_tree(node, "  ")
     pending = doc['pending_nodes']
     if pending['next'] != pending.address:
-        print "Pending Node trees:"
+        print("Pending Node trees:")
         current_list_entry = pending['next']
         while current_list_entry is not None:
             voidp = current_list_entry.cast(dom_get_type_ptr("void"))
