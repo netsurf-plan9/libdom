@@ -1306,6 +1306,7 @@ sub generate_control_statement {
 				print "unsigned int iterator$iterator_index = 0;";
 				print "foreach_initialise_domnodelist($coll, \&iterator$iterator_index);\n";
 				print "while(get_next_domnodelist($coll, \&iterator$iterator_index, \&$member)) {\n";
+                                $self->addto_cleanup($member);
 			}
 
 			if ($self->{"var"}->{$coll} eq "NamedNodeMap") {
@@ -1560,6 +1561,12 @@ sub end_half_assertion {
 ### Enclose an unsed function
 ##############################################################################################
 
+sub cleanup_lists {
+   my ($self, $indent) = @_;
+   foreach my $list (keys %{$self->{list_map}}) {
+      print "${indent}if ($list != NULL)\n${indent}\tlist_destroy($list);\n" if ($list ne '');
+   }
+}
 
 sub cleanup_domvar {
 	my ($self, $indent) = @_;
@@ -1579,6 +1586,7 @@ sub cleanup {
 	my $self = shift;
 
 	print "\n\n";
+        $self->cleanup_lists("\t");
 	$self->cleanup_domstring("\t");
 	$self->cleanup_domvar("\t");
         print "\n\tprintf(\"PASS\");\n";
