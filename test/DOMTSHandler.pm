@@ -1605,7 +1605,7 @@ sub addto_cleanup {
 		if (exists $unref_prefix{$type}) {
 			$prefix = $unref_prefix{$type};
 		}
-		push(@{$self->{unref}}, $prefix."_unref(".$var.");\n");
+		push(@{$self->{unref}}, "if (".$var." != NULL) { ".$prefix."_unref(".$var."); ".$var." = NULL; }\n");
 	}
 }
 
