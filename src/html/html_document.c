@@ -1119,6 +1119,7 @@ dom_exception _dom_html_document_get_body(dom_html_document *doc,
 		}
 
 		if (len == 0) {
+			dom_nodelist_unref(nodes);
 			exc = dom_document_get_elements_by_tag_name(doc,
 					doc->elements[DOM_HTML_ELEMENT_TYPE_FRAMESET],
 					&nodes);
