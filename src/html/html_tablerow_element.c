@@ -354,7 +354,7 @@ dom_exception dom_html_table_row_element_insert_cell(
 		int32_t index, dom_html_element **cell) {
 	dom_html_document *doc = (dom_html_document *) ((dom_node_internal *) element)->owner;
 
-	dom_node *node; 		/*< The node at the (index)th position*/
+	dom_node *new_cell;
 
 	dom_html_collection *cells;	/*< The collection of cells in input table_row_element*/
 	uint32_t len; 			/*< The size of the cell collection */
@@ -368,42 +368,45 @@ dom_exception dom_html_table_row_element_insert_cell(
 		.prefix = ((dom_node_internal *)element)->prefix
 	};
 
-	exp = _dom_html_element_create(&params, cell);
+	exp = _dom_html_element_create(&params, (dom_html_element **)&new_cell);
 	if (exp != DOM_NO_ERR)
 		return exp;
 	
 	exp = dom_html_table_row_element_get_cells(element, &cells);
 	if (exp != DOM_NO_ERR) {
-		dom_node_unref(*cell);
+		dom_node_unref(new_cell);
 		return exp;
 	}
 
 	exp = dom_html_collection_get_length(cells, &len);
 	if (exp != DOM_NO_ERR) {
-		dom_node_unref(*cell);
+		dom_node_unref(new_cell);
+		dom_html_collection_unref(cells);
 		return exp;
 	}
 	
 	if (index < -1 || index > (int32_t)len) {
 		/* Check for index validity */
+		dom_node_unref(new_cell);
 		dom_html_collection_unref (cells);
 		return DOM_INDEX_SIZE_ERR;
 	} else if (index == -1 || index == (int32_t)len) {
-		dom_node *new_cell;
 		dom_html_collection_unref(cells);
 
-		return dom_node_append_child(element,
-				*cell,
-				&new_cell);
+		exp = dom_node_append_child(element, new_cell, cell);
+		dom_node_unref(new_cell);
+
 	} else {
-		dom_node *new_cell;
-		dom_html_collection_item(cells,
-				index, &node);
+		dom_node *node;
+		dom_html_collection_item(cells, index, &node);
 		dom_html_collection_unref(cells);
 
-		return dom_node_insert_before(element,
-				*cell, node, &new_cell);
+		exp = dom_node_insert_before(element, new_cell, node, cell);
+		dom_node_unref(new_cell);
+		dom_node_unref(node);
 	}
+
+	return exp;
 }
 
 /**
