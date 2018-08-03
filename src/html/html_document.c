@@ -1184,8 +1184,10 @@ dom_exception _dom_html_document_get_images(dom_html_document *doc,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	return _dom_html_collection_create(doc, (dom_node_internal *) root, 
+	err = _dom_html_collection_create(doc, (dom_node_internal *) root, 
 			images_callback, doc, col);
+	dom_node_unref(root);
+	return err;
 }
 
 bool applet_callback(struct dom_node_internal * node, void *ctx)
@@ -1233,8 +1235,10 @@ dom_exception _dom_html_document_get_applets(dom_html_document *doc,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	return _dom_html_collection_create(doc, (dom_node_internal *) root, 
+	err = _dom_html_collection_create(doc, (dom_node_internal *) root, 
 			applets_callback, doc, col);
+	dom_node_unref(root);
+	return err;
 }
 
 /**
@@ -1276,8 +1280,10 @@ dom_exception _dom_html_document_get_links(dom_html_document *doc,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	return _dom_html_collection_create(doc, (dom_node_internal *) root,
+	err = _dom_html_collection_create(doc, (dom_node_internal *) root,
 			links_callback, doc, col);
+	dom_node_unref(root);
+	return err;
 }
 
 static bool __dom_html_document_node_is_form(dom_node_internal *node,
@@ -1352,8 +1358,10 @@ dom_exception _dom_html_document_get_anchors(dom_html_document *doc,
 	if (err != DOM_NO_ERR)
 		return err;
 
-	return _dom_html_collection_create(doc, (dom_node_internal *) root,
+	err = _dom_html_collection_create(doc, (dom_node_internal *) root,
 			anchors_callback, doc, col);
+	dom_node_unref(root);
+	return err;
 }
 
 dom_exception _dom_html_document_get_cookie(dom_html_document *doc,
