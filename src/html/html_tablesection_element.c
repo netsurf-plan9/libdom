@@ -229,14 +229,13 @@ dom_exception dom_html_table_section_element_get_rows(
  */
 dom_exception dom_html_table_section_element_insert_row(
 		dom_html_table_section_element *element,
-		int32_t index, dom_html_element **new_row) {
+		int32_t index, dom_html_element **new_row)
+{
 	dom_html_document *doc = (dom_html_document *) ((dom_node_internal *) element)->owner;
-
-	dom_node *node; 		/*< The node at the (index)th position*/
-
 	dom_html_collection *rows; 	/*< The collection of rows in input table_section_element*/
 	uint32_t len; 			/*< The size of the row collection */
 	dom_exception exp;		/*< Variable for getting the exceptions*/
+	dom_node *new_node;
 
 	struct dom_html_element_create_params params = {
 		.type = DOM_HTML_ELEMENT_TYPE_TR,
@@ -247,48 +246,49 @@ dom_exception dom_html_table_section_element_insert_row(
 	};
 
 	exp = _dom_html_table_row_element_create(&params,
-			(dom_html_table_row_element **)new_row);
+			(dom_html_table_row_element **)&new_node);
 	if(exp != DOM_NO_ERR)
 		return exp;
 	
 	exp = dom_html_table_section_element_get_rows(element, &rows);
 	if(exp != DOM_NO_ERR) {
-		dom_node_unref(new_row);
-		new_row = NULL;
+		dom_node_unref(new_node);
+		new_node = NULL;
 		return exp;
 	}
 
 	exp = dom_html_collection_get_length(rows, &len);
-
-
-	if(exp != DOM_NO_ERR) {
-		dom_node_unref(new_row);
-		new_row = NULL;
+	if (exp != DOM_NO_ERR) {
+		dom_node_unref(new_node);
+		new_node = NULL;
 		dom_html_collection_unref(rows);
 		return exp;
 	}
 	
-	if(index < -1 || index > (int32_t)len) {
+	if (index < -1 || index > (int32_t)len) {
 		/* Check for index validity */
 		dom_html_collection_unref(rows);
+		dom_node_unref(new_node);
+		new_node = NULL;
 		return DOM_INDEX_SIZE_ERR;
-	} else if(index == -1 || index == (int32_t)len) {
-		dom_node *new_node;
+
+	} else if (index == -1 || index == (int32_t)len) {
 		dom_html_collection_unref(rows);
-		return dom_node_append_child(element,
-				*new_row,
-				&new_node);
+		exp = dom_node_append_child(element, new_node, new_row);
 	} else {
-		dom_node *new_node;
-
-		dom_html_collection_item(rows,
-				index, &node);
+		dom_node *node;
+		dom_html_collection_item(rows, index, &node);
 		dom_html_collection_unref(rows);
 
-		return dom_node_insert_before(element,
-		                *new_row, node,
-				&new_node);
+		exp = dom_node_insert_before(element,
+				new_node, node, new_row);
+		dom_node_unref(node);
 	}
+
+	dom_node_unref(new_node);
+	new_node = NULL;
+
+	return exp;
 }
 
 /**
