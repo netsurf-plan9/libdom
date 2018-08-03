@@ -274,7 +274,7 @@ dom_exception dom_html_object_element_get_form(
 	}
 
 	if (form_tmp != NULL) {
-		*form = (dom_html_form_element *) form_tmp;
+		*form = (dom_html_form_element *) dom_node_ref(form_tmp);
 		return DOM_NO_ERR;
 	}
 

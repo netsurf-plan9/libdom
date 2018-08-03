@@ -1144,7 +1144,6 @@ dom_exception _dom_html_document_get_body(dom_html_document *doc,
 		}
 
 		*body = (dom_html_element *)node;
-		dom_node_unref(node);
 	}
 
 	return exc;
