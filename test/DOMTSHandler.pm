@@ -85,8 +85,9 @@ our %unref_prefix = (
 	DOMString => "dom_string",
 	NamedNodeMap => "dom_namednodemap",
 	NodeList => "dom_nodelist",
-        HTMLCollection => "dom_html_collection",
-        HTMLDocument => "dom_html_document",
+	HTMLCollection => "dom_html_collection",
+	HTMLOptionsCollection => "dom_html_options_collection",
+	HTMLDocument => "dom_html_document",
 );
 
 our %special_method = (
