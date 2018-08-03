@@ -120,7 +120,7 @@ dom_exception dom_html_table_element_delete_t_foot(
 
 dom_exception dom_html_table_element_insert_row(
 		dom_html_table_element *element,
-		int32_t index, dom_html_element **row);
+		int32_t index, dom_html_element **row_out);
 
 dom_exception dom_html_table_element_delete_row(
 		dom_html_table_element *element,

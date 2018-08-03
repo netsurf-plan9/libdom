@@ -726,6 +726,7 @@ static dom_exception dom_html_table_element_create_t_body(
 	dom_html_collection_unref(t_bodies);
 	return exp;
 }
+
 /**
  * Insert a new Row into the table
  *
@@ -736,39 +737,22 @@ static dom_exception dom_html_table_element_create_t_body(
 dom_exception dom_html_table_element_insert_row(
 		dom_html_table_element *element,
 		int32_t index,
-		dom_html_element **row)
+		dom_html_element **row_out)
 {
 	dom_exception exp;
+	dom_html_table_row_element *row;
 	dom_html_collection* rows;
 	uint32_t len;
 	dom_html_document *doc = (dom_html_document *)
 		((dom_node_internal *) element)->owner;
 
-	struct dom_html_element_create_params params = {
-		.type = DOM_HTML_ELEMENT_TYPE_TR,
-		.doc = doc,
-		.name = doc->elements[DOM_HTML_ELEMENT_TYPE_TR],
-		.namespace = ((dom_node_internal *)element)->namespace,
-		.prefix = ((dom_node_internal *)element)->prefix
-	};
-
-	exp = dom_html_table_element_get_rows(element,
-			&rows);
+	exp = dom_html_table_element_get_rows(element, &rows);
 	if(exp != DOM_NO_ERR) {
-		dom_html_collection_unref(rows);
 		return exp;
 	}
-	exp = dom_html_collection_get_length(rows,
-			&len);
+	exp = dom_html_collection_get_length(rows, &len);
+	dom_html_collection_unref(rows);
 	if(exp != DOM_NO_ERR) {
-		dom_html_collection_unref(rows);
-		return exp;
-	}
-	exp = _dom_html_table_row_element_create(&params,
-			(dom_html_table_row_element **)row);
-	if(exp != DOM_NO_ERR) {
-		dom_node_unref(*row);
-		dom_html_collection_unref(rows);
 		return exp;
 	}
 
@@ -777,19 +761,31 @@ dom_exception dom_html_table_element_insert_row(
 	} else if(len == 0) {
 		dom_html_table_section_element *new_body;
 		dom_node *new_row;
-		exp = dom_html_table_element_create_t_body(element,
-				&new_body);
+
+		struct dom_html_element_create_params params = {
+			.type = DOM_HTML_ELEMENT_TYPE_TR,
+			.doc = doc,
+			.name = doc->elements[DOM_HTML_ELEMENT_TYPE_TR],
+			.namespace = ((dom_node_internal *)element)->namespace,
+			.prefix = ((dom_node_internal *)element)->prefix
+		};
+
+		exp = _dom_html_table_row_element_create(&params, &row);
 		if(exp != DOM_NO_ERR) {
-			dom_html_collection_unref(rows);
-			dom_node_unref(new_body);
 			return exp;
 		}
 
-		exp = dom_node_append_child(new_body, *row,
-				&new_row);
+		exp = dom_html_table_element_create_t_body(element, &new_body);
+		if(exp != DOM_NO_ERR) {
+			dom_node_unref(row);
+			return exp;
+		}
+
+		exp = dom_node_append_child(new_body, row, &new_row);
+		dom_node_unref(new_body);
+		dom_node_unref(row);
 		if(exp == DOM_NO_ERR) {
-			dom_node_unref(*row);
-			*row = (dom_html_element *)new_row;
+			*row_out = (dom_html_element *)new_row;
 		}
 	} else {
 		uint32_t window_len = 0, section_len;
@@ -802,35 +798,39 @@ dom_exception dom_html_table_element_insert_row(
 		}
 
 		exp = dom_html_table_element_get_t_head(element, &t_head);
-		if (exp != DOM_NO_ERR)
-			return exp;
-
-		dom_html_collection_unref(rows);
-
-		exp = dom_html_table_section_element_get_rows(t_head, &rows);
-		if(exp != DOM_NO_ERR) {
-			dom_html_collection_unref(rows);
+		if (exp != DOM_NO_ERR) {
 			return exp;
 		}
 
-		dom_html_collection_get_length(rows, &section_len);
+		exp = dom_html_table_section_element_get_rows(t_head, &rows);
 		if(exp != DOM_NO_ERR) {
-			dom_html_collection_unref(rows);
+			dom_node_unref(t_head);
+			return exp;
+		}
+
+		exp = dom_html_collection_get_length(rows, &section_len);
+		dom_html_collection_unref(rows);
+		if(exp != DOM_NO_ERR) {
+			dom_node_unref(t_head);
 			return exp;
 		}
 
 		if(window_len + section_len > (uint32_t)index ||
 				window_len + section_len == len) {
-			dom_html_collection_unref(rows);
-			return dom_html_table_section_element_insert_row(t_head,
-					index-window_len, row);
+			exp = dom_html_table_section_element_insert_row(t_head,
+					index-window_len,
+					(struct dom_html_element **)&row);
+			dom_node_unref(t_head);
+			if (exp == DOM_NO_ERR) {
+				*row_out = (dom_html_element *)row;
+			}
+			return exp;
 		}
+		dom_node_unref(t_head);
 
 		window_len += section_len;
 
 		n = (dom_node_internal *)element;
-
-		dom_html_collection_unref(rows);
 
 		for (n = n->first_child; n != NULL; n = n->next) {
 			if((n->type == DOM_ELEMENT_NODE) &&
@@ -838,47 +838,69 @@ dom_exception dom_html_table_element_insert_row(
 					doc->elements[DOM_HTML_ELEMENT_TYPE_TBODY],
 					n->name)) {
 
-				exp = dom_html_table_section_element_get_rows((dom_html_table_section_element *)n, &rows);
+				exp = dom_html_table_section_element_get_rows(
+						(dom_html_table_section_element *)n,
+						&rows);
+				if (exp != DOM_NO_ERR) {
+					return exp;
+				}
 				exp = dom_html_collection_get_length(rows, &section_len);
 				dom_html_collection_unref(rows);
+				if (exp != DOM_NO_ERR) {
+					return exp;
+				}
 
 				if(window_len + section_len > (uint32_t)index ||
 						window_len + section_len == len) {
-					return dom_html_table_section_element_insert_row(
+					exp = dom_html_table_section_element_insert_row(
 							(dom_html_table_section_element *)n,
-							index-window_len, row);
+							index-window_len,
+							(struct dom_html_element **)&row);
+					if (exp == DOM_NO_ERR) {
+						*row_out = (dom_html_element *)row;
+					}
+					return exp;
 				}
 
 				window_len += section_len;
 			}
 		}
 		exp = dom_html_table_element_get_t_foot(element, &t_foot);
-		if(exp != DOM_NO_ERR)
+		if(exp != DOM_NO_ERR) {
 			return exp;
+		}
 
 		exp = dom_html_table_section_element_get_rows(t_foot, &rows);
 		if(exp != DOM_NO_ERR) {
-			dom_html_collection_unref(rows);
+			dom_node_unref(t_foot);
 			return exp;
 		}
 
 		exp = dom_html_collection_get_length(rows, &section_len);
-
 		dom_html_collection_unref(rows);
-
-		if(exp != DOM_NO_ERR)
+		if(exp != DOM_NO_ERR) {
+			dom_node_unref(t_foot);
 			return exp;
+		}
 
 		if(window_len + section_len > (uint32_t)index ||
 				window_len +section_len == len) {
-			return dom_html_table_section_element_insert_row(t_foot,
-					index-window_len, row);
+			exp = dom_html_table_section_element_insert_row(t_foot,
+					index-window_len,
+					(struct dom_html_element **)&row);
+			dom_node_unref(t_foot);
+			if (exp == DOM_NO_ERR) {
+				*row_out = (dom_html_element *)row;
+			}
+			return exp;
 		}
+		dom_node_unref(t_foot);
 		exp = DOM_INDEX_SIZE_ERR;
 	}
-	dom_html_collection_unref(rows);
+
 	return exp;
 }
+
 /**
  * Delete the table Head, if one exists
  *
