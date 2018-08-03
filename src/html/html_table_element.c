@@ -917,22 +917,17 @@ dom_exception dom_html_table_element_delete_row(
 	dom_html_document *doc = (dom_html_document *) 
 		((dom_node_internal *) element)->owner;
 
-	exp = dom_html_table_element_get_rows(element,
-			&rows);
+	exp = dom_html_table_element_get_rows(element, &rows);
 	if(exp != DOM_NO_ERR) {
-		dom_html_collection_unref(rows);
 		return exp;
 	}
-	exp = dom_html_collection_get_length(rows,
-			&len);
-
+	exp = dom_html_collection_get_length(rows, &len);
+	dom_html_collection_unref(rows);
 	if(exp != DOM_NO_ERR) {
-		dom_html_collection_unref(rows);
 		return exp;
 	}
 
 	if(index >= (int32_t)len || index < -1 || len ==0) {
-		dom_html_collection_unref(rows);
 		return DOM_INDEX_SIZE_ERR;
 	} else {
 		uint32_t window_len = 0, section_len;
@@ -944,28 +939,31 @@ dom_exception dom_html_table_element_delete_row(
 			index = (int32_t)len-1;
 		}
 
-		dom_html_collection_unref(rows);
-
 		exp = dom_html_table_element_get_t_head(element, &t_head);
 		if(exp != DOM_NO_ERR)
 			return exp;
 
 		exp = dom_html_table_section_element_get_rows(t_head, &rows);
 		if (exp != DOM_NO_ERR) {
-			dom_html_collection_unref(rows);
+			dom_node_unref(t_head);
 			return DOM_NO_ERR;
 		}
 
 		exp = dom_html_collection_get_length(rows, &section_len);
-
 		dom_html_collection_unref(rows);
-		if(exp != DOM_NO_ERR)
+		if(exp != DOM_NO_ERR) {
+			dom_node_unref(t_head);
 			return exp;
+		}
 
 		if(window_len + section_len > (uint32_t)index) {
-			return dom_html_table_section_element_delete_row(t_head,
+			exp = dom_html_table_section_element_delete_row(t_head,
 					index-window_len);
+			dom_node_unref(t_head);
+			return exp;
 		}
+		dom_node_unref(t_head);
+
 		window_len += section_len;
 		n = (dom_node_internal *)element;
 
@@ -974,10 +972,10 @@ dom_exception dom_html_table_element_delete_row(
 					dom_string_caseless_isequal(
 					doc->elements[DOM_HTML_ELEMENT_TYPE_TBODY],
 					n->name)) {
-				exp = dom_html_table_section_element_get_rows
-					((dom_html_table_section_element *)n, &rows);
+				exp = dom_html_table_section_element_get_rows(
+						(dom_html_table_section_element *)n,
+						&rows);
 				if(exp != DOM_NO_ERR) {
-					dom_html_collection_unref(rows);
 					return exp;
 				}
 
@@ -995,19 +993,26 @@ dom_exception dom_html_table_element_delete_row(
 			}
 		}
 		exp = dom_html_table_element_get_t_foot(element, &t_foot);
+		if(exp != DOM_NO_ERR)
+			return exp;
+
 		exp = dom_html_table_section_element_get_rows(t_foot, &rows);
 		if(exp != DOM_NO_ERR) {
-			dom_html_collection_unref(rows);
+			dom_node_unref(t_foot);
 			return exp;
 		}
 		exp = dom_html_collection_get_length(rows, &section_len);
 		dom_html_collection_unref(rows);
-		if (exp != DOM_NO_ERR)
+		if (exp != DOM_NO_ERR) {
+			dom_node_unref(t_foot);
 			return exp;
+		}
 
 		if(window_len + section_len > (uint32_t)index) {
-			return dom_html_table_section_element_delete_row(t_foot,
+			exp = dom_html_table_section_element_delete_row(t_foot,
 					index-window_len);
+			dom_node_unref(t_foot);
+			return exp;
 		}
 		return DOM_INDEX_SIZE_ERR;
 	}
