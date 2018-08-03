@@ -244,15 +244,13 @@ dom_exception dom_html_table_row_element_get_row_index(
 			return exp;
 		}
 
-		exp = dom_html_table_section_element_get_rows(t_head,
-				&rows);
+		exp = dom_html_table_section_element_get_rows(t_head, &rows);
+		dom_node_unref(t_head);
 		if (exp != DOM_NO_ERR) {
-			dom_node_unref(t_head);
 			return exp;
 		}
 
-		dom_html_collection_get_length(rows,
-				&len);
+		dom_html_collection_get_length(rows, &len);
 		dom_html_collection_unref(rows);
 
 		count += len;
