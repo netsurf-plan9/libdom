@@ -740,7 +740,6 @@ dom_exception dom_html_table_element_insert_row(
 		dom_html_element **row_out)
 {
 	dom_exception exp;
-	dom_html_table_row_element *row;
 	dom_html_collection* rows;
 	uint32_t len;
 	dom_html_document *doc = (dom_html_document *)
@@ -760,6 +759,7 @@ dom_exception dom_html_table_element_insert_row(
 		exp = DOM_INDEX_SIZE_ERR;
 	} else if(len == 0) {
 		dom_html_table_section_element *new_body;
+		dom_html_table_row_element *row;
 		dom_node *new_row;
 
 		struct dom_html_element_create_params params = {
@@ -781,7 +781,8 @@ dom_exception dom_html_table_element_insert_row(
 			return exp;
 		}
 
-		exp = dom_node_append_child(new_body, row, &new_row);
+		exp = dom_node_append_child(new_body, (dom_html_element *) row,
+				&new_row);
 		dom_node_unref(new_body);
 		dom_node_unref(row);
 		if(exp == DOM_NO_ERR) {
@@ -791,6 +792,7 @@ dom_exception dom_html_table_element_insert_row(
 		uint32_t window_len = 0, section_len;
 		dom_html_table_section_element *t_head;
 		dom_html_table_section_element *t_foot;
+		dom_html_element *row;
 		dom_node_internal *n;
 
 		if(index ==-1) {
@@ -818,11 +820,10 @@ dom_exception dom_html_table_element_insert_row(
 		if(window_len + section_len > (uint32_t)index ||
 				window_len + section_len == len) {
 			exp = dom_html_table_section_element_insert_row(t_head,
-					index-window_len,
-					(struct dom_html_element **)&row);
+					index-window_len, &row);
 			dom_node_unref(t_head);
 			if (exp == DOM_NO_ERR) {
-				*row_out = (dom_html_element *)row;
+				*row_out = row;
 			}
 			return exp;
 		}
@@ -854,10 +855,9 @@ dom_exception dom_html_table_element_insert_row(
 						window_len + section_len == len) {
 					exp = dom_html_table_section_element_insert_row(
 							(dom_html_table_section_element *)n,
-							index-window_len,
-							(struct dom_html_element **)&row);
+							index-window_len, &row);
 					if (exp == DOM_NO_ERR) {
-						*row_out = (dom_html_element *)row;
+						*row_out = row;
 					}
 					return exp;
 				}
@@ -886,11 +886,10 @@ dom_exception dom_html_table_element_insert_row(
 		if(window_len + section_len > (uint32_t)index ||
 				window_len +section_len == len) {
 			exp = dom_html_table_section_element_insert_row(t_foot,
-					index-window_len,
-					(struct dom_html_element **)&row);
+					index-window_len, &row);
 			dom_node_unref(t_foot);
 			if (exp == DOM_NO_ERR) {
-				*row_out = (dom_html_element *)row;
+				*row_out = row;
 			}
 			return exp;
 		}
