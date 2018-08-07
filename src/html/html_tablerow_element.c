@@ -354,7 +354,7 @@ dom_exception dom_html_table_row_element_insert_cell(
 		int32_t index, dom_html_element **cell) {
 	dom_html_document *doc = (dom_html_document *) ((dom_node_internal *) element)->owner;
 
-	dom_node *new_cell;
+	dom_html_element *new_cell;
 
 	dom_html_collection *cells;	/*< The collection of cells in input table_row_element*/
 	uint32_t len; 			/*< The size of the cell collection */
@@ -368,7 +368,7 @@ dom_exception dom_html_table_row_element_insert_cell(
 		.prefix = ((dom_node_internal *)element)->prefix
 	};
 
-	exp = _dom_html_element_create(&params, (dom_html_element **)&new_cell);
+	exp = _dom_html_element_create(&params, &new_cell);
 	if (exp != DOM_NO_ERR)
 		return exp;
 	
