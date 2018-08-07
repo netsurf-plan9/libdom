@@ -235,7 +235,7 @@ dom_exception dom_html_table_section_element_insert_row(
 	dom_html_collection *rows; 	/*< The collection of rows in input table_section_element*/
 	uint32_t len; 			/*< The size of the row collection */
 	dom_exception exp;		/*< Variable for getting the exceptions*/
-	dom_html_table_row_element *new_node;
+	dom_node *new_node;
 
 	struct dom_html_element_create_params params = {
 		.type = DOM_HTML_ELEMENT_TYPE_TR,
@@ -246,7 +246,7 @@ dom_exception dom_html_table_section_element_insert_row(
 	};
 
 	exp = _dom_html_table_row_element_create(&params,
-			(dom_html_table_row_element **)&new_node);
+			(dom_html_table_row_element **)(void *) &new_node);
 	if(exp != DOM_NO_ERR)
 		return exp;
 	
