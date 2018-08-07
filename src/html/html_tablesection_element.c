@@ -235,7 +235,7 @@ dom_exception dom_html_table_section_element_insert_row(
 	dom_html_collection *rows; 	/*< The collection of rows in input table_section_element*/
 	uint32_t len; 			/*< The size of the row collection */
 	dom_exception exp;		/*< Variable for getting the exceptions*/
-	dom_node *new_node;
+	dom_html_table_row_element *new_node;
 
 	struct dom_html_element_create_params params = {
 		.type = DOM_HTML_ELEMENT_TYPE_TR,
@@ -253,14 +253,12 @@ dom_exception dom_html_table_section_element_insert_row(
 	exp = dom_html_table_section_element_get_rows(element, &rows);
 	if(exp != DOM_NO_ERR) {
 		dom_node_unref(new_node);
-		new_node = NULL;
 		return exp;
 	}
 
 	exp = dom_html_collection_get_length(rows, &len);
 	if (exp != DOM_NO_ERR) {
 		dom_node_unref(new_node);
-		new_node = NULL;
 		dom_html_collection_unref(rows);
 		return exp;
 	}
@@ -269,7 +267,6 @@ dom_exception dom_html_table_section_element_insert_row(
 		/* Check for index validity */
 		dom_html_collection_unref(rows);
 		dom_node_unref(new_node);
-		new_node = NULL;
 		return DOM_INDEX_SIZE_ERR;
 
 	} else if (index == -1 || index == (int32_t)len) {
@@ -286,7 +283,6 @@ dom_exception dom_html_table_section_element_insert_row(
 	}
 
 	dom_node_unref(new_node);
-	new_node = NULL;
 
 	return exp;
 }
