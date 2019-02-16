@@ -180,6 +180,7 @@ sub new {
 			# The list for UNREF
 			unref => [],
 			string_unref => [],
+                        block_unrefs => ["!!!"],
 			# The indent of current statement
 			indent => "",
 			# The variables for List/Collection
@@ -1251,7 +1252,9 @@ sub generate_control_statement {
 		}
 
 		case "for-each" {
-			# Detect what is the collection type, if it is "string", we
+                        # Push a block onto the cleanups
+                        push(@{$self->{"block_unrefs"}}, "b");
+                        # Detect what is the collection type, if it is "string", we
 			# should also do some conversion work
 			my $coll = $ats->{"collection"};
 			# The default member type is dom_node
@@ -1308,6 +1311,7 @@ sub generate_control_statement {
 				print "foreach_initialise_domnodelist($coll, \&iterator$iterator_index);\n";
 				print "while(get_next_domnodelist($coll, \&iterator$iterator_index, \&$member)) {\n";
                                 $self->addto_cleanup($member);
+                                push(@{$self->{'block_unrefs'}}, $member);
 			}
 
 			if ($self->{"var"}->{$coll} eq "NamedNodeMap") {
@@ -1316,6 +1320,7 @@ sub generate_control_statement {
 				print "foreach_initialise_domnamednodemap($coll, \&iterator$iterator_index);\n";
 				print "while(get_next_domnamednodemap($coll, \&iterator$iterator_index, \&$member)) {\n";
                                 $self->addto_cleanup($member);
+                                push(@{$self->{'block_unrefs'}}, $member);
 			}
 
 			if ($self->{"var"}->{$coll} eq "HTMLCollection") {
@@ -1324,6 +1329,7 @@ sub generate_control_statement {
 				print "foreach_initialise_domhtmlcollection($coll, \&iterator$iterator_index);\n";
 				print "while(get_next_domhtmlcollection($coll, \&iterator$iterator_index, \&$member)) {\n";
                                 $self->addto_cleanup($member);
+                                push(@{$self->{'block_unrefs'}}, $member);
 			}
 		}
 	}
@@ -1342,10 +1348,18 @@ sub complete_control_statement {
 		case [qw(if while for-each)] {
 			# Firstly, we should cleanup the dom_string in this block
 			$self->cleanup_block_domstring();
-
+                        $self->pop_block_unrefs() if ($name eq 'for-each');
 			print "}\n";
 		}
 	}
+}
+
+sub pop_block_unrefs {
+   my ($self) = @_;
+   while ((my $var = pop(@{$self->{'block_unrefs'}})) ne 'b') {
+      die "OMG!" if ($var eq '!!!');
+      print("if ($var != NULL) {\n    dom_node_unref($var);\n    $var = NULL;\n}\n");
+   }
 }
 
 
