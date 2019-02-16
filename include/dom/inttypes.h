@@ -8,7 +8,7 @@
 #ifndef dom_inttypes_h_
 #define dom_inttypes_h_
 
-#include <inttypes.h>
+#include <stdint.h>
 
 /**
  * The IDL spec(2nd ed) 3.10.5 defines a short type with 16bit range
