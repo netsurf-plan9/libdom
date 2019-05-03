@@ -57,7 +57,7 @@ dom_exception _dom_event_initialise(dom_event *evt)
 	evt->refcnt = 1;
 	evt->in_dispatch = false;
 	evt->is_initialised = false;
-	evt->is_trusted = false;
+	evt->is_trusted = true;
 
 	return DOM_NO_ERR;
 }
