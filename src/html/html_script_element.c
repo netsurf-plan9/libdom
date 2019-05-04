@@ -60,6 +60,8 @@ dom_exception _dom_html_script_element_initialise(
 		struct dom_html_element_create_params *params,
 		struct dom_html_script_element *ele)
 {
+	ele->flags = DOM_HTML_SCRIPT_ELEMENT_FLAG_NON_BLOCKING;
+
 	return _dom_html_element_initialise(params, &ele->base);
 }
 
@@ -272,4 +274,41 @@ dom_exception dom_html_script_element_set_text(
 	dom_string *text)
 {
 	return _dom_node_set_text_content((dom_node_internal *)ele, text);
+}
+
+/**
+ * Read the internal node flags
+ *
+ * \param ele The dom_html_script_element object
+ * \param flags Where to fill out the flags
+ * \return DOM_NO_ERR on success
+ */
+dom_exception dom_html_script_element_get_flags(
+	dom_html_script_element *ele,
+	dom_html_script_element_flags *flags)
+{
+	assert(flags != NULL);
+	assert(ele != NULL);
+
+	*flags = ele->flags;
+
+	return DOM_NO_ERR;
+}
+
+/**
+ * Set the internal node flags
+ *
+ * \param ele The dom_html_script_element object
+ * \param flags The flags to retain
+ * \return DOM_NO_ERR on success
+ */
+dom_exception dom_html_script_element_set_flags(
+	dom_html_script_element *ele,
+	dom_html_script_element_flags flags)
+{
+	assert(ele != NULL);
+
+	ele->flags = flags;
+
+	return DOM_NO_ERR;
 }

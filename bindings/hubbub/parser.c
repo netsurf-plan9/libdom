@@ -226,6 +226,41 @@ static hubbub_error create_element(void *parser, const hubbub_tag *tag,
 			goto clean1;
 	}
 
+	/* Now do some special per-element-type handling */
+	dom_html_element_type tag_type;
+	err = dom_html_element_get_tag_type(element, &tag_type);
+	if (err != DOM_NO_ERR) {
+		dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
+				"Can't get tag type out of element");
+		goto clean1;
+	}
+
+	switch (tag_type) {
+	case DOM_HTML_ELEMENT_TYPE_SCRIPT: {
+		/* Kickstart of https://html.spec.whatwg.org/multipage/scripting.html#script-processing-model */
+		dom_html_script_element *script = (dom_html_script_element *)element;
+		dom_html_script_element_flags flags;
+		err = dom_html_script_element_get_flags(script, &flags);
+		if (err != DOM_NO_ERR) {
+			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
+					"Can't get flags out of script element");
+			goto clean1;
+		}
+		flags |= DOM_HTML_SCRIPT_ELEMENT_FLAG_PARSER_INSERTED;
+		err = dom_html_script_element_set_flags(script, flags);
+		if (err != DOM_NO_ERR) {
+			dom_parser->msg(DOM_MSG_CRITICAL, dom_parser->mctx,
+					"Can't set flags into script element");
+			goto clean1;
+		}
+		break;
+	}
+	default:
+		/* Nothing */
+		break;
+	}
+
+
 	*result = element;
 
 clean1:
