@@ -202,6 +202,16 @@ static inline void dom_node_unref(dom_node *node)
 }
 #define dom_node_unref(n) dom_node_unref((dom_node *) (n))
 
+/* Contains is non-virtual since it doesn't need to be */
+
+dom_exception _dom_node_contains(struct dom_node_internal *node,
+				struct dom_node_internal *other,
+				bool *contains);
+#define dom_node_contains(n, o, c) \
+	_dom_node_contains((dom_node_internal *)(n), (dom_node_internal *)(o), (c))
+
+/* All the rest are virtual */
+
 static inline dom_exception dom_node_get_node_name(struct dom_node *node,
 		dom_string **result)
 {

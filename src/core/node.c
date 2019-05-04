@@ -296,6 +296,36 @@ void _dom_node_finalise(dom_node_internal *node)
 
 /* ---------------------------------------------------------------------*/
 
+/* The public non-virtual function of this interface Node */
+
+dom_exception _dom_node_contains(struct dom_node_internal *node,
+				struct dom_node_internal *other,
+				bool *contains)
+{
+	assert(node != NULL);
+	assert(other != NULL);
+	assert(contains != NULL);
+
+	if (node->owner != other->owner) {
+		*contains = false;
+		return DOM_NO_ERR;
+	}
+
+	while (other != NULL) {
+		if (other == node) {
+			*contains = true;
+			return DOM_NO_ERR;
+		}
+		other = other->parent;
+	}
+
+	*contains = false;
+	return DOM_NO_ERR;
+}
+
+
+/* ---------------------------------------------------------------------*/
+
 /* The public virtual function of this interface Node */
 
 /**
