@@ -219,7 +219,10 @@ static hubbub_error create_element(void *parser, const hubbub_tag *tag,
 		}
 	}
 
-	if (element != NULL && tag->n_attributes > 0) {
+	/* By now, we MUST have constructed an element */
+	assert(element != NULL);
+
+	if (tag->n_attributes > 0) {
 		herr = add_attributes(parser, element, tag->attributes,
 				tag->n_attributes);
 		if (herr != HUBBUB_OK)
