@@ -1502,6 +1502,8 @@ dom_exception _dom_node_set_text_content(dom_node_internal *node,
 		err = dom_node_remove_child(node, p, (void *) &r);
 		if (err != DOM_NO_ERR)
 			return err;
+		/* The returned node was reffed, so unref it */
+		dom_node_unref(r);
 	}
 
 	doc = node->owner;
@@ -1510,12 +1512,15 @@ dom_exception _dom_node_set_text_content(dom_node_internal *node,
 	err = dom_document_create_text_node(doc, content, &text);
 	if (err != DOM_NO_ERR)
 		return err;
-	
-	err = dom_node_append_child(node, text, (void *) &r);
-	if (err != DOM_NO_ERR)
-		return err;
 
-	return DOM_NO_ERR;
+	err = dom_node_append_child(node, text, (void *) &r);
+
+	/* The node is held alive as a child here, so unref it */
+	dom_node_unref(text);
+	/* And unref it a second time because append_child reffed it too */
+	dom_node_unref(r);
+
+	return err;
 }
 
 /**
