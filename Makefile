@@ -6,7 +6,7 @@
 
 # Component settings
 COMPONENT := dom
-COMPONENT_VERSION := 0.3.3
+COMPONENT_VERSION := 0.3.4
 # Default to a static library
 COMPONENT_TYPE ?= lib-static
 
