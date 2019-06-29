@@ -56,7 +56,7 @@ static const dom_string_internal empty_string = {
 
 void dom_string_destroy(dom_string *str)
 {
-	dom_string_internal *istr = (dom_string_internal *)str;
+	dom_string_internal *istr = (void *) str;
 	if (str != NULL) {
 		assert(istr->base.refcnt == 0);
 		switch (istr->type) {
@@ -175,7 +175,7 @@ dom_exception dom_string_create_interned(const uint8_t *ptr, size_t len,
 dom_exception dom_string_intern(dom_string *str, 
 		struct lwc_string_s **lwcstr)
 {
-	dom_string_internal *istr = (dom_string_internal *) str;
+	dom_string_internal *istr = (void *) str;
 	/* If this string is already interned, do nothing */
 	if (istr->type != DOM_STRING_INTERNED) {
 		lwc_string *ret;
@@ -209,8 +209,8 @@ dom_exception dom_string_intern(dom_string *str,
 bool dom_string_isequal(const dom_string *s1, const dom_string *s2)
 {
 	size_t len;
-	const dom_string_internal *is1 = (dom_string_internal *) s1;
-	const dom_string_internal *is2 = (dom_string_internal *) s2;
+	const dom_string_internal *is1 = (void *) s1;
+	const dom_string_internal *is2 = (void *) s2;
 
 	if (s1 == NULL)
 		is1 = &empty_string;
@@ -258,8 +258,8 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 	const uint8_t *d1 = NULL;
 	const uint8_t *d2 = NULL;
 	size_t len;
-	const dom_string_internal *is1 = (dom_string_internal *) s1;
-	const dom_string_internal *is2 = (dom_string_internal *) s2;
+	const dom_string_internal *is1 = (void *) s1;
+	const dom_string_internal *is2 = (void *) s2;
 
 	if (s1 == NULL)
 		is1 = &empty_string;
@@ -311,7 +311,7 @@ bool dom_string_caseless_isequal(const dom_string *s1, const dom_string *s2)
 bool dom_string_lwc_isequal(const dom_string *s1, lwc_string *s2)
 {
 	size_t len;
-	dom_string_internal *is1 = (dom_string_internal *) s1;
+	dom_string_internal *is1 = (void *) s1;
 
 	if (s1 == NULL || s2 == NULL)
 		return false;
@@ -348,7 +348,7 @@ bool dom_string_caseless_lwc_isequal(const dom_string *s1, lwc_string *s2)
 	size_t len;
 	const uint8_t *d1 = NULL;
 	const uint8_t *d2 = NULL;
-	dom_string_internal *is1 = (dom_string_internal *) s1;
+	dom_string_internal *is1 = (void *) s1;
 
 	if (s1 == NULL || s2 == NULL)
 		return false;
@@ -897,7 +897,7 @@ dom_exception _dom_exception_from_lwc_error(lwc_error err)
  */
 const char *dom_string_data(const dom_string *str)
 {
-	dom_string_internal *istr = (dom_string_internal *) str;
+	dom_string_internal *istr = (void *) str;
 	if (istr->type == DOM_STRING_CDATA) {
 		return (const char *) istr->data.cdata.ptr;
 	} else {
@@ -911,7 +911,7 @@ const char *dom_string_data(const dom_string *str)
  */
 size_t dom_string_byte_length(const dom_string *str)
 {
-	dom_string_internal *istr = (dom_string_internal *) str;
+	dom_string_internal *istr = (void *) str;
 	if (istr->type == DOM_STRING_CDATA) {
 		return istr->data.cdata.len;
 	} else {
@@ -954,7 +954,7 @@ dom_string_toupper(dom_string *source, bool ascii_only, dom_string **upper)
 		index++;
 	}
 	
-	if (((dom_string_internal*)source)->type == DOM_STRING_CDATA) {
+	if (((dom_string_internal *) ((void *) source))->type == DOM_STRING_CDATA) {
 		exc = dom_string_create(copy_s, nbytes, upper);
 	} else {
 		exc = dom_string_create_interned(copy_s, nbytes, upper);
@@ -978,7 +978,7 @@ dom_string_toupper(dom_string *source, bool ascii_only, dom_string **upper)
 dom_exception
 dom_string_tolower(dom_string *source, bool ascii_only, dom_string **lower)
 {
-	dom_string_internal *isource = (dom_string_internal *)source;
+	dom_string_internal *isource = (void *) source;
 	dom_exception exc = DOM_NO_ERR;
 
 	if (ascii_only == false)
@@ -1106,7 +1106,7 @@ dom_exception dom_string_whitespace_op(dom_string *s,
 	len = temp_pos - temp;
 
 	/* Make new string */
-	if (((dom_string_internal *) s)->type == DOM_STRING_CDATA) {
+	if (((dom_string_internal *) ((void *) s))->type == DOM_STRING_CDATA) {
 		exc = dom_string_create(temp, len, ret);
 	} else {
 		exc = dom_string_create_interned(temp, len, ret);
