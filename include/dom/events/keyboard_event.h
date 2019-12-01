@@ -41,8 +41,8 @@ dom_exception _dom_keyboard_event_get_code(dom_keyboard_event *evt,
 
 dom_exception _dom_keyboard_event_get_location(dom_keyboard_event *evt,
 		dom_key_location *location);
-#define dom_keyboard_event_get_key_location(e, l) \
-		_dom_keyboard_event_get_key_location( \
+#define dom_keyboard_event_get_location(e, l) \
+		_dom_keyboard_event_get_location( \
 		(dom_keyboard_event *) (e), (dom_key_location *) (l))
 
 dom_exception _dom_keyboard_event_get_ctrl_key(dom_keyboard_event *evt,
