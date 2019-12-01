@@ -31,9 +31,6 @@ struct dom_keyboard_event {
 	uint32_t modifier_state;	/**< The modifier keys state */
 };
 
-/* Constructor */
-dom_exception _dom_keyboard_event_create(struct dom_keyboard_event **evt);
-
 /* Destructor */
 void _dom_keyboard_event_destroy(struct dom_keyboard_event *evt);
 

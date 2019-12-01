@@ -23,6 +23,10 @@ typedef enum {
 	DOM_KEY_LOCATION_NUMPAD = 3
 } dom_key_location;
 
+dom_exception _dom_keyboard_event_create(dom_keyboard_event **evt);
+#define dom_keyboard_event_create(n) \
+		_dom_keyboard_event_create((dom_keyboard_event **) (n))
+
 dom_exception _dom_keyboard_event_get_key_identifier(dom_keyboard_event *evt,
 		dom_string **ident);
 #define dom_keyboard_event_get_key_identifier(e, i) \
