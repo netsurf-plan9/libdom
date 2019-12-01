@@ -18,17 +18,14 @@
 struct dom_keyboard_event {
 	struct dom_ui_event base;	/**< The base class */
 
-	dom_string *key_ident;	/**< The identifier of the key in this 
-					 * event, please refer:
-					 * http://www.w3.org/TR/DOM-Level-3-Events/keyset.html#KeySet-Set
-					 * for detail
-					 */
-
-	dom_key_location key_loc;	/**< Indicate the location of the key on
-					 * the keyboard
-					 */
+	dom_string *key;
+	dom_string *code;
+	dom_key_location location;
 
 	uint32_t modifier_state;	/**< The modifier keys state */
+
+	bool repeat;
+	bool is_composing;
 };
 
 /* Destructor */
