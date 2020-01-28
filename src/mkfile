@@ -198,9 +198,9 @@ CFLAGS=-D_BSD_EXTENSION -D_SUSV2_SOURCE -D_C99_SNPRINTF_EXTENSION\
  -I . \
  -I ../include \
  -I ../../posix/include \
- -I ../../libparserutils-0.2.4/include \
- -I ../../libwapcaplet-0.4.1/include \
- -I ../../libhubbub-0.3.5/include
+ -I ../../libparserutils/include \
+ -I ../../libwapcaplet/include \
+ -I ../../libhubbub/include
 
 all:V:	libdom.$O.a
 
