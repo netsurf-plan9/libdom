@@ -1,0 +1,2 @@
+parser.c:
+Changed 645: source from uint to int, as enums are ints.

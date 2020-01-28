@@ -1,0 +1,214 @@
+</$objtype/mkfile
+
+CC=pcc
+OBJ=\
+	core/attr.$O \
+	core/cdatasection.$O \
+	core/characterdata.$O \
+	core/comment.$O \
+	core/doc_fragment.$O \
+	core/document.$O \
+	core/document_type.$O \
+	core/element.$O \
+	core/entity_ref.$O \
+	core/implementation.$O \
+	core/namednodemap.$O \
+	core/node.$O \
+	core/nodelist.$O \
+	core/pi.$O \
+	core/string.$O \
+	core/text.$O \
+	core/typeinfo.$O \
+	events/custom_event.$O \
+	events/dispatch.$O \
+	events/document_event.$O \
+	events/event.$O \
+	events/event_listener.$O \
+	events/event_target.$O \
+	events/keyboard_event.$O \
+	events/mouse_event.$O \
+	events/mouse_multi_wheel_event.$O \
+	events/mouse_wheel_event.$O \
+	events/mutation_event.$O \
+	events/mutation_name_event.$O \
+	events/text_event.$O \
+	events/ui_event.$O \
+	html/html_anchor_element.$O \
+	html/html_applet_element.$O \
+	html/html_area_element.$O \
+	html/html_base_element.$O \
+	html/html_basefont_element.$O \
+	html/html_body_element.$O \
+	html/html_br_element.$O \
+	html/html_button_element.$O \
+	html/html_collection.$O \
+	html/html_directory_element.$O \
+	html/html_div_element.$O \
+	html/html_dlist_element.$O \
+	html/html_document.$O \
+	html/html_element.$O \
+	html/html_fieldset_element.$O \
+	html/html_font_element.$O \
+	html/html_form_element.$O \
+	html/html_frame_element.$O \
+	html/html_frameset_element.$O \
+	html/html_head_element.$O \
+	html/html_heading_element.$O \
+	html/html_hr_element.$O \
+	html/html_html_element.$O \
+	html/html_iframe_element.$O \
+	html/html_image_element.$O \
+	html/html_input_element.$O \
+	html/html_isindex_element.$O \
+	html/html_label_element.$O \
+	html/html_legend_element.$O \
+	html/html_li_element.$O \
+	html/html_link_element.$O \
+	html/html_map_element.$O \
+	html/html_menu_element.$O \
+	html/html_meta_element.$O \
+	html/html_mod_element.$O \
+	html/html_object_element.$O \
+	html/html_olist_element.$O \
+	html/html_opt_group_element.$O \
+	html/html_option_element.$O \
+	html/html_options_collection.$O \
+	html/html_paragraph_element.$O \
+	html/html_param_element.$O \
+	html/html_pre_element.$O \
+	html/html_quote_element.$O \
+	html/html_script_element.$O \
+	html/html_select_element.$O \
+	html/html_style_element.$O \
+	html/html_table_element.$O \
+	html/html_tablecaption_element.$O \
+	html/html_tablecell_element.$O \
+	html/html_tablecol_element.$O \
+	html/html_tablerow_element.$O \
+	html/html_tablesection_element.$O \
+	html/html_text_area_element.$O \
+	html/html_title_element.$O \
+	html/html_ulist_element.$O \
+	utils/character_valid.$O \
+	utils/hashtable.$O \
+	utils/namespace.$O \
+	utils/validate.$O \
+	../bindings/hubbub/parser.$O \
+	../bindings/xml/expat_xmlparser.$O \
+#	../bindings/xml/libxml_xmlparser.$O
+
+HFILES=\
+../include/dom/core/attr.h \
+../include/dom/core/cdatasection.h \
+../include/dom/core/characterdata.h \
+../include/dom/core/comment.h \
+../include/dom/core/doc_fragment.h \
+../include/dom/core/document.h \
+../include/dom/core/document_type.h \
+../include/dom/core/element.h \
+../include/dom/core/entity_ref.h \
+../include/dom/core/exceptions.h \
+../include/dom/core/implementation.h \
+../include/dom/core/namednodemap.h \
+../include/dom/core/node.h \
+../include/dom/core/nodelist.h \
+../include/dom/core/pi.h \
+../include/dom/core/string.h \
+../include/dom/core/text.h \
+../include/dom/core/typeinfo.h \
+../include/dom/dom.h \
+../include/dom/events/custom_event.h \
+../include/dom/events/document_event.h \
+../include/dom/events/event.h \
+../include/dom/events/event_listener.h \
+../include/dom/events/event_target.h \
+../include/dom/events/events.h \
+../include/dom/events/keyboard_event.h \
+../include/dom/events/mouse_event.h \
+../include/dom/events/mouse_multi_wheel_event.h \
+../include/dom/events/mouse_wheel_event.h \
+../include/dom/events/mutation_event.h \
+../include/dom/events/mutation_name_event.h \
+../include/dom/events/text_event.h \
+../include/dom/events/ui_event.h \
+../include/dom/functypes.h \
+../include/dom/html/html_anchor_element.h \
+../include/dom/html/html_applet_element.h \
+../include/dom/html/html_area_element.h \
+../include/dom/html/html_base_element.h \
+../include/dom/html/html_basefont_element.h \
+../include/dom/html/html_body_element.h \
+../include/dom/html/html_br_element.h \
+../include/dom/html/html_button_element.h \
+../include/dom/html/html_collection.h \
+../include/dom/html/html_directory_element.h \
+../include/dom/html/html_div_element.h \
+../include/dom/html/html_dlist_element.h \
+../include/dom/html/html_document.h \
+../include/dom/html/html_element.h \
+../include/dom/html/html_elements.h \
+../include/dom/html/html_fieldset_element.h \
+../include/dom/html/html_font_element.h \
+../include/dom/html/html_form_element.h \
+../include/dom/html/html_frame_element.h \
+../include/dom/html/html_frameset_element.h \
+../include/dom/html/html_head_element.h \
+../include/dom/html/html_heading_element.h \
+../include/dom/html/html_hr_element.h \
+../include/dom/html/html_html_element.h \
+../include/dom/html/html_iframe_element.h \
+../include/dom/html/html_image_element.h \
+../include/dom/html/html_input_element.h \
+../include/dom/html/html_isindex_element.h \
+../include/dom/html/html_label_element.h \
+../include/dom/html/html_legend_element.h \
+../include/dom/html/html_li_element.h \
+../include/dom/html/html_link_element.h \
+../include/dom/html/html_map_element.h \
+../include/dom/html/html_menu_element.h \
+../include/dom/html/html_meta_element.h \
+../include/dom/html/html_mod_element.h \
+../include/dom/html/html_object_element.h \
+../include/dom/html/html_olist_element.h \
+../include/dom/html/html_opt_group_element.h \
+../include/dom/html/html_option_element.h \
+../include/dom/html/html_options_collection.h \
+../include/dom/html/html_paragraph_element.h \
+../include/dom/html/html_param_element.h \
+../include/dom/html/html_pre_element.h \
+../include/dom/html/html_quote_element.h \
+../include/dom/html/html_script_element.h \
+../include/dom/html/html_select_element.h \
+../include/dom/html/html_style_element.h \
+../include/dom/html/html_table_element.h \
+../include/dom/html/html_tablecaption_element.h \
+../include/dom/html/html_tablecell_element.h \
+../include/dom/html/html_tablecol_element.h \
+../include/dom/html/html_tablerow_element.h \
+../include/dom/html/html_tablesection_element.h \
+../include/dom/html/html_text_area_element.h \
+../include/dom/html/html_title_element.h \
+../include/dom/html/html_ulist_element.h \
+../include/dom/inttypes.h \
+
+
+
+
+CFLAGS=-D_BSD_EXTENSION -D_SUSV2_SOURCE -D_C99_SNPRINTF_EXTENSION\
+ -I . \
+ -I ../include \
+ -I ../../posix/include \
+ -I ../../libparserutils-0.2.4/include \
+ -I ../../libwapcaplet-0.4.1/include \
+ -I ../../libhubbub-0.3.5/include
+
+all:V:	libdom.$O.a
+
+libdom.$O.a: $OBJ $HFILES
+	ar rv libdom.$O.a $OBJ
+
+%.$O:	%.c $HFILES
+	$CC $CFLAGS -c -o $target $stem.c
+
+clean:V:
+	rm -f $OBJ libdom.$O.a
