@@ -205,8 +205,8 @@ CFLAGS=\
 
 all:V:	libdom.$O.a ../dom/bindings
 
-../dom/bindings: ../bindings
-	mkdir ../include/dom/bindings
+../include/dom/bindings: ../bindings
+	mkdir -p ../include/dom/bindings
 	dircp ../bindings ../include/dom/bindings
 
 libdom.$O.a: $OBJ $HFILES
