@@ -203,7 +203,7 @@ CFLAGS=\
 	 -I ../../libwapcaplet/include \
 	 -I ../../libhubbub/include
 
-all:V:	libdom.$O.a ../dom/bindings
+all:V:	libdom.$O.a ../include/dom/bindings
 
 ../include/dom/bindings: ../bindings
 	mkdir -p ../include/dom/bindings
