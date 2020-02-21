@@ -2172,7 +2172,9 @@ dom_exception _dom_node_detach_range(dom_node_internal *first,
  *
  * This is not implemented in terms of attach/detach in case 
  * we want to perform any special replacement-related behaviour 
- * at a later date.
+ * at a later date.  If the replacement is essentially empty (either NULL
+ * or an empty document fragment node) then this essentially just removes
+ * the old node from its parent.  It is up to the caller to deal with that.
  */
 void _dom_node_replace(dom_node_internal *old,
 		dom_node_internal *replacement)
@@ -2190,6 +2192,19 @@ void _dom_node_replace(dom_node_internal *old,
 		last = replacement;
 	}
 
+	if (first == NULL) {
+		/* All we're doing is removing old */
+		if (old->previous == NULL) {
+			old->parent->first_child = old->next;
+		}
+		if (old->next == NULL) {
+			old->parent->last_child = old->previous;
+		}
+		old->previous = old->next = old->parent = NULL;
+		return;
+	}
+
+	/* We're replacing old with first-to-last */
 	first->previous = old->previous;
 	last->next = old->next;
 
