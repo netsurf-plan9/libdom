@@ -2218,7 +2218,7 @@ void _dom_node_replace(dom_node_internal *old,
 	else
 		old->parent->last_child = last;
 
-	for (n = first; n != last->next; n = n->next) {
+	for (n = first; n != NULL && n != last->next; n = n->next) {
 		n->parent = old->parent;
 	}
 
