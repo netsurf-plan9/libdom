@@ -1,5 +1,6 @@
 </$objtype/mkfile
 
+LIB=libdom.$O.a
 CC=pcc
 OBJ=\
 	core/attr.$O \
@@ -193,27 +194,18 @@ HFILES=\
 
 
 
+<../../nsport.mk
 
 CFLAGS=\
-	-D_BSD_EXTENSION -D_SUSV2_SOURCE -D_C99_SNPRINTF_EXTENSION\
-	 -I . \
-	 -I ../include \
-	 -I ../../posix/include \
+	$CFLAGS \
 	 -I ../../libparserutils/include \
 	 -I ../../libwapcaplet/include \
-	 -I ../../libhubbub/include
+	 -I ../../libhubbub/include\
+
+<../../nsportlib.mk
 
 all:V:	libdom.$O.a ../include/dom/bindings
 
 ../include/dom/bindings: ../bindings
 	mkdir -p ../include/dom/bindings
 	dircp ../bindings ../include/dom/bindings
-
-libdom.$O.a: $OBJ $HFILES
-	ar rv libdom.$O.a $OBJ
-
-%.$O:	%.c $HFILES
-	$CC $CFLAGS -c -o $target $stem.c
-
-clean:V:
-	rm -f $OBJ libdom.$O.a

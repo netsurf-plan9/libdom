@@ -56,7 +56,7 @@ dom_exception __dom_dispatch_node_change_event(dom_document *doc,
 		goto cleanup;
 	
 cleanup:
-	_dom_mutation_event_destroy(evt);
+	dom_event_unref(evt);
 
 	return err;
 }
@@ -101,7 +101,7 @@ dom_exception __dom_dispatch_node_change_document_event(dom_document *doc,
 		goto cleanup;
 	
 cleanup:
-	_dom_mutation_event_destroy(evt);
+	dom_event_unref(evt);
 
 	return err;
 }
@@ -145,7 +145,7 @@ dom_exception __dom_dispatch_attr_modified_event(dom_document *doc,
 	err = dom_event_target_dispatch_event(et, evt, success);
 
 cleanup:
-	_dom_mutation_event_destroy(evt);
+	dom_event_unref(evt);
 
 	return err;
 }
@@ -188,7 +188,7 @@ dom_exception __dom_dispatch_characterdata_modified_event(
 	err = dom_event_target_dispatch_event(et, evt, success);
 
 cleanup:
-	_dom_mutation_event_destroy(evt);
+	dom_event_unref(evt);
 
 	return err;
 }
@@ -224,7 +224,7 @@ dom_exception __dom_dispatch_subtree_modified_event(dom_document *doc,
 	err = dom_event_target_dispatch_event(et, evt, success);
 
 cleanup:
-	_dom_mutation_event_destroy(evt);
+	dom_event_unref(evt);
 
 	return err;
 }
@@ -263,7 +263,7 @@ dom_exception _dom_dispatch_generic_event(dom_document *doc,
 	err = dom_event_target_dispatch_event(et, evt, success);
 
 cleanup:
-	_dom_event_destroy(evt);
+	dom_event_unref(evt);
 
 	return err;
 }

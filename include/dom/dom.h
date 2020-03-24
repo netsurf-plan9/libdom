@@ -111,6 +111,12 @@ typedef enum dom_namespace {
 	DOM_NAMESPACE_COUNT   = 7
 } dom_namespace;
 
+/* Note, these are not valid until at least one function related to DOM
+ * namespaces has been called such as the creation of a Document.
+ */
 extern dom_string *dom_namespaces[DOM_NAMESPACE_COUNT];
+
+/* Optional client-callable namespace cleanup function */
+extern dom_exception dom_namespace_finalise(void);
 
 #endif

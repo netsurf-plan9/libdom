@@ -39,7 +39,7 @@ struct dom_hubbub_parser {
 	hubbub_tree_handler tree_handler;
 					/**< Hubbub parser tree handler */
 
-	struct dom_document *doc;	/**< DOM Document we're building */
+	struct dom_document *doc;	/**< DOM Document we're building within */
 
 	dom_hubbub_encoding_source encoding_source;
 					/**< The document's encoding source */
@@ -860,6 +860,119 @@ dom_hubbub_parser_create(dom_hubbub_parser_params *params,
 	/* set return parameters */
 	*document = (dom_document *)dom_node_ref(binding->doc);
 	*parser = binding;
+
+	return DOM_HUBBUB_OK;
+}
+
+
+/**
+ * Create a Hubbub parser instance
+ *
+ * \param params The binding creation parameters
+ * \param parser Pointer to location to recive instance.
+ * \param document Pointer to location to receive document.
+ * \return Error code
+ */
+dom_hubbub_error
+dom_hubbub_fragment_parser_create(dom_hubbub_parser_params *params,
+				  dom_document *document,
+				  dom_hubbub_parser **parser,
+				  dom_document_fragment **fragment)
+{
+	dom_hubbub_parser *binding;
+	hubbub_parser_optparams optparams;
+	hubbub_error error;
+	dom_exception err;
+
+	if (document == NULL) {
+		return DOM_HUBBUB_BADPARM;
+	}
+
+	/* check result parameters */
+	if (fragment == NULL) {
+		return DOM_HUBBUB_BADPARM;
+	}
+
+	if (parser == NULL) {
+		return DOM_HUBBUB_BADPARM;
+	}
+
+	/* setup binding parser context */
+	binding = malloc(sizeof(dom_hubbub_parser));
+	if (binding == NULL) {
+		return DOM_HUBBUB_NOMEM;
+	}
+
+	binding->parser = NULL;
+	binding->doc = (struct dom_document *)dom_node_ref(document);
+	binding->encoding = params->enc;
+
+	if (params->enc != NULL) {
+		binding->encoding_source = DOM_HUBBUB_ENCODING_SOURCE_HEADER;
+	} else {
+		binding->encoding_source = DOM_HUBBUB_ENCODING_SOURCE_DETECTED;
+	}
+
+	binding->complete = false;
+
+	if (params->msg == NULL) {
+		binding->msg = dom_hubbub_parser_default_msg;
+	} else {
+		binding->msg = params->msg;
+	}
+	binding->mctx = params->ctx;
+
+	/* ensure script function is valid or use the default */
+	if (params->script == NULL) {
+		binding->script = dom_hubbub_parser_default_script;
+	} else {
+		binding->script = params->script;
+	}
+
+	/* create hubbub parser */
+	error = hubbub_parser_create(binding->encoding,
+				     params->fix_enc,
+				     &binding->parser);
+	if (error != HUBBUB_OK)	 {
+		dom_node_unref(binding->doc);
+		free(binding);
+		return (DOM_HUBBUB_HUBBUB_ERR | error);
+	}
+
+	/* create DOM document fragment */
+	err = dom_document_create_document_fragment(binding->doc,
+						    fragment);
+	if (err != DOM_NO_ERR) {
+		hubbub_parser_destroy(binding->parser);
+		dom_node_unref(binding->doc);
+		free(binding);
+		return DOM_HUBBUB_DOM;
+	}
+
+	binding->tree_handler = tree_handler;
+	binding->tree_handler.ctx = (void *)binding;
+
+	/* set tree handler on parser */
+	optparams.tree_handler = &binding->tree_handler;
+	hubbub_parser_setopt(binding->parser,
+			     HUBBUB_PARSER_TREE_HANDLER,
+			     &optparams);
+
+	/* set document node*/
+	optparams.document_node = dom_node_ref((struct dom_node *)*fragment);
+	hubbub_parser_setopt(binding->parser,
+			     HUBBUB_PARSER_DOCUMENT_NODE,
+			     &optparams);
+
+	/* set scripting state */
+	optparams.enable_scripting = params->enable_script;
+	hubbub_parser_setopt(binding->parser,
+			     HUBBUB_PARSER_ENABLE_SCRIPTING,
+			     &optparams);
+
+	/* set return parameters */
+	*parser = binding;
+	/* fragment is already set up */
 
 	return DOM_HUBBUB_OK;
 }

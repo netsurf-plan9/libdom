@@ -1661,13 +1661,13 @@ dom_exception _dom_element_set_attr(struct dom_element *element,
 		if (err != DOM_NO_ERR)
 			return err;
 
-		success = true;
-		err = _dom_dispatch_subtree_modified_event(doc,
-				(dom_event_target *) e, &success);
+		err = dom_attr_set_value(match->attr, value);
 		if (err != DOM_NO_ERR)
 			return err;
 
-		err = dom_attr_set_value(match->attr, value);
+		success = true;
+		err = _dom_dispatch_subtree_modified_event(doc,
+				(dom_event_target *) e, &success);
 		if (err != DOM_NO_ERR)
 			return err;
 	} else {
