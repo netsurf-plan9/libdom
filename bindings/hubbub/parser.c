@@ -642,7 +642,7 @@ static hubbub_error set_quirks_mode(void *parser, hubbub_quirks_mode mode)
 static hubbub_error change_encoding(void *parser, const char *charset)
 {
 	dom_hubbub_parser *dom_parser = (dom_hubbub_parser *) parser;
-	uint32_t source;
+	hubbub_charset_source source;
 	const char *name;
 
 	/* If we have an encoding here, it means we are *certain* */
