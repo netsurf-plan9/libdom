@@ -99,6 +99,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_body_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_meta_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_form_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_button_element.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_canvas_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_input_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_select_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_text_area_element.h

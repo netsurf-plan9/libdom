@@ -150,9 +150,9 @@ dom_exception _dom_html_canvas_element_copy_internal(
 
 dom_exception
 dom_html_canvas_element_get_width(dom_html_canvas_element *canvas,
-				  int32_t *width)
+				  dom_ulong *width)
 {
-	return dom_html_element_get_int32_t_property(&canvas->base,
+	return dom_html_element_get_dom_ulong_property(&canvas->base,
 						     "width",
 						     SLEN("width"),
 						     width);
@@ -160,9 +160,9 @@ dom_html_canvas_element_get_width(dom_html_canvas_element *canvas,
 
 dom_exception
 dom_html_canvas_element_set_width(dom_html_canvas_element *canvas,
-				  uint32_t width)
+				  dom_ulong width)
 {
-	return dom_html_element_set_int32_t_property(&canvas->base,
+	return dom_html_element_set_dom_ulong_property(&canvas->base,
 						     "width",
 						     SLEN("width"),
 						     width);
@@ -170,9 +170,9 @@ dom_html_canvas_element_set_width(dom_html_canvas_element *canvas,
 
 dom_exception
 dom_html_canvas_element_get_height(dom_html_canvas_element *canvas,
-				  int32_t *height)
+				  dom_ulong *height)
 {
-	return dom_html_element_get_int32_t_property(&canvas->base,
+	return dom_html_element_get_dom_ulong_property(&canvas->base,
 						     "height",
 						     SLEN("height"),
 						     height);
@@ -180,9 +180,9 @@ dom_html_canvas_element_get_height(dom_html_canvas_element *canvas,
 
 dom_exception
 dom_html_canvas_element_set_height(dom_html_canvas_element *canvas,
-				  uint32_t height)
+				  dom_ulong height)
 {
-	return dom_html_element_set_int32_t_property(&canvas->base,
+	return dom_html_element_set_dom_ulong_property(&canvas->base,
 						     "height",
 						     SLEN("height"),
 						     height);
