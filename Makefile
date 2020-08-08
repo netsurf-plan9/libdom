@@ -2,11 +2,11 @@
 #
 # Makefile for libdom
 #
-# Copyright 2009-2015 John-Mark Bell <jmb@netsurf-browser.org>
+# Copyright 2009-2020 John-Mark Bell <jmb@netsurf-browser.org>
 
 # Component settings
 COMPONENT := dom
-COMPONENT_VERSION := 0.4.0
+COMPONENT_VERSION := 0.4.1
 # Default to a static library
 COMPONENT_TYPE ?= lib-static
 
@@ -99,6 +99,7 @@ INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_body_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_meta_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_form_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_button_element.h
+INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_canvas_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_input_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_select_element.h
 INSTALL_ITEMS := $(INSTALL_ITEMS) $(I):$(Is)/html_text_area_element.h

@@ -17,6 +17,7 @@
 #include "html/html_head_element.h"
 #include "html/html_body_element.h"
 #include "html/html_base_element.h"
+#include "html/html_canvas_element.h"
 #include "html/html_div_element.h"
 #include "html/html_link_element.h"
 #include "html/html_title_element.h"
@@ -771,6 +772,10 @@ _dom_html_document_create_element_internal(
 		exc = _dom_html_isindex_element_create(&params,
 				(dom_html_isindex_element **) result);
 		break;
+	case DOM_HTML_ELEMENT_TYPE_CANVAS:
+		exc = _dom_html_canvas_element_create(&params,
+				(dom_html_canvas_element **) result);
+		break;
 	case DOM_HTML_ELEMENT_TYPE_DATA:
 	case DOM_HTML_ELEMENT_TYPE_SPAN:
 	case DOM_HTML_ELEMENT_TYPE_TIME:
@@ -779,7 +784,6 @@ _dom_html_document_create_element_internal(
 	case DOM_HTML_ELEMENT_TYPE_METER:
 	case DOM_HTML_ELEMENT_TYPE_TRACK:
 	case DOM_HTML_ELEMENT_TYPE_VIDEO:
-	case DOM_HTML_ELEMENT_TYPE_CANVAS:
 	case DOM_HTML_ELEMENT_TYPE_DIALOG:
 	case DOM_HTML_ELEMENT_TYPE_KEYGEN:
 	case DOM_HTML_ELEMENT_TYPE_OUTPUT:

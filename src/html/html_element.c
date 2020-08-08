@@ -526,7 +526,7 @@ dom_exception dom_html_element_set_int32_t_property(dom_html_element *ele,
 	if (err != DOM_NO_ERR)
 		goto cleanup;
 	
-	err = dom_element_set_attribute(ele, svalue, str);
+	err = dom_element_set_attribute(ele, str, svalue);
 	
 	dom_string_unref(svalue);
 cleanup:
@@ -615,7 +615,7 @@ dom_exception dom_html_element_set_dom_ulong_property(dom_html_element *ele,
 	if (err != DOM_NO_ERR)
 		goto cleanup;
 
-	err = dom_element_set_attribute(ele, svalue, str);
+	err = dom_element_set_attribute(ele, str, svalue);
 
 	dom_string_unref(svalue);
 cleanup:
