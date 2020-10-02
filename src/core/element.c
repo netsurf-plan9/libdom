@@ -1414,7 +1414,12 @@ dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
 		return DOM_NO_ERR;
 	}
 
-	return dom_node_is_default_namespace(node->parent, namespace, result);
+	if (node->parent != NULL) {
+		return dom_node_is_default_namespace(node->parent, namespace, result);
+	} else {
+		*result = false;
+	}
+	return DOM_NO_ERR;
 }
 
 /**
