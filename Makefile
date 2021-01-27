@@ -157,3 +157,6 @@ ifeq ($(WITH_HUBBUB_BINDING),yes)
   REQUIRED_PKGS := $(REQUIRED_PKGS) libhubbub
 endif
 
+ifeq ($(WITH_EXPAT_BINDING),yes)
+  REQUIRED_LIBS := $(REQUIRED_LIBS) expat
+endif
