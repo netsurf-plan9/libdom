@@ -72,7 +72,7 @@
 #include "utils/namespace.h"
 #include "utils/utils.h"
 
-static struct dom_html_document_vtable html_document_vtable = {
+static const struct dom_html_document_vtable html_document_vtable = {
 	{
 		{
 			{
@@ -85,7 +85,7 @@ static struct dom_html_document_vtable html_document_vtable = {
 	DOM_HTML_DOCUMENT_VTABLE
 };
 
-static struct dom_node_protect_vtable html_document_protect_vtable = {
+static const struct dom_node_protect_vtable html_document_protect_vtable = {
 	DOM_HTML_DOCUMENT_PROTECT_VTABLE
 };
 

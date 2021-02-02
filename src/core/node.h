@@ -53,7 +53,7 @@ typedef struct dom_node_protect_vtable {
  */
 struct dom_node_internal {
 	struct dom_node base;		/**< The vtable base */
-	void *vtable;			/**< The protected vtable */
+	const void *vtable;		/**< The protected vtable */
 
 	dom_string *name;		/**< Node name (this is the local part
 		 			 * of a QName in the cases where a
