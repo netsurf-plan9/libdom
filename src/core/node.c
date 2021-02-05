@@ -55,14 +55,14 @@ static inline dom_exception _dom_node_detach_range(dom_node_internal *first,
 static inline void _dom_node_replace(dom_node_internal *old, 
 		dom_node_internal *replacement);
 
-static struct dom_node_vtable node_vtable = {
+static const struct dom_node_vtable node_vtable = {
 	{
 		DOM_NODE_EVENT_TARGET_VTABLE
 	},
 	DOM_NODE_VTABLE
 };
 
-static struct dom_node_protect_vtable node_protect_vtable = {
+static const struct dom_node_protect_vtable node_protect_vtable = {
 	DOM_NODE_PROTECT_VTABLE
 };
 

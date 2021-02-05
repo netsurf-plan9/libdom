@@ -18,7 +18,7 @@
 #include "core/document.h"
 #include "utils/utils.h"
 
-struct dom_html_element_vtable _dom_html_element_vtable = {
+const struct dom_html_element_vtable _dom_html_element_vtable = {
 	{
 		{
 			{
@@ -31,7 +31,7 @@ struct dom_html_element_vtable _dom_html_element_vtable = {
 	DOM_HTML_ELEMENT_VTABLE
 };
 
-static struct dom_element_protected_vtable _dom_html_element_protect_vtable = {
+static const struct dom_element_protected_vtable _dom_html_element_protect_vtable = {
 	{
 		DOM_HTML_ELEMENT_PROTECT_VTABLE
 	},

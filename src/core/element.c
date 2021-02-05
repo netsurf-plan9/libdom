@@ -32,7 +32,7 @@
 #include "utils/list.h"
 #include "events/mutation_event.h"
 
-struct dom_element_vtable _dom_element_vtable = {
+const struct dom_element_vtable _dom_element_vtable = {
 	{
 		{
 			DOM_NODE_EVENT_TARGET_VTABLE
@@ -42,7 +42,7 @@ struct dom_element_vtable _dom_element_vtable = {
 	DOM_ELEMENT_VTABLE
 };
 
-static struct dom_element_protected_vtable element_protect_vtable = {
+static const struct dom_element_protected_vtable element_protect_vtable = {
 	{
 		DOM_NODE_PROTECT_VTABLE_ELEMENT
 	},
@@ -1414,7 +1414,12 @@ dom_exception _dom_element_is_default_namespace(dom_node_internal *node,
 		return DOM_NO_ERR;
 	}
 
-	return dom_node_is_default_namespace(node->parent, namespace, result);
+	if (node->parent != NULL) {
+		return dom_node_is_default_namespace(node->parent, namespace, result);
+	} else {
+		*result = false;
+	}
+	return DOM_NO_ERR;
 }
 
 /**
