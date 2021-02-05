@@ -77,7 +77,7 @@ typedef struct dom_node_internal dom_node_internal;
  * DOM node type
  */
 typedef struct dom_node {
-	void *vtable;
+	const void *vtable;
 	uint32_t refcnt;
 } dom_node;
 
