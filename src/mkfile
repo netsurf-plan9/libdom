@@ -200,9 +200,10 @@ HFILES=\
 
 CFLAGS=\
 	$CFLAGS \
-	 -I ../../libparserutils/include \
-	 -I ../../libwapcaplet/include \
-	 -I ../../libhubbub/include\
+	-I ../../libparserutils/include \
+	-I ../../libwapcaplet/include \
+	-I ../../libhubbub/include\
+	-I ../../expat/lib\
 
 <../../nsportlib.mk
 
